@@ -1,0 +1,185 @@
+\chapter{FIFO memory}\label{fifoMem}
+
+\minitoc
+
+The FIFO memory, or the {\em queue memory} is used to interconnect
+subsystems working logical, or both logical and electrical,
+asynchronously.x
+
+\begin{definition}
+FIFO memory implements a data structure which consists in a string
+of maximum $2^{m}$ $n$-bit recordings accessed for write and read,
+at its two ends. {\bf Full} and {\bf empty} signals are provided
+indicating the write operation or the read operation are not
+allowed. $\diamond$
+\end{definition}
+
+\placedrawing[h]{figures/G1_01_fifo_memory.lp  f66.lp}{{\bf FIFO memory.} {\small Two
+pointers, evolving in the same direction, and a two-port RAM
+implement a LIFO (queue) memory. The limit flags are computed
+combinational from the addresses used to write and to read the
+memory.}}{fifo}
+
+A FIFO is considered synchronous if both {\em read} and {\em
+write} signals are synchronized with the same clock signal. If the
+two commands, {\em read} and {\em write}, are synchronized with
+different clock signals, then the FIFO memory is called
+asynchronous.
+
+In Figure \ref{fifo} is presented a solution for the synchronous
+version, where:
+\begin{itemize}
+    \item {\bf RAM} is a $2^{n}$ $m$-bit words two-port asynchronous random access memory, one
+    port for write to the address {\tt w\_addr} and another for
+    read form the address {\tt r\_addr}
+    \item {\bf write counter} is an $(n+1)$-bit resetable counter incremented
+    each time a write is executed; its output is {\tt w\_addr[n:0]}, initially
+    it is reset
+    \item {\bf read counter} is an $(n+1)$-bit resetable counter incremented
+    each time a read is executed; its output is {\tt r\_addr[n:0]}, initially it is reset
+    \item {\bf eq} is a comparator activating its output when
+    the least significant $n$ bits of the two counters are
+    identical.
+\end{itemize}
+
+FIFO works like a circular memory addressed by two pointers ({\tt
+w\_addr[n-1:0]} and {\tt r\_addr[n-1:0]}) running on the same
+direction. If the write pointer {\em after} a write operation
+becomes equal with the read pointer, then the memory is  full and
+the {\tt full} signal is 1. If the read pointer {\em after} a read
+operation becomes equal with the write pointer, then the memory is
+empty and the {\tt empty} signal is 1. The $n+1$-th bit in each
+counter is used to differentiate between empty and full when {\tt
+w\_addr[n-1:0]} and {\tt r\_addr[n-1:0]} are the same. If {\tt
+w\_addr[n]} and {\tt r\_addr[n]} are different, then {\tt
+w\_addr[n-1:0]} = {\tt r\_addr[n-1:0]} means full, else it means
+empty.
+
+The circuit used to compare the two addresses is a combinational
+one. Therefore, its output has a hazardous behavior which affects
+the outputs {\tt full} and {\tt empty}. These two outputs must be
+used carefully in designing the system which includes this FIFO
+memory. The problem can be managed because the system works in the
+same clock domain ({\tt clock} is the same for both ends of FIFO
+and for the entire system). We call this kind of FIFO {\em
+synchronous FIFO}.
+
+\begin{simulation} A Verilog synthesisable description of a synchronous
+FIFO follows:
+
+%\pagebreak
+
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/******************************************************************
+File name:      simple_fifo.v
+Circuit name:   Synchronous First-In First_Out memory
+Description:    behavioral description of a synchronous FIFO
+******************************************************************/
+ module simple_fifo(output  [31:0]  out     ,
+                    output          empty   ,
+                    output          full    ,
+                    input   [31:0]  in      ,
+                    input           write   ,
+                    input           read    ,
+                    input           reset   ,
+                    input           clock   );
+    wire    [9:0]   write_addr, read_addr;
+
+    counter write_counter(  .out        (write_addr ),
+                            .reset      (reset      ),
+                            .count_up   (write      ),
+                            .clock      (clock      )),
+            read_counter(   .out        (read_addr  ),
+                            .reset      (reset      ),
+                            .count_up   (read       ),
+                            .clock      (clock      ));
+
+    dual_ram memory(.out        (out            ),
+                    .in         (in             ),
+                    .read_addr  (read_addr[8:0] ),
+                    .write_addr (write_addr[8:0]),
+                    .we         (write          ),
+                    .clock      (clock          ));
+
+    assign  eq      = read_addr[8:0] == write_addr[8:0] ,
+            phase   = ~(read_addr[9] == write_addr[9])  ,
+            empty   = eq & phase   ,
+            full    = eq & ~phase    ;
+ endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+%\pagebreak
+
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/******************************************************************
+File name:      counter.v
+Circuit name:   Counter
+Description:    behavioral description of the counters used to 
+                implement the asynchronous FIFO
+******************************************************************/
+ module counter(output  reg [9:0]   out     ,
+                input               reset   ,
+                input               count_up,
+                input               clock   );
+
+    always @(posedge clock) if (reset)          out <= 0;
+                             else if (count_up) out <= out + 1;
+ endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+\pagebreak
+
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/******************************************************************
+File name:      dual_ram.v
+Circuit name:   Dual-Port RAM
+Description:    behavioral description of the dual-port RAM used 
+                to implement the synchronous FIFO
+******************************************************************/
+ module dual_ram(   output  [31:0]  out         ,
+                    input       [31:0]  in          ,
+                    input       [8:0]   read_addr   ,
+                    input       [8:0]   write_addr  ,
+                    input               we          ,
+                    input               clock       );
+    reg     [63:0]  mem[511:0];
+    assign   out = mem[read_addr]   ;
+    always @(posedge clock) if (we) mem[write_addr] <= in   ;
+ endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+ $\diamond$
+\end{simulation}
+
+An {\em asynchronous FIFO} uses two independent clocks, one for
+{\tt write counter} and another for {\tt read counter}. This type
+of FIFO is used to interconnect subsystems working in different
+clock domains. The previously described circuit is unable to work
+as an asynchronous FIFO. The signals {\tt empty} and {\tt full}
+are meaningless, being generated in two clock domains. Indeed,
+{\tt write counter} and {\tt read counter} are triggered by
+different clocks generating the signal {\tt eq} with hazardous
+transitions related to two different clocks: {\em write clock} and
+{\em read clock}. This signal can not be used neither in the
+system working with {\em write clock} nor in the system working
+with {\em read clock}. {\em Read clock} is unable to avoid the
+hazard generated by {\em write clock}, and {\em write clock} is
+unable to avoid the hazard generated by {\em read clock}. Special
+tricks must be used.

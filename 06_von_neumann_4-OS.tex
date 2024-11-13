@@ -1,0 +1,444 @@
+\chapter{Computers: Four-Loop, Fourth-Order Systems (4-OS)}\label{lect6}
+
+\minitoc
+
+The processor is the core of a computing system that contains also a memory subsystem and an input-output subsystem. The physical resources involved are tightly interleaved in various form of actual organization. The memory associated with the processor contains programs and data, while the input-output system has two main functions: expanding the memory capacity and ensuring the interaction of the system with the outside world.
+
+\placedrawing[H]{figures/06_01_computing_components.lp}{The three-partite functionality of a computing system.}{pmio}
+
+The way in which the tripartite functionality is distributed in a given system shows significant variations from o  ne implementation to another. In the following, we will limit ourselves to a simple version, but not simpler than one that allows us to introduce the main concepts and problems.
+
+\section{von Neumann Abstract Model}
+
+\section{Memory Management}
+
+\subsection{Memory Gap}
+
+The evolution of the performance of the three components of a computer system occurred at a very different rate due to strictly technological aspects. The most disturbing difference, with major structural consequences, occurred in the case of processor and memory speed performances. The frequency of the processor clock increased  much faster than the memory access time (see Figure \ref{pmPGap}. Processor clock frequency increased with 60\% per year, while the access time for memories with only 10\% per year.
+
+\placedrawing[H]{figures/06_02_processor_memory_gap.lp}{Processor-Memory Performance Gap \cite{Patterson1}.}{pmPGap}
+
+Due to this difference, what we now call a memory gap occurred. The fast processor cannot wait for the slow memory to deliver or receive its data. And the memory gap imposed the memory hierarchy of the computing system based on the locality principle.
+
+\paragraph{Locality principle} says that if a certain location is accessed in the data or program memory, then the next accesses will be made with a high probability in a reasonably small vicinity.
+
+\bigskip
+
+Applying the locality principle allowed the definition of the strategies that govern the conception of a hierarchy of effective memories.
+
+\subsection{Memory Hierarchy}
+
+The hierarchy of memory is based on the fact that when we access a location that is in a memory that is too slow in relation to the speed of processing in the processor, a block or a page of bytes that contains the requested bytes will be transferred to a faster intermediate memory. This transfer is done with the hope that the following accesses will be made in the intermediate memory if the updated page or block in it was large enough.
+
+Figure \ref{mhy} shows the current way in which the memory hierarchy is implemented. At the top of the hierarchy there are registers from register files whose content is accessible at the level of the clock signal cycle. Next comes system memory in the form of the closest level as cache memory. The name comes from the French {\em cach\' e} which means hidden. Indeed, this level of memory/memories is transparent to the architecture of the computing system in most cases.
+
+\placedrawing[H]{figures/06_03_memory_hierarchy.lp}{Memory hierarchy from fast and small register files to slow and large auxiliary storage memories such as HDD (Hard Disk Drive), SSD (Solid-State Drive), optical disk, tape.}{mhy}
+
+Registers  are managed by compilers, their size is $< 4KB$ (in most of cases $\sim 128B$, i.e., 32 32-bit words), the access time is $< 0.5 ns$.
+
+Cache memories are managed by hardware, their size is $< 16MB$, the maximum access time is $\sim 0.5 ns$.
+
+The main memory is managed by the operating system, its size is in the range of $1 \div 16 GB$, the access time is $\sim 100 ns$.
+
+The disk memory is managed by the operating system or human operator, its size is $> 128GB$, the access time is $\sim 5 ms$.
+
+\subsection{Virtual Memory Mechanism}
+
+How relate two successive levels in the hierarchy? Let us consider two levels in the memory hierarchy, $Level_i$ containing $m$ pages and $Level_{i+1}$ containing $n$ pages, with $n >> m$. Each page in $Level_i$, called {\em physical level} is a copy of a page from $Level_{i+1}$ called {\em virtual level}. In Figure \ref{vmm}a, pages 0, 2, and $m-2$ from the level $i$ were brought from pages 3, 4, and 0 of level $i+1$. Any change in the physical level must actualized in the associated virtual level. The "user"  accesses the virtual level while the virtual mechanism accesses the physical level. It is the job of the virtual memory mechanism to perform transparently the access and to keep coherent the content of the virtual level with the physical level.
+
+\placedrawing[H]{figures/06_04_virtual_memory.lp}{Virtual memory mechanism. {\bf a.} Page correspondence. {\bf b.} Translation mechanism.  }{vmm}
+
+
+The addressing mechanism is represented in Figure \ref{vmm}b, where the access to the physical memory is done mediated by a translation mechanism performed by the {\em Page translate} block.  The "user" issues a virtual address having two parts:
+\begin{itemize}
+    \item virtual page address
+    \item offset in the page
+\end{itemize}
+When a new page is loaded into physical memory, the content of this translator is updated according to the correspondence shown in the figure \ref{vmm}a.
+
+
+Page translation mechanism is implemented in various form.
+
+The simplest one is a RAM memory containing $n$ $log_2 m$-bit words. The RAM memory is in this case almost empty, because only $m$ locations from  $n$ are used, because usually $n>> m$.
+
+A more efficient solution is to use an associative memory to make the translation.
+
+\subsection{Associative Memory-Based Page Translator}
+
+\subsubsection{Content-Addressable Memory}
+
+
+A normal way to ``question" a memory circuit is to ask for:
+\begin{quote}
+{\bf Q1}: {\em what is the value of the property A of the object B}
+\end{quote}
+For example: {\em How old is George?} The {\em age} is the
+property and the {\em object} is George. The first step to design
+an appropriate device to be questioned as previously is
+exemplified is to define a circuit able to answer the question:
+\begin{quote}
+{\bf Q2}: {\em where is the object B?}
+\end{quote}
+with two possible answers:
+\begin{enumerate}
+    \item {\em the object B is not in the searched space}
+    \item {\em the object B is stored in the cell indexed by X}.
+\end{enumerate}
+The circuit for answering Q2-type questions is called {\em Content
+Addressable Memory}, shortly: {\em CAM}. (About the question Q1 in
+the next subsection.)
+
+The basic cell of a CAM is consists of:
+\begin{itemize}
+    \item the storage elements for binary objects
+    \item the ``questioning" circuits for searching the value
+    applied to the input of the cell.
+\end{itemize}
+
+\placedrawing[H]{figures/06_05_content_addressable_cell.lp}{{\bf Content Addressable Cell.}
+{\small {\bf a.} The structure: data latches whose content is
+compared against the input data using 4 XORs and one NAND. Write
+is performed applying the clock with stable data input. {\bf b.}
+The logic symbol.}}{cam_cell}
+
+In Figure \ref{cam_cell} there are 4 D latches as storage elements
+and four XORs connected to a 4-input NAND used as comparator. The
+cell has two functions:
+\begin{itemize}
+    \item {\bf to store}: the active level of the clock modify the content
+    of the cell storing  the 4-bit input data into the four D
+    latches
+    \item {\bf to search}: the input data is continuously compared
+    with the content of the cell generating the signal $AO'=0$ if
+    the input matches the content.
+\end{itemize}
+
+
+
+
+The cell is {\em written} as an $m$-bit latch and is continuously
+{\em interrogated} using a combinational circuit as comparator.
+The resulting circuit is an 1-OS because results serially
+connecting a memory, one-loop circuit with a combinational,
+no-loop circuit. No additional loop is involved.
+
+An $n$-word CAM contains $n$ CAM cells and some additional
+combinational circuits for distributing the clock to the selected
+cell and for generating the global signal M, activated for
+signaling a successful match between the input value and one or
+more cell contents. In Figure \ref{cam}a a 4-word of 4 bits each
+is represented. The write enable, $WE$, signal is demultiplexed as
+clock to the appropriate cell, according to the address codded by
+$A_{1}A_{0}$. The 4-input NAND generate the signal $M$. If, at
+least one address output, $AO_{i}'$ is zero, indicating match in
+the corresponding cell, then $M = 1$ indicating a successful
+search.
+
+\placedrawing[h]{figures/06_06_content_addressable_memory.lp}{{\bf The Content Addressable Memory
+({\em CAM}).} {\small {\bf a.} A 4-word CAM is built using 4
+content addressable cells, a demultiplexor to distribute the write
+enable (WE) signal, and a $NAND_{4}$ to generate the match signal
+(M). {\bf b.} The logic symbol.}}{cam}
+
+The {\em input address} $A_{p-1}, \ldots, A_{0}$ is binary codded
+on $p = log_{2} n$ bits. The {\em output address} $AO_{n-1},
+\ldots, AO_{0}$ is an {\em unary code} indicating the place or the
+places where the data input $D_{m-1}, \ldots, D_{0}$ matches the
+content of the cell. The output address must be unary codded
+because there is the possibility of match in more than one cell.
+
+Figure \ref{cam}b represents the logic symbol for a CAM with $n$
+$m$-bit words. The input $WE$ indicate the function performed by
+CAM. Be very careful with the set-up time and hold time of data
+related to the $WE$ signal!
+
+The CAM device is used to locate an object (to answer the question
+{\bf Q2}). Dealing with the properties of an object (answering
+{\bf Q1}-type questions) means to use o more complex devices which
+{\em associate} one or more properties to an object. Thus, the
+{\em associative memory} will be introduced adding some circuits
+to CAM.
+
+
+\subsubsection{Associative Memory}
+
+A partially used RAM can be an associative memory, but a very
+inefficient one. Indeed, let be a RAM addressed by $A_{n-1} \ldots
+A_{0}$ containing 2-field words $\{V, \; D_{m-1} \ldots D_{0}\}$.
+The {\em objects} are codded using the address, the {\em values}
+of the unique property $P$ are codded by the data field $D_{m-1}
+\ldots D_{0}$. The one-bit field $V$ is used as a validation flag.
+If $V=1$ in a certain location, then there is a match between the
+object designated by the corresponding address and the value of
+property $P$ designated by the associated data field.
+
+\begin{exemplu}
+Let be the 1Mword RAM addressed by $A_{19} \ldots A_{0}$
+containing 2-field 17-bit words $\{V, \; D_{15} \ldots D_{0}\}$.
+The set of objects, $OBJ$, are codded using 20-bit words, the
+property $P$ associated to $OBJ$ is codded using 16-bit words. If
+$$RAM[11110000111100001111] = 1\_0011001111110000$$
+$$RAM[11110000111100001010] = 0\_0011001111110000$$
+then:
+\begin{itemize}
+    \item for the object $11110000111100001111$ the property $P$
+    is defined ($V=1$) and has the value $0011001111110000$
+    \item for the object $11110000111100001010$ the property $P$
+    is not defined ($V=0$) and the data field is meaningless.
+\end{itemize}
+Now, let us consider the 20-bit address codes four-letter names
+using for each letter a 5-bit code. How many locations in this
+memory will contain the field $V$ instantiated to 1?
+Unfortunately, only extremely few of them, because:
+\begin{itemize}
+    \item only 24 from 32 binary configurations of 5 bits will be
+    used to code the 24 letters of Latin alphabet ($24^{4} <
+    2^{20}$)
+    \item but more important: how many different name expressed by 4
+    letters can be involved in a real application? Usually no more
+    than few hundred, meaning almost nothing related to $2^{20}$.
+\end{itemize}
+ $\diamond$
+\end{exemplu}
+
+The previous example teaches us that a RAM used as associative
+memory is a very inefficient solution. In real applications are
+used names codded very inefficiently:
+$$number\_of\_possible\_names >>> number\_of\_actual\_names.$$
+In fact, the natural memory function means almost the same: to
+remember about something immersed in a huge set of possibilities.
+
+One way to implement an efficient associative memory is to take a
+CAM and to use it as a {\em programmable decoder} for a RAM. The
+(extremely) limited subset of the actual objects are stored into a
+CAM, and the address outputs of the CAM are used instead of the
+output of a combinational decoder to select the accessed location
+of a RAM containing the value of the property $P$. In Figure
+\ref{am} this version of an associative memory is presented.
+$CAM_{m \times n}$ is usually dimensioned with $2^{m} >>> n$
+working as a decoder programmed to decode {\bf any} very small
+subset of $n$ addresses expressed by $m$ bits.
+
+\placedrawing[h]{figures/06_07_associative_memory.lp}{{\bf An associative memory ({\em
+AM}).} {\small The structure of an AM can be seen as a RAM with a
+programmable decoder implemented with a CAM. The decoder is
+programmed loading CAM with the considered addresses.}}{am}
+
+Here are the three working mode of the previously described
+associative memory:
+\begin{description}
+    \item[define\_object]: write the name of an object to the
+    selected location in CAM
+    \\ {\tt wa' = 0, address = name\_of\_object, sel = cam\_address
+    \\ wd' = 1, din = don't\_care}
+
+    \item[associate\_value]: write the associated value in the
+    randomly accessed array to the location selected by the active
+    address output of CAM
+    \\ {\tt wa' = 1, address = name\_of\_object, sel = don't\_care
+    \\ wd' = 0, din = value}
+
+    \item[search]: search for the value associated with the name of the object
+    applied to the address input
+    \\ {\tt wa' = 1, address = name\_of\_object, sel = don't\_care
+    \\ wd' = 1, din = don't\_care}
+    \\ {\tt dout} is valid only if {\tt valide\_dout = 1}.
+\end{description}
+
+This associative memory will be dimensioned according to the
+dimension of the actual subset of names, which is significantly
+smaller than the virtual set of the possible names ($2^{p} <<<
+2^{m}$). Thus, for a searching space with the size in $O(2^{m})$ a
+device having the size in $O(2^{p})$ is used.
+
+
+
+\subsubsection{Translation Lookaside Buffer (TLB)}
+
+The associative memory will allow us to design a translation lookaside buffer (TLB) with a size given by the number of pages in the physical memory, unlike the one based on a RAM type memory which has a size given by the much larger number of pages in the virtual memory.
+
+With a minimal number of differences, the described virtualization mechanism is applied in managing the relationship between all the hierarchical levels in the memory of the computer system.
+
+In what follows, we will consider the simple example in which the hierarchy contains a single cache level, the main memory and the hard disk. We will compare the main parameters that characterize the  cache-main memory relationship and the main memory-hard disk relationship.
+\begin{itemize}
+    \item the typical amount of data moved when physical memory is actualized from the virtual memory
+        \begin{itemize}
+            \item block size for cache: 128B
+            \item page size main memory: 4KB
+        \end{itemize}
+    \item the typical access time when the addressing is hit
+        \begin{itemize}
+            \item 1 clock cycle (very rarely 2 or 3) for cache
+            \item $\sim 100$ clock cycles because of board technology and silicon technology for memories (the first is reduced by multi-chip packaging) for main memory
+        \end{itemize}
+    \item the typical miss penalty:
+        \begin{itemize}
+            \item 100 clock cycles for cache memory
+            \item $10^6$ clock cycles for main memory
+        \end{itemize}
+    \item the typical miss rate:
+        \begin{itemize}
+            \item $1\%$ for cache memory
+            \item $10^{-4}\%$ for main memory
+        \end{itemize}
+\end{itemize}
+
+\section{System Organization}
+
+How looks the actual structure of a computing system? In Figure \ref{compSys} is exemplified a system where are emphasized two buses: the internal bus and the input-output bus. They are interconnected by two units: Bus Bridge and DMA (Direct Memory Access).
+
+\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a computing system.}{compSys}
+
+On Internal Bus are connected fast devices while on the Input-Output Bus are connected devices involving a lot of data transfer.
+
+The memory hierarchy is distributed in the version represented in Figure \ref{compSys}  as follows:
+\begin{enumerate}
+    \item Register File in the processor, having a capacity of 32W $\div$ 1024W, accessed for reading or writing in a single clock cycle
+    \item the two 1st level cache memories, each having a capacity of 128KB $\div$ 1MB, accessed for reading or writing in 1 $\div$ 3  clock cycles:
+        \begin{itemize}
+            \item Program Cache
+            \item Data Cache
+        \end{itemize}
+        so that at this level the system is structured according to the Harvard abstract model
+    \item 2nd Level Cache memory, having a capacity of 1MB $\div$ 8MB, so that at this level the system is structured according to the von Neumann abstract model
+    \item Hard Disk connected through:
+        \begin{itemize}
+            \item Bus Bridge
+            \item DMA
+        \end{itemize}
+\end{enumerate}
+
+
+\section{I/O}
+
+The input-output system includes certain specific mechanisms that we will briefly describe first. Then we will briefly describe the most important input-output devices.
+
+\subsection{Bus}
+
+A {\bf {\em Bus}} is a communication system that transfers data between components inside a computer, or between computers. There are two types of buses: serial (those that transfer data bib by bit) and parallel (those that transfer data word by word of n bits). The main problem that arises is that of the synchronization of the transfer. We will discuss it under its essential aspects for the synchronous transfer of n-bit words.
+
+In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Figure \ref{compSys}) between Main Memory and 2nd Level Cache are presented. Three important moments are marked in the mentioned waveforms:
+\begin{description}
+    \item[$t_1$]: the active edge of clock takes a read command (Read = 0) from the address Read Address. Both Read and Read Address must be stable at least minimum {\bf {\em  set-up time}} before the active edge of clock (the positive one) and {\bf {\em hold time}} after the positive edge of clock
+    \item[$t_2$]: the active edge of clock can take the data from the output of Main Memory only if the signal Wait is not active (Wait = 0) thus completing the read cycle. The signal Wait is necessary when the Main Memory is not a fast enough memory, or the clock frequency is too high.
+    \item[$t_3$]: the active edge of clock takes Valid Input Data to write it at Write Address because Write signal is active (Write' = 0).
+\end{description}
+
+\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
+
+\noindent\rule{16cm}{0.8pt}
+
+{\bf Q.6.1}: In the waveforms in Figure \ref{bus} the distance between $t_1$ and $t_2$ is only one clock cycle. In reality, this distance can be tens or even hundreds of clock cycles. What is the explanation of this fact?
+
+\bigskip
+
+{\bf Q.6.2}: Why do you think that a single clock cycle was enough for writing?
+
+
+\noindent\rule{16cm}{0.8pt}
+
+The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 clock cycles in the example illustrated by Figure \ref{bus}. Usually, this latency is very high, reaching hundreds of cycles.
+
+
+\subsection{DMA}
+
+Direct memory access (DMA) (see Figure \ref{compSys}) is an important feature of computer systems. It allows  to access the main memory  system independently of the central processor.
+
+When the processor is running an input/output program, it is occupied for the entire duration of the read or write operation. Thus the processor is unavailable to perform other work. With DMA, the processor  initiates the transfer only, then it does other operations while the transfer is performed. When the transfer is completed the processor receives an interrupt from the DMA (about interrupt see \ref{interrupt} in this lecture notes).
+
+An example of using the DMA unit is for transferring a page of 4KB from Hard Dist to Main Memory.
+
+\subsection{FIFO}
+
+First-In-First-Out (FIFO) memory is a special memory device represented in Figure \ref{fifo1}. It has the following connections (see Figure \ref{fifo1}a):
+
+\placedrawing[H]{figures/06_10_fifo.lp}{{\bf a.} Block schematic of FIFO. {\bf b.} {\tt write A} operation. {\bf c.} {\tt write D.} {\bf d.} {\tt write F}. {\bf e.} {\tt read}.}{fifo1}
+
+\begin{description}
+    \item[dataIn]: the data entry of $n$ bits to which the word that will be recorded in the rightmost unoccupied location is applied.
+    \item[dataOut]: the $n$ bit data output from which the oldest unextracted record is extracted
+    \item[full]: it signals the fact that the memory is full and will not accept a new write before executing at least one read
+    \item[write]: if activated when {\tt full = 0}, then {\tt dataIn} is queued
+    \item[empty]: it signals the fact that the memory is empty and will not accept a new read before executing at least one write
+    \item[read]: if activated when {\tt empty = 0}, then {\tt dataOut} is extracted from the  queue
+\end{description}
+
+In Figures from \ref{fifo1}b to \ref{fifo1}e is exemplified the way FIFO works, as follows:
+\begin{description}
+    \item[{\tt write(A)}]: in the empty FIFO A is stored in the rightmost position (see Figure \ref{fifo1}b)
+    \item[{\tt write(D)}]: B is stored in the rightmost free position, immediately after A (see Figure \ref{fifo1}c)
+    \item[{\tt write(F)}]: F is stored in the rightmost free position, immediately after B (see Figure \ref{fifo1}cd)
+    \item[{\tt read}]: A is extracted from FIFO and the queue "advances" one step (see Figure \ref{fifo1}e)
+\end{description}
+
+There are two main types of FIFO:
+\begin{itemize}
+    \item synchronous FIFO: the sending system and the receiving system run with the same clock signal (for those who are interested can consult Appendix \ref{fifoMem})
+    \item asinchronous FIFO: the sending system and the receiving system run with different  clock signals
+\end{itemize}
+Asynchronous FIFO are used to solve the problem of crossing data between systems running in different clock domain. The module BUS Bridge (see Figure \ref{compSys}) contains almost sure an asynchronous FIFO.
+
+\subsection{I/O Devices}
+
+There are two types of I/O devices:
+\begin{itemize}
+    \item Storage devices, mainly represented by hard disk, flash memory, optical disk, tape.
+    \item Functional devices, mainly represented by display system, network interface, ...
+\end{itemize}
+We will briefly present the storage devices that extend the memory hierarchy outside the central computing unit.
+
+\subsubsection{Hard Disk}
+
+The most common auxiliary memory is the hard disk drive. Its internal structure is represented in Figure \ref{disk}.
+
+\placedrawing[H]{figures/06_11_hard_drive.lp}{Hard Disk Drive Structure [Source: Google-Images]}{disk}
+
+Main parameters:
+\begin{itemize}
+    \item storage capacity: 10 $\div$ 30 TB
+    \item average access time: 2.5 $\div$ 10 ms
+    \item MTBF: $\sim$285 years (MTBF stands for mean time between failures; it is the predicted elapsed time between inherent failures of a mechanical or electronic system, during normal system operation.)
+    \item bytes per sector: 512 $\div$ 4096
+    \item shock tolerance
+        \begin{itemize}
+            \item operating: 10 $\div$ 100 g (g stands for gravitational acceleration: $9.8 m/s^2$.)
+            \item nonoperating: 100 $\div$ 100 g
+        \end{itemize}
+\end{itemize}
+
+\subsubsection{Optical Disks}
+
+Optical disks are read-only mediums. There are two versions:
+\begin{itemize}
+    \item CD: optical compact disk (0.65 GB)
+    \item DVD: digital video disk (4.7 GB); sometimes written on both sides to double capacity
+\end{itemize}
+
+\subsubsection{Flash Memory}
+
+
+Flash memory is a type of EEPROM (electronically erasable programmable readonly memory), which is normally read-only but can be erased. Solid-state devices (SSDs) based on flash memory technology do not have moving parts.
+
+The capacity per flash memory chip increased by about 50\%–60\% per year.
+
+Typical SSDs will have a the time taken for a disk drive to locate the area on the disk where the data to be read is stored between 0.08 and 0.16 ms.
+
+Time to {\bf read} 2 KB from a flash memory takes about 75 $\mu$S,  while DDR SDRAM takes less than 500 ns. Then  flash memory is  about 150 times slower. But compared to HDD is $\sim 400$  times faster. We conclude: the flash memory can not replace DRAM for main memory, but is a good candidate to replace HDD.
+
+Time to {\bf write} for flash memory is about 1500 times slower then SDRAM, and about 8–15 times faster than HDD.
+
+\subsubsection{Tapes}
+
+Magnetic-tape data storage is a system for storing  information on magnetic tape using digital recording.
+
+Typically  9-track tape are used to store bytes with CRC. Magnetic tape  packaged in cartridges and cassettes. The device that performs the writing or reading of data is called a tape drive.
+
+Tape data storages are now used mainly for system backup, data archive or data exchange.
+
+Uncompressed/Native capacity: $\sim$20TB.
+
+Compressed capacity: $\sim$50TB.
+
+
+
+

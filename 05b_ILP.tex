@@ -1,0 +1,989 @@
+\chapter{Instruction-Level Parallelism}\label{lect5}
+
+\minitoc
+
+There are various form of instruction-level parallelism. We will consider is this short course only the parallelism introduced by the pipeline mechanism and the multiple execution units.
+Thus, the 5th lesson deals with the pipeline mechanism, used to accelerate the processor's operation, and the implications of its use. But as we will see any gain obtained from the application of an improvement technique comes with a price.
+
+\section{Pipelining}
+
+Combinational logic circuits (CLCs) that have a very high depth cause the system clock frequency to be reduced. The solution that allows increasing the clock frequency is the introduction of pipeline registers.
+
+
+\subsection{Pipeline Acceleration}
+
+In Figure \ref{fig47} the pipeline technique is illustrated. In Figure \ref{fig47}a, the frequency at which the system clock can work is given by the propagation time through the $CLC_{f \circ g}$ to which is added the time associated with the propagation through the registers.
+
+\placedrawing[H]{figures/05b_01_pipelining.lp}{Pipelining. {\bf a.} The initial circuit, without pipeline register.  {\bf b.} The pipelined version of the circuit.}{fig47}
+
+
+$$T_{clock} = t_{regProp} + t_{CLC_{f \circ g}} + t_{set-up} \simeq t_{CLC_{f \circ g}}$$
+
+In Figure \ref{fig47}b,  the frequency at which the system clock can work will be increased because the period of the clock is given by
+
+$$T_{clock} = t_{regProp} + max(t_{CLC_{f}}, t_{CLC_{g}}) + t_{set-up}$$
+
+The resulting acceleration is:
+$$\alpha \simeq \frac{t_{CLC_{f \circ g}}}{max(t_{CLC_{f}}, t_{CLC_{g}})}$$
+
+The maximum efficiency, $\alpha \simeq 2$, is obtained when
+$$t_{CLC_{f}} \simeq t_{CLC_{g}}$$
+
+If the resulting frequency is not high enough, the technique is applied to the deepest circuit or both. The process can continue until the requested speed is reached.
+
+\subsection{{\bf {\em Pipelined Version of toyRISC}}}
+
+\subsubsection{Structure}
+
+The operating frequency of the toyRISC processor presented in the previous lesson can be increased by inserting some pipeline registers on the critical path of the combinatorial propagation. A version, adapted to be accelerated, is shown in Figure \ref{fig46} where the two memories are not represented.
+Instead, only the connections to those memories are represented. The program memory is a synchronous memory (see \ref{syncMem}) connected in our system in combinational mode through the output multiplexers. The data memory is a synchronous pipelined memory (see \ref{sybcPipeMem}) which responds with one cycle latency to the read command.
+
+\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
+
+\subsubsection{Micro-architecture}
+
+The micro-architecture is:
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name: DEFINES.vh
+                   PIPELINED TOY-RISC MICROARCHITECTURE
+*************************************************************************/
+// CONTROL OPERATIONS
+`define nop     6'b00_0000 // no operation: pc<=pc+1;
+`define rjmp   	6'b00_0001 // relative jump: pc<=pc+v;
+`define zbr    	6'b00_0010 // pc<=(rf[l]=0) ? pc+v:pc+1
+`define nzbr   	6'b00_0011 // pc<=!(rf[l]=0) ? pc+v:pc+1
+`define ret    	6'b00_0101 // return: pc<=rf[l][15:0];
+`define halt   	6'b00_0110 // halt unitil interrupt
+`define eint   	6'b00_1000 // set enable interrupt
+`define dint   	6'b00_1001 // set disable interrupt
+// ARITHMETIC & LOGIC OPERATIONS, for these instructions: pc<=pc+1;
+`define add     6'b11_0000 // rf[d]<=rf[l]+rf[r];
+`define sub     6'b11_0001 // rf[d]<=rf[l]-rf[r];
+`define addv    6'b11_0010 // rf[d]<=rf[l]+v;
+`define mult    6'b11_0011 // rf[d]<=rf[l]*rf[r];
+`define multv   6'b11_0100 // rf[d]<=rf[l]*v;
+`define addc    6'b11_0101 // rf[d]<=(rf[l]+rf[r]}[32];
+`define subc    6'b11_0110 // rf[d]<=(rf[l]-rf[r])[32];
+`define addvc   6'b11_0111 // rf[d]<=(rf[l]+v)[32];
+`define lsh     6'b11_1000 // rf[d]<=rf[l] >> 1;
+`define ash     6'b11_1001 // rf[d]<=
+                      //     <={rf[l][31],rf[l][31:1]};
+`define move    6'b11_1010 // rf[d]<=rf[l];
+`define swap    6'b11_1011 // rf[d]<=
+                      // <={rf[l][15:0],rf[l][31:16]};
+`define bwnot   6'b11_1100 // rf[d]<=~rf[l];
+`define bwand   6'b11_1101 // rf[d]<=rf[l]&rf[r];
+`define bwor    6'b11_1110 // rf[d]<=rf[l]|rf[r];
+`define bwxor   6'b11_1111 // rf[d]<=rf[l]^rf[r];
+// DATA LOAD-STORE OPERATIONS, for these instructions: pc=pc+1;
+`define read   	6'b10_0000 // read from dataMemory[rf[l]];
+`define load   	6'b10_0111 // rf[d]<=dataOut;
+`define store  	6'b10_1000 // dataMemory[rf[l]]<=rf[r];
+`define val    	6'b01_0111 // rf[d]<={{16*{v[15]}},v};
+\end{lstlisting}
+\end{shaded*}
+}
+
+The three pipeline registers introduced in design divide the execution of an instruction in four stages:
+\begin{description}
+    \item[INSTRUCTION FETCH (IF)]: the content of the register {\tt pc} (program counter) addresses in the program memory the binary code of an instruction; in the same time the module {\tt next} computes the value for the next {\tt pc}. The execution time for this stage is:
+        $$t_{IF} = t_{pc} + max(t_{next}, t_{ACCto Program Memory}) + t_{suPipeReg1}$$
+        In the pipeline register {\bf PipeReg\_1} is loaded the information requested to finish the execution of the fetched instruction
+    \item[OPERANDS FETCH (OF)]: from the register are fetched the two operands of the instruction using the fields {\tt leftAddr} and {\tt rightAddr} fetched in the previous cycle from the program memory. In {\bf pipeReg\_2} are loaded the two fetched operands and the information needed in the next cycles to end the execution of the instruction. The execution time for this stage is:
+        $$t_{OF} = t_{PipeReg1} + t_{regFile} + t_{suPipeReg2}$$
+    \item[EXECUTION (EX)]: ALU performs the operation according to the code {\tt opCode}, propagated to this stage through the two previous  pipeline registers,  generate {\tt result} and the predicate {\tt zero = (rezult == 0)}; the {\tt add} module adds to the program counter the signed value of {\tt value} to perform the branch operation.  The execution time for this stage is:
+        $$t_{EX} = t_{PipeReg2} + max((t_{mux}+t_{alu}),  (t_{add}+t_{mux}), t_{dataMemPipeReg}) + t_{suPipeReg3}$$
+    \item[WRITE BACK (WB)]: acts on the first two levels in the pipeline: it allows the modification of the {\tt pc} to perform jumps and writes the result of the current operation in the register file. The execution time for this stage is:
+        $$t_{WB} = t_{PipeReg3} +  max(t_{suRegFile}, (t_{next} + t_{suPC}))$$
+\end{description}
+The maximum clock frequency is limited by:
+$$T_{clock} = max(t_{IF}, t_{OF}, t_{EX}, t_{WB})$$
+
+\subsubsection{Architecture}
+
+
+The Instruction Set Architecture is:
+
+\begin{verbatim}
+/******************************************************************************
+                    toyRISC'S ARCHITECTURE
+******************************************************************************/
+    NOP         // no operation
+    RJMP(lb)    // relative jumpto label 'lb'
+    BRZ(l,lb)   // branch if rf[l]=zero at label 'lb'
+    BRNZ(l,lb)  // branch if rf[l]!=zero at label 'lb'
+    RET(l)      // return from subroutine: pc<=rf[l]
+    HALT        // halt until interrupt is received, pc = pc
+ // for the following instructions: pc<=pc+1;
+    EINT        // set enable interrupt
+    DINT        // set disable interrupt
+    ADD(d,l,r)  // rf[d]<=rf[l]+rf[r];
+    SUB(d,l,r)  // rf[d]<=rf[l]-rf[r];
+    ADDV(d,l,v)	// rf[d]<=rf[l]+v;
+    MULT(d,l,r)	// rf[d]<=rf[l]*rf[r];
+    MULTV(d,l,v)// rf[d]<=rf[l]*v;
+    ADDC(d,l,r)	// rf[d]<=(rf[l]+rf[r]}[32];
+    SUBC(d,l,r)	// rf[d]<=(rf[l]-rf[r])[32];
+    ADDVC(d,l,v)// rf[d]<=(rf[l]+v)[32];
+    LSH(d,l)    // rf[d]<=rf[l] >> 1;
+    ASH(d,l)    // rf[d]<={rf[l][31],rf[l][31:1]};
+    MOVE(d,l)   // rf[d]<=rf[l];
+    SWAP(d,l)   // rf[d]<={rf[l][15:0],rf[l][31:16]};
+    NOT(d,l)    // rf[d]<=~rf[l];
+    AND(d,l,r)  // rf[d]<=rf[l]&rf[r];
+    OR(d,l,r)   // rf[d]<=rf[l]|rf[r];
+    XOR(d,l,r)  // rf[d]<=rf[l]^rf[r];
+    READ(l)     // read from dataMemory[rf[l]];
+    LOAD(d)     // rf[d]<=dataOut;
+    STORE(l,r)  // dataMemory[rf[l]]<=rf[r];
+    VAL(d,v)    // rf[d]<={{16*{v[15]}},v};
+\end{verbatim}
+
+\subsection{Latency}
+
+In each clock cycle the execution of one instruction  ends with a latency of three clock cycles. The entire structure performs in parallel 4 successive instructions, each stage being involved in the execution of one instruction.
+
+\begin{exemplu}
+Let us see how is executed the following sequence of instructions:
+\begin{verbatim}
+    XOR(5,0,0)  ;
+    VAL(1,12)   ;
+    SUB(2,3,4)  ;
+    ADD(0,0,3)  ;
+    AND(1,3,2)  ;
+\end{verbatim}
+In Table \ref{pipeEx} the distribution along the pipe of the execution is represented. Each line in the table represents a pipeline level. The execution of the first instruction, {\tt XOR}, starts in the $i$-th clock cycle, with {\tt XOR0}, and ends in the $(i+3)$-th cycle with {\tt XOR3}. Then in each clock cycle one of the following instruction ends.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Pipelined execution.}
+    \label{pipeEx}
+    {\small
+    {\tt
+    \begin{tabular}{|c||c|c|c|c|c|c|c|c|}
+      \hline
+     Pipe Stage $\setminus$ Time    & t=i & t=i+1 & t=i+2 & t=i+3 & t=i+4 & t=i+5 & t=i+6 & t=i+7   \\ \hline \hline
+        Pipe0:IF        & XOR0 & VAL0   & SUB0   & ADD0   & AND0   &      &       &         \\ \hline
+        Pipe1:OF        &     & XOR1   & VAL 1  & SUB1   & ADD1   & AND1   &          &         \\ \hline
+        Pipe2:EX        &     &       & XOR2   & VAL2   & SUB2   & ADD2   & AND2   &        \\ \hline
+        Pipe3:WB        &     &       &       & XOR3   & VAL3   & SUB3   & ADD3   & AND3        \\ \hline
+    \end{tabular}
+    }
+    }
+  \end{center}
+\end{table}
+$\diamond$
+\end{exemplu}
+
+In each clock cycle, an instruction completes with a latency of 3 clock cycles. The good news: the clock frequency increases significantly due to pipeline organization. The bad news: the latency introduced by the pipeline organization creates unwanted dependencies.
+
+\section{Hazards Generated by Dependencies}
+
+%http://www.mathcs.richmond.edu/~dszajda/classes/cs301/Fall_2020/slides/Dependences_Hazards_Exceptions.pdf
+
+% https://www.geeksforgeeks.org/computer-organization-and-architecture-pipelining-set-2-dependencies-and-data-hazard/
+
+There are three types of dependencies:
+\begin{enumerate}
+\item Structural Dependency
+\item Data Dependency
+\item Control Dependency
+\end{enumerate}
+
+These dependencies generate hazardous behaviors of the pipelined processor due to the parallel execution of instructions which partially overlap. In the following some of them will be illustrated. Due to the fact that we used the Harvard abstract model for our toyRISC processor, main structural dependency are avoided. Therefore we concentrate only to the next two type of dependencies.
+
+Structural dependencies are typically represented by those related to processor memory. In the case of our processor, toyRISC, they do not appear because we have an abstract model of the Harvard type with two memories, one for programs and another for data. Thus, in what follows, we will focus on the other two types of dependencies.
+
+\subsection{Data dependency}
+
+When the current instruction uses values generated by a previous instruction that has not been completed, the effect of data dependency appears. There are 3 types of data dependencies that
+we’ve been talking about:
+\begin{itemize}
+\item RAW: Read after Write
+\item WAR: Write after Read
+\item WAW: Write after Write
+\end{itemize}
+We will focus on the first, RAW, which is typical for our processor version. For the other two, they are illustrated in Example \ref{warwaw}.
+
+\begin{exemplu}\label{dataDep}
+Let us see how is executed the following sequence of instructions:
+\begin{verbatim}
+    XOR(5,0,0)  ;
+    VAL(1,12)   ;
+    SUB(2,3,4)  ;
+    ADD(0,2,1)  ;
+    AND(1,1,2)  ;
+\end{verbatim}
+In Table \ref{pipeEx2} the distribution along the pipe of the execution is represented.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Data dependency in the pipelined execution .}
+    \label{pipeEx2}
+    {\small
+    {\tt
+    \begin{tabular}{|c||c|c|c|c|c|c|c|c|}
+      \hline
+     Pipe Stage $\setminus$ Time  & t=i   & t=i+1 & t=i+2 & t=i+3  & t=i+4  & t=i+5  & t=i+6 & t=i+7    \\ \hline \hline
+        Pipe0:IF                  & XOR0  & VAL0  & SUB0  & ADD0  & AND0   &        &        &                \\ \hline
+        Pipe1:OF                  &       & XOR1  & VAL1  & SUB1  & ADD1   & AND1   &        &                 \\ \hline
+        Pipe2:EX                  &       &       & XOR2  & VAL2  & SUB2   & {\footnotesize {\bf {\em ADD2}}}   & AND2   &                 \\ \hline
+        Pipe3:WB                  &       &       &       & XOR3  & VAL3   & {\footnotesize {\bf {\em SUB3}}}   & ADD3   & AND3              \\ \hline
+    \end{tabular}
+    }
+    }
+  \end{center}
+\end{table}
+The WB cycle for SUB, {\tt SUB3}, is executed at {\tt i+5}, too late to have the content of {\tt rf2} actualized with the result of  {\tt SUB(2,3,4)} for the instruction {\tt ADD(0,2,1)} which is supposed to have {\tt rf2} actualized by the previous instruction in {\tt i+4}. {\tt ADD2} must be preceded by {\tt SUB3}. {\tt SUB3} is delayed with one clock cycle for a proper execution of the code. The instruction {\tt ADD(0,2,1)} uses the value in {\tt rf2} before the execution of {\tt SUB{2,3,4}}.
+
+$\diamond$
+\end{exemplu}
+
+
+\begin{exemplu}\label{dataDepSim}
+Data dependency is illustrated also by running on our simulator the  program run in Example \ref{exADD}:
+\begin{verbatim}
+            NOP         ;
+            VAL(0,1)    ;
+            VAL(1,2)    ;
+            VAL(2,3)    ;
+            VAL(3,4)    ;
+            VAL(4,5)    ;
+            NOP         ;
+            NOP         ;
+            ADD(5,4,3)  ;
+            HALT        ;
+            HALT        ;
+\end{verbatim}
+The result is correct because of the two {\tt NOP}s inserted in the program from Example \ref{exADD} before the {\tt ADD} instruction:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=1  pc=1023  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=5  pc=   0  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=7  pc=   1  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=9  pc=   2  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=11 pc=   3  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=13 pc=   4  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=1
+t=15 pc=   5  RF=[1, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=2
+t=17 pc=   6  RF=[1, 2, x, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=3
+t=19 pc=   7  RF=[1, 2, 3, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=4
+t=21 pc=   8  RF=[1, 2, 3, 4, x, x, x, x] leftOp2=1 rightOp2=1 result3=5
+t=23 pc=   9  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=1
+t=25 pc=  10  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=5 rightOp2=4 result3=1
+t=27 pc=  10  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=9
+t=29 pc=  10  RF=[1, 2, 3, 4, 5, 9, x, x] leftOp2=1 rightOp2=1 result3=1
+\end{verbatim}
+}
+If the two {\tt NOP}s are omitted,
+\begin{verbatim}
+            NOP         ;
+            VAL(0,1)    ;
+            VAL(1,2)    ;
+            VAL(2,3)    ;
+            VAL(3,4)    ;
+            VAL(4,5)    ;
+            ADD(5,4,3)  ;
+            HALT        ;
+            HALT        ;
+\end{verbatim}
+then the processor behaves incorrectly, as follows:
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=1  pc=1023  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=5  pc=   0  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=7  pc=   1  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=9  pc=   2  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=11 pc=   3  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+t=13 pc=   4  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=1
+t=15 pc=   5  RF=[1, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=2
+t=17 pc=   6  RF=[1, 2, x, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=3
+t=19 pc=   7  RF=[1, 2, 3, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=4
+t=21 pc=   8  RF=[1, 2, 3, 4, x, x, x, x] leftOp2=x rightOp2=x result3=5
+t=23 pc=   8  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=x
+t=25 pc=   8  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=1
+\end{verbatim}
+because the operands for the arithmetic operations are not yet in place being delayed on the execution pipe.
+
+$\diamond$
+\end{exemplu}
+
+
+
+To solve the problem of data dependency just emphasized there are used two solutions: stalling and forwarding.
+
+\subsubsection{Stalling}
+
+An inefficient solution, for the execution time, is to stall by introducing a {\tt NOP} instruction between {\tt SUB(2,3,4)} and {\tt ADD(0,2,1)}, thus delaying the use of the content of {\tt rf2} with one clock cycle. Result the following sequence of instructions:
+\begin{verbatim}
+    XOR(5,0,0)  ;
+    VAL(1,12)   ;
+    SUB(2,3,4)  ;
+    NOP         ;
+    ADD(0,2,1)  ;
+    AND(1,1,2)  ;
+\end{verbatim}
+whose execution is illustrated in Table \ref{stall}.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Stalling}
+    \label{stall}
+    {\small
+    {\tt
+    \begin{tabular}{|c||c|c|c|c|c|c|c|c|c|}
+      \hline
+     Instr $\setminus$ Time & t=i & t=i+1 & t=i+2 & t=i+3 & t=i+4 & t=i+5 & t=i+6 & t=i+7 & t=t+8   \\ \hline \hline
+        IF      & XOR0 & VAL0   & SUB0   & NOP0   & ADD0   & AND0   &     &       &         \\ \hline
+        OF      &     & XOR1   & VAL1   & SUB1   & NOP1   & ADD1   & AND1   &         &         \\ \hline
+        EX      &     &       & XOR2   & VAL2   & SUB2   & NOP2   & {\footnotesize {\bf {\em ADD2}}}   & AND2   &       \\ \hline
+        WB      &     &       &       & XOR3   & VAL3   & {\footnotesize {\bf {\em SUB3}}}   & NOP3   & ADD3   & AND3       \\ \hline
+    \end{tabular}
+    }
+    }
+  \end{center}
+\end{table}
+Now, {\tt ADD2} is preceded by {\tt SUB3} and addition is performed takeing into account the result of the subtract operation.
+
+\subsubsection{Reordering}
+
+Sometimes, {\bf but only sometimes}, there is a very simple and efficient solution for data dependency: reordering the instructions in the sequence of instructions. In Example \ref{dataDep}, the instruction {\tt XOR(5,0,0)} can be moved, without affecting the result of running the sequence of instructions, between the instructions {\tt SUB} and {\tt ADD}. as follows:
+\begin{verbatim}
+    VAL(1,12)   ;
+    SUB(2,3,4)  ;
+    XOR(5,0,0)  ;
+    ADD(0,2,1)  ;
+    AND(1,1,2)  ;
+\end{verbatim}
+Thus, the {\tt XOR} instruction is used for stalling instead of the {\tt NOP} instruction, but now the execution time is not affected.
+
+\subsubsection{Forwarding}
+
+By adding hardware, the data dependency can be resolved, {\bf in all cases}, with no time penalty. The solution is to connect {\tt result} not only to the register file input, but also directly to the ALU input when the value just computed is needed for the next instruction. The mechanism is called {\em forwarding} and requires the addition of one input to the  ALU input as left operand or as right operand. But, because there are binary operations (operations with two operands) sometimes both operands arrive to late in the register file to be fetched for the current instruction.
+
+Thus, forwarding control is done by a circuit which analyse the binary code of three successive instructions. Three situations can occur:
+\begin{verbatim}
+    xxxxxx_00001_xxx...x                // identified in PipeReg_3
+    xxxxxx_yyyyy_00001_xxx...x          // identified in PipeReg_2
+\end{verbatim}
+or
+\begin{verbatim}
+    xxxxxx_00001_xxx...x                // identified in PipeReg_3
+    xxxxxx_yyyyy_zzzzz_00001_xxx...x    // identified in PipeReg_2
+\end{verbatim}
+or
+\begin{verbatim}
+    xxxxxx_00001_xxx...x                // identified in PipeReg_3
+    xxxxxx_yyyyy_00001_00001_xxx...x    // identified in PipeReg_2
+\end{verbatim}
+
+\begin{verbatim}
+    xxxxxx_00001_xxx...x                // identified in PipeReg_4
+    xxxxxx_00011_xxx...x                // identified in PipeReg_3
+    xxxxxx_yyyyy_00011_00001_xxx...x    // identified in PipeReg_2
+\end{verbatim}
+
+\begin{verbatim}
+    xxxxxx_00001_xxx...x                // identified in PipeReg_4
+    xxxxxx_00011_xxx...x                // identified in PipeReg_3
+    xxxxxx_yyyyy_00001_00011_xxx...x    // identified in PipeReg_2
+\end{verbatim}
+
+\placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
+
+
+
+The structure of the processor is modified as it is shown in Figure \ref{brDelRed}, where a new level in pipe is added and the operands at  ALU inputs are selected using multiplexors with additional inputs. The selection for the augmented multiplexors are computed combinational as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as operand in the EXECUTE state of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected the  inputs 1  or as {\tt result4} to the inputs 2 to the selection multiplexors at ALU operand inputs. The value of {\tt result3} is used to be forwarded when the dependency is identified with the result of the instructions issued in one clock cycle before the current one. The value of {\tt result4} is used to be forwarded when the dependency is identified with the result of the instructions issued in two clock cycles before the current one.
+
+\begin{exemplu}\label{dataDepSim}
+Data dependency  solved by using forwarding is exemplified starting from Example \ref{dataDepSim}:
+\begin{verbatim}
+            NOP         ;
+            VAL(0,1)    ;
+            VAL(1,2)    ;
+            VAL(2,3)    ;
+            VAL(3,4)    ;
+            VAL(4,5)    ;
+            ADD(5,4,3)  ;
+            HALT        ;
+            HALT        ;
+\end{verbatim}
+Now the processor behaves incorrectly without the aditional {\tt NOP}s, as follows:
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x, x, x, x, x]
+t=1  pc=1023  RF=[x, x, x, x, x, x, x, x]
+t=5  pc=   0  RF=[x, x, x, x, x, x, x, x]
+t=7  pc=   1  RF=[x, x, x, x, x, x, x, x]
+t=9  pc=   2  RF=[x, x, x, x, x, x, x, x]
+t=11 pc=   3  RF=[x, x, x, x, x, x, x, x]
+t=13 pc=   4  RF=[x, x, x, x, x, x, x, x]
+t=15 pc=   5  RF=[x, x, x, x, x, x, x, x]
+t=17 pc=   6  RF=[1, x, x, x, x, x, x, x]
+t=19 pc=   7  RF=[1, 2, x, x, x, x, x, x]
+t=21 pc=   8  RF=[1, 2, 3, x, x, x, x, x]
+t=23 pc=   8  RF=[1, 2, 3, 4, x, x, x, x]
+t=25 pc=   8  RF=[1, 2, 3, 4, 5, x, x, x]
+t=27 pc=   8  RF=[1, 2, 3, 4, 5, 9, x, x]
+\end{verbatim}
+because the operands for the arithmetic operations are now forwarded  using the two multiplexors to the ALU's inputs.
+
+$\diamond$
+\end{exemplu}
+
+
+\subsection{Control Dependency}
+
+The pipelined processor always fetches the instruction immediately after any taken branch.
+
+\begin{exemplu}\label{controlDep}
+Let be the following sequence of instructions which contains a unconditioned (relative) jump:
+\begin{verbatim}
+    i:          XXX     ;
+    i+1:        RJMP(12);
+    i+2: LB(2)  YYY     ;
+    i+3:        UUU     ;
+    i+4:        VVV     ;
+    ...         ...
+    i+j: LB(12) ZZZ     ;
+\end{verbatim}
+Its execution is supposed to be:
+\begin{verbatim}
+    XXX     ;
+    RJMP(12);
+    ZZZ     ;
+\end{verbatim}
+but in our processor it will be:
+\begin{verbatim}
+    XXX     ;
+    RJMP(12);
+    YYY     ;
+    ZZZ     ;
+\end{verbatim}
+because the instruction {\tt YYY} are inserted into the pipe before the execution of the jump instruction completed in {\tt t=i+2} when the jump address is available  (see Table \ref{contrDep}).
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Hazard generated by the control dependency}
+    \label{contrDep}
+    {\small
+    {\tt
+    \begin{tabular}{|c||c|c|c|c|c|c|c|c|}
+      \hline
+     Instr $\setminus$ Time & t=i  & t=i+1 & t=i+2 & t=i+3 & t=i+4 & t=i+5 & t=i+6 & t=i+7  \\ \hline \hline
+        IF                  & XXX0 & RJMP0 & YYY0  & ZZZ0  &       &       &       &        \\ \hline
+        OF                  &      & XXX1  & RJMP1 & YYY1  & ZZZ1  &       &       &        \\ \hline
+        EX                  &      &       & XXX2  & ---- & YYY2   & ZZZ2  &       &        \\ \hline
+        DM                  &       &       &      & XXX3  & ----  & YYY3  & ZZZ3  &        \\ \hline
+        WB                  &      &       &       &       & XXX4  & ----  & YYY4  & ZZZ4   \\ \hline
+    \end{tabular}
+    }
+    }
+  \end{center}
+\end{table}
+
+$\diamond$
+\end{exemplu}
+
+
+\begin{exemplu}
+In the following example the effect of interrupt is illustrated together with  the effect of the control dependency due to the unwanted  execution of {\tt VAL(4,33)} positioned after the {\tt RET{30}} instruction.
+\begin{verbatim}
+            VAL(31,13)      ;
+            VAL(2,23)       ;
+            VAL(0,13)       ;
+            VAL(1,13)       ;
+            EI              ;
+            ADDV(0,0,1)     ;
+            VAL(1,1)        ;
+            VAL(2,222)      ;
+            NOP             ;
+            ADDV(0,0,4)     ;
+            HALT            ;
+            HALT            ;
+            NOP             ;
+// subroutine triggered by interrupt
+            ADDV(30,30,-1)  ;
+            NOP             ;
+            NOP             ;
+            NOP             ;
+            RET(30)         ;
+            VAL(4,33)       ;
+\end{verbatim}
+The result of simulation is:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x, x, x, x, x]       intState=xxx inta=x
+t=1  pc=1023  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
+t=5  pc=   0  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
+t=7  pc=   1  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
+t=9  pc=   2  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
+t=11 pc=   3  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
+t=13 pc=   4  RF=[x, x, x, x, x, x, x, 13]      intState=000 inta=0
+t=15 pc=   5  RF=[x, x, 23, x, x, x, x, 13]     intState=000 inta=0
+t=17 pc=   6  RF=[13, x, 23, x, x, x, x, 13]    intState=001 inta=0
+t=19 pc=   7  RF=[13, 13, 23, x, x, x, x, 13]   intState=010 inta=1
+t=21 pc=  13  RF=[13, 13, 23, x, x, x, 6, 13]   intState=011 inta=0
+t=23 pc=  13  RF=[13, 13, 23, x, x, x, 6, 13]   intState=100 inta=0
+t=25 pc=  13  RF=[13, 13, 23, x, x, x, 6, 13]   intState=000 inta=0
+t=27 pc=  14  RF=[13, 13, 23, x, x, x, 6, 13]   intState=000 inta=0
+t=29 pc=  15  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=31 pc=  16  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=33 pc=  17  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=35 pc=  18  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=37 pc=   5  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=39 pc=   6  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=41 pc=   7  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
+t=43 pc=   8  RF=[13, 13, 23, x, 33, x, 5, 13] 	intState=000 inta=0
+t=45 pc=   9  RF=[14, 13, 23, x, 33, x, 5, 13] 	intState=000 inta=0
+t=47 pc=  10  RF=[14, 1, 23, x, 33, x, 5, 13]   intState=000 inta=0
+t=49 pc=  11  RF=[14, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
+t=51 pc=  11  RF=[14, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
+t=53 pc=  11  RF=[18, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
+t=55 pc=  11  RF=[18, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
+t=57 pc=  11  RF=[18, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
+\end{verbatim}
+}
+The execution of {\tt VAL(4,33)} is obvious at {\tt t=43}. The program syntax does not assume this.
+
+$\diamond$
+\end{exemplu}
+
+
+
+
+
+
+There are few solutions for solving the previously emphasized hazard.
+
+
+\begin{comment}
+\subsubsection{Reducing the Branch Delay}
+
+Instead of deciding in the EXECUTION stage of the pipeline if the branch condition is fulfilled, the decision can be moved in OPS FETCH stage. In Figure \ref{brDelRed} the modified structure is presented. The decision is done by testing if the left operand fetched form the register file is zero or not. The adder and the multiplexor used to compute the jump address are moved one stage up.
+
+Why didn't I opt for this solution from the beginning? Because there is a price for the solution we propose. In the initial structure, the zero value could come from the current operation, which could be a logical or arithmetic function. In the new solution we only test the fact that a variable is zero.
+
+Control dependency now produces a reduced hazard. In Table \ref{contrDep1} we notice that the VVV instruction is no longer inserted parasitically in the pipeline. Now instead of flushing three instruction from the pipe when the branch is taken, the system will flush only two instructions.
+
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Reducing the hazard generated by the control dependency}
+    \label{contrDep1}
+    {\small
+    {\tt
+    \begin{tabular}{|c||c|c|c|c|c|c|c|c|}
+      \hline
+     Instr $\setminus$ Time & t=i  & t=i+1 & t=i+2 & t=i+3 & t=i+4 & t=i+5 & t=i+6  & t=i+7   \\ \hline \hline
+        IF                  & XXX0 & RJMP0 & YYY0  & UUU0  & ZZZ0  &       &        &        \\ \hline
+        OF                  &      & XXX1  & RJMP1 & YYY1  & UUU1  & ZZZ1  &        &          \\ \hline
+        EX                  &      &       & XXX2  & RJMP2 & YYY2  & UUU2  & ZZZ2   &          \\ \hline
+        WB                  &      &       &       & XXX3  & RJMP3 & YYY3  & UUU3   & ZZZ3  \\ \hline
+    \end{tabular}
+    }
+    }
+  \end{center}
+\end{table}
+
+%\placedrawing[H]{F59.lp}{The  change used to reduce hazards imposed by data and control dependencies.}{brDelRed}
+
+
+A possible structural disadvantage of this structure may be due to the additional delay introduced by the circuit that detects the zero value at the left output of the register file.
+
+\end{comment}
+
+
+\subsubsection{Stalling}
+
+By introducing a stall using a {\tt NOP} instruction the sequence of instruction becomes:
+\begin{verbatim}
+    i:          XXX     ;
+    i+1:        RJMP(12);
+    i+2:        NOP     ;
+    i+3: LB(2)  YYY     ;
+    ...         ...
+    i+j: LB(12) ZZZ     ;
+\end{verbatim}
+the execution will be:
+\begin{verbatim}
+    XXX     ;
+    RJMP(12);
+    NOP     ;
+    ZZZ     ;
+\end{verbatim}
+This solution results in a branch penalty (the number of stalls introduced during the branch operations in the pipelined processor) of 1 cycle (the  NOP introduced after {\tt RJMP(12)}).
+
+\subsubsection{Reordering}
+
+Sometimes the branch penalty can be reduced by reordering.
+
+Because, in the previous example, the jump is unconditional, which means the execution of the instruction {\tt XXX} does not have implications on the jump instruction, the sequence of instruction can be reordered, as follows:
+\begin{verbatim}
+    i:          RJMP(12);
+    i+1:        XXX     ;
+    i+2: LB(2)  YYY     ;
+    ...         ...
+    i+j: LB(12) ZZZ     ;
+\end{verbatim}
+thus,  executing the instruction {\tt XXX} after jump no penalty is introduced.
+
+\begin{exemplu}
+Reordering is exemplified by the following code:
+\begin{verbatim}
+            NOP         ;
+            VAL(0,-3)   ;
+            NOP         ;
+            NOP         ;
+    LB(1);  NOP         ;
+            NOP         ;
+            BRNZ(0,1)   ;
+            ADDV(0,0,1) ;
+            HALT        ;
+            HALT        ;
+\end{verbatim}
+where the increment of the register 0 is specified out of loop, but is executed associated with each branch.
+The result of simulation is:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x, x, x, x, x]
+t=1  pc=1023  RF=[x, x, x, x, x, x, x, x]
+t=5  pc=   0  RF=[x, x, x, x, x, x, x, x]
+t=7  pc=   1  RF=[x, x, x, x, x, x, x, x]
+t=9  pc=   2  RF=[x, x, x, x, x, x, x, x]
+t=11 pc=   3  RF=[x, x, x, x, x, x, x, x]
+t=13 pc=   4  RF=[x, x, x, x, x, x, x, x]
+t=15 pc=   5  RF=[4294967293, x, x, x, x, x, x, x] 	
+t=17 pc=   6  RF=[4294967293, x, x, x, x, x, x, x] 	
+t=19 pc=   7  RF=[4294967293, x, x, x, x, x, x, x] 	
+t=21 pc=   4  RF=[4294967293, x, x, x, x, x, x, x] 	
+t=23 pc=   5  RF=[4294967293, x, x, x, x, x, x, x] 	
+t=25 pc=   6  RF=[4294967293, x, x, x, x, x, x, x] 	
+t=27 pc=   7  RF=[4294967294, x, x, x, x, x, x, x] 	
+t=29 pc=   4  RF=[4294967294, x, x, x, x, x, x, x] 	
+t=31 pc=   5  RF=[4294967294, x, x, x, x, x, x, x] 	
+t=33 pc=   6  RF=[4294967294, x, x, x, x, x, x, x] 	
+t=35 pc=   7  RF=[4294967295, x, x, x, x, x, x, x] 	
+t=37 pc=   4  RF=[4294967295, x, x, x, x, x, x, x] 	
+t=39 pc=   5  RF=[4294967295, x, x, x, x, x, x, x] 	
+t=41 pc=   6  RF=[4294967295, x, x, x, x, x, x, x] 	
+t=43 pc=   7  RF=[0, x, x, x, x, x, x, x]
+t=45 pc=   8  RF=[0, x, x, x, x, x, x, x]
+t=47 pc=   9  RF=[0, x, x, x, x, x, x, x]
+t=49 pc=   9  RF=[0, x, x, x, x, x, x, x]
+t=51 pc=   9  RF=[1, x, x, x, x, x, x, x]
+t=53 pc=   9  RF=[1, x, x, x, x, x, x, x]
+t=55 pc=   9  RF=[1, x, x, x, x, x, x, x]
+\end{verbatim}
+}
+
+
+$\diamond$
+\end{exemplu}
+
+
+\subsubsection{Static Branch Prediction}
+
+Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction presumes that backward branches will be taken and that forward branches will not.
+
+In this case, most of the predictions will be correct. Indeed, if we have a jump back to execute a loop that repeats $n$ times, then once in $n+1$ situations the prediction will have to be corrected.
+
+\begin{exemplu}
+A backward branch is one that has a target address that is lower than its own address. For example,
+it  refers to the following type of loop:
+\begin{verbatim}
+    i:          VAL(1,23)   ;
+    i+1:        VAL(2,1)    ;
+    i+2:  LB(3) SUB(1,1,2)  ;
+    i+3:        NZJMP(1,3)  ;
+    i+4:        NOP         ;
+    i+5:        NOP         ;
+    i+6:        ...
+\end{verbatim}
+This technique can help with prediction accuracy of loops, which are usually backward-pointing branches, and are taken more often than not taken.
+
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+A forward branch is one that has a target address that is higher than its own address. For example,
+it  refers to the following type of loop:
+\begin{verbatim}
+    i:          VAL(1,23)   ;
+    i+1:        VAL(2,1)    ;
+    i+2:        SUB(1,1,2)  ;
+    i+3:        ZJMP(1,2)   ;
+    i+4:        XXX         ;
+                ...
+    i+j: LB(2)  YYY         ;
+\end{verbatim}
+
+
+$\diamond$
+\end{exemplu}
+
+In static prediction, all decisions are made at compile time, before the execution of the program
+
+{\bf Note}: In order to reduce the branch penalty, in the case of unconditional jumps, certain changes can be made in the hardware. For example, the calculation of unconditional jump addresses can be moved to the OP FETCH (OF) level. The execution latency of unconditional jumps is thus reduced by one unit.
+
+\subsubsection{Dynamic Branch Prediction}
+
+Dynamic branch prediction predicts branches based on dynamic information collected at run-time. It requires additional hardware. As examples, I have chosen two of the simplest prediction mechanisms.
+
+\paragraph{Last-time, one-bit predictor}
+is the simplest solution  which uses a two state automaton whose behavior is described in Figure \ref{bp1}. We will code the state {\tt prediction not taken} with 0, and the state {\tt prediction taken} with 1. The automaton is a {\em saturated} 1-bit counter. If is incremented from 0 goes to 1, if is decremented from 1 goes to 0. But if it is incremented from 1, stays in 1, while decremented from 0 stays in 0. This 2-state automaton says whether the branch was recently taken or not. Based on this, the processor fetches the next instruction from the target address or sequential address. If the prediction is wrong, flushes the pipeline and also flips prediction. So, every time a wrong prediction is made, the prediction bit is flipped.
+
+\placedrawing[H]{figures/05b_04_1bit_branch_predictor.lp}{The saturated one-bit up/down counter as last-time branch predictor.}{bp1}
+
+
+This mechanism always mispredicts the last iteration and the first iteration of a loop branch, thus the accuracy for a loop with $N$ iterations is $(100 \times (N-2)/N)\%$. For large values of $N$ the accuracy of the prediction increases, while for small values this mechanism is not very efficient.
+
+
+\paragraph{Two-Bit Counter Based Predictor} is a two-state finite automaton. Its behavior is described in Figure \ref{2bp}. The advantage of the two-bit predictor over a one-bit predictor is that a conditional jump has to deviate twice from what it has done most in the past before the prediction changes. For example, a loop-closing conditional jump is mispredicted once rather than twice.
+
+Each state of the automaton is interpreted as follows:
+\begin{itemize}
+    \item 00: strongly not taken
+    \item 01: weakly not taken
+    \item 10: weakly taken
+    \item 11: strongly taken
+\end{itemize}
+
+\placedrawing[H]{figures/05b_05_2bit_branch_predictor.lp}{Two-bit saturated counter based predictor.}{2bp}
+
+
+The automaton is a {\em saturated} 2-bit counter. It increments for {\tt actually taken} and decrements  for {\tt actually not taken}. This predictor changes prediction only on two successive mispredictions.
+
+\section{Programming Pipelined Processors}
+
+\begin{exemplu}
+The assembly program, written for the generic version of toyRISC, changes the sign of the number stored in {\tt rf[2]} provides in {\tt rf[3]} -7 and then in {\tt rf[1]} back the value of 7.
+
+\begin{verbatim}
+            VAL(2, 7);
+            CHSGN(3,2);
+            CHSGN(1,3);
+            HALT;
+\end{verbatim}
+
+The perform the same operation in the pipelined version without the forwarding mechanism, the program must take into account the data dependency, is:
+\begin{verbatim}
+            VAL(2, 7);
+            NOP;
+            NOP;
+            CHSGN(3,2);
+            NOP;
+            NOP;
+            CHSGN(1,3);
+            HALT;
+            HALT;
+\end{verbatim}
+
+Adding the forwarding mechanism, the program becomes:
+\begin{verbatim}
+            VAL(2, 7);
+            CHSGN(3,2);
+            CHSGN(1,3);
+            HALT;
+            HALT;
+\end{verbatim}
+
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+The program which establish by {\tt rf[3] = 1} that the content of {\tt rf[0]} is divisible by 4, else {\tt rf[3] = 0}, is:
+
+\begin{verbatim}
+            VAL(0,8);
+            VAL(1,3);
+            AND(2,0,1);
+            NOP;
+            NOP;
+            BRZ(2,22);
+            NOP;
+            RJMP(33);
+            VAL(3,0);
+    LB(22); VAL(3,1);
+    LB(33); HALT;
+            HALT;
+\end{verbatim}
+If it runs  preceded by:
+\begin{verbatim}
+            VAL(0,9);
+\end{verbatim}
+then the result is {\tt rf[3] = 0}, else if it is preceded by:
+\begin{verbatim}
+            VAL(0,8);
+\end{verbatim}
+then the result is {\tt rf[3] = 1}.
+
+The first two {\tt NOP}s in the program are introduced because the forwarding mechanism is implemented only for the operands of the ALU, not for testing the value at the output of the register file by the circuit {\tt zero}. The third {\tt NOP} is due to the control cependency.
+
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+The program which compute in {\tt rf[4]} the mean values stored in {\tt rf[0], rf[1], rf[2], rf[3]} is:
+\begin{verbatim}
+            ADD(4,0,1);
+            ADD(4,4,2);
+            ADD(4,4,3);
+            ASH(4,4);
+            ASH(4,4);
+            HALT;
+            HALT;
+\end{verbatim}
+If it runs  preceded by:
+\begin{verbatim}
+            VAL(0,10);
+            VAL(1,12);
+            VAL(2,3);
+            VAL(3,44);
+\end{verbatim}
+then the result if {\tt rf[4] = 17}.
+
+$\diamond$
+\end{exemplu}
+
+\section{Superscalar Processor}
+
+If the processor is designed with several execution units (for example: one integer ALU, two floating-point units, two load/store units), the potential parallelism thus obtained should be activated at the highest possible level. This means that in each clock cycle a maximum number of resources should be active, if possible all of them.
+
+In this case, the processor, called  {\em superscalar}, can execute instructions in an order imposed by the availability of data and execution units, rather than by their initial sequence in the  program. For example, the {\em PowerPC 970} processor  fetches and decodes up to eight instructions, dispatch up to five to reserve stations (register files), issue up to eight to the execution units and retire up to five per cycle.
+
+\subsection{Register renaming}
+
+The sequence in which the instructions are executed must be strictly respected when there are data dependencies. But when certain independent sequences can be identified, strictly sequential execution is no longer mandatory, especially in the case of a superscalar processor that allows parallelism at the level of instructions. We can apply in such cases the {\em register renaming} technique.
+
+\begin{exemplu}
+Consider this sequence of code running on an out-of-order processor:
+\begin{verbatim}
+    READ(0,4)   ;   // read in rf[0] from the address in rf[4]
+    ADD(0,0,12) ;   // rf[0] <= rf[0] + rf[12]
+    STORE(0,7)  ;   // dataMemory[rf[7]] <= rf[0]
+    READ(0,5)   ;
+    ADD(0,0,6)  ;
+    STORE(0,21) ;
+\end{verbatim}
+The instructions in the last three lines are {\bf independent} of the first three lines. The processor cannot execute {\tt STORE(0,21)} until  {\tt STORE(0,7)} is done.
+We can eliminate this restriction involving in our code a supplementary register, as follows:
+\begin{verbatim}
+    READ(0,4)   ;   // read in rf[0] from the address in rf[4]
+    ADD(0,0,12) ;   // rf[0] <= rf[0] + rf[12]
+    STORE(0,7)  ;   // dataMemory[rf[7]] <= rf[0]
+    READ(2,5)   ;
+    ADD(2,2,6)  ;
+    STORE(2,21) ;
+\end{verbatim}
+The first three instructions involves {\tt rf[0]}, while the last three instructions work on the register {\tt rf[2]}, allowing the last three instructions to be executed in parallel with the first three.
+
+$\diamond$
+\end{exemplu}
+
+
+\subsection{Out-of-Order Execution}
+
+Out-of-order execution  is a mechanism used in  high-performance  processing units to make use efficiently  of instruction cycles. Using this mechanism, a processor executes instructions in an order governed by the availability of input data and execution units, rather than by their original order in a program. Thus the processor  avoids being idle while waiting for the preceding instruction to complete and can, in the meantime, proceed to execution of the next instructions that are able to run immediately and independently.
+The mechanism is efficient for a processor with multiple execution units {\bf with speed difference between instructions}. It is the case of superscalar processor with ISA performing integer and floating-point arithmetic operations. There are also speed difference between arithmetic and logic instructions and memory access instructions.
+
+While in a pipelined scalar processor an instruction is executed in the following steps:
+\begin{enumerate}
+\item Instruction fetch.
+\item Operands fetch, if input operands are available in processor's register file, else the processor stalls until they are available.
+\item The instruction is executed.
+\item The results is write back to the register file.
+\end{enumerate}
+in a superscalar processor the out-of-order execution is requested. It consists of the following steps:
+\begin{enumerate}
+\item Instruction fetch.
+\item Instruction dispatch to an instruction queue (also called instruction buffer or reservation stations).
+\item The instruction waits in the queue until its input operands are available. The instruction can leave the queue before older instructions.
+\item The instruction is issued to the appropriate idle functional unit.
+\item The results are queued.
+\item Only after all older instructions have their results written back to the register file, then this result is written back to the register file.
+\end{enumerate}
+
+The benefit of out-of-order execution processing grows as the instruction pipeline deepens and the speed difference between main memory or cache memory and the processor widens. On modern machines, the processor runs few times faster than the cache memory and many times faster then system memory, so during the time an in-order processor  waits for data, a large number of instructions could be executed.
+
+\begin{exemplu}\label{warwaw}
+In the following sequence of instructions (see \cite{Patterson2}, p. 185):
+\begin{verbatim}
+    DIV(0,2,4)  ;
+    ADD(6,0,8)  ;
+    STR(6,1)    ;   // store
+    SUB(8,9,7)  ;
+    MUL(6,9,8)  ;
+\end{verbatim}
+here are the following dependencies:
+\begin{enumerate}
+    \item between ADD and SUB if SUB finishes before ADD starts (a WAR hazard) is an antidependence
+    \item between ADD and MUL if ADD finishes later than MUL (WAW hazard) is an output dependence
+    \item between DIV and ADD a true data dependency (a RAW hazard)
+    \item between SUB and MUL a true data dependency (a RAW hazard)
+    \item between ADD and STORE a true data dependency (a RAW hazard)
+\end{enumerate}
+First, let us apply register renaming technique involving two additional registers, {\tt rf(10)} and {\tt rf(11)}:
+\begin{verbatim}
+    DIV(0, 2, 4)    ;
+    ADD(10,0, 8)    ;
+    STR(10,1)       ;
+    SUB(11,9, 7)    ;
+    MUL(6, 9, 11)   ;
+\end{verbatim}
+Any WAR and WAW dependencies are now removed statically by the compiler. For RAW dependency the forwarding mechanism works but only in a processor with one integer ALU. What can be done for a superscalar processor with floating point arithmetic?
+
+$\diamond$
+\end{exemplu}
+
+The hardware added for out-of-order execution is big sized and complex. With the increase in the number of pipeline levels, the costs (area plus complexity in use) increase. Multiprocessing and multithreading will allow more efficient alternative solutions.
+
+\subsubsection{Floating-point representation of real numbers}
+
+To expand the range in which the numbers are represented, the following form is used:
+$$N = sgn(1 + frac) \times 2^{exp - 127}$$
+where:
+$$sgn \in \{-,+\} = \{0,1\}$$
+$$frac \in [0, 1)$$
+$$exp \in [0,255]$$
+The binary representation is:
+$$\langle sgn | exp | frac \rangle$$
+For example the 32-bit version:
+$$0\_10000001\_10000000000000000000000$$
+represents the number: $+ (1+0.5) \times 2^{129-127} = 6$
+
+More at: \url{https://www.geeksforgeeks.org/ieee-standard-754-floating-point-numbers/}
+
+For the purpose we are pursuing, it is enough to understand that the operation with represented floating-point numbers involves a pipeline or a sequence of elementary operations of one clock cycle. The number of cycles will be different depending on the operation, minimum for addition and maximum for division.
+
+\subsubsection{Tomasulo's Algorithm}
+
+The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers. For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for whole or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \cite{Patterson3}:
+\begin{itemize}
+    \item Op—The operation to perform on source operands S1 and S2.
+\item Qj, Qk—The reservation stations that will produce the corresponding source
+operand; a value of zero indicates that the source operand is already available
+in Vj or Vk, or is unnecessary.
+\item Vj, Vk—The value of the source operands. Note that only one of the V fields or
+the Q field is valid for each operand. For loads, the Vk field is used to hold the
+offset field.
+\item A—Used to hold information for the memory address calculation for a load or
+store. Initially, the immediate field of the instruction is stored here; after the
+address calculation, the effective address is stored here.
+\item Busy—Indicates that this reservation station and its accompanying functional
+unit are occupied.
+\end{itemize}
+while the register file has a field, Qi:
+\begin{itemize}
+    \item Qi—The number of the reservation station that contains the operation whose
+result should be stored into this register. If the value of Qi is blank (or 0), no currently active instruction is computing a result destined for this register, meaning that the value is simply the register contents.
+\end{itemize}
+
+\section{Problems}
+
+\subsection{}
+
+\subsection{}
+%\placedrawing{IMEC.lp}{}{} 

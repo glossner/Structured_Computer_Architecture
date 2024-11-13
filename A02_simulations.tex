@@ -1,0 +1,163 @@
+\chapter{Simulations}
+
+\begin{comment}
+\section{Waveforms Generator}\label{waveForm}
+
+Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs. These waveforms can be configured according to the simulated process or have the periodic shape of a clock used to synchronize the operation of the circuit.
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name: waveFormGenerator.sv
+Circuit name: no circuit, only wave formes
+Description: two waveforms are generated, a "random" one and a periodical
+             one: a clock signal
+*************************************************************************/
+module waveFormGenerator();
+    logic randomWave;
+    logic clock     ;
+
+    initial begin       randomWave = 0  ;
+                    #2  randomWave = 1  ;
+                    #6  randomWave = 0  ;
+                    #4  randomWave = 1  ;
+                    #8  randomWave = 0  ;
+                    #5  $stop           ;
+            end
+    initial begin               clock = 0       ;
+                    forever #2  clock = ~clock  ;
+            end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+By simulating the {\tt waveFormGenerator.sv} module, the behavior represented in Figure \ref{wave} results.
+
+
+\placedrawing[H]{waveSim.lp}{Waveforms generated for a Vivado System Verilog simulation}{wave}
+
+\end{comment}
+
+\section{Combo Simulations}
+
+\subsection{ALU Simulation}\label{aluSim}
+
+The simplest behavioral design of an 8-function ALU is listed in the following module:
+
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      alu.sv
+Circuit name:   arithmetic and logic unit
+Description:    the circuit selects, using the selection code 'func', one
+                of the 8 functions
+*************************************************************************/
+module ALU(input    logic         crIn          ,
+            input   logic [2:0]   func          ,
+            input   logic [31:0]  left, right   ,
+            output  logic         crOut         ,
+            output  logic [31:0]  out           );
+
+  always_comb case(func)
+                3'b000: {crOut, out} = left + right + crIn;     //add
+                3'b001: {crOut, out} = left - right - crIn;     //sub
+                3'b010: {crOut, out} = {1'b0, left & right};    //and
+                3'b011: {crOut, out} = {1'b0, left | right};    //or
+                3'b100: {crOut, out} = {1'b0, left ^ right};    //xor
+                3'b101: {crOut, out} = {1'b0, ~left};           //not
+                3'b110: {crOut, out} = {1'b0, left};            //left
+                3'b111: {crOut, out} = {1'b0, left >> 1};       //shr
+                default {crOut, out} = 33'b0 - 1'b1;
+            endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+The elaborated design provided by the Vivado tool based on the previous System Verilog is represented in Figure \ref{aluSIM}.
+
+\placedrawing[h]{figures/B1_01_aluSim.lp aluSim.lp}{}{aluSIM}
+
+
+\section{Memory Simulations}
+
+
+
+\subsection{Pipelined Three Number Adder}\label{pipe3adder}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      pipelinedThreeAdder.sv
+Circuit name:   pipelined Three Input Adder
+Description:    The module 'threeAdder' has 3 4-bit inputs and one 4-bit
+                output. The circuit adds modulo 16 three numbers;
+                do not provide carry output
+*************************************************************************/
+module pipelinedThreeAdder( output  logic [3:0] out     ,
+                            input   logic [3:0] in0     ,
+                            input   logic [3:0] in1     ,
+                            input   logic [3:0] in2     ,
+                            input   logic       clock   );
+    logic [3:0] syncReg ;
+    logic [3:0] pipeReg ;
+    logic [3:0] sum     ;
+
+    adder   inAdder(    .out(sum    ),
+                        .in0(in0    ),
+                        .in1(in1    )),
+            outAdder(   .out(out    ),
+                        .in0(syncReg),
+                        .in1(pipeReg));
+    always_ff @(posedge clock)  begin   syncReg <= in2  ;
+                                        pipeReg <= sum  ;
+                                end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\placedrawing[h]{figures/B1_02_pipeEx.lp}{}{pipeEX}
+
+\subsection{{\em Read-During-Write} Register File}\label{fastregFile}
+
+In the design of the pipeline processor with forwarding mechanism, a register file that provides the currently written value at the output proved useful. The register file version that provides {\em read-during-write} facility requires an additional structure that performs comparison and multiplexing operations (see Figure \ref{fastregfile} obtained following the project described in the following module).
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      fastRegFile.sv
+Circuit name:   Register File
+Description:    Three-pport, 32 32-bit words implemented with a
+                synchronous RAM
+*************************************************************************/
+module fastRegFile( output  logic [31:0]    leftOut     ,
+                    output  logic [31:0]    rightOut    ,
+                    input   logic [31:0]    in          ,
+                    input   logic [4:0]     leftAddr    ,
+                    input   logic [4:0]     rightAddr   ,
+                    input   logic [4:0]     destAddr    ,
+                    input   logic           we          ,
+                    input   logic           clock       );
+    logic [31:0]    rf[0:31]    ;
+
+    always_ff @(posedge clock) if (we) rf[destAddr] <= in   ;
+
+    assign leftOut  =
+        ((destAddr == leftAddr) && we) ? in : rf[leftAddr]  ;
+    assign rightOut =
+        ((destAddr == rightAddr) && we) ? in : rf[rightAddr];
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\placedrawing[h]{figures/B1_03_fast_reg_file.lp  frf.lp}{}{fastregfile}
+
+

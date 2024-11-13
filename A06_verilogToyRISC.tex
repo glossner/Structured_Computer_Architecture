@@ -1,0 +1,569 @@
+\chapter{ToyRISC Design}\label{toyRiscDesign}
+
+\minitoc
+
+The organization of the simple executive processor {\bf {\em toyRISC}} (described in {\tt toyRISC.v} module of the design listed in Figure \ref{cod2}) is given in Figure \ref{fig43}, where two simple automata, the {\bf RALU} ({\bf R}egisters with {\bf A}rithmetic-{\bf L}ogic {\bf U}nit)
+subsystem  and  the {\bf Control} subsystem  are loop connected thus closing the 3rd loop which allow the emergence of the processing function. The only complex subsystems are two small modules: the decode circuit (described in {\tt Decode.v} and the interrupt automaton, {\tt intSect.v}.
+
+\section{Code}
+
+The design has a multi-level organization
+
+\subsection{First Level}
+
+The top level
+
+\placedrawing[H]{figures/C1.lp}{{\tt 01\_theSystem}}{cod1}
+
+\subsection{Second Level}
+
+\placedrawing[H]{figures/C2.lp}{{\tt 02\_toyRISC}}{cod2}
+
+\placedrawing[H]{figures/C3.lp}{{\tt 02\_memories}}{cod3}
+
+\subsection{Third Level}
+
+\placedrawing[H]{figures/C5.lp}{{\tt }}{cod5}
+
+\placedrawing[H]{figures/C6.lp}{{\tt }}{cod6}
+
+\placedrawing[H]{figures/C4.lp}{{\tt }}{cod4}
+
+\placedrawing[H]{figures/C7.lp}{{\tt }}{cod7}
+
+\placedrawing[H]{figures/C8.lp}{{\tt }}{cod8}
+
+\subsection{Fourth Level}
+
+\placedrawing[H]{figures/C12.lp}{{\tt }}{cod12}
+
+\placedrawing[H]{figures/C9.lp}{{\tt }}{cod9}
+
+\placedrawing[H]{figures/C10.lp}{{\tt }}{cod10}
+
+\placedrawing[H]{figures/C11.lp}{{\tt }}{cod11}
+
+\section{Assembly}\label{assembly}
+
+{\footnotesize
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog]
+/************************************************************************
+File name: 00_toyRISCcodeGenerator.v
+Description:
+************************************************************************/
+    reg [5:0]   RISCopCode          ;
+    reg [4:0]   RISCdest            ;
+    reg [4:0]   RISCleft            ;
+    reg [4:0]   RISCright           ;
+    reg [10:0]  RISCvalue           ;
+    reg [6:0]   RISCaddrCounter     ;
+    reg [6:0]   RISClabelTab[0:128] ;
+
+    `include "0_ISAdefine.vh"
+
+    task hendLine;
+        begin
+            dut.MEMORIES.PROG_MEM.progMem[RISCaddrCounter] =
+                {   RISCopCode  ,
+                    RISCdest    ,
+                    RISCleft    ,
+                    RISCright   ,
+                    RISCvalue   }                   ;
+            RISCaddrCounter = RISCaddrCounter + 1   ;
+        end
+    endtask
+
+    // sets RISClabelTab in the first pass associating
+    // 'RISCaddrCounter' with 'labelIndex'
+    task LB ;
+        input [4:0] labelIndex;
+
+        RISClabelTab[labelIndex] = RISCaddrCounter;
+    endtask
+    // uses the content of RISClabelTab in the second pass for rjump
+    task ULB;
+        input [4:0] labelIndex;
+
+        {RISCright, RISCvalue}  =
+            RISClabelTab[labelIndex] - RISCaddrCounter;
+    endtask
+    // uses the content of RISClabelTab in the second pass for call
+    task CLB;
+        input [4:0] labelIndex;
+
+        {RISCright, RISCvalue}  =
+            RISClabelTab[labelIndex];
+    endtask
+
+    task HALT;
+        begin   RISCopCode  = `rjmp;
+                RISCdest    = 0     ;
+                RISCleft    = 0     ;
+                RISCright   = 0     ;
+                RISCvalue   = 0     ;
+                hendLine            ;
+        end
+    endtask
+
+    task NOP;
+        begin   RISCopCode  = `nop  ;
+                RISCdest    = 0     ;
+                RISCleft    = 0     ;
+                RISCright   = 0     ;
+                RISCvalue   = 0     ;
+                hendLine            ;
+        end
+    endtask
+
+    task RJMP;
+        input [5:0] label   ;
+
+        begin   RISCopCode  = `rjmp;
+                RISCdest    = 0     ;
+                RISCleft    = 0     ;
+                ULB(label)          ;
+                hendLine            ;
+        end
+    endtask
+
+    task ZJMP;
+        input [4:0] leftAddr;
+        input [5:0] label   ;
+
+        begin   RISCopCode  = `zjmp     ;
+                RISCdest    = 0         ;
+                RISCleft    = leftAddr  ;
+                ULB(label)              ;
+                hendLine                ;
+        end
+    endtask
+
+    task NZJMP;
+        input [4:0] leftAddr;
+        input [5:0] label   ;
+
+        begin   RISCopCode  = `nzjmp    ;
+                RISCdest    = 0         ;
+                RISCleft    = leftAddr  ;
+                ULB(label)              ;
+                hendLine                ;
+        end
+    endtask
+
+    task RET;
+        input [4:0] leftAddr;
+
+        begin   RISCopCode  = `ret      ;
+                RISCdest    = 0         ;
+                RISCleft    = 5'b11111  ;
+                RISCright   = 0         ;
+                RISCvalue   = 0         ;
+                hendLine                ;
+        end
+    endtask
+
+    task AJMP;
+        input [10:0] value  ;
+
+        begin   RISCopCode              = `ajmp;
+                RISCdest                = 0     ;
+                RISCleft                = 0     ;
+                {RISCright, RISCvalue}  = value ;
+                hendLine                        ;
+        end
+    endtask
+
+    task CALL;
+        input [5:0] label   ;
+
+        begin   RISCopCode  = `call;
+                RISCdest    = 0     ;
+                RISCleft    = 0     ;
+                CLB(label)          ;
+                hendLine            ;
+        end
+    endtask
+
+    task BIGV;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `bigv     ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task ADD;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `add      ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task SUB;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `sub      ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task CRADD;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `addcr    ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task CRSUB;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `subcr    ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task LEFTSH; // logic left shift
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+
+        begin   RISCopCode  = `lsh      ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = 5'b0      ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task ARITHSH; // arithmetic shift
+        input [4:0] destAddr;
+        input [4:0] leftAddr;
+
+        begin   RISCopCode  = `ash      ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = 0         ;
+                RISCvalue   = 0         ;
+                hendLine                ;
+        end
+    endtask
+
+    task MOVE;
+        input [4:0] destAddr;
+        input [4:0] leftAddr;
+
+        begin   RISCopCode  = `move ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = 0         ;
+                RISCvalue   = 0         ;
+                hendLine                ;
+        end
+    endtask
+
+    task MULT;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `mult ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 0         ;
+                hendLine                ;
+        end
+    endtask
+
+    task AND;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `bwand    ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 0         ;
+                hendLine                ;
+        end
+    endtask
+
+    task OR;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `bwor ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 0         ;
+                hendLine                ;
+        end
+    endtask
+
+    task XOR;
+        input [4:0] destAddr    ;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `bwxor    ;
+                RISCdest    = destAddr  ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task READ;
+        input [4:0] destAddr;
+        input [4:0] rightAddr;
+
+        begin   RISCopCode  = `read ;
+                RISCdest    = destAddr  ;
+                RISCleft    = 5'b0      ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task STORE;
+        input [4:0] leftAddr    ;
+        input [4:0] rightAddr   ;
+
+        begin   RISCopCode  = `store    ;
+                RISCdest    = 5'b0      ;
+                RISCleft    = leftAddr  ;
+                RISCright   = rightAddr ;
+                RISCvalue   = 11'b0     ;
+                hendLine                ;
+        end
+    endtask
+
+    task VAL;
+        input [4:0]     destAddr;
+        input [15:0]    value   ;
+
+        begin   RISCopCode  = `val              ;
+                RISCdest    = destAddr          ;
+                RISCleft    = 5'b0              ;
+                {RISCright, RISCvalue} = value  ;
+                hendLine                        ;
+        end
+    endtask
+
+    task EINT; // enable interrupt
+        begin   RISCopCode  = `ei   ;
+                RISCdest    = 0     ;
+                RISCleft    = 0     ;
+                RISCright   = 0     ;
+                RISCvalue   = 0     ;
+                hendLine            ;
+        end
+    endtask
+
+    task DINT; // disable interrupt
+        begin   RISCopCode  = `di   ;
+                RISCdest    = 0     ;
+                RISCleft    = 0     ;
+                RISCright   = 0     ;
+                RISCvalue   = 0     ;
+                hendLine            ;
+        end
+    endtask
+
+    // RUNNING
+    initial begin   RISCaddrCounter = 0;
+                    `include "00_toyRISCprogram.v" // first pass
+                    RISCaddrCounter = 0;
+                    `include "00_toyRISCprogram.v" // second pass
+            end
+ \end{lstlisting}
+\end{shaded*}
+}
+
+
+\section{Simulation}
+
+%\pagebreak
+
+{\footnotesize
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog]
+/************************************************************************
+File name: 00_toyRiscSimulator.v
+Description:
+************************************************************************/
+//`include "DEFINES.vh"
+module toyRiscSimulator;
+    reg         reset, interrupt, clk   ;
+    reg [15:0]  intAddr                 ;
+    wire        inta                    ;
+
+    integer i;
+
+    initial begin               clk = 0     ;
+                    forever #1  clk = ~clk  ;
+            end
+
+    `include "00_toyRISCcodeGenerator.v"
+
+    initial for (i=0; i<32; i=i+1)
+        $display("programMemory[%0d] \t = %b",
+                    i, dut.MEMORIES.PROG_MEM.progMem[i]);
+
+    initial
+        begin       reset       = 1         ;
+                    intAddr     = 16'b1111  ;
+                    interrupt   = 0         ;
+            #4      reset       = 0         ;
+            #20     interrupt   = 1         ;
+            #150    begin
+                    // DISPLAY THE CONTENT OF THE REGISTER FILE
+                        for (i=0; i<8; i=i+1)
+                            $display("RF[%0d] \t = %b",
+                            i, dut.PROCESSOR.RALU.regFile.registers[i]);
+                    // DISPLAY THE DATA MEMORY OF HOST
+                        for (i=0; i<8; i=i+1)
+                            $display("dataMemory[%0d] \t = %b",
+                            i, dut.MEMORIES.DATA_MEM.mem[i]);
+                    end
+            #2      $stop   ;
+        end
+
+    theSystem dut(reset, interrupt, intAddr, inta, clk);
+
+    initial begin
+        $monitor
+        ("t=%0d \t pc=%0d \t inta=%0d \t
+        RF[0]=%0d \t RF[1]=%0d\t RF[2]=%0d \t RF[3]=%0d  ...
+        \t RF[31]=%0d",
+         $time,
+         dut.PROCESSOR.Control.pc,
+         dut.PROCESSOR.Control.address,
+         dut.PROCESSOR.inta,
+         dut.PROCESSOR.RALU.regFileIn,
+         dut.PROCESSOR.RALU.regFile.registers[0],
+         dut.PROCESSOR.RALU.regFile.registers[1],
+         dut.PROCESSOR.RALU.regFile.registers[2],
+         dut.PROCESSOR.RALU.regFile.registers[3],
+         dut.PROCESSOR.RALU.regFile.registers[31]);
+    end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\placedrawing[H]{figures/C13.lp}{{\tt }}{cod13}
+
+{\footnotesize
+\begin{verbatim}
+***************************************************************************************
+    The binary form of program provided by 00_toyRISCcodeGenerator.v
+***************************************************************************************
+programMemory[0]     = 01011100000000000000000000001011
+programMemory[1]     = 01011100001000000000000000000001
+programMemory[2]     = 01010100000000000000000000000000
+programMemory[3]     = 11001100000000000000100000000000
+programMemory[4]     = 00001100000000001111111111111111
+programMemory[5]     = 00011100000000000000000000001010
+programMemory[6]     = 00000000000000000000000000000000
+programMemory[7]     = 00000000000000000000000000000000
+programMemory[8]     = 01011100010000000000000000100001
+programMemory[9]     = 00000100000000000000000000000000
+programMemory[10]    = 01011100000000000000000001000010
+programMemory[11]    = 00010100000111110000000000000000
+programMemory[12]    = 00000000000000000000000000000000
+programMemory[13]    = 00000000000000000000000000000000
+programMemory[14]    = 00000000000000000000000000000000
+programMemory[15]    = 00000000000000000000000000000000
+programMemory[16]    = 01011100011000000000000000001101
+programMemory[17]    = 00000000000000000000000000000000
+programMemory[18]    = 00010100000111110000000000000000
+
+***************************************************************************************
+    The result of simulation provided by the monitor run by 00_toyRiscSimulator.v
+***************************************************************************************
+t=0     pc=x     inta=0   RF[0]=x    RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=1     pc=65535 inta=0   RF[0]=x    RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=5     pc=0     inta=0   RF[0]=11   RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=7     pc=1     inta=0   RF[0]=11   RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=9     pc=2     inta=0   RF[0]=11   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=11    pc=3     inta=0   RF[0]=11   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=13    pc=4     inta=0   RF[0]=10   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=15    pc=3     inta=0   RF[0]=10   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=17    pc=4     inta=0   RF[0]=9    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=19    pc=3     inta=0   RF[0]=9    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=21    pc=4     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=23    pc=3     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=24    pc=3     inta=1   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
+t=25    pc=15    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=4
+t=27    pc=16    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=4
+t=29    pc=17    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=31    pc=18    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=33    pc=4     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=35    pc=3     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=37    pc=4     inta=0   RF[0]=7    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=39    pc=3     inta=0   RF[0]=7    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=41    pc=4     inta=0   RF[0]=6    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=43    pc=3     inta=0   RF[0]=6    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=45    pc=4     inta=0   RF[0]=5    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=47    pc=3     inta=0   RF[0]=5    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=49    pc=4     inta=0   RF[0]=4    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=51    pc=3     inta=0   RF[0]=4    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=53    pc=4     inta=0   RF[0]=3    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=55    pc=3     inta=0   RF[0]=3    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=57    pc=4     inta=0   RF[0]=2    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=59    pc=3     inta=0   RF[0]=2    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=61    pc=4     inta=0   RF[0]=1    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=63    pc=3     inta=0   RF[0]=1    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=65    pc=4     inta=0   RF[0]=0    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=67    pc=5     inta=0   RF[0]=0    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
+t=69    pc=10    inta=0   RF[0]=0    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
+t=71    pc=11    inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
+t=73    pc=6     inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
+t=75    pc=7     inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
+t=77    pc=8     inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
+t=79    pc=9     inta=0   RF[0]=66   RF[1]=1   RF[2]=33  RF[3]=13  ...  RF[31]=6
+\end{verbatim}
+}
+
+%\placedrawing[H]{C14.lp}{{\tt }}{cod14}
+
+%\placedrawing[H]{C15.lp}{{\tt }}{cod15} 

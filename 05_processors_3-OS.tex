@@ -1,0 +1,854 @@
+\chapter{Processors: Three-Loop, Third-Order Systems (3-OS)}\label{lect4}
+
+\minitoc
+
+In this lesson we will accelerate the closing of the loops, but we will focus on the third loop that allows us to introduce the concept of the processor exemplified with a simple engine called {\bf {\em toyRISC}}. We will practice the processor concept in the context provided by the fifth loop, the one that defines the computer concept in the currently practiced understanding, that of Reduced Instruction Set Computer (RISC) type computing systems. Only for those interested and familiar with System Verilog HDL, at the end of this text there is an appendix that allows the simulation of the system described in this lesson.
+
+At the level of the third loop, we are at a {\em turning point} where the physical structure of the circuits will meet the informational structure of the programs. The functionality will be determined starting from this point by the circuit-information combination. The interface between structural and informational aspects is provided by the concept of {\bf {\em architecture}} borrowed from the field of construction.
+
+\section{Architecture vs. Organization}
+
+{\small
+ \hfill{
+\begin{minipage}{8cm}
+{\em Architecture: describes what the computer does.
+
+Organization: describes how it does it.}
+\end{minipage}
+}}
+
+\bigskip
+In the beginning it was only the hardware and the software. At some point there was a need for an interface that would provide the software with a more friendly development environment. What it is? If in a suite of hardware implementations the set of instructions changes radically with each new version, then the programs written for previous versions are thrown into the trash every time a new hardware version is instantiated. This bad habit is cured with the design, at the beginning of the 1960s, of the IBM System/360. At that moment it was decided that:
+\begin{quote}
+{\em ... to describe the
+attributes of a system as seen by the programmer, i.e., the conceptual structure
+and functional behavior, as distinct from the organization of the data flow and
+controls, the logical design, and the physical implementation.} \cite{Amdahl}
+\end{quote}
+And so the Hardware -- Software duet turned into the Hardware -- Architecture -- Software triplet. Architecture being the short form for Instruction Set Architecture.
+\begin{table}[H]
+  \begin{center}
+    \caption{Architecture vs. Organization.}
+    \label{avso}
+    {\small
+    \begin{tabular}{|p{6cm}|p{6cm}|}
+      \hline
+     {\bf Architecture}                 & {\bf Organization}                                \\ \hline \hline
+     describes what the computer does   & describes how it does it                          \\ \hline
+     deals with the functional behavior & deals with a structural relationship              \\ \hline
+     architecture is fixed first        & organization is decided after     \\ \hline
+     comprises instruction sets, registers, data types, and addressing modes & consists of  multiplexors, adders, multipliers, peripherals, memories, ...\\ \hline
+     the software developer is aware of it & it escapes the software programmer’s detection\\ \hline
+    \end{tabular}
+    }
+  \end{center}
+\end{table}
+
+
+
+\section{Processor: Three-Loop, Three-Order System ({\bf 3-OS})}
+
+There are several ways to close the third loop over a generic 2-OS represented by an automaton in order to obtain the generic structure o a {\bf processor}. On the closed loop over an automaton we can connect a 0-OS (a combinational circuit), a 1-OS (a memory), or a 2-OS (an automaton). The last version is the most significant (see Figure \ref{fig40}). It is the subject of this lesson.
+
+The two machines that configure a processor have distinct functions:
+\begin{itemize}
+\item functional automaton that performs data processing functions; it is a simple automaton
+
+\item control automaton that ensures the sequential operation of the processor implemented in two possible versions:
+\begin{itemize}
+\item  a complex controller of the type presented in \ref{contrAut}, when, in addition to fetching the instruction from the program memory, it is also necessary to break it down into a sequence of micro-instructions executed by the functional automaton
+\item  a simple controller of the counter type presented in \ref{progCounter}, when it is sufficient to bring the instruction from the program memory because the instruction is simple enough to be executed directly by the functional automaton
+\end{itemize}
+
+\end{itemize}
+
+\placedrawing[H]{figures/05_01_generic_processor.lp}{Generic Processor}{fig40}
+
+The two types of control generate two types of processors, as follows in the next section.
+
+
+
+\subsection{Interpreting Processor (CISC processor)}
+
+The first type of processor, the one that interprets the instruction by decomposing it into a sequence of microinstructions, is represented in Figure \ref{fig41}, where the control is performed with a complex automaton. An instruction can involve complex operations implemented sequentially through a series of micro-instructions sent by the controller to the functional automaton that can send back to the controller flags that can characterize the result of the application of each micro-instruction. For this reason, this processor version is called CISC (Complex Instruction Set Computer).
+
+\placedrawing[H]{figures/05_02_interpreting_processor.lp}{Interpreting Processor}{fig41}
+
+For each instruction the CISC processor must perform:
+\begin{enumerate}
+    \item instruction fetch
+    \item instruction execute
+    \item compute the address for the next instruction
+\end{enumerate}
+so that an instruction is executed in a variable number of at least several clock cycles.
+
+\subsection{Executing Processor (RISC processor)}
+
+The second type of processor is designed in such a way that it executes each instruction in constant time, usually one clock cycle, but no more than two clock cycles. Because each instruction requires fetching it from memory, and some instructions also require writing or reading data from memory, it is necessary to structure the memory into two sub-memories, one for programs and another for data. This results in the structure in Figure \ref{fig42}, where the processor has two access paths to memory resources.
+In this case, the control automaton can only take care of fetching the instructions from the program memory and the functional automaton will execute sufficiently simple instructions to require only one clock cycle to be operated.
+
+How did you get to this way of designing a processor that executes only simple, executable instructions in one clock cycle? Around 1980, the following facts were evident:
+
+\placedrawing[H]{figures/05_03_executing_processor.lp}{Executing Processor}{fig42}
+
+\begin{itemize}
+    \item the frequency with which the instructions of a CISC processor appeared in the programs was very variable: a small number of instructions had a very high frequency of use, and the majority were used with low frequencies
+
+    \item if the instructions were listed in descending order of frequency of use, then a line could be drawn in this list delimiting a set of frequently used instructions that also had the quality of being able to implement the instructions below the line through a suitable sequencing of them
+
+    \item the pleasant surprise was that only simple functions were found above the line
+
+    \item thus, for frequent operations, the effector structure could be imagined to work quickly, and for the less frequent ones, the possibility of their performance is ensured
+\end{itemize}
+
+
+Thus, a RISC processor executes instead of interpreting. Programs represent sequences of simple instructions, which are executed in parallel with the control of their evolution. Indeed, the functional automaton operates on the data while the control automaton calculates the address from which the next instruction will be read.
+Both types of operations fall into the category of simple ones, the fact that it allows us to consider a RISC processor as simple to distinguish it from a CISC one which is complex due to the control automaton.
+
+
+\section{von Neumann Computer Version: Four-Loop, Four-Order System ({\bf 4-OS})}
+
+The two types of processors defined in the previous section were used to define two abstract computer models.
+
+\smallskip
+
+{\bf Historical note}: in the 1940s, the first electronic computers were made in two versions that generated two models for the subsequent evolution. Traditionally, but erroneously, these models are called {\em architectures}. The concept of architecture appeared in the 1960s. For this reason, we will call these concepts {\em abstract models} instead of architectures.
+
+\smallskip
+
+
+\placedrawing[H]{figures/05_04_von_neumann.lp}{The abstract model of computer proposed by  John von Neumann.}{fig44}
+
+The interpretive processor is used in the definition of the {\em von Neumann abstract model}, in which the processor is loop connected to a single memory in which both programs and data are stored (see Figure \ref{fig44}). Thus, a 4-OS is obtained by connecting a 3-OS (Processor) with a 1-OS (Memory).
+
+\section{Harvard Computer Version: Five-Loop, Five-Order System ({\bf 5-OS})}
+
+The Harvard abstract model assumes a fifth loop. The processor together with the program memory forms a 4-OS, and by closing another loop through the data memory, a 5-OS is obtained (see Figure \ref{fig45}).
+
+\placedrawing[H]{figures/05_05_harvard_model.lp}{The Harvard abstract model  of computer.}{fig45}
+
+We will continue to focus, for obvious reasons, on RISC-type processors that allow the implementation of the Harvard abstract model.
+
+\section{{\bf {\em ToyRISC Processor}}}
+
+The executing processor is simpler than an interpreting processor.
+The complexity of computation moves almost completely from the
+physical structure of the processor into the programs executed by
+the processor, because this kind of processor (called Reduced Instruction Set Computer, RISC)  has an organization
+containing mainly simple, recursively defined circuits.
+
+
+\subsection{Organization}
+
+The Harvard abstract model of a RISC executing machine  determines the internal structure of the
+processor to have mechanisms allowing in each clock cycle cu
+address both, the program memory and the data memory. Thus, the
+RALU-type functional automaton, directly interfaced with the data
+memory, is loop-connected with a control automaton designed to
+fetch in each clock cycle a new instruction from the program
+memory. The control automaton does not ``know" the function to be
+performed, it ``knows" how to ``fetch the function" from an external storage
+support, the program memory.
+
+\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}
+
+{\bf Important note}: the organization presented in the following is designed only from the circuit point of view with emphasis on the {\em competence} of the system. In order to maximize the performance the design must apply specific techniques to increase the frequency of the clock cycle. This concern goes beyond the aims of this lecture. We will partially address these issues in the next lesson. Books on the organization and architecture of computing systems deal extensively with issues of maximizing performance. (Books on the architecture and organization of computers written by John Hennessy and David Patterson are recommended  \cite{Hennessy1} \cite{Patterson2}.)
+
+
+In Figure \ref{fig43}, the organization of the processor {\bf {\em toyRISC}} is represented. It contains two simple loop-connected automata, PC and RALU, serially connected with a complex and small section, DCD.
+
+
+
+\subsubsection{PC: a control automaton}
+
+The Control section is a simple functional automaton whose
+state, stored in the register called Program Counter, ({\tt pc}), is used
+to compute in each clock cycle the address in Program Memory from where the next
+instruction is fetched. There are two modes to compute the next
+address: (1) incrementing, with 1 or a signed number, the current
+address, or (2) independently from the
+current value of Program Counter, using a value fetched from an internal
+register or a value generated by the currently executed
+instruction.  More,
+the current {\tt pc+1} can be stored in an internal register when
+the control of the program {\em calls} a  function and a return is
+needed. For all the previously described behaviors the
+combinational circuit {\bf nextPC} (described in {\tt nextPc.v} module of the design presented in Appendix \ref{toyRiscDesign}) is designed to close the loop over the Program Counter register.
+
+
+\subsubsection{RALU: a functional automaton}
+
+The RALU section is also a simple functional automaton whose state is structured as an array of variables and is stored in a Register File (a small memory with two output ports and one input port). In each clock cycle two values are fetched from this memory and are submitted to be operated in the ALU unit. The result is write back in a location selected by a destination address. The
+section accepts data coming form the data memory,
+from the currently executed instruction, or from the {\bf PC}
+automaton, thus closing the 3rd loop.
+
+\subsubsection{DCD: interrupt automaton \& decoder}\label{interrupt}
+
+The DCD section contains an automaton, the interrupt automaton, and a combinational decoder.
+
+In  computers, an interrupt  is a signal for the processor to interrupt currently executing code. If the interrupt is accepted, the processor will suspend its current activities, save its state, and execute the function requested by the interrupt.  This interruption is  temporary, allowing the software to resume normal activities after the program associated to the interrupt finishes.
+
+There are two types of interrupts:
+\begin{itemize}
+\item Hardware interrupts
+when the interrupt signal generated from external devices (for example, in a keyboard if we press a key to do some action this pressing of the keyboard generates a signal that is given to the processor to do action). They are classified into two types:
+\begin{itemize}
+    \item Maskable Interrupt: interrupts that can be delayed when a highest priority interrupt has occurred to the processor.
+
+    \item Non Maskable Interrupt: that cannot be delayed and immediately be serviced by the processor.
+\end{itemize}
+\item Software interrupts generated from internal devices  divided into two types:
+\begin{itemize}
+    \item Normal Interrupts: are caused by the software instructions are called software instructions.
+    \item Exception: an unplanned interruption while executing a program (for example, while executing a program if we got a value that is divided by zero).
+\end{itemize}
+\end{itemize}
+
+In our very simple example we illustrated a maskable hardware interrupt. The circuit {\tt intSect} consists of a finite automaton with two states, {\tt enableInterrupt} and {\tt disableInterrupt}, controlled with the instructions {\tt ei} and {\tt di}. When the system is reset, the machine switches to the {\tt disableInterrupt} state. If the automaton is in the {\tt enableInterrupt} state and the {\tt interrupt} signal is activated, then {\tt inta} (interrupt acknowledge) is generated, the {\tt pc+1} value is saved in {\tt regFile}, to be able to return the program to the point where it was interrupted, and  the instruction from {\tt intAddr} where the program associated with the interruption treatment is located is read. This program ends with an unconditional jump to the address saved in {\tt regFile}.
+
+\bigskip
+
+
+Both, the {\bf PC} automaton and the {\bf RALU} automaton are
+simple, recursively defined automata. The computational complexity
+is completely moved in the code stored inside the program memory.
+
+\subsection{Instruction Set Architecture}
+
+The storage resources on which the ISA definition is based are the following:
+
+\begin{verbatim}
+ reg    [31:0]  programMemory[0:65535]  ;
+ reg    [31:0]  dataMemory[0:1023]      ;
+ reg    [15:0]  pc                      ; // program counter
+ reg    [31:0]  registers[0:31]         ; // register file
+ reg            intEnable               ; // interrupt enable FF
+ \end{verbatim}
+
+
+
+
+ The structure of the arithmetic \& logic instructions have two forms:
+ \begin{itemize}
+    \item {\tt destinationRegiste <= leftOperamd OP rightOperand}
+    \item {\tt destinationRegiste <= leftOperamd OP immediateValue}
+ \end{itemize}
+
+
+\hspace{-5mm}with the  following two formats:
+\begin{verbatim}
+        instruction[31:0] = {opCode[5:0],       // operation code
+                             dest[4:0],         // destination register
+                             left[4:0],         // left operand
+                             right[4:0],        // right operand
+                             noUse[10:0]}
+                            |
+                            {opCode[5:0],
+                             dest[4:0],
+                             left[4:0],
+                             immediate[15:0]}   // value
+\end{verbatim}
+
+
+
+Instruction Set Architecture, ISA, of the {\bf {\em toyRISC}} processor is described in
+the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing system includes at least the following types of instructions:
+\begin{enumerate}
+    \item control instructions
+    \item arithmetic and logic instructions
+    \item memory access instructions
+    \item interrupt control instructions
+\end{enumerate}
+
+\placedrawing[H]{figures/05_07_toy_risc_isa.lp   C0.lp}{toyRISC ISA: {\tt 0\_ISAdefine.vh}.}{toyriscisa}
+
+
+
+The first field of the instruction, {\tt opCode}, contains the information used to determine what is the the action performed by  the current instruction.
+Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign} the entire design is listed. This design is meant to illustrate mainly the competence of the circuits without aiming to reach some performances in execution. In order to maximize the performance, it is necessary to apply special techniques (usually in the category of pipelines) related to the field of quantitative optimization of the organization of the computer system. See more on the quantitative approach in \cite{Hennessy}.
+
+\subsection{Assembly Code}
+
+In order to generate the code executable by the toyRISC processor, a code generator  translates the mnemonics into binary code. In Table \ref{mnem}, the mnemonics used to write assembly programs are listed. In the second column the action performed specified and in the last column the binary codes are listed. The binary code is organized in 5 or 4 fields.  The first field represents the operation code, the second the destination address of the result  in the register file ({\tt ddddd} is the binary code of the actual value when it matters), the third field represents the address for the left operand ({\tt lllll} is the binary code of the actual value when it matters). The least significant 16 bits are organized in 2 fields or in one field. In the first case 5 bits ({\tt rrrrr} is the binary code of the actual value when it matters) represents the address of the right operand and the rest 11 bits have no meaning, while in the second case all the 16 bits represents a value ({\tt vvvvvvvvvvvvvvvv} is the binary code of the actual value when it matters).
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Assembly language mnemonics, their meanings and binary form.}
+    \label{mnem}
+    {\scriptsize
+    {\tt
+    \begin{tabular}{|l|l|l|}
+      \hline
+     Mnemonics & Description & Binary form \\ \hline \hline
+      NOP                       & rf[0] <= rf[0] + 0                            & 110010\_00000\_00000\_00000\_00000000000  \\ \hline
+      RJMP(label)               & pc <= pc + value                              & 000001\_00000\_00000\_vvvvvvvvvvvvvvv     \\ \hline
+      BRZ(left,label)         & pc <= (left = 0) ? pc+immediate : pc+1          & 000010\_00000\_lllll\_vvvvvvvvvvvvvvv     \\ \hline
+      BRNZ(left,label)        & pc <= (left = 0) ?  pc+1 : pc+immediate         & 000011\_00000\_lllll\_vvvvvvvvvvvvvvv     \\ \hline
+      RET                       & pc <= rf[left]                                & 000101\_00000\_lllll\_00000\_00000000000  \\ \hline
+      HALT                      & pc <= pc                                      & 000110\_00000\_00000\_00000\_00000000000  \\ \hline
+      EINT                      & intEnable <= 1 (enable interrupt)             & 001000\_00000\_00000\_00000\_00000000000  \\ \hline
+      DINT                      & intEnable <= 0 (disable interrupt)            & 001001\_00000\_00000\_00000\_00000000000  \\ \hline
+      ADD(dest,left,right)    & rf[dest] <= rf[left] + rf[right]                & 110000\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      SUB(dest,left,right)    & rf[dest] <= rf[left] - rf[right]                & 110001\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      ADDV(dest,left,value)    & rf[dest] <= rf[left] + value                   & 110010\_ddddd\_lllll\_vvvvvvvvvvvvvvv     \\ \hline
+      MULT(dest,left,right)   & rf[dest] <= rf[left] * rf[right]                & 110011\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      MULTV(dest,left,value)   & rf[dest] <= rf[left] * rf[right]               & 110100\_ddddd\_lllll\_vvvvvvvvvvvvvvv     \\ \hline
+      ADDC(dest,left,right)  & rf[dest] <= (rf[left] + rf[right])[32]           & 110101\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      SUBC(dest,left,right)  & rf[dest] <= (rf[left] - rf[right])[32]           & 110110\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      ADDVC(dest,left,value)  & rf[dest] <= (rf[left] + value)[32]              & 110111\_ddddd\_lllll\_vvvvvvvvvvvvvvv     \\ \hline
+      LSH(dest,left)        & rf[dest] <= \{0, rf[left][31:1]\}                 & 111000\_ddddd\_lllll\_00000\_00000000000  \\ \hline
+      ASH(dest,left)        & rf[dest] <= \{rf[left][31],rf[left][31:1]\}       & 111001\_ddddd\_lllll\_00000\_00000000000  \\ \hline
+      MOVE(dest,left)       & rf[dest] <= rf[left]                              & 111010\_ddddd\_lllll\_00000\_00000000000  \\ \hline
+      SWAP(dest,left)       & rf[dest] <= {rf[left][15:0],rf[left][31:16]}      & 111011\_ddddd\_lllll\_00000\_00000000000  \\ \hline
+      NOT(dest,left)        & rf[dest] <= ~rf[left]                             & 111100\_ddddd\_lllll\_00000\_00000000000  \\ \hline
+      AND(dest,left,right)    & rf[dest] <= rf[left \& rf[right]                & 111101\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      OR(dest,left,right)     & rf[dest] <= rf[left] | rf[right]                & 111110\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      XOR(dest,left,right)    & rf[dest] <= rf[left] $\oplus$ rf[right]         & 111111\_ddddd\_lllll\_rrrrr\_00000000000  \\ \hline
+      READ(left)            & read from dataMemory[left]                        & 100000\_00000\_lllll\_00000\_00000000000  \\ \hline
+      LOAD(dest)            & rf[dest] <= dataOut                               & 100111\_ddddd\_00000\_00000\_00000000000  \\ \hline
+      STORE(left,right)     & dataMemory[left] <= rf[right]                     & 101000\_00000\_lllll\_rrrrr\_00000000000  \\ \hline
+      VAL(dest,val)         & rf[dest] <= \{{11{val[20]}}, value\}              & 010111\_ddddd\_00000\_vvvvvvvvvvvvvvv     \\ \hline
+    \end{tabular}
+    }}
+  \end{center}
+\end{table}
+
+\subsubsection{Toy Assembler}
+
+The binary codes in the \ref{mnem} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in System Verilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. A portion of this generator is listed below to illustrate the idea of two-pass encoding; the whole is attached in the \ref{codeGen} section. In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: RISCcodeGenerator.sv
+Circuit name:
+Description:
+************************************************************************/
+    reg [5:0]   opCode          ;
+    reg [4:0]   d               ;
+    reg [4:0]   l               ;
+    reg [4:0]   r               ;
+    reg [15:0]  v               ;
+    reg [9:0]   addrCounter     ;
+    reg [9:0]   labelTab[0:1023];
+
+    `include "DEFINES.vh"
+
+    task endLine; // assemble the executable code line by line
+     begin
+        progMemory[addrCounter][31:0] =
+            {   opCode  ,
+                d       ,
+                l       ,
+                v       }                   ;
+            addrCounter = addrCounter + 1   ;
+     end
+    endtask
+
+    // sets labelTab in the first pass
+    // associating 'counter' with 'labelIndex'
+    task LB ;
+        input [5:0] labelIndex;
+
+        labelTab[labelIndex] = addrCounter;
+    endtask
+    // uses the content of labelTab in the second pass
+    task ULB;
+        input [5:0] labelIndex;
+
+        v = labelTab[labelIndex] - addrCounter;
+    endtask
+
+// CONTROL INSTRUCTIONS
+    task NOP; // no operation
+        begin   opCode  = `addv ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task RJMP; // relative jump
+        input   [15:0]  label   ;
+
+        begin   opCode  = `rjmp ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                ULB(label)      ;
+                endLine         ;
+        end
+    endtask
+
+    task BRZ; // branch if zero
+        input   [4:0]   left    ;
+        input   [9:0]   label   ;
+
+        begin   opCode  = `zbr  ;
+                d       = 5'b0  ;
+                l       = left  ;
+                ULB(label)      ;
+                endLine         ;
+        end
+    endtask
+
+    // ...
+
+
+    task EI; // enable interrupt
+        begin   opCode  = `eint ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    // ...
+
+// ARITHMETIC & LOGIC INSTRUCTIONS
+    task ADD; // addition
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `add          ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    // ...
+
+    task SUBC; // carry from subtract
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `subc         ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    // ...
+
+
+
+    task AND; // bitwise AND
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `bwand        ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    // ...
+
+
+// DATA TRANSFER INSTRUCTIONS
+    task READ; // data read
+        input   [4:0]   left    ;
+
+        begin   opCode  = `read ;
+                d       = 5'b0  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    // ...
+    // RUNNING
+    initial begin   addrCounter = 0;
+                    `include "program.sv" // first pass
+                    addrCounter = 0;
+                    `include "program.sv" // second pass
+            end
+\end{lstlisting}
+\end{shaded*}
+}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[task] taskName; {\bf input} [...:...] inputName; ... {\bf begin} taskBody {\bf end  endtask} : describes the task {\tt taskName} of parameters {\tt inputName} ... which performs the actions defined by {\tt taskBody}.
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+\subsubsection{Simulator}
+
+The simulator used to validate the processor design is described in detail in the \ref{simrisc} section, where the processor was instantiated and the data, {\tt dataMemory}, and program, {\tt ProgMemory} memories were added. The interrupt signal {\tt intIn} has been activated, which will be taken into account immediately by the instruction {\tt DI} will allow it.
+
+
+\subsubsection{Assembly Programs}
+
+\begin{exemplu}\label{exADD}
+Let by a following simple program:
+{\small
+\begin{verbatim}
+            NOP         ;
+            VAL(0,1)    ;
+            VAL(1,2)    ;
+            VAL(2,3)    ;
+            VAL(3,4)    ;
+            VAL(4,5)    ;
+            ADD(0,0,1)  ;
+            ADD(0,0,2)  ;
+            ADD(0,0,3)  ;
+            ADD(0,0,4)  ;
+            HALT        ;
+\end{verbatim}
+}
+The code generator loads in the program memory the following binary form of the program:
+{\small
+\begin{verbatim}
+progMemory[0]    = 11001000000000000000000000000000
+progMemory[1]    = 01011100000000000000000000000001
+progMemory[2]    = 01011100001000000000000000000010
+progMemory[3]    = 01011100010000000000000000000011
+progMemory[4]    = 01011100011000000000000000000100
+progMemory[5]    = 01011100100000000000000000000101
+progMemory[6]    = 11000000000000000000100000000000
+progMemory[7]    = 11000000000000000001000000000000
+progMemory[8]    = 11000000000000000001100000000000
+progMemory[9]    = 11000000000000000010000000000000
+progMemory[10] 	 = 00011000000000000000000000000000
+progMemory[11] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+\end{verbatim}
+}
+The clock period is equal with 2 time units. The program starts at the time unit {\tt t=5} after the 4 time units action of the {\tt reset} signal.
+The value of the program counter and of the first 2 registers in the register file evolve as follows:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x]  ei=x inta=x
+t=1  pc=1023  RF=[x, x, x, x]  ei=0 inta=0
+t=5  pc=   0  RF=[x, x, x, x]  ei=0 inta=0
+t=7  pc=   1  RF=[x, x, x, x]  ei=0 inta=0
+t=9  pc=   2  RF=[1, x, x, x]  ei=0 inta=0
+t=11 pc=   3  RF=[1, 2, x, x]  ei=0 inta=0
+t=13 pc=   4  RF=[1, 2, 3, x]  ei=0 inta=0
+t=15 pc=   5  RF=[1, 2, 3, 4]  ei=0 inta=0
+t=17 pc=   6  RF=[1, 2, 3, 4]  ei=0 inta=0
+t=19 pc=   7  RF=[3, 2, 3, 4]  ei=0 inta=0
+t=21 pc=   8  RF=[6, 2, 3, 4]  ei=0 inta=0
+t=23 pc=   9  RF=[10, 2, 3, 4] ei=0 inta=0
+t=25 pc=  10  RF=[15, 2, 3, 4] ei=0 inta=0
+\end{verbatim}
+}
+
+
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+Let us take an example to show how the interrupt acts. The interrupt is applied from the beginning of the test, but it is enabled only after the instruction {\tt EI} runs.
+
+{\small
+\begin{verbatim}
+            VAL(31,10)  ;
+            VAL(2,23)   ;
+            VAL(0,13)   ;
+            EI          ;
+            ADDV(0,0,2) ;
+            NOP         ;
+            ADDV(0,0,4) ;
+            HALT        ;
+            NOP         ;
+            NOP         ;
+// subroutine triggered by interrupt
+            DI          ;
+            VAL(3,44)   ;
+            RET(30)     ;
+\end{verbatim}
+}
+
+The toy assembler generates in {\tt progMemory} the following executable code:
+
+{\small
+\begin{verbatim}
+progMemory[0]    = 01011111111000000000000000001010
+progMemory[1]    = 01011100010000000000000000010111
+progMemory[2]    = 01011100000000000000000000001101
+progMemory[3]    = 00100000000000000000000000000000
+progMemory[4]    = 11001000000000000000000000000010
+progMemory[5]    = 11001000000000000000000000000000
+progMemory[6]    = 11001000000000000000000000000100
+progMemory[7]    = 00011000000000000000000000000000
+progMemory[8]    = 11001000000000000000000000000000
+progMemory[9]    = 11001000000000000000000000000000
+progMemory[10] 	 = 00100100000000000000000000000000
+progMemory[11] 	 = 01011100011000000000000000101100
+progMemory[12] 	 = 00010100000111100000000000000000
+progMemory[13] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+\end{verbatim}
+}
+The simulation provides:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x]    ei=x inta=x
+t=1  pc=1023  RF=[x, x, x, x]    ei=0 inta=0
+t=5  pc=   0  RF=[x, x, x, x]    ei=0 inta=0
+t=7  pc=   1  RF=[x, x, x, x]    ei=0 inta=0
+t=9  pc=   2  RF=[x, x, 23, x]   ei=0 inta=0
+t=11 pc=   3  RF=[13, x, 23, x]  ei=0 inta=0
+t=13 pc=   4  RF=[13, x, 23, x]  ei=1 inta=1
+t=15 pc=  10  RF=[13, x, 23, x]  ei=0 inta=0
+t=17 pc=  11  RF=[13, x, 23, x]  ei=0 inta=0
+t=19 pc=  12  RF=[13, x, 23, 44] ei=0 inta=0
+t=21 pc=   4  RF=[13, x, 23, 44] ei=0 inta=0
+t=23 pc=   5  RF=[15, x, 23, 44] ei=0 inta=0
+t=25 pc=   6  RF=[15, x, 23, 44] ei=0 inta=0
+t=27 pc=   7  RF=[19, x, 23, 44] ei=0 inta=0
+\end{verbatim}
+}
+
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+Let be a wrong program which runs forever because of an unconditional jump.
+{\small
+\begin{verbatim}
+            VAL(0,3)    ;
+    LB(1);  ADDV(0,0,-1);
+            NOP         ;
+            RJMP(1)     ;
+            HALT        ;
+\end{verbatim}
+}
+The simulation provides:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x] ei=x inta=x
+t=1  pc=1023  RF=[x, x, x, x] ei=0 inta=0
+t=5  pc=   0  RF=[3, x, x, x] ei=0 inta=0
+t=7  pc=   1  RF=[3, x, x, x] ei=0 inta=0
+t=9  pc=   2  RF=[2, x, x, x] ei=0 inta=0
+t=11 pc=   3  RF=[2, x, x, x] ei=0 inta=0
+t=13 pc=   1  RF=[2, x, x, x] ei=0 inta=0
+t=15 pc=   2  RF=[1, x, x, x] ei=0 inta=0
+t=17 pc=   3  RF=[1, x, x, x] ei=0 inta=0
+t=19 pc=   1  RF=[1, x, x, x] ei=0 inta=0
+t=21 pc=   2  RF=[0, x, x, x] ei=0 inta=0
+t=23 pc=   3  RF=[0, x, x, x] ei=0 inta=0
+t=25 pc=   1  RF=[0, x, x, x] ei=0 inta=0
+t=27 pc=   2  RF=[4294967295, x, x, x] ei=0 inta=0
+t=29 pc=   3  RF=[4294967295, x, x, x] ei=0 inta=0
+t=31 pc=   1  RF=[4294967295, x, x, x] ei=0 inta=0
+t=33 pc=   2  RF=[4294967294, x, x, x] ei=0 inta=0
+t=35 pc=   3  RF=[4294967294, x, x, x] ei=0 inta=0
+t=37 pc=   1  RF=[4294967294, x, x, x] ei=0 inta=0
+t=39 pc=   2  RF=[4294967293, x, x, x] ei=0 inta=0
+t=41 pc=   3  RF=[4294967293, x, x, x] ei=0 inta=0
+t=43 pc=   1  RF=[4294967293, x, x, x] ei=0 inta=0
+\end{verbatim}
+}
+
+$\diamond$
+\end{exemplu}
+
+
+\begin{exemplu}
+Let be a  program which works with {\tt dataMemory}.
+{\small
+\begin{verbatim}
+            VAL(0,1)    ;
+            VAL(1,55)   ;
+            STORE(0,1)  ;
+            READ(0)     ;
+            LOAD(2)     ;
+            HALT        ;
+\end{verbatim}
+}
+The simulation provides:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x]   ei=x inta=x
+t=1  pc=1023  RF=[x, x, x, x]   ei=0 inta=0
+t=5  pc=   0  RF=[1, x, x, x]   ei=0 inta=0
+t=7  pc=   1  RF=[1, x, x, x]   ei=0 inta=0
+t=9  pc=   2  RF=[1, 55, x, x]  ei=0 inta=0
+t=11 pc=   3  RF=[1, 55, x, x]  ei=0 inta=0
+t=13 pc=   4  RF=[1, 55, x, x]  ei=0 inta=0
+t=15 pc=   5  RF=[1, 55, 55, x] ei=0 inta=0
+\end{verbatim}
+}
+
+$\diamond$
+\end{exemplu}
+
+
+
+
+\subsection{Time performance}
+
+The longest combinational path in a system using our {\bf {\em
+toyRISC}}, which imposes the minimum clock period, is:
+
+$$T_{clock} = t_{clock\_to\_instruction} + t_{leftAddr\_to\_leftOp}
++ t_{throughALU} + t_{throughMUX} + t_{fileRegSU}$$
+
+Because the system is not buffered the clock frequency depends also by the
+time behavior of the system directly connected with {\bf {\em
+toyRISC}}. In this case $t_{clock\_to\_instruction}$ -- the access
+time of the program memory, related to the active edge of the
+clock -- is an extra-system parameter limiting the speed of our
+design. The internal propagation time to be considered are: the
+read time from the file register ($t_{leftAddr\_to\_leftOp}$ or
+$t_{rightAddr\_to\_rightOp}$), the maximum propagation time
+through ALU (dominated by the time for an 32-bit arithmetic
+operation), the propagation time through a 4-way 32-bit
+multiplexer, and the {\em set-up time} on the file register's data
+inputs. The way from the output of the file register through {\bf
+Next PC} circuit is ``shorter" because it contains a 16-bit adder,
+comparing with the 32-bit one of the ALU.
+
+The increase in speed performance will be illustrated in the next lesson by using pipeline registers.
+
+\section{How is Designed an Instruction Set Architecture}
+
+As we already said, we use the term ISA to refer to the actual
+programmer-visible instruction set. The ISA serves as the boundary
+between the software engineer  and hardware engineer. We will list and comment further on the main characteristics of an ISA \cite{Patterson4}:
+\begin{itemize}
+    \item Class of ISA
+        \begin{itemize}
+            \item register-memory ISAs such as x86, with complex memory access instructions
+            \item load-store ISAs such as ARM, RISC V, with only simple load and store insructions for memory access
+        \end{itemize}
+    \item Memory addressing is byte addressing with two versions:
+        \begin{itemize}
+            \item byte aligned (ex.: ARM) if the object accessed at address A has $s$ bytes, then the  $A mod s = 0$
+            \item with no alignment (ex.: x86 and RISC V) which produces slower access
+        \end{itemize}
+    \item Addressing modes
+        \begin{itemize}
+            \item few simple: register, immediate, displacement, ... (RISC V, ARM)
+            \item many complex: the previous and more (x86)
+        \end{itemize}
+    \item Types and sizes of operands
+        \begin{itemize}
+            \item integer: 8 bit (ASCII), 16 bit (Unicode character), 32-bit (word), 64-bit (double word)
+            \item floats: standard IEEE 754 32-bit floating point and 64-bit floating point
+        \end{itemize}
+    \item Operations:
+        \begin{itemize}
+            \item data transfer
+            \item arithmetic
+                \begin{itemize}
+                    \item integer: add, sub, mult, div, rem, rightShift, ...
+                    \item floats: add, sub, mult, div, rem
+                \end{itemize}
+            \item logic: minimally AND and XOR
+            \item control: jumps, conditional branches, calls, ret, ...
+        \end{itemize}
+    \item Control flow instructions:
+        \begin{itemize}
+            \item RISC V tests the value of a register for conditional branches
+            \item x86 and ARM test flags in a state register
+            \item x86 save the return address from subroutine on a stack memory organized in the main mamory
+        \end{itemize}
+    \item Encoding an ISA:
+        \begin{itemize}
+            \item variable length for x86
+            \item fix length for RISC V and ARM
+        \end{itemize}
+\end{itemize}
+
+
+\section{Problems}
+
+\begin{problem}
+Instal on your computer the design of the toyRISC processor using modules listed in Section \ref{toyRiscDesign}, and run the simple program which loads in the first 4 registers the numbers 11, 22, 33, 44.
+
+$\diamond$
+\end{problem}
+
+{\bf Solution}
+
+The program is:
+{\small
+\begin{verbatim}
+            VAL(0,11)   ;
+            VAL(1,22)   ;
+            VAL(2,33)   ;
+            VAL(3,44)   ;
+            HALT        ;
+\end{verbatim}
+}
+The program generated by {\tt RISCcodeGenerator.sv} is:
+{\small
+\begin{verbatim}
+progMemory[0]    = 01011100000000000000000000001011
+progMemory[1]    = 01011100001000000000000000010110
+progMemory[2]    = 01011100010000000000000000100001
+progMemory[3]    = 01011100011000000000000000101100
+progMemory[4]    = 00011000000000000000000000000000
+progMemory[5]    = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+\end{verbatim}
+}
+The result of simulation is:
+{\small
+\begin{verbatim}
+t=0  pc=   x  RF=[x, x, x, x]
+t=1  pc=1023  RF=[x, x, x, x]
+t=5  pc=   0  RF=[11, x, x, x]
+t=7  pc=   1  RF=[11, x, x, x]
+t=9  pc=   2  RF=[11, 22, x, x]
+t=11 pc=   3  RF=[11, 22, 33, x]
+t=13 pc=   4  RF=[11, 22, 33, 44]
+\end{verbatim}
+}
+
+\begin{problem}
+Add to the list of monitoring signals the last two register in the register file in order to verify the way the interrupt signal is managed. Write a program which contains the subroutine of 5 instruction at the location 20 in the program memory. Enable the interrupt action in the sixth step of the main program. Make also all the necessary adjustment in module {\tt testRISC.sv} to allow verifying the interrupt action.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+The add-prefix function receives the sequence of numbers $[n_0, n_1, \ldots, n_{m-1}]$ and returns $$[n_0, n_0 + n_1, n_0 + n_1 + n_2, \ldots, \sum_0^{m-1} n_i]$$
+Write the program that load in the first 16 registers a sequence of different numbers and compute the add-prefix sequence in the last 16 registers.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}\label{div}
+In registers 0 and 1 are stored the positive integers A an B. Write in assembly the program that compute in register 2 the quotient $A / B$ and 3 the reminder.
+
+{\bf Hint}: subtract as many times as possible B from A counting in 2 successes. In register 3 leave the rest.
+
+$\diamond$
+\end{problem}
+What instruction or instructions should be added to the architecture to simplify the program in Problem \ref{div}?
+
+\begin{problem}
+Load in data memory the first 32 Fibbonacci numbers and then add them in register 3.
+
+
+$\diamond$
+\end{problem}
+
+
+
+
+
+
+
+

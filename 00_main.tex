@@ -1,0 +1,250 @@
+\documentclass[11pt]{book}
+
+\usepackage{lipsum}
+\usepackage{comment}
+\usepackage{verbatim}
+\usepackage{latexcad}  % Position sensitive
+\usepackage[maxfloats=25]{morefloats}
+\usepackage[english]{babel}
+
+\usepackage{graphicx}
+\graphicspath{{}{Images/}}  % Look in ./ and Images/
+
+\usepackage{makeidx}
+\usepackage{mathptmx}
+
+\usepackage{amsfonts}
+\usepackage[hyphens]{url}
+
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+%\usepackage{cmbright}
+%\usepackage{lmodern}
+%\usepackage{epic,eepic}
+%\usepackage{pstricks}
+
+\usepackage{mathptmx, listings, framed, xcolor}
+\definecolor{shadecolor}{rgb}{0.9,0.9,0.9} %code background
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{array}
+
+\usepackage{fancyhdr}
+\usepackage{tocbibind}
+\usepackage{shorttoc}
+\usepackage{minitoc}
+\dominitoc % Initialize mini tables of contents
+
+\setlength{\textheight}{22cm} \setlength{\textwidth}{16cm}
+\topmargin 323mm \advance \topmargin -\textheight \divide
+\topmargin by 4 \advance \topmargin -1.0in \leftmargin 216mm
+\advance \leftmargin -\textwidth \divide \leftmargin by 2 \advance
+\leftmargin -1.0in \oddsidemargin \leftmargin \evensidemargin
+\leftmargin
+
+
+\makeindex
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% DOCUMENT
+%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\pagestyle{fancy}
+\sloppy
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HEADER / FOOTER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\fancyhead{} % Clear all header fields
+%\fancyhead[RO,LE]{\footnotesize \textbf{Gheorghe M. \c{S}tefan: \emph{Structured Computer Architecture}}} % Right on odd pages, left on even pages
+\fancyhead[RO,LE]{\footnotesize \textbf{\emph{Structured Computer Architecture}}} % Right on odd pages, left on even pages
+\fancyhead[LO]{\scriptsize \leftmark} % Chapter title in the left header on odd pages
+\fancyhead[RE]{\scriptsize \leftmark} % Chapter title in the right header on even pages
+\fancyfoot{} % Clear all footer fields
+\fancyfoot[RO]{\footnotesize \thepage} % Right for odd pages
+\fancyfoot[LE]{\footnotesize \thepage} % Left for even pages
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Structured Computer Architecture: \par
+An Order-Based Approach \par From Logic Gates to Parallel Distributed Systems
+}
+\author{{\bf {\em John Glosner, Gheorghe M. \c{S}tefan}}}
+ \date{{{\today \\ \bf {\em -- First Edition  --}}}}
+
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Front matter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagenumbering{roman}
+%\part{FRONT MATTER}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Copyright
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{}
+\addcontentsline{toc}{chapter}{Copyright}
+
+\vspace*{\fill}
+\noindent
+This document was prepared with \LaTeX $\, 2_{\epsilon}$
+
+
+%\section*{Copyright Notice}
+\vspace{2em}
+© 2024 John Glosner, Gheorghe M. \c{S}tefan. This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0).
+
+
+\vspace*{\fill}
+
+
+\sloppy
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preface
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\chapter*{Preface}
+%\addcontentsline{toc}{chapter}{Preface}
+
+%\section*{Forward}
+%\addcontentsline{toc}{section}{Forward}
+
+This textbook arose from an introductory course on Computer Architecture taught at Rivier University in the Fall of 2024. It draws on Gheorghe M. \c{S}tefan's years of teaching Computer Architecture at the University of Bucharest.
+
+Unlike other Computer Architecture textbooks, this book approaches the subject from a Computer Science theoretical perspective. By an ordered approach, we start with the most basic 0-order computing system - one with stateless operations. We then describe computing systems in terms of their loop order progressing order-by-order. Table \ref{tab:orders_of_computing_systems} shows the order of the progression of computing systems.
+
+%***********************************
+% TABLE: Order of Computing Systems
+%***********************************
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.2} % Increase row height for vertical centering
+\begin{tabular}{|>{\centering\arraybackslash}m{2cm} | >{\centering\arraybackslash}m{4cm} | >{\centering\arraybackslash}m{4cm} | >{\centering\arraybackslash}m{4cm}|}
+\hline
+\textbf{Order} & \textbf{Definition} & \textbf{Components} & \textbf{Example} \\ \hline
+
+0-Order & No loops. Stateless systems where output is determined by current input only. & Logic gates (AND, OR, NOT). & Simple combinational circuits, e.g., Multiplexer, adders, ALU. \\ \hline
+
+1st-Order & One loop. Memory Circuits & Flip-flops, latches, registers, RAM, SRAM, ROM. & D flip-flop. \\ \hline
+
+2nd-Order & Two loops. Automata. & Mealy, Moore automaton & Counters, FSMs, ALUs with registers. \\ \hline
+
+3rd-Order & Three loops. Processing units executing instructions. & ALU, control units, registers. & Simple microprocessor, e.g., CPU. \\ \hline
+
+4th-Order & Four loops. Processor plus one Memory & Program and Data in single memory. & von Neumann abstract machine. \\ \hline
+
+5th-Order & Processor with two memories. & Separate Program and Data memories. & Harvard abstract machine. \\ \hline
+
+nth-Order & N loops. Multi-processor systems. & SCAN and REDUCE & TBD \\ \hline
+
+\end{tabular}
+\caption{Orders of Computing Systems}
+\label{tab:orders_of_computing_systems}
+\end{table}
+
+
+Part I of this book is intended for undergraduate study. No specific background is required other than high school mathematics. Part II of this book is designed for senior-level undergraduate students or first-year graduate students.
+
+The Theory of Computing is demonstrated with practical examples. 
+Most of the descriptions of the structures and the simulation of their behavior are written in the System Verilog HDL. Students may install the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}} (\url{}) or use online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}} or jdoodle \footnote{\url{https://www.jdoodle.com}}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Table of Contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{tocdepth}{3}
+\shorttoc{Contents}{1} % Only sections
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table of Contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand*\contentsname{Contents (detailed)}
+\setcounter{tocdepth}{4}
+
+\tableofcontents
+
+\listoffigures
+%\addcontentsline{toc}{chapter}{List of Figures}
+
+\listoftables
+%\addcontentsline{toc}{chapter}{List of Tables}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MAIN DOCUMENT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mainmatter
+\pagenumbering{arabic}
+
+%\renewcommand{\chaptername}{Section}
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{exemplu}{Example}[chapter]
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{problem}{Problem}[chapter]
+\newtheorem{project}{Project}[chapter]
+\newtheorem{simulation}{VeriSim}[chapter]
+\newtheorem{verisum}{SystemVerilogSummary}%[chapter]
+\newtheorem{corollary}{Corollary}[chapter]
+\newtheorem{proof}{Proof}[chapter]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\part{FROM GATES TO PROCESSORS}
+
+%*************************
+% Chapters for Part 1
+%*************************
+\include{01_preliminaries}
+\include{02_combinational_circuits_0-OS}
+\include{03_memory_circuits_1-OS}
+\include{04_automata_2-OS}
+\include{05_processors_3-OS}
+\include{05b_ILP}
+
+
+\part{COMPUTING}
+\include{06_von_neumann_4-OS}
+\include{07_harvard_5-OS}
+\include{08_parallel_computing_N-OS}
+\include{09_open_problems}
+
+
+\clearpage
+\addcontentsline{toc}{part}{APPENDIXES}
+\part*{APPENDIXES}
+
+\appendix
+
+\part*{Appendices}
+
+\include{A01_implementations}
+\include{A02_simulations}
+\include{A03_toyRISCimp}
+\include{A04_pipelinedToyRISCimp}
+\include{A05_pipeForwardToyRISCimp}
+\include{A06_verilogToyRISC}
+\include{A07_verilogFIFO}
+
+
+
+\clearpage
+%\addcontentsline{toc}{chapter}{Bibliography}
+
+\include{99_bibliography} % Bibliography
+
+\clearpage
+%\addcontentsline{toc}{chapter}{Index}
+
+\printindex
+
+\end{document}
+
+

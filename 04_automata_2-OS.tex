@@ -1,0 +1,1323 @@
+\chapter{Automata: Two-Loop, Second-Order Systems (2-OS)}\label{lect3}
+
+\minitoc
+
+In this lesson we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes, that is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
+
+Our final target in this lesson is RALU: {\bf {\em Registers with Arithmetic \& Logic Unit}}.
+
+\section{Definitions}
+
+The typical circuit in 2-OS is the automaton. We will highlight two categories of automata: small \& complex finite automata and large \& simple functional automata.
+
+\subsection{Generic Definition}
+
+We will start with a generic definition because it applies to all kinds of automata introduced in this lecture.
+
+\begin{definition}
+An automaton, A, is defined by the following 5-uple:
+$$A=(X, Y, Q, f, g)$$
+where:
+\begin{description}
+\item[X]: the finite set of input variables \item[Y]: the finite
+set of output variables \item[Q]: the set of state variables
+\item[f]: the state transition function, described by $f:X \times
+Q \rightarrow Q$ \item[g]: the output transition function,  with
+one of the  following  definitions:
+\begin{itemize}
+    \item $g:X \times Q \rightarrow Y$ for the Mealy type automaton
+    \item $g:Q \rightarrow Y$ for the Moore type automaton
+    \item $g(q)=q$ for $Y \equiv Q$, where $q \in Q$ for the half-automaton, symbolized with $A_{1/2}$.
+\end{itemize}
+\end{description}
+At each clock cycle the state of the automaton  switches and the
+output takes the value according to the new state (and the current
+input, in Mealy's approach).
+
+$\diamond$
+\end{definition}
+
+A strict initial automaton is defined by:
+$$A=(X, Y, Q, f, g; q_{0})$$
+and has a special input, called {\bf reset}, used to led the
+automaton in the initial state $q_{0}$. If the automaton is
+initial, the input reset switches the automaton in one,
+specially selected, initial state.
+
+
+\subsection{Size vs. complexity}
+
+The huge {\em size} of the actual circuits implemented on a single
+chip imposes a more precise distinction between {\em simple}
+circuits and {\em complex} circuits. When we can integrated on a
+single chip more than $10^{9}$ components, the size of the circuits
+becomes less important than their complexity. Unfortunately we
+don't make a clear distinction between {\em size} and {\em
+complexity}. We say usually: ``the complexity of a computation is
+given by the size of memory and by the CPU time". But, if we have
+to design a circuit of 100 million transistors it is very important
+to distinguish between a circuit having an uniform structure and a
+randomly structured ones. In the first case the circuit can be
+easy specified, easy described in an HDL, easy tested and so on.
+Otherwise, if the structure is completely random, without any
+repetitive substructure inside, it can be described using only a
+description having a similar dimension with the circuit size. When
+the circuit is small, it is not a problem, but for million of
+components the problem has no solution. Therefore, if the circuit
+is very big, it is not enough to deal only with its size, the most
+important becomes also the degree of uniformity of the circuit.
+This degree of uniformity, the degree of order inside the circuit
+can be specified by its {\bf complexity}.
+
+As a consequence we must distinguish more carefully the concept of
+{\em size} by the concept of {\em complexity}. Follow the
+definitions of these terms with the meanings we will use in this
+book.
+
+\begin{definition}
+The {\bf size} of a digital circuit, $S_{digital \; circuit}$, is
+given by the dimension of the physical resources used to implement
+it.
+
+$\diamond$
+\end{definition}
+
+In order to provide a numerical expression for size we need a more
+detailed definition which takes into account technological
+aspects. In the '40s we counted electronic bulbs, in the '50s we
+counted transistors, in the '60s we counted SSI\footnote{{\em
+Small Size Integrated} circuits} and MSI\footnote{{\em Medium Size
+Integrated} circuits} packages. In the '70s we started to use two
+measures: sometimes the number of transistors or the number of
+2-input gates on the Silicon die and other times the Silicon die
+area. Thus, we propose two numerical measures for the size.
+
+\begin{definition}
+The {\bf gate size} of a digital circuit, $GS_{digital \;
+circuit}$, is given by the total number of CMOS pairs of
+transistors used for building the gates  used to implement it\footnote{Sometimes gate size
+is expressed in the total number of 2-input gates necessary to
+implement the circuit. We prefer to count CMOS pairs of
+transistors (almost identical with the number of inputs) instead
+of equivalent 2-input gates because is simplest. Anyway, both ways
+are partially inaccurate because, for various reasons, the
+transistors used in implementing a gate have different areas.}.
+
+
+$\diamond$
+\end{definition}
+
+This definition of size offers an almost accurate image about the
+silicon area used to implement the circuit, but the effects of
+lay-out, of fan-out and of speed are not catched by this
+definition.
+
+\begin{definition}
+The {\bf area size} of a digital circuit, $AS_{digital \;
+circuit}$, is given by the dimension of the area on silicon used
+to implement it.
+
+$\diamond$
+\end{definition}
+
+The area size is useful to compute the price of the implementation
+because when a circuit is produced we pay for the number of
+wafers. If the circuit has a big area, the number of the circuits
+per wafer is small and the yield is low\footnote{The same number
+of errors make useless  a bigger area of the wafer containing
+large circuits.}.
+
+\begin{definition}\label{circCompl}
+The {\bf algorithmic complexity}  of a  digital circuit, simply
+the {\bf complexity}, $C_{digital \; circuit}$, has the magnitude
+order given by the minimal number of symbols needed to express its
+definition.
+
+$\diamond$
+\end{definition}
+
+Definition \ref{circCompl} is inspired by Gregory Chaitin's definition for the
+algorithmic complexity of a string of symbols \cite{Chaitin '77}. The
+{\em algorithmic complexity} of a string is related to the
+dimension of the smallest program that generates it.  Our $C_{digital
+\; circuit}$ can be associated to the shortest unambiguous circuit description
+in a certain HDL (in the most of cases it is about a behavioral
+description).
+
+\begin{definition}
+A {\bf simple circuit} is a circuit having the complexity
+much smaller than   its size:
+$$C_{simple \; circuit} << S_{simple \; circuit}.$$
+Usually  the complexity of a simple circuit is constant:
+$C_{simple \; circuit} \in O(1)$.
+
+$\diamond$
+\end{definition}
+
+\begin{definition}
+A {\bf complex circuit} is a circuit having the complexity  in
+the same magnitude order with its size:
+$$C_{complex \; circuit} \sim S_{complex \; circuit}$$
+
+$\diamond$
+\end{definition}
+
+\begin{exemplu}
+The following Verilog program describes a {\em complex circuit},
+because the size of its definition (the program) is
+$$S_{def. \; of \; random\_circ} = k_{1} + k_{2} \times
+S_{random\_circ} \in O(S_{random\_circ}).$$
+{\footnotesize
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= ,  morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*********************************************************************************
+File name:      random_circ.sv
+Circuit name:   Example of a complex circuit
+Description:    a small complex network of gates
+*********************************************************************************/
+module random_circ(output   logic f, g,
+                    input    logic a, b, c, d, e);
+   logic     w1, w2;
+
+   and  and1(w1, a, b),
+        and2(w2, c, d);
+   or   or1(f, w1, c),
+        or2(g, e, w2);
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+$\diamond$
+\end{exemplu}
+
+
+\begin{exemplu}
+The following Verilog program describes a {\em simple circuit},
+because the program that define completely the circuit is the same
+for any value of {\em n}.
+{\footnotesize
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*********************************************************************************
+File name:      or_prefixes.sv
+Circuit name:   Example of simple circuit
+Description:    a big simple circuit
+*********************************************************************************/
+ module or_prefixes #(parameter n = 256)
+        (output logic [0:n-1] out,
+         input  logic [0:n-1] in);
+
+    integer k;
+    always_comb  begin  out[0] = in[0];
+                        for (k=1; k<n; k=k+1) out[k] = in[k] | out[k-1];
+                 end
+ endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+The {\em prefixes of OR} circuit consists in {\em n} $OR_{2}$ gates
+connected in a very regular form. The definition is the same for
+any value of {\em n}.\footnote{A short discussion occurs when the
+dimension of the input is specified. To be extremely rigorous, the
+parameter $n$ is expressed using a string o symbols in $O(log \;
+n)$. But usually this aspect can be ignored.}
+
+$\diamond$
+\end{exemplu}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[and, or, xor, not]: are reserved names for predefined circuits which can be instantiated under specific names
+    \item[parameter]: used to define a local parameter
+    \item[integer] k: defined a positive integer
+    \item[for]: defined the well known loop running under the index {\tt k}
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+Composing circuits generate not only biggest structures, but also
+{\em deepest} ones. The depth of the circuit is related with the
+associated propagation time.
+
+\begin{definition}
+The {\em depth} of a combinational circuit is equal with the total
+number of serially connected {\em constant} input gates (usually 2-input gates) on the longest path from inputs
+to the outputs of the circuit.
+
+$\diamond$
+\end{definition}
+
+
+
+At the current technological level the size becomes  less
+important than the complexity, because we can {\em produce}
+circuits having an increasing number of components, but we can
+{\em describe} only circuits having the range of complexity
+limited by our mental capacity to deal efficiently with complex
+representations. The first step to have a circuit is to express
+what it must do in a behavioral description written in a certain
+HDL. If this "definition" is too large, having the magnitude order
+of a huge multi-billion-transistor circuit, we don't have the
+possibility to write the program expressing our desire.
+
+In the domain of circuit design we passed long ago beyond the
+stage of {\em minimizing} the number of gates in a few gates
+circuit. Now, the most important thing, in the
+multi-billion-transistor circuit era, is the {\em ability to
+describe} simple (because we can't
+write huge programs), big (because we can produce more circuits on
+the same area) sized circuits. We must take into consideration that the Moore's Law applies to size not
+to complexity.
+
+
+
+
+\subsection{Taxonomy}
+
+Starting from the generic definition, in Figure \ref{fin_aut} are represented the generic structures of the automata used in digital design.
+
+The structures found in current practice are:
+\begin{description}
+    \item[half automaton]: is an automaton whose output is identical to the internal state (the combinational circuit that transforms the state into the output is missing); the latency of the Y output compared to the X input is one clock cycle
+    \item[Mealy immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending on state and input; the latency of the Y output compared to the X input is zero
+    \item[Moore immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending only by the state; the latency of the Y output compared to the X input is one clock cycle
+    \item[Mealy delayed automaton]: is a Mealy immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is one clock cycle
+    \item[Moore delayed automaton]: is a Moore immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is two clock cycles.
+\end{description}
+Depending on the way the machine is integrated into the system we are designing, we will choose the most suitable version. Latency can sometimes be advantageous.
+
+
+\placedrawing[H]{figures/04_01_automata_types.lp}{{\bf Automata types.} {\small {\bf
+a.} The structure of the half-automaton ($A_{1/2}$), the no-output function
+automaton: the state is generated by the previous state and the
+previous input. {\bf b.} The logic symbol of half-automaton. {\bf
+c.} Immediate Mealy automaton: the output is generated by the
+current state and the current input. {\bf d.} Immediate Moore
+automaton: the output is generated by the current state. {\bf e.}
+Delayed Mealy automaton: the output is generated by the previous
+state and the previous input. {\bf f.} Delayed Moore automaton:
+the output is generated by the previous state.}}{fin_aut}
+
+
+
+We will make another important distinction: that between complex automata and simple ones.
+
+\begin{definition}
+A complex automaton has a description proportional with the number of state it has.
+
+$\diamond$
+\end{definition}
+
+\begin{definition}
+A simple automaton has a description of constant size, independent of the number of its states.
+
+$\diamond$
+\end{definition}
+
+\section{Finite (complex) Automata}
+
+\begin{definition}
+A finite automaton is characterized by $|Q| \in O(1)$, i.e., the size of the set Q is constant and independent on the length of the string of symbols it receives.
+
+$\diamond$
+\end{definition}
+
+We will exemplify with two typical cases: a recognizing automaton and a control automaton.
+
+\subsection{Recognizing automata}
+
+\begin{exemplu}\label{regLang}
+The binary strings $1^{n}0^{m}$, for $n \geq 1$ and $m \geq 1$,
+are recognized by a finite automaton.
+Let's define and design it. The transition diagram defining the
+behavior of the automaton is presented in Figure \ref{rega},
+where the state set $Q$ contains:
+
+\placedrawing[h]{figures/04_02_transition_diagram.lp}{{\bf Transition diagram.} {\small
+The transition diagram for the half-automaton which recognizes
+strings of form $1^{n}0^{m}$, for $n \geq 1$ and $m \geq 1$. Each
+circle represent a state, each (marked) arrow represent a
+(conditioned) transition.}}{rega}
+
+\begin{itemize}
+    \item $q_{0}$ - is the {\em initial} state in which:
+        \begin{itemize}
+            \item if 1 is received, the output is {\tt rec1} and the automaton switches in the state $q_{1}$
+            \item if 0 is received the automaton generate on output {\tt fail} and switches in $q_{3}$
+        \end{itemize}
+    \item $q_{1}$ - in this state at least one 1 was received and
+        \begin{itemize}
+            \item if 1 is received, the output is {\tt rec1} and the state remains the same
+            \item if 0 is received, the output is {\tt rec0} the the state becomes $q_{2}$
+        \end{itemize}
+    \item $q_{2}$ - this state acknowledges a well formed string:
+        \begin{itemize}
+            \item if 1 is received, the output is {\tt fail} and the state switches in $q_{3}$
+            \item if 0 is received, the output is {\tt rec0} and the state remains the same
+        \end{itemize}
+    \item $q_{3}$ - is the  error state because  an incorrect string was; the state remains unconditionally the same until a new {\tt reset} is aplied.
+    received.
+\end{itemize}
+
+
+
+The first step in implementing the structure of the just defined
+automaton is to {\bf assign binary codes} to each state.
+In this stage we have the absolute freedom. Any assignment can be
+used. The only difference will be in the resulting structure but
+not in the resulting behavior.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Transition state table.}
+    \label{table1}
+    \begin{tabular}{|c|c|c||c|c|c|c|}
+      \hline
+     $Q_1$ & $Q_0$& $X$& $Q^+_1$& $Q^+_0$ & $Y_1$ & $Y_0$\\
+     \hline \hline
+   0&       0&     0&        0&       0 & 1  & 1 \\ \hline
+   0&       0&     1&        0&       0 & 1  & 1 \\ \hline
+   0&       1&     0&        0&       1 & 0  & 1 \\ \hline
+   0&       1&     1&        0&       0 & 1  & 1 \\ \hline
+   1&       0&     0&        0&       0 & 1  & 1 \\ \hline
+   1&       0&     1&        1&       1 & 1  & 0 \\ \hline
+   1&       1&     0&        0&       1 & 0  & 1 \\ \hline
+   1&       1&     1&        1&       1 & 1  & 0 \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\placedrawing[h]{figures/04_03_4state_finite_automaton.lp}{{\bf A 4-state finite
+automaton.} {\small The structure of the finite
+automaton used to recognize binary string belonging to the
+$1^{n}0^{m}$ set of strings.}}{aut1}
+
+Let be the codes, symbolized by $Q_1$ and $Q_2$, assigned in square brackets
+in Figure \ref{rega}. For the outputs, the symbols $Y_1$ and $Y_2$ are used with the following meanings:
+\begin{verbatim}
+        rec0: 01
+        rec1: 10
+        fail: 11
+\end{verbatim}
+The input signal is symbolized by $X$.
+
+Results the transition table, for the functions $f$ and $g$, presented in
+Table \ref{table1}. The resulting transition functions the resulting immediate Mealy automaton are:
+$$Q_{1}^{+} = Q_{1} \cdot X = ((Q_{1} \cdot X)')'$$
+$$Q_{0}^{+} = Q_{1} \cdot X + Q_{0} \cdot X' = ((Q_{1} \cdot X)' \cdot (Q_{0} \cdot X'))'$$
+$$Y_1 = (Q_0 \cdot X)'$$
+$$Y_0 = Q_1 \cdot X' = (Q_1' + X)'$$
+
+The circuit is represented in Figure \ref{aut1} in a version using inverted gated
+only. The 2-bit state register is designed by 2 D flip-flops. The
+{\tt reset}  input is applied on the {\em set} input of D-FF1 and
+on the {\em reset} input of D-FF0.
+
+The recognition process begins with the application of the {\tt reset} signal through which the automaton goes to the initial state, $q_0$, coded by $Q_1, Q_0 = 10$. A correct string must start with 1, otherwise the automaton goes to the final state, $q_3$, which signals {\tt fail}. In state $q_1$, the automaton receives 1s, until the first 0 is applied to the input and the automaton passes to state $q_2$ in which it signals, through {\tt rec0}, that the string received is correct. If in state $q_2$ it is received in 1, then the string is cataloged as not belonging to those recognized by blocking the automaton in state $q_3$.
+
+$\diamond$
+\end{exemplu}
+
+Designing a finite automaton using a description in System Verilog HDL involves writing the following files:
+\begin{itemize}
+\item {\tt defines.vh} in which the binary values that the state, input and output variables take are defined
+\item {\tt topAutomaton.sv} in which the module that describes the automaton defining the state register, instantiating the combinational calculation module of the loop, {\tt loopCLC}, and the module {\tt outCLC} that describes the output circuit is defined
+\item {\tt loopCLC.sv} which describes the state transition function
+\item {\tt outCLC.sv} which describes the output transition function.
+\end{itemize}
+
+
+\begin{exemplu}\label{mealySV}
+Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | n,m >0)$, and solve the design using a System Verilog description.
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: defines.vh
+Description: binary codes for input, output and state variables
+************************************************************************/
+// input codes
+    `define a 1'b1
+    `define b 1'b0
+// output codes	
+    `define recA    2'b10 // automaton receives a
+    `define recB    2'b01 // automaton receives b
+    `define fail    2'b00 // automaton failed to receive correct string
+// internal states
+    `define init    2'b10 // initial state
+    `define runA    2'b11 // automaton received at least one b
+    `define runB    2'b01 // automaton received at least one a
+    `define eror    2'b00 // fail state
+\end{lstlisting}
+\end{shaded*}
+}}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: regLang.sv
+Circuit name: Automaton that tecognize the regular language
+                    L = (a^nb^m | n,m >0)
+Description: structural description of the immediate Mealy automaton
+             designed to recognize the language L
+************************************************************************/
+`include "defines.vh"
+module regLang( input   logic       in      ,
+                output  logic [1:0] out     ,
+                input   logic       reset   ,
+                                    clock   );
+    logic [1:0]   state, nextState  ;
+
+    always_ff @(posedge clock) begin: state_register
+        if (reset) 	state   <= `init    ;
+         else       state   <= nextState;
+    end: state_register
+    loopCLC lC( in          ,
+                state       ,
+                nextState   );
+    outCLC oC( 	state   ,
+                in      ,
+                out     );
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:      loopCLC.sv
+Circuit name:   loopCLCimmMealy
+Description:    combinational circuit used to compute the loop for
+                immediate Mealy language L detector automaton
+************************************************************************/
+`include "defines.vh"
+module loopCLC( input   logic         in          ,
+                input   logic [1:0]   state       ,
+                output  logic [1:0]   nextState   );
+
+    always_comb begin: loop_clc
+        case(state)
+            `init   : nextState = (in == `a) ? `runA   : `error ;
+            `runA   : nextState = (in == `a) ? `runA   : `runB  ;
+            `runB   : nextState = (in == `b) ? `runB   : `error ;
+            `error  : nextState = `error                        ;
+        endcase
+    end: loop_clc
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: outCLC.sv
+Circuit name: outputCLCimmMmealy
+Description: combinational circuit used to compute the output for
+             immediate Mealy bcb detector automaton
+************************************************************************/
+`include "defines.vh"
+module outCLC(  input       [1:0]   state   ,
+                input               in      ,
+                output  bit [1:0]   out     );
+
+    always_comb begin: out_clc
+        case(state)
+            `init   : out = (in == `a) ? `recA : `fail   ;
+            `runA   : out = (in == `a) ? `recA : `recB   ;
+            `runB   : out = (in == `a) ? `fail : `recB   ;
+            `error  : out = `fail                        ;
+        endcase
+    end: out_clc
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:      testRegLang.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "defines.vh"
+module testRegLang;
+    logic       in      ;
+    logic [1:0] out     ;
+    logic       reset   ;
+    logic       clock   ;
+
+    initial begin           clock = 0       ;
+                forever #1  clock = ~clock  ;
+            end
+
+    initial begin       reset   = 1 ;
+                        in      = `a;
+                    #2  reset   = 0 ;
+                    #10 in      = `b;
+                    #6  in      = `a;
+                    #8  $finish     ;
+            end
+
+    regLang dut(in      ,
+                out     ,
+                reset   ,
+                clock   );
+
+    initial begin
+        $monitor("t=%0d  clock=%0d  reset=%0d  in=%0d  out=%0d",
+                  $time, clock,     reset,     in,     out);
+    end
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars;
+        #100 $finish;
+    end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+
+
+
+$\diamond$
+\end{exemplu}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[`define]: used to define global variable
+    \item[`include] "fileName.vh" : used to include code already defined
+    \item[`name]: used to assert a name already defined using {\tt `define}.
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+The main point: for any values for $m$ and $n$, the number of states of the finite automaton is constant, equal with 4. But the description of the of the automaton's behavior is proportional with the number of states (see the number of lines of the truth table defining the state transition) and independent by values $m$ and $n$.
+
+\subsection{Control automata}\label{contrAut}
+
+Another use of a finite automaton is to control. Controlling means to send a sequence of commands to a digital systems and to determine the evolution of this sequence according to signals receiving back from the controlled system. Thus, the evolution in the state space depends: (1) on the internal loop of the automat and (2) on the flags received form the controlled system.
+
+\placedrawing[h]{figures/04_04_control_automaton.lp}{{\bf Control Automaton.} {\small The
+functional definition of control automaton. Control means to issue
+commands and to receive back signals (flags) characterizing the
+effect of the command.}}{contr_aut}
+
+In Figure \ref{contr_aut}, a Mealy delayed version is presented. It works as follows:
+\begin{itemize}
+    \item the input {\tt operation[p-1:0]} is a binary code  used to initialize the automaton in $2^p$ different initial states, each associated to a control sequence of commands to be issued to the controlled system
+    \item the inputs {\tt flags[q-1:0]} represent independent bits used to characterise the behavior of the controlled system (for example if an arithmetic operation provided carry)
+    \item the output {\tt command[m-1:0]} represent the command issued in each clock cycle toward the control system; it can be organized in one ore few fields to control different part of the system
+    \item {\tt state[n-1:0]} represent the inner loop of the control automaton
+\end{itemize}
+
+The size of the CLC of this generic version is, in most of cases, to big to be optimally implementable. Indeed, because in the general case a CLC with N inputs is proportional with $2^N$, our CLC could have a size proportional with $2^{p+q+n}$.
+
+But, to our luck, real applications have certain characteristics that allow a drastic simplification of the generic solution. We present it in the Figure \ref{crom}.
+
+\placedrawing[h]{figures/04_05_simplest_controller.lp}{{\bf The simplest Controller.} {\small The Moore version of a control automaton is optimized by: (1) using a multiplexor to select, using MOD and T combined by {\tt clc}, the next state from different sources, (2) using an increment circuit (INC) to compute the most
+frequent next address for CLC, and (3) using a multiplexor to select, using TEST, for each cycle the appropriate flag.}}{crom}
+
+We arrived at the structure in Figure \ref{crom} starting from the following observations:
+\begin{enumerate}
+\item the entry {\tt operation} is taken into account in the calculation of the transition only in certain states, those of initializing a new command sequence
+
+\item the {\tt flags} entries are not all significant in every state
+
+\item the command sequences contain subsequences that are chained unconditionally, a fact that allows their encoding by incrementing
+\end{enumerate}
+
+
+\section{Simple Automata}
+
+A simple automaton has the loop closed through a simple combinatorial circuit. We will provide two examples on our way to build a computing engine.
+
+\subsection{Counters}
+
+\subsubsection{T Flip-Flop}
+
+The smallest and the simplest automaton is a half-automaton with 2 states and one input (see Figure \ref{t_ff}a). What could be the behavior of an automaton with only two internal states (Q and Q') and a single input bit T? The only solution:
+$$Q \Leftarrow T \;? \; Q' : Q$$
+
+\placedrawing[h]{figures/04_06_T_flip_flop.lp}{{\bf The T flip-flop.} {\small {\bf
+a.} It is the simplest automaton because: has 1-bit state register
+(a DF-F), a 2-input loop circuit (one as automaton input and
+another to close the loop), and direct output from the state
+register. {\bf b.} The structure of the T flip-flop: the $XOR_{2}$
+circuits complements the state if $T=1$. {\bf c.} The logic
+symbol.}}{t_ff}
+
+Let us remember on of the XOR's function: commanded inverter. Then the actual structure of the smallest and simplest automaton is represented in Figure \ref{t_ff}b.
+
+The numerical function of the TF-F is 2 modulo counter under the command T. If T=1 then the circuit counts, else it preserves the last state.
+
+\subsubsection{Generic Counter}
+
+The counter is basically a simple half-automaton that has an increment circuit on the reverse connection. Each active edge of the clock loads the incremented state register value into the state register. In real application, the functionality is extended to the following set of operations:
+
+\placedrawing[h]{figures/04_07_counter.lp}{Counter.}{fig38}
+
+\begin{itemize}
+    \item {\tt op = 00 = nop: out <= out}
+    \item {\tt op = 01 = reset: out <= 0}
+    \item {\tt op = 10 = load: out <= in}
+    \item {\tt op = 11 = count: out <= down ? out - 1 : out + 1}
+    \item {\tt down}: 2's complement of {\tt out} to the increment circuit's input
+\end{itemize}
+
+The structure of the generic counter is represented in Figure \ref{fig38}. If the size of the register is of $n$ bits, then the circuit counts modulo $2^n$.
+
+\begin{exemplu}
+Four-bit presetable and reversible counter.
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:    counterDefines.vh
+Circuit name:
+Description:
+************************************************************************/
+    `define nop     3'b000
+    `define reset   3'b001
+    `define load   	3'b010
+    `define up      3'b011
+    `define down   	3'b111
+\end{lstlisting}
+\end{shaded*}
+}}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:    counter.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "counterDefines.vh"
+module counter( output  logic [3:0] out ,
+                input   logic [2:0] op  ,
+                input   logic [3:0] in  ,
+                input   logic       clk );
+
+    always_ff @(posedge clk)    case(op)
+                                   `reset   : out <= 0      ;
+                                   `load    : out <= in     ;
+                                   `up      : out <= out + 1;
+                                   `down    : out <= out - 1;
+                                   default  : out <= out    ;
+                                endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:      testCounter.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "counterDefines.vh"
+module testCounter;
+    logic [3:0] out ;
+    logic [2:0] op  ;
+    logic [3:0] in  ;
+    logic       clk ;
+
+    initial begin           clk = 0     ;
+                forever #1  clk = ~clk  ;
+            end
+
+    initial begin       op = `reset ;
+                        in = 4'b1010;
+                    #2  op = `up    ;
+                    #6  op = `load  ;
+                    #2  op = `up    ;
+                    #10 op = `down  ;
+                    #16 $finish     ;
+            end
+
+    counter dut(out ,
+                op  ,
+                in  ,
+                clk );
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+
+$\diamond$
+\end{exemplu}
+
+\subsection{{\bf {\em Program Counter}}}\label{progCounter}
+
+A specific application of the counter simple automaton is the system used to compute the next address in the process of running a program (see Figure \ref{fig39}). The set of functions, specified on the input {\tt next}, are:
+\begin{itemize}
+    \item {\tt nop: addres <= address} for {\tt halt} instruction
+    \item {\tt rst: address <= 0} for system reset
+    \item {\tt inc: address <= address + 1} for program counter increment
+    \item {\tt rjmp: address <= address + relValue} for relative jump
+    \item {\tt crjmp: address <= (absValue = 0) ? address + relValue : address + 1} for conditioned branch
+    \item {\tt ajmp: address <= absValue} for absolute jump
+\end{itemize}
+
+\placedrawing[H]{figures/04_08_program_counter.lp}{Program Counter.}{fig39}
+
+
+
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:      programCounter.sv
+Circuit name:   Program Counter
+Description:
+************************************************************************/
+module programCounter #(parameter n=32)
+        (   output  logic [31:0]    progAddr,
+            input   logic [2:0]     sel     ,
+            input   logic [31:0]    relValue,
+            input   logic [31:0]    absValue,
+            input   logic           reset   ,
+            input   logic           clock   );
+    logic [31:0]    pc      ;
+    logic [31:0]    nextPC  ;
+
+    always_ff @(posedge clock) if (reset)   pc <= 0     ;
+                                else        pc <= nextPC;
+    always_comb
+     case(sel)
+         3'b000: nextPC = pc                                        ;
+         3'b001: nextPC = pc + relValue                             ;
+         3'b010: nextPC = (absValue == 0) ? pc + relValue : pc + 1  ;
+         3'b011: nextPC = (absValue == 0) ? pc + 1 : pc + relValue  ;
+         3'b100: nextPC = absValue                                  ;
+        default: nextPC = pc + 1                                    ;
+     endcase
+
+     assign progAddr = pc       ; // for pipelined version
+     //assign progAddr = nextPC ; // for non-pipelined version
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\subsection{{\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}}\label{rALU}
+
+If we connect in a loop a register file with a logical-arithmetic unit we will obtain the simplest form of an executive core of a processor (see Figure \ref{ralu}). The external connections of a Register with Arithmetic \& Logic Unit (RALU) type module are:
+\begin{description}
+    \item[{\tt func[3:0]}]: selects one of the maximum 8 functions performed by ALU
+    \item[{\tt carryIn}]: carry input for arithmetic functions (is borrow for subtract)
+    \item[{\tt carryOut}]: carry output for arithmetic function (is borrow for subtract)
+    \item[{\tt in[31:0]}]: data input
+    \item[{\tt load}]: selects data input as left operand for ALU
+    \item[{\tt leftAddr[4:0]}]: selects left output or left operand for ALU when {\tt load = 0}
+    \item[{\tt rightAddr[4:0]}]: selects right output or right operand for ALU
+    \item[{\tt clock}]: is the clock signal active on the positive edge
+    \item[{\tt we}]: write enable for the register file
+    \item[{\tt destAddr[4:0]}]: destination address for the value {\tt out} provided by ALU
+    \item[{\tt leftOut[31:0]}]: left output of RALU
+    \item[{\tt rightOut[31:0]}]: right output of RALU
+\end{description}
+According to the connection list, RALU performs no more than 8 functions, on 32-bit words stored in a 32-word register file.
+
+\placedrawing[h]{figures/04_09_ralu.lp}{32-bit RALU.}{ralu}
+
+In each clock cycle, the function {\tt func} is applied on two operands  selected from the register file and the result, {\tt out}, is loaded back in the register file if {\tt writeEnable = 1}. If {\tt load = 1}, then {\tt leftOp = in}. If {\tt writeEnable = 0}, the content of the register file remains unchanged and the only purpose of the operation is to send toward the external systems the outputs: {\tt carryOut, leftOut, rightOut}.
+
+The code {\tt func} selects the  functions defined in the file {\tt define.vh}:
+
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      define.vh
+Circuit name:
+Description:
+*************************************************************************/
+`define bigv  4'b0001 // rf[dest] = {rf[left][15:0],rf[right][15:0]}
+`define add   4'b0010 // rf[dest] = rf[left] + rf[right]
+`define sub   4'b0011 // rf[dest] = rf[left] - rf[right]
+`define addcr 4'b0100 // rf[dest] = (rf[left] + rf[right])[32]
+`define subcr 4'b0101 // rf[dest] = (rf[left] - rf[right])[32]
+`define lsh   4'b1000 // rf[dest] = rf[left] >> 1
+`define ash   4'b1001 // rf[dest] = {rf[left][31],rf[left][31:1]}
+`define move  4'b1010 // rf[dest] = rf[left]
+`define mult  4'b1011 // rf[dest] = rf[left] * rf[right]
+`define bwand 4'b1101 // rf[dest] = rf[left] & rf[right]
+`define bwor  4'b1110 // rf[dest] = rf[left] | rf[right]
+`define bwxor 4'b1111 // rf[dest] = rf[left] ^ rf[right]
+\end{lstlisting}
+\end{shaded*}
+}
+
+The top module is:
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      RALU.sv
+Circuit name:   register file with arithmetic and logic unit
+Description:
+*************************************************************************/
+module RALU(output  logic [31:0]    leftOut     ,
+            output  logic [31:0]    righttOut   ,
+            output  logic           crOut       ,
+            input   logic [4:0]     leftAddr    ,
+            input   logic [4:0]     rightAddr   ,
+            input   logic [4:0]     destAddr    ,
+            input   logic [31:0]    in          ,
+            input   logic           load        ,
+            input   logic           we          ,
+            input   logic [3:0]     func        ,
+            input   logic           clock       );
+    logic [31:0]    out  ;
+
+    regFile rf( .leftOut    (leftOut    ),
+                .righttOut  (righttOut  ),
+                .in         (out        ),
+                .leftAddr   (leftAddr   ),
+                .rightAddr  (rightAddr  ),
+                .destAddr   (destAddr   ),
+                .we         (we         ),
+                .clock      (clock      ));
+
+    ALU alu(.func   (func               ),
+            .left   (load ? in : leftOut),
+            .right  (righttOut          ),
+            .crOut  (crOut              ),
+            .out    (out                ));
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      regFile.sv
+Circuit name:   Register File
+Description:    Three-pport, 32 32-bit words implemented with a
+                synchronous RAM
+*************************************************************************/
+module regFile( output  logic [31:0]    leftOut     ,
+                output  logic [31:0]    righttOut   ,
+                input   logic [31:0]    in          ,
+                input   logic [4:0]     leftAddr    ,
+                input   logic [4:0]     rightAddr   ,
+                input   logic [4:0]     destAddr    ,
+                input   logic           we          ,
+                input   logic           clock       );
+    logic [31:0]    mem[0:31]   ;
+
+    always_ff @(posedge clock) if (we) mem[destAddr] <= in  ;
+
+    assign leftOut  = mem[leftAddr] ;
+    assign rightOut = mem[rightAddr];
+
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      alu.sv
+Circuit name:   arithmetic and logic unit
+Description:    the circuit selects, using the selection code 'func', one
+                of the 8 functions
+*************************************************************************/
+`include "define.vh"
+module ALU( input   logic [3:0]   func  ,
+            input   logic [31:0]  left  ,
+            input   logic [31:0]  right ,
+            output  logic         crOut ,
+            output  logic [31:0]  out  	);
+    logic [32:0] sum    ;
+    logic [32:0] dif    ;
+
+    assign sum = left + right   ;
+    assign dif = left - right   ;
+    always_comb
+        case(func)
+            `bigv  : {crOut, out} <= {1'b0, left[15:0], right[15:0]};
+            `add   : {crOut, out} <=  sum                           ;
+            `sub   : {crOut, out} <=  dif                           ;
+            `addcr : {crOut, out} <= {32'b0, sum[32]}               ;
+            `subcr : {crOut, out} <= {32'b0, dif[32]}               ;
+            `lsh   : {crOut, out} <= {left[0], left[31:1]}          ;
+            `ash   : {crOut, out} <= {left[31], left[31:1]}         ;
+            `move  : {crOut, out} <= {1'b0, left}                   ;
+            `mult  : {crOut, out} <= {1'b0, left * right}           ;
+            `bwand : {crOut, out} <= {1'b0, left & right}           ;
+            `bwor  : {crOut, out} <= {1'b0, left | right}           ;
+            `bwxor : {crOut, out} <= {1'b0, left ^ right}           ;
+            default {crOut, out} <=  33'b0 - 1'b1                   ;
+        endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+Let us use the RALU unit we just defined to exemplify simple calculations.
+
+\begin{exemplu}\label{ex3.1}
+The following sequence o operations: load two numbers (12 and 5) in register file, add them, divide the result by 4, add with 23, and send out the result on the right output.
+
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Sequence of commands applied to RALU in Example \ref{ex3.1}}
+    \label{raluSeq}
+    \vspace{2mm}
+    %{\small
+    {\tt
+    \begin{tabular}{|c|c|c|c|c|c|c||c|}
+    \hline
+    func &  in & load & leftAddr & rightAddr & we & destAddr & COMMENT          \\ \hline \hline
+    1111 &  xx &  0   &  00000   &  00000    & 1  &  00000   & R0 <= 0          \\ \hline
+    0010 &  12 &  1   &  xxxxx   &  00000    & 1  &  00001   & R1 <= 12+R0      \\ \hline
+    0010 &   5 &  1   &  xxxxx   &  00000    & 1  &  00010   & R2 <= 5+R0       \\ \hline
+    0010 &  xx &  0   &  00001   &  00010    & 1  &  00011   & R3 <= R1+R2      \\ \hline
+    1001 &  xx &  0   &  00011   &  xxxxx    & 1  &  00011   & R3 <= R3/2       \\ \hline
+    1001 &  xx &  0   &  00011   &  xxxxx    & 1  &  00011   & R3 <= R3/2       \\ \hline
+    0010 &  23 &  1   &  xxxxx   &  00011    & 1  &  00011   & R3 <= R3+23      \\ \hline
+    xxxx &  xx &  x   &  xxxxx   &  00011    & 0  &  xxxxx   & rightOut = R3    \\ \hline
+ \end{tabular}
+ }
+ %}
+  \end{center}
+\end{table}
+
+$\diamond$
+\end{exemplu}
+
+
+A more flexible way to test the correctness of the design is to make a simulation.
+
+{\footnotesize
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*******************************************************************************
+File name:      testRALU.sv
+Circuit name:
+Description:
+*******************************************************************************/
+`include "define.vh"
+module testRALU;
+    logic [31:0]    leftOut     ;
+    logic [31:0]    righttOut   ;
+    logic           crOut       ;
+    logic [4:0]     leftAddr    ;
+    logic [4:0]     rightAddr   ;
+    logic [4:0]     destAddr    ;
+    logic [31:0]    in          ;
+    logic           load        ;
+    logic           we          ;
+    logic [3:0]     func        ;
+    logic           clock       ;
+    logic [51:0]    mInstr      ;
+
+    initial begin               clock = 0       ;
+                    forever #1  clock = ~clock  ;
+            end
+
+    RALU dut(   leftOut     ,
+                righttOut   ,
+                crOut       ,
+                leftAddr    ,
+                rightAddr   ,
+                destAddr    ,
+                in          ,
+                load        ,
+                we          ,
+                func        ,
+                clock       );
+
+    // Define MICRO-INSTRUCTION
+    assign {func, destAddr, leftAddr, rightAddr, load, in} = mInstr ;
+
+    initial begin
+            we = 1'b1   ;
+            mInstr = {`move,  5'b00000, 5'b00110, 5'b00111, 1'b1, 32'b1000} ;
+        #2  mInstr = {`move,  5'b00001, 5'b00010, 5'b00010, 1'b1, 32'b1001} ;
+        #2  mInstr = {`move,  5'b00010, 5'b00110, 5'b00111, 1'b1, 32'b1010} ;
+        #2  mInstr = {`move,  5'b00011, 5'b00010, 5'b00010, 1'b1, 32'b1011} ;
+        #2  mInstr = {`add,   5'b00011, 5'b00010, 5'b00001, 1'b0, 32'b111}  ;
+        #2  mInstr = {`sub,   5'b00011, 5'b00010, 5'b00001, 1'b0, 32'b111}  ;
+        #2  mInstr = {`bwand, 5'b00011, 5'b00010, 5'b00001, 1'b0, 32'b111}  ;
+        #2  $finish;
+    end
+
+    initial begin
+        $monitor("t=%0d clock=%b func=%b destAddr=%0d leftAddr=%0d
+                rightAddr=%0d load=%0d in=%0d RF=[%0d, %0d, %0d, %0d]",
+                $time, clock, func, destAddr, leftAddr, rightAddr, load, in,
+                dut.rf.mem[0],
+                dut.rf.mem[1],
+                dut.rf.mem[2],
+                dut.rf.mem[3]);
+        end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+The result of simulation is printed by the monitor defined in the previous test module:
+
+{\footnotesize
+\begin{verbatim}
+t=0  clock=0 func=1010 destAddr=0 leftAddr=6 rightAddr=7 load=1 in=8  RF=[x, x, x, x]
+t=1  clock=1 func=1010 destAddr=0 leftAddr=6 rightAddr=7 load=1 in=8  RF=[8, x, x, x]
+t=2  clock=0 func=1010 destAddr=1 leftAddr=2 rightAddr=2 load=1 in=9  RF=[8, x, x, x]
+t=3  clock=1 func=1010 destAddr=1 leftAddr=2 rightAddr=2 load=1 in=9  RF=[8, 9, x, x]
+t=4  clock=0 func=1010 destAddr=2 leftAddr=6 rightAddr=7 load=1 in=10 RF=[8, 9, x, x]
+t=5  clock=1 func=1010 destAddr=2 leftAddr=6 rightAddr=7 load=1 in=10 RF=[8, 9, 10, x]
+t=6  clock=0 func=1010 destAddr=3 leftAddr=2 rightAddr=2 load=1 in=11 RF=[8, 9, 10, x]
+t=7  clock=1 func=1010 destAddr=3 leftAddr=2 rightAddr=2 load=1 in=11 RF=[8, 9, 10, 11]
+t=8  clock=0 func=0010 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 11]
+t=9  clock=1 func=0010 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 19]
+t=10 clock=0 func=0011 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 19]
+t=11 clock=1 func=0011 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 1]
+t=12 clock=0 func=1101 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 1]
+t=13 clock=1 func=1101 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 8]
+\end{verbatim}
+}
+
+
+
+
+
+
+
+
+\section{Problems}
+
+\subsection{Finite Complex Automata}
+
+\begin{problem}
+Design the finite automaton which recognise the binary strings $a^{n}b^2c^{m}$, for $n \geq 1$ and $m \geq 1$. The input and the output signal are specified in the following file (where the state assignment must be added):
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: defines.vh
+Description: binary codes for input, output and state variables
+************************************************************************/
+// input codes
+    `define a 2'b01
+    `define b 2'b00
+    `define c 2'b10
+// output codes	
+    `define recA    2'b10 // automaton receives a
+    `define recB    2'b01 // automaton receives b
+    `define recC    2'b11 // automaton receives c
+    `define fail    2'b00 // automaton failed to receive correct string
+// internal states
+    // ...
+\end{lstlisting}
+\end{shaded*}
+}}
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Design the interrupt automaton which manage the interrupt process in a processor. The synchronous interaction of a processor with an external event, in its simplest form, is achieved by accepting an interrupt signal, {\tt int}, to which it responds with {\tt inta} ("interrupt acklognement"). Acceptance of the interruption is conditioned by the state {\tt enableState} state in which the interrupt management automaton can be. At {\tt reset}, the automaton goes into the state {\tt disableState}. The {\tt eint} instruction puts the automaton in the {\tt enableState} state, a state in which {\tt inta} can be issued if {\tt int} is received. After issuing {\tt inta}, the automaton generates the signal {\tt flush} which blocks the update of the processor state for a number of cycles, number that depends on the depth of the execution pipe (3, in the considered case). At the end of {\tt flush} signal the automaton switches in the  {\tt disableState}. Instruction {\tt dint} sends the automaton in the {\tt disableState} state.
+\begin{enumerate}
+    \item Draw the graph of the automaton whose external connections are partially defined as follows:
+    {\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/***************************************************************
+File name: defines.vh
+Description: binary codes for input, output and state variables
+***************************************************************/
+// input independent signals
+    `define eint    2'b01 // enable interrupt instruction
+    `define dint    2'b10 // disable interrupt instruction
+    `define int     1'b1  // external interrupt signal
+// output codes	
+    `define idle    2'b00 // idle state enabled or disabled
+    `define inta    2'b01 // interrupt acknowledge
+    `define flush   2'b10 // flush the pipe command
+// internal states
+    `define enableState  ...
+    `define disableState ...
+    // ...
+\end{lstlisting}
+\end{shaded*}
+}}
+Drawing the graph will allow completing the previous definitions file.
+    \item Provide the System Verilog description of the automaton
+    \item Use the Vivado environment to draw the schematic of the resulting circuit
+    \item Simulate the automaton to test its behavior.
+\end{enumerate}
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Let be the automaton defined by the graph represented in Figure \ref{graph}.
+
+\placedrawing[h]{figures/04_10_graph.lp}{}{graph}
+
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/***************************************************************
+File name: defines.vh
+Description: binary codes for input, output and state variables
+***************************************************************/
+// input independent signals
+    `define A   1'b1
+// output codes	
+    `define X   2'b01
+    `define Y   2'b10
+    `define Z   2'b11
+// internal states
+    // ...
+\end{lstlisting}
+\end{shaded*}
+}}
+Implement the automaton in two versions assigning for the 5 states the binary codes in different versions. Compare the size of the two solutions.
+
+$\diamond$
+\end{problem}
+
+\subsection{Simple Functional Automata}
+
+\begin{problem}
+Consider an 8-bit counter whose counting modes are selected by three bits as follows:
+\begin{enumerate}
+    \item no operation
+    \item increment modulo $2^8$ by one unit at each clock cycles
+    \item increment modulo $2^8$ by 3 at each clock cycles
+    \item increment modulo $2^8$ by 5 at each clock cycles
+    \item increment modulo $2^8$ by 7 at each clock cycles
+    \item increment modulo $2^8$ by 11 at each clock cycles
+    \item increment modulo $2^8$ by 13 at each clock cycles
+    \item increment modulo $2^8$ by 17 at each clock cycles
+\end{enumerate}
+Required:
+\begin{enumerate}
+    \item Draw the block diagram of the solution you propose using known circuits
+    \item Write the structural System Verilog description of the circuit
+    \item Simulate the design to prove the functionality
+\end{enumerate}
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Simulate the circuit described in Section \ref{progCounter}.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Consider the program counter described in Section \ref{progCounter}.
+
+1. Draw the logic diagram of the circuit described in the {\tt programCounter.sv} module using a register, and studied combinational circuits.
+
+2. If $t_{pReg} = \#30$, $t_{SU} = \#5$, $t_{selectionMUX} = \#15$, $t_{selectedMUX} = \#5$, $t_{inc} = \#100$ , $t_{add} = \#110$, then what is the minimum period of the clock signal.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Simulate the circuit described in Section \ref{rALU} running the sequence outlined in Table \ref{raluSeq}.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Upgrade the RALU described in Section \ref{rALU} with ALU upgraded in Problem \ref{upgradeALU}.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Add to the RALU described in Section \ref{rALU} the possibility that the right operand can come from a second selected input with a distinct associated signal. Instead of {\tt in[31:0]} and {\tt load}, the design will contain {\tt inLeft[31:0]}, {\tt loadLeft}, {\tt inRight[31:0]} and {\tt loadRight}.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Consider the RALU described in Section \ref{rALU}, where: $t_{accessRegFile} = \#50$, $t_{rfSU} = \#5$, $t_{selectionMUX} = \#15$, $t_{selectedMUX} = \#5$, $t_{pALU} = \#150$. What is the minimum period of the clock signal.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Consider the RALU described in Section \ref{rALU} and fill-up the first 7 columns in Table \ref{aluSeq} according to operations specified in the last column.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Sequence of commands applied to RALU described in Section \ref{rALU}}
+    \label{aluSeq}
+    \vspace{2mm}
+    %{\small
+    {\tt
+    \begin{tabular}{|c|c|c|c|c|c|c||c|}
+    \hline
+    func &  in & load & leftAddr & rightAddr & we & destAddr & COMMENT          \\ \hline \hline
+     &   &     &     &      &   &     & R2 <= 5         \\ \hline
+     &   &     &     &      &   &     & R5 <= 23        \\ \hline
+     &   &     &     &      &   &     & R12 <= R2 + R3 	\\ \hline
+     &   &     &     &      &   &     & R14 <= R12      \\ \hline
+     &   &     &     &      &   &     & R1 <= R14       \\ \hline
+     &   &     &     &      &   &     & R2 <= R5 + R13  \\ \hline
+     &   &     &     &      &   &     & R7 <= R2/2      \\ \hline
+     &   &     &     &      &   &     & R8 <= R7 +12    \\ \hline
+ \end{tabular}
+ }
+ %}
+  \end{center}
+\end{table}
+
+
+$\diamond$
+\end{problem}

@@ -1,0 +1,937 @@
+\chapter{Combinational Circuits:  No-Loop, Zero-Order Systems (0-OS)}\label{lect1}
+\minitoc
+
+In this first lesson, and in the next one, we make a compromise between a brief recapitulation and a quick introduction to the field of digital circuits in such a way as not to bore the already knowledgeable and not to stress the novices. We will introduce strictly those notions that are necessary to understand the principles on which the organization and architecture of computers are based. We will focus on concepts and less on optimizing the way of implementation. We will focus more on the competence of the described structures than on their performance. The functional approach will prevail over the structural one in the description of the components used to design a computer system. We will focus on some possible optimizations, in the last lessons, only at the level of organization and architecture of a computing system.
+
+
+\section{One-input combinational circuits}
+
+\subsection{Formal Description}
+
+{\small
+\begin{table}[H]
+  \begin{center}
+    \caption{One-input circuits.}
+    \label{tab:one_input_circuits}
+    \begin{tabular}{|c||c|c|c|c|}
+      \hline
+      A&  &  NOT&  BUFFER&      \\ \hline \hline
+      0&  0&   1&       0& 1    \\ \hline
+      1&  0&   0&       1& 1    \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+}
+
+\placedrawing[H]{figures/02_01_not.lp}{Graphic representation of the NOT and BUFFER circuits.}{fig10}
+
+{\small
+\subsection{$^*$Physical Implementation of NOT Circuit}
+
+\subsubsection{CMOS switches}
+
+A logic gates consists in a network of interconnected switches
+implemented using the two type of MOS transistors: p-MOS and
+n-MOS. How behaves the two type of transistors in specific
+configurations is presented in Figure \ref{0_switch}.
+
+A switch connected to $V_{DD}$ is implemented using a p-MOS
+transistor. It is represented in Figure \ref{0_switch}a {\em off}
+(generating $z$, which means {\em Hi-Z}: no signal, neither 0, nor
+1) and in Figure \ref{0_switch}b it is represented {\em on}
+(generating 1 logic, or {\em truth}).
+
+A switch connected to {\em ground} is implemented using a n-MOS
+transistor. It is represented in Figure \ref{0_switch}c {\em off}
+(generating $z$, which means {\em Hi-Z}: no signal, neither 0, nor
+1) and in Figure \ref{0_switch}e it is represented {\em on}
+(generating 0 logic, or {\em false}).
+
+\placedrawing[h]{figures/02_02_transistors.lp}{{\bf Basic switches.} {\small {\bf a}.
+Open switch connected to $V_{DD}$. {\bf b}. Closed switch connected to
+$V_{DD}$. {\bf c}. Open switch connected to {\em ground}. {\bf d}.
+Closed switch connected to {\em ground}.}}{0_switch}
+
+A MOS transistor works very well as an {\em on-off} switch
+connecting its drain to a certain potential.  A p-MOS transistor
+can be used to connect its drain to a high potential when its
+gates is connected to ground, and an n-MOS transistor can connect
+its drain to ground if its gates is connected to a high potential.
+This complementary behavior is used to build the elementary logic
+circuits.
+
+In Figure \ref{src} is presented the {\em switch-resistor-capacitor
+model} (SRC). If $V_{GS} < V_{T}$ then the transistor is {\bf off}, if
+$V_{GS} \geq V_{T}$ then the transistor is {\bf on}. In both cases the
+input of the transistor behaves like a capacitor, the gate-source
+capacitor $C_{GS}$.
+
+When the transistor is on its drain-source resistance is:
+$$R_{ON} = R_{n}\frac{L}{W}$$
+where: $L$ is the channel length, $W$ is the channel width, and $R_{n}$
+is the resistance per square. The length $L$ is a constant
+characterizing a certain technology. For example, if $L = 0.13\mu m$
+this means it is about a $0.13\mu m$ process.
+
+The input capacitor has the value:
+$$C_{GS} = \frac{\epsilon_{OX} LW}{d}.$$
+The value:
+$$C_{OX} = \frac{\epsilon_{OX}}{d}$$
+where: $\epsilon_{OX} \approx 3.9 \epsilon_{0}$ is the permittivity of
+the silicon dioxide, is  the gate-to-channel capacitance per unit area
+of the MOSFET gate.
+
+In this conditions the gate input current is:
+$$i_{G} = C_{GS} \frac{dv_{GS}}{dt}$$
+
+\placedrawing[h]{figures/02_03_mosfet.lp}{{\bf The MOSFET switch.} {\small The {\em
+switch-resistor-capacitor} model consists in the two states: OF
+($V_{GS} < V_{T}$), and ON ($V_{GS} \geq V_{T}$). In both states the
+input is defined by the capacitor $C_{GS}$.}}{src}
+
+
+\begin{exemplu}
+For an AND gate with low strength, with $W = 1.8\mu m$, in $0.13
+\mu m$ technology, supposing $C_{OX} = 4fF/\mu m^{2}$, results the
+input capacitance: $$C_{GS} = 4 \times 0.13 \times 1.8 fF = 0.936
+fF$$ Assuming $R_{n} = 5K\Omega$, results for the same gate:
+$$R_{ON} = 5 \times \frac{0.13}{1.8} \; K\Omega = 361 \Omega$$
+
+$\diamond$
+\end{exemplu}
+
+\subsubsection{The Inverter}
+
+
+\paragraph{The static behavior.}
+The smallest and simplest logic circuit -- the invertor -- can be built
+using a pair of complementary transistors, connecting together the two
+gates as input and the two drains as output, while the n-MOS source is
+connected to ground (interpreted as logic 0) and the p-MOS source to
+$V_{DD}$ (interpreted as logic 1). Results the circuit represented in
+Figure \ref{0_inv}.
+
+\placedrawing[h]{figures/02_04_inverter.lp}{{\bf Building an invertor.} {\small {\bf
+a}. The invertor circuit. {\bf b}. The logic symbol for the invertor
+circuit.}}{0_inv}
+
+The behavior of the invertor consist in combining the behaviors of the
+two switches previously defined. For $in=0$ pMOS is $on$ and nMOS is
+$off$ the output generating $V_{DD}$ which means 1. For $in=1$ pMOS is
+$off$ and nMOS is $on$ the output generating 0.
+
+The static behavior of the inverter (or NOT) circuit can be easy
+explained starting from the switches described in Figure
+\ref{0_switch}. Connecting together a switch generating $z$ with a
+switch generating 1 or 0, the connection point will generate 0 or
+1.
+
+\paragraph{Dynamic behavior.}
+The propagation time of an inverter can be analyzed using the two
+serially connected invertors represented in Figure \ref{switch}. The
+delay of the first invertor is generated by its capacitive load,
+$C_{L}$, composed by:
+\begin{itemize}
+\item its parasitic drain/bulk capacitance, $C_{DB}$, is the intrinsic  output capacitance of the first invertor
+\item wiring capacitance, $C_{wire}$, which depends on the length of the wire (of width $W_w$ and of length $L_w$) connected between the two invertors: $$C_{wire} = C_{thickox} W_w L_w$$
+\item next stage input capacitance, $C_{G}$, approximated by summing the gate capacitance for pMOC and nMOS transistors: $$C_G = C_{Gp} + C_{Gn} = C_{ox}(W_p L_p + W_n L_n)$$
+\end{itemize}
+
+\placedrawing[h]{figures/02_05_propagation_time.lp}{{\bf The propagation time.} {\small
+}}{switch}
+
+The total load capacitance
+$$C_L = C_{DB} + C_{wire} + C_G$$
+is sometimes dominated by $C_{wire}$. For short connections $C_G$ dominates, while for big {\em fan-out}\index{fan-out: the number on input gates  connected to the output of a digital circuit} both, $C_{wire}$ and $C_G$ must be considered.
+
+The signal $V_A$ is used to measure the propagation time of the first NOT in Figure \ref{switch}a. It is generated by an ideal pulse generator with output impedance 0. Thus, the rising time and the falling time of this signal are considered 0 (the input capacitance of the NOT circuit is charged  or discharged in no time).
+
+The two delay times (see Figure \ref{switch}c) associated to an invertor
+(to a gate in the general case) are defined as follows:
+\begin{itemize}
+    \item $t_{pLH}$: the time interval between the moment the input
+    switches in 0 and the output reaches $V_{OH}/2$ coming from 0
+    \item $t_{pHL}$: the time interval between the moment the input
+    switches in 1 and the output reaches $V_{OH}/2$ coming from $V_{OH}$
+\end{itemize}
+
+Let us consider the transition of $V_A$ from 0 to $V_{OH}$ at $t_r$ (rise edge). Before transition, at $t_r^-$, $C_L$ is fully charged and $V_B = V_{OH}$. In Figure \ref{switch}b is represented the equivalent circuit at $t_r^+$, when pMOS is off and nMOS is on. In this moment starts the process of discharging  the capacitance $C_L$ at the constant current
+$$I_{Dn(sat)} = \frac{1}{2} \mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})^2$$
+In Figure \ref{switch1}, at $t_r^-$ the transistor is cut, $I_{Dn} = 0$. At $t_r^+$ the  nMOS transistor switch in saturation and becomes an ideal {\em constant current generator} which starts to discharge $C_L$ linearly at the constant current $I_{Dn(sat)}$. The process continue until $V_{OUT} = V_{OH}$, according to the definition of $t_{pHL}$.
+
+
+\placedrawing[h]{figures/02_06_nmos_output.lp}{{\bf The output characteristic of the nMOS transistor.} {\small
+}}{switch1}
+
+In order to compute $t_{pHL}$ we take into consideration the constant value of the discharging current which provide a linear variation of $v_{OUT}$.
+$$\frac{dv_{out}}{dt} = \frac{d}{dt}(\frac{q_L}{C_L}) = \frac{-I_{Dn(sat)}}{C_L}$$
+$$\frac{dv_{out}}{dt} = \frac{\frac{V_{OH}}{2} - V_{OH}}{t_{pHL}}$$
+We solve the equations for $t_{pHL}$:
+$$t_{pHL} = C_L \frac{1}{\mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})} \frac{V_{OH}}{V_{OH} - V_{Tn}}$$
+Because:
+$$R_{ONn} = \frac{1}{\mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})}$$
+results:
+$$t_{pHL} = C_L R_{ONn} \frac{1}{1 - \frac{V_{Tn}}{V_{OH}}} = k_n R_{ONn} C_L = k_n \tau_{nL} $$
+where:
+\begin{itemize}
+\item $\tau_{nL}$ is the {\em constant time} associated to the H-L transition
+\item $k_n$ is a constant associated to the technology we use; it goes down when $V_{OH}$ increases or $V_T$ decreases
+\end{itemize}
+
+The speed of a gate depends by its dimension and by the capacitive load
+it drives. For a big $W$ the value of $R_{ON}$ is small charging or
+discharging $C_{L}$ faster.
+
+For $t_{pLH}$ the approach is similar. Results: $t_{pLH} = k_p \tau_{pL}$.
+
+By definition the propagation time associated to a circuit is: $$t_p = (t_{pLH} + t_{pHL})/2$$
+its value being dominated by the value of $C_L$ and the size (width) of the two transistors, $W_n$ and $W_p$.
+}
+
+\section{Two-input gates}
+
+\subsection{Formal Description}
+
+{\small
+\begin{table}[H]
+  \begin{center}
+    \caption{Two-input gates.}
+    \label{tab:two_input_gates}
+    \begin{tabular}{|c|c||c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+      \hline
+      A& B& &  NOR&  & &  & & XOR& NAND& AND& NXOR&  &  &  &  & OR& \\ \hline \hline
+      0& 0& 0&   1& 0&     1& 0&     1&   0&    1&   0&    1& 0& 1& 0& 1&  0& 1\\ \hline
+      0& 1& 0&   0& 1&     1& 0&     0&   1&    1&   0&    0& 1& 1& 0& 0&  1& 1\\ \hline
+      1& 0& 0&   0& 0&     0& 1&     1&   1&    1&   0&    0& 0& 0& 1& 1&  1& 1\\ \hline
+      1& 1& 0&   0& 0&     0& 0&     0&   0&    0&   1&    1& 1& 1& 1& 1&  1& 1\\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+}
+
+The currently used two-input gates are (see Tab. \ref{tab:two_input_gates}):
+\begin{description}
+\item[AND]: A$\cdot$B = AB = 1 only if both A and B are 1, else AB = 0\\
+    Numerical interpretation: arithmetic product \\
+    Symbolic interpretation: {\bf gate} because A=1 opens the way for B
+\item[NAND]: (AB)' = 0 only if both A and B are 1, else AB = 1
+\item[OR]: A+B = only if at least one of A and B is 1, else A+B = 0
+\item[NOR]: (A+B) = 0 only if at least one of A and B is 1, else A+B = 1
+\item[XOR]: exclusive OR, because it is excluded the case A=B=1 in determining 1 on the output\\
+    A$\oplus$B = 1 when only one of the input, A or B, is one\\
+    Logic interpretation: conditioned inverter, i.e., {\em if} A = 0 {\bf then}  A$\oplus$B = B {\bf else}  A$\oplus$B = B'
+    Numerical interpretation: modulo-2 sum\\
+    Symbolic interpretation: anticoincidence
+\item[NXOR]: (A$\oplus$B')\\
+    Symbolic interpretation: coincidence
+\end{description}
+
+\placedrawing[H]{figures/02_07_two_input_gates.lp}{Graphical representation of the most used two-input gates.}{fig11}
+\placedrawing[H]{figures/02_08_non_inverting_gate_waveforms.lp}{Wave forms for the non-inverting gates.}{fig16}
+
+
+In Figure \ref{fig16} is represented the behavior of the main gates, AND, OR and XOR, driven by the signal A snd B represented in the first two wave forms. Besides the logic response to the inputs A and B there are represented the main time characteristics:
+\begin{itemize}
+    \item $t_+$: the positive transition time (the duration of the positive edge)
+    \item $t_-$: the negative transition time (the duration of the negative edge)
+    \item $t_{pLH}$: the propagation time  of the signal through the gate for the transition from Low to High
+    \item $t_{pHL}$: the propagation time  of the signal through the gate for the transition from High to Low
+\end{itemize}
+
+
+
+All the previous times are different from positive and negative transition and from a type of gate to another. For our approach differences are small and unimportant.
+
+
+
+
+\section{Many-input gates}
+
+The number $N$ of $n$-input gates is: $N^{2^n}$, because the number of input binary configuration is $2^n$. Therefore, they cannot be listed. For $n>2$ the Boolean functions are managed using Boolean algebra rules.
+
+Let's consider some significant examples:
+
+\begin{itemize}
+    \item (A')' = A
+    \item AB + AB' = A(B + B') = A $\cdot$ 1 = A\\
+    {\em because, when B=1 the expression takes the value A, and when B=0 the expression still takes the value A, we conclude that the value of B does not matter and the expression takes the value A}.
+    \item A + A'B = A + B\\
+    to prove it the method of truth table is used, as follow:
+    \begin{table}[H]
+  \begin{center}
+    \caption{Example of proof using the truth table.}
+    \label{tab:table1}
+    \begin{tabular}{|c|c||c|c|c||c|}
+      \hline
+      A& B&  A'& A'B& A+A'B& A+B   \\ \hline \hline
+      0& 0&   1&   0&     0&   0   \\ \hline
+      0& 1&   1&   1&     1&   1   \\ \hline
+      1& 0&   0&   0&     1&   1   \\ \hline
+      1& 1&   0&   0&     1&   1   \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+    \item A $\oplus$ B = (A' $\oplus$ B)' = (A $\oplus$ B')' = A' $\oplus$ B'
+    \item de Morgan rule: A + B = (A'B')' \\
+    {\em A or B is 1 is equivalent to the fact that it is not true that A is 0 and B is 0}.
+    \item de Morgan rule: AB = (A' + B')'\\
+    {\em A and B are 1 is equivalent to the fact that it is not true that A is 0 or B is 0.}
+
+\end{itemize}
+
+
+
+Fortunately for us, synthesis software tools (Hardware Description Languages (HDLs) such as Verilog or VHDL) "know" how to use Boolean algebra very efficiently, saving us the effort of minimizing combinational logic circuits.
+
+\subsection{Seven-Segment Display}
+
+A seven-segment display is driven by a trans-coder which receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{sevenSeg}.
+
+The logic expression for the output {\tt a} is:
+\begin{center}
+$a =   B'_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B'_3 \cdot B'_2 \cdot B_1\cdot B'_0  +
+        B'_3 \cdot B'_2 \cdot B_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B_0  + $ \\
+        $B'_3 \cdot B_2 \cdot B_1\cdot B'_0  + B'_3 \cdot B_2 \cdot B_1\cdot B_0  +
+        B_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B_3 \cdot B'_2 \cdot B'_1\cdot B_0  $
+\end{center}
+or a simpler version by negatin the negated function:
+$$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B'_0)' = (B'_3 \cdot B'_1 \cdot (B_2 \oplus B_0))' = B_3 + B_1 + (B_2 \oplus B_0)'$$
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Seven-segment display.}
+    \label{sevenSeg}
+    \begin{tabular}{|c|c|c|c||c|c|c|c|c|c|c|}
+      \hline
+     $B_3$ & $B_2$& $B_1$& $B_0$& a& b& c& d& e& f& g \\ \hline \hline
+      0& 0& 0& 0& 1& 1& 1& 1& 1& 1& 0 \\ \hline
+      0& 0& 0& 1& 0& 1& 1& 0& 0& 0& 0 \\ \hline
+      0& 0& 1& 0& 1& & & & & & \\ \hline
+      0& 0& 1& 1& 1& & & & & & \\ \hline
+      0& 1& 0& 0& 0& & & & & & \\ \hline
+      0& 1& 0& 1& 1& & & & & & \\ \hline
+      0& 1& 1& 0& 1& & & & & & \\ \hline
+      0& 1& 1& 1& 1& & & & & & \\ \hline
+      1& 0& 0& 0& 1& & & & & & \\ \hline
+      1& 0& 0& 1& 1& & & & & & \\ \hline
+    \end{tabular}
+    %\label{sevenSeg}
+  \end{center}
+\end{table}
+
+The System Verilog description of the circuit is sketched in the following:
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      sevenSegmDys.sv
+Circuit name:   Seven-Segment Display
+Description:
+*************************************************************************/
+module sevenSegmDys(output  logic [6:0] seg     ,
+                    input   logic [3:0] number  );
+
+    always_comb case(number)
+                    4'b0000: seg = 7'b1111110   ;
+                    4'b0001: seg = 7'b0110000   ;
+                    4'b0010: seg = 7'b  ;
+                    4'b0011: seg = 7'b  ;
+                    4'b0100: seg = 7'b  ;
+                    4'b0101: seg = 7'b  ;
+                    4'b0110: seg = 7'b  ;
+                    4'b0111: seg = 7'b  ;
+                    4'b1000: seg = 7'b  ;
+                    4'b1001: seg = 7'b  ;
+                    default: seg = 7'b  ;
+                endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[always\_comb]: defines a combinational block that describes the behavior of the output of the circuit as a combination based on the value of the input variables. The blocking assignment, {\tt =}, is used to assure the combinational behavior.
+    \item[4'b0010]: instantiate a variable as a 4-bit number
+    \item[case]: selects a block of code to be executed based on the value of a given signal in our design. Once a match is found for the input signal value, the action associated with that value will be executed
+    \item[default]: if no condition is fulfilled, the default action is selected for execution.
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+\section{Generic combinational circuits}
+
+\subsection{Decoder}
+
+Decoding means to identify with a one bit signal each binary code applied to the input of the circuit. Therefor, a $n$-bit input code applied on the input of a decoder implies a number of $2^n$ outputs. Only one output is active at a time corresponding to the input code. Thus, for the decoder represented in Figure \ref{fig14}, if $\{x_{n-1}, \ldots, x_0\} = 00 \ldots 0101$, then $y_5=1$ and all the other outputs are 0.
+
+\placedrawing[H]{figures/02_09_decoder.lp}{Decoder with $n$-bit input (DCDn).}{fig14}
+
+The System Verilog code for the decoder circuit follows. The description is behavioral.
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[$<<$]: shift left logical, i.e., multiplication with 2 to the power of the number of binary shifts
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      dcd.sv
+Circuit name:   4-input decoder
+Description:
+*************************************************************************/
+module dcd( output  logic [15:0]    dcdOut  ,
+            input   logic [3:0]     dcdIn   );
+
+     assign dcdOut = 1 << dcdIn ;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+
+
+In Figure \ref{fig8}a, is represented the smallest decoder, the elementary DCD, eDCD. Using two eDCD and 4 ANDs, a two-input decoder, DCD2, is designed (see Figure \ref{fig8}b). The rule to increase the number of inputs becomes evident with the third example: DCD3 (see Figure \ref{fig8}c).
+
+
+\placedrawing[H]{figures/02_10_recursive_decoder.lp}{Recursively defined 3-input decoder (DCD). {\bf a.} Elementary decoder (eDCD). {\bf b.} Two-input decoder (DCD2). {\bf c.} Three-input DCD (DCD3).}{fig8}
+
+
+\subsection{Multiplexor}
+
+\subsection{Elementary multiplexor}
+
+Any combinational circuit can be expressed using NAND function. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexor (eMUX) represented in Figure \ref{fig9},
+where:
+
+\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexor (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig9}
+
+\begin{center} O = {\bf if} (S) {\bf then} I1 {\bf else} I0 \end{center}
+
+\subsection{Many-input multiplexor}
+
+The multiplexor grabs bits from $m=2^n$ inputs selected by a $n$-bit code.
+
+\placedrawing[H]{figures/02_12_mux_generalized.lp}{The general definition of the multiplexor circuit (MUXn). {\bf a.} The structure of MUXn: a DCDn serially connected with a $m=2^n$ ANDs on the first level of an AND-OR structure. {\bf b.} The logic symbol for MUXn.}{fig12}
+
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[{\tt a[b]}]: selects the bit indicated by {\tt b} from the binary word {\tt a}
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      mux.sv
+Circuit name:   4-input multiplexor
+Description:
+*************************************************************************/
+module mux( output  logic           muxOut  ,
+            input   logic [15:0]    muxIn   ,
+            input   logic [3:0]     muxSel  );
+
+     assign muxOut = muxIn[muxSel] ;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+
+\subsection{Demultiplexor}
+
+The demultiplexer transfers the input signal X to one of the $m=2^n$ outputs, $y_0, y_1, \ldots, y_{m-1}$, indicated by the $n$-bit selection input, $x_0, x_1, \ldots, x_{n-1}$. In Figure \ref{fig13} a demultiplexer is built using a decoder which open only one of the $m$ AND gate sending the $X$ input to the selected output.
+
+\placedrawing[H]{figures/02_13_demux.lp}{Demultiplexor as a DCD whose outputs are ANDed with the one bit signal to be distributed according to the $n$-bit input code. }{fig13}
+
+
+For example: if $$\{x_{n-1} x_{n-2}, \ldots, x_1, x_0\} = 00 \ldots 011$$ then
+$$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
+
+The code describing behaviorally the circuit follows:
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      dMux.sv
+Circuit name:   4-input demultiplexor
+Description:    Demultiplexor is an enabled decoder
+*************************************************************************/
+module dMux(output  logic [15:0]    dMuxOut     ,
+            input   logic [3:0]     dMuxIn      ,
+            input   logic           dMuxEnable  );
+
+     assign dMuxOut = dMuxEnable << dMuxIn ;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+Now, instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned.
+
+
+\section{Function oriented combinational circuits}
+
+\subsection{Half Adder}
+
+As we have seen, the XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). Carry signal is activated when both inputs are 1. Therefore, besides the XOR gate we must add an AND gate as in Figure \ref{fig3}. We call the resulting circuit half adder because it does not take into account the carry signal provided by the previous binary order.
+
+\placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig3}
+
+
+\subsection{Increment}
+
+Incrementing means adding 1 to a number. The schematic for a 4-bit increment circuit, INC4, is represented in Figure \ref{fig4}, where if {\tt inc = 1} the output $out_0 <= in'_0$  and {\tt cr} of $HA_0$ if it is activated command the increment for $HA_1$, and so on.
+
+\placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig4}
+
+If each 2-input AND from $HA_i$ has, for example,  a propagation time, $t_{pAND2} = 1ns = 10^{-9}sec$, and the 2-input XOR has the propagation time, $t_{pXOR2} = 1.5ns$, then the total execution time for the INC4 circuit is:
+$$t_{pINC4} = 3 \times t_{pAND2} + t_{pXOR2} = 4.5ns$$
+Thus, when the good news that the size of the $n$-bit number increment circuit, $S_{INCn}$, is proportional with the input size, the bad news is that the execution time, i.e., depth, $D_{INCn}$, is in same magnitude order:
+$$S_{INCn} \in O(n)$$
+$$D_{INCn} \in O(n)$$
+(The depth of the circuit can be reduced by increasing the size (but in the limits of the same magnitude order) using a prefix network.)
+
+\subsection{Adder/subtractor}
+
+Full adder (FA) adds two one-bit numbers with the carry provided from the previous binary position and generate the sum and the carry value for the next binary position. In Figure \ref{fig5}a, a FA is composed from two HAs and an OR circuit used to grab the carry generated by the first HA or by the second HA. The first FA adds the two input bits, A and B, while the second FA adds the value of the carry, C, generated by the previous binary order.
+
+\placedrawing[H]{figures/02_16_adder_full.lp}{Adder. {\bf a.} Full Adder (FA). {\bf b.} 4-bit adder (ADD4).}{fig5}
+
+\placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Substractor}{fig6}
+
+
+The main problem to be solved, but not in this lecture, is the execution time, i.e., the maximum time interval from the moment when an input changes until the moment when all the outputs of the circuit reach the correct final value. This time interval is due to propagation through logic gates on the longest path. In our case, the longest path is the one from input C to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. In the general case, the time is proportional to $n$ (it is in $O(n)$).
+
+
+
+
+
+Subtract operation is performed by adding the 2s complement:
+
+\begin{verbatim}
+        +5 = 0_0101
+        -5 = 1_1010 + 1 = 1_1011
+        +5 = 0_0100 + 1 = 0_0101
+
+        -5 + 2 = 1_1011 +
+                 0_0010 =
+                 1_1101 = -3, because 0_0010 + 1 = 0_0011 = 3
+\end{verbatim}
+
+Therefore, each $B_i$ is complemented and the increment with 1 is generated by inverting the carry input. All the inversions are performed under de command {\tt sub} applied to $5$ XORs.
+
+
+\subsection{{\bf {\em Arithmetic \& Logic Unit}}}\label{alu1}
+
+An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexor as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
+
+\placedrawing[H]{figures/02_18_alu.lp}{ALU.}{fig37}
+
+
+\placedrawing[H]{figures/02_19_8function_alu.lp}{The generic form of a 8-function Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig15}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      alu.sv
+Circuit name:   arithmetic and logic unit
+Description:    the circuit selects, using the selection code 'func', one
+                of the 8 functions
+*************************************************************************/
+module ALU(input    logic         crIn          ,
+            input   logic [2:0]   func          ,
+            input   logic [31:0]  left, right   ,
+            output  logic         crOut         ,
+            output  logic [31:0]  out           );
+
+  always_comb case(func)
+                3'b000: {crOut, out} = left + right + crIn;     //add
+                3'b001: {crOut, out} = left - right - crIn;     //sub
+                3'b010: {crOut, out} = {1'b0, left & right};    //and
+                3'b011: {crOut, out} = {1'b0, left | right};    //or
+                3'b100: {crOut, out} = {1'b0, left ^ right};    //xor
+                3'b101: {crOut, out} = {1'b0, ~left};           //not
+                3'b110: {crOut, out} = {1'b0, left};            //left
+                3'b111: {crOut, out} = {1'b0, left >> 1};       //shr
+            endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+    \item[\{a,b\}]: concatenates the binary word  {\tt b} to the binary word {\tt a}
+    \item[{\bf -}]:  is the operator {\tt minus}
+    \item[\&]: is the operator {\tt bitwise AND}
+    \item[${\bf \vert}$]: is the operator {\tt bitwise OR}
+    \item[${\bf \hat{}}$]: is the operator {\tt bitwise XOR}
+    \item[${\bf >>}$]: is the operator {\tt shift right logical}
+\end{description}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+Actual implementations are sometimes optimized by implementing two ore more modules sharing partially the same circuits. A small and simple example is represented in Figure \ref{fig7}, where: {\small
+\begin{itemize}
+\item {\tt func[2:0]} to select the function:
+    \begin{description}
+        \item[{\tt func = 000}] {\tt add: \{crOut, result\} = leftOp + rightOp + crIn}
+        \item[{\tt func = 100}] {\tt sub: \{crOut, result\} = leftOp - rightOp - crIn}
+        \item[{\tt func = 010}] {\tt and: \{crOut, result\} = \{1'b0, leftOp \& rightOp\}} (bitwise AND)
+        \item[{\tt func = 001}] {\tt xor: \{crOut, result\} = \{1'b0, leftOp $\oplus$ rightOp\}} (bitwise XOR)
+        \item[{\tt func = 011}] {\tt shr: \{crOut, result\} = \{leftOp[0], serialIn, leftOp[n-1:1]\}}
+    \end{description}
+\item {\tt leftOp[n-1:0]}
+\item {\tt rightOp[n-1:0]}
+\item {\tt crIn}
+\item {\tt crOut}
+\item {\tt serialIn}: the value loaded in the most significant position in the shift right operation, {\tt shr}, allowing the following types of shifts:
+    \begin{itemize}
+        \item {\tt shr: \{crOut, result\} = \{leftOp[0], 1'b0, leftOp[n-1:1]\}}
+        \item {\tt ash: \{crOut, result\} = \{leftOp[0], leftOp[n-1], leftOp[n-1:1]\}}
+        \item {\tt rot: \{crOut, result\} = \{leftOp[0], leftOp[0], leftOp[n-1:1]\}}
+        \item {\tt csh: \{crOut, result\} = \{leftOp[0], crIn, leftOp[n-1:1]\}}
+    \end{itemize}
+\item {\tt result[n-1:0]}
+\end{itemize}
+}
+
+\placedrawing[H]{figures/02_20_nbit_alu.lp}{A simple Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig7}
+
+The implementation takes into account the fact that a HA is implemented using an AND gate and a XOR gate (see Figure \ref{fig3}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, a XOR is added for the subtract function and for the two logic functions the outputs of the first HA are directly used.
+
+\section{Problems}
+
+
+\subsection{Waveforms}
+
+\begin{problem}
+Generate the following waveforms:
+$$W = a^3c^4ba^2$$
+where: $a = 2'b01$, $b = 2'b10$, $c = 2'b11$. and each value is maintained 2 time units (\#2).
+
+$\diamond$
+\end{problem}
+
+{\bf Solution}
+
+Because each symbol is codded on 2 bits, results 2 wave forms: $w_1$ and $w_0$, as follows:
+
+W =
+$\begin{bmatrix}
+w_1 \\
+w_0
+\end{bmatrix}$
+=
+$\begin{bmatrix}
+0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 & 0\\
+1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 1 & 1
+\end{bmatrix}$
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      waveform1.sv
+Description:    W = aaaccccbaa =
+*************************************************************************/
+module waveform1;
+    logic [1:0] W;
+
+    parameter   a = 2'b01,
+                b = 2'b10,
+                c = 2'b11;
+
+    initial begin       W = a   ;
+                    #6  W = c  	;
+                    #8  W = b  	;
+                    #2  W = a  	;
+                    #4  $stop   ;
+            end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+The resulting waveforms are captured in Figure \ref{w1}.
+
+\placedrawing[H]{figures/02_21_waveform1.lp}{Output for waveform1.sv}{w1}
+
+
+\begin{problem}
+Generate the following waveforms:
+$$(ab^2c)^3$$
+where: $W = a = 2'b11$, $b = 2'b10$, $c = 2'b01$,  and each value is maintained 2 time units (\#4).
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Generate a clock signal with 2 time units period and the following waveforms:
+$$(a^3b^2c)^2$$
+where: $W = a = 2'b11$, $b = 2'b10$, $c = 2'b01$,  and each value is changed synchronously with the negative edge of the clock signal.
+
+$\diamond$
+\end{problem}
+
+
+\subsection{Combinatorial Circuits}
+
+\begin{problem}
+Design in System Verilog the structural solution at the gate level for a half adder.
+
+$\diamond$
+\end{problem}
+
+{\bf Solution}
+
+A half adder is defined by the following Boolean expressions:
+$$sum = a \oplus b$$
+$$cr = a \cdot b$$
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      halfAdder.sv
+Description:
+*************************************************************************/
+module halfAdder(   input   logic a, b,
+                    output  logic sum, cr);
+
+    xor myXor(sum, a, b);
+    and myAnd(cr, a, b);
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+Using Vivado toll the elaborated design represented in Figure \ref{halfadd} is provided.
+
+\placedrawing[H]{figures/02_22_half_adder.lp}{}{halfadd}
+
+\begin{problem}
+Design in System Verilog the structural solution at the gate level for a full-half adder using two solutions:
+\begin{itemize}
+    \item describe at the gate level
+    \item a hierarchical approach based on the solution of the previous problem using a top module where two half-adders are instantiated.
+\end{itemize}
+Provide the simulation of the circuit to test exhaustively its behavior.
+
+$\diamond$
+\end{problem}
+
+{\bf Solution}
+
+For the first solution we have the following design:
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      fullAdder.sv
+Description:
+*************************************************************************/
+module fullAdder(   input   logic a, b, crIn,
+                    output  logic sum, crOut);
+    logic sum0, cr0, cr1;
+
+    xor myXor(sum0, a, b);
+    xor outXor(sum, sum0, crIn);
+    and myAnd1(cr0, a, b);
+    and myAnd2(cr1, sum0, crIn);
+    or myOr(crOut, cr0, cr1);
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+Using Vivado toll the elaborated design represented in Figure \ref{fulladd} is provided.
+
+\placedrawing[H]{figures/02_23_full_adder.lp}{}{fulladd}
+
+For the second solution we have the following design:
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      hFullAdder.sv
+Description:    Hierarchical Full-Adder
+*************************************************************************/
+module hFullAdder(  input   logic a, b, crIn,
+                    output  logic sum, crOut);
+    logic sum0, cr0, cr1;
+
+    halfAdder   ha0(.a  (a      ),
+                    .b  (b      ),
+                    .sum(sum0   ),
+                    .cr (cr0    )),
+                ha1(.a  (sum0   ),
+                    .b  (crIn   ),
+                    .sum(sum    ),
+                    .cr (cr1    ));
+    or outOr(crOut, cr0, cr1);
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+Using Vivado toll the elaborated design represented in Figure \ref{hfulladd} is provided.
+
+\placedrawing[H]{figures/02_24_full_adder_from_half_adders.lp}{}{hfulladd}
+
+For testing the functionality of the full-adder the following module is designed:
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      testFullAdder.sv
+Description:    Hierarchical Full-Adder
+*************************************************************************/
+module testFullAdder();
+    logic a, b, crIn, sum, crOut;
+
+    hFullAdder dut(a, b, crIn, sum, crOut);
+
+    initial begin       {a,b,crIn} = 3'b000 ;
+                    #1  {a,b,crIn} = 3'b001 ;
+                    #1  {a,b,crIn} = 3'b010 ;
+                    #1  {a,b,crIn} = 3'b011 ;
+                    #1  {a,b,crIn} = 3'b100 ;
+                    #1  {a,b,crIn} = 3'b101 ;
+                    #1  {a,b,crIn} = 3'b110 ;
+                    #1  {a,b,crIn} = 3'b111 ;
+                    #1  $stop               ;
+            end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\placedrawing[H]{figures/02_25_full_adder_waveform.lp}{}{sfulladd}
+
+\section{Exercises}
+
+\begin{problem}
+Design a 4-bit number adder with carry input and output.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Design a 4-bit number subtractor  with carry input and output.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Design a 4-bit number adder/subtractor with carry input and output. The input {\tt op} designates addition for {\tt op = 0}, and subtract for {\tt op = 1}.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Fill in the missing lines in Table \ref{sevenSeg} and complete the project partially defined by {\tt sevenSegDys.sv}. Test the correct operation.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Write a full tester for {\tt dcd.sv} amd run it.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}\label{dcdP}
+Design in System Verilog a 4-input decoder using the recursive definition provided in Figure \ref{fig8}. Test its correct functioning.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Design in System Verilog a 4-input demultiplexor using DCD4 designed as solution for Problem \ref{dcdP}. Test its correct functioning.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Design in System Verilog a 4-input multiplexor using DCD4 designed as solution for Problem \ref{dcdP}. Test its correct functioning
+
+$\diamond$
+\end{problem}
+
+\begin{problem}\label{eq}
+Consider a decoder with 4 inputs, denoted {\tt A[3:0]}, whose outputs are connected to the selected inputs of a multiplexer with output {\tt F} and with 4 selection inputs, denoted {\tt B[3:0]}. What is the transfer function, {\em F = f(A,B)}, of the system with two 4-bit inputs, {\tt A} and {\tt B} and a one-bit output {\tt F }?
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Provide an optimal solution for a circuit which receives 2 8-bit words, {\tt A[7:0]} and {\tt B[7:0]},  and provide one bit output, EQ, telling if the two words are identical or not:
+\begin{equation}
+  EQ =
+    \begin{cases}
+      1 & \text{if  A == B}\\
+      0 & \text{if  A !== B}
+    \end{cases}
+\end{equation}
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Test the behavior of the ALU defined by {\tt alu.sv} in Section \ref{alu1}.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Modify the module {\tt alu.sv} from Section \ref{alu1} to save the bit {\tt left[0]}, when the right shift is performed, to the output crOut.
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}\label{upgradeALU}
+Add to the module {\tt alu.sv} from Section \ref{alu1} the following functionality and test it:
+\begin{itemize}
+    \item right shift with {\tt crIn} on the most significant position
+    \item arithmetic (right) shift which maintains the sign of the signed integer
+    \item rotate left
+    \item rotate right
+    \item equality comparison: {\tt left == right}
+    \item inequality comparison: {\tt left >= right}
+    \item select the maximum: {\tt out = (left =< right) ? left : right}
+    \item select minimum: {\tt out = (left > right) ? left : right}
+\end{itemize}
+
+$\diamond$
+\end{problem}
+
+
+\begin{problem}
+Design structurally at the gate level in System Verilog the slice of the simple ALU defined in Figure \ref{fig7}.
+
+$\diamond$
+\end{problem}
+

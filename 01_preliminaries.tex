@@ -1,0 +1,474 @@
+\chapter{Preliminaries}\label{chapt:preliminaries}
+\minitoc
+\lipsum[1]
+
+\section{Number Systems}
+\lipsum[1]
+\subsection{Base/Radix Concepts}
+\lipsum[1]
+\subsection{Positional Notation}
+\lipsum[1]
+\subsection{Binary Arithmetic}
+\lipsum[1]
+
+\section{Number Representations}
+\lipsum[1]
+\subsection{Unsigned Numbers}
+\lipsum[1]
+\subsection{Signed Numbers}
+\lipsum[1]
+\subsubsection{One's Complement}
+\lipsum[1]
+\subsubsection{Two's Complement}
+\lipsum[1]
+\subsection{Overflow Detection}
+\lipsum[1]
+
+\section{Modular Arithmetic}
+\lipsum[1]
+\subsection{Modulo Operation}
+\lipsum[1]
+\subsection{Residue Classes}
+\lipsum[1]
+
+\section{Binary Coded Decimal (BCD) and Other Encodings}
+\lipsum[1]
+\subsection{BCD}
+\lipsum[1]
+\subsection{Gray Code}
+\lipsum[1]
+
+\section{Floating-Point Arithmetic}
+\lipsum[1]
+\subsection{Scientific Notation and Exponent Representation}
+\lipsum[1]
+\subsection{IEEE Floating-Point Standard}
+\lipsum[1]
+
+\section{Set Notation}
+\lipsum[1]
+
+\section{Digital Domain}
+
+\subsection{Signals in Digital Domain}
+
+In the electronic digital domain we work with two values only (see Figure \ref{fig1}):
+
+\placedrawing[H]{figures/01_01_digital_0_and_1.lp}{The two levels of the signal in the digital domain. Low level (0 Volt) for {\tt 0} or {\tt false}, and high level ($V_{DD}$ Volt) for {\tt 1} or {\tt true}.}{fig1}
+
+\begin{itemize}
+\item 0, represented by the electrical value 0 V, having two meanings:
+\begin{itemize}
+\item the numerical value {\tt 0}
+\item the logic value {\tt false}
+\end{itemize}
+\item 1, represented by the electrical value $V_{DD}$ V, having two meanings:
+\begin{itemize}
+\item the numerical value {\tt 1}
+\item the logic value {\tt true}
+\end{itemize}
+\end{itemize}
+
+The signals used in a digital system are of two types:
+\begin{itemize}
+\item non-periodic, with a certain structure ("random") adapted to the process of simulating the operation of a digital system
+\item periods, usually with a strictly alternating structure, used as clock signals by which the operation of a digital system is synchronized.
+\end{itemize}
+
+Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs.
+In the following System Verilog module, two waveforms are generated, one "random" and one usable as a periodic signal.
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name: waveFormGenerator.sv
+Circuit name: no circuit, only wave formes
+Description: two waveforms are generated, a "random" one and a periodical
+             one: a clock signal
+*************************************************************************/
+module waveFormGenerator();
+    logic randomWave;
+    logic clock     ;
+    initial begin       randomWave = 0  ;
+                    #2  randomWave = 1  ;
+                    #6  randomWave = 0  ;
+                    #4  randomWave = 1  ;
+                    #8  randomWave = 0  ;
+                    #5  $stop           ;
+            end
+    initial begin               clock = 0       ;
+                    forever #2  clock = ~clock  ;
+            end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+By simulating the {\tt waveFormGenerator.sv} module, the behavior represented in Figure \ref{wave} results.
+
+
+
+\placedrawing[H]{figures/01_02_waveSim.lp}{Waveforms generated for a Vivado System Verilog simulation}{wave}
+
+
+In a digital system we can distinguish two extreme types of circuits:
+\begin{itemize}
+\item purely logical circuits that operate on some binary signals with some symbolic meaning (example: the transcoder for displaying the numbers from 0 to 9 using 7 segments, represented in Figure \ref{fig2}a)
+
+\item purely numerical circuits that operate on binary signals with numerical significance (example: a modulo 16 adder for two numbers represented by 4 bits each, represented in Figure \ref{fig2}b)
+\end{itemize}
+Obviously, an intermediate version is always possible (example: a circuit that compares two numbers, A and B, and indicates through three logical signals of one bit each: $A>B, \; A=B, \; A\leq B$)
+
+\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig2}
+
+\subsection{Character encoding}
+
+There is American Standard Code for Information Interchange (ASCII),  a character encoding standard used to represent text in computers.
+ASCII codes are represented on 8-bit binary configuration: $B = \{b_7, b_6, \ldots, b_0\}$. For example: from $B = 8'b011\_0000$ to $B = 8'b011\_1001$ the codes are used to represent digital numbers from 0 to 9, while from $B = 8'b100\_0000$ to $B = 8'b011\_1111$ the codes are used to represent the letters $@, A, B, \ldots, N, O$.
+
+See also UTF-16 (16-bit Unicode Transformation Format) which is a character encoding capable of encoding all characters  used in our computer.
+
+\subsection{Number encoding}
+
+While a decimal number (a number represented in base 10) represented on $n$ digits has the form:
+$$D = 10^{n-1} \times d_{n-1} + 10^{n-2} \times d_{n-2} + \ldots + 10^{1} \times d_{1} + 10^{0} \times d_{0}$$
+where: $d_i \in \{0, 1, \ldots, 9\}$ for $i = 0, 1, \ldots, n-1$
+a binary number (a number represented in base 2) represented on $n$ bits has the form:
+$$B = 2^{n-1} \times b_{n-1} + 2^{n-2} \times b_{n-2} + \ldots + 2^{1} \times b_{1} + 2^{0} \times b_{0}$$
+where: $b_i \in \{0, 1\}$ for $i = 0, 1, \ldots, n-1$
+
+Examples:
+\begin{itemize}
+    \item $253 = 10^2 \times 2 + 10^1 \times 5 + 10^0 \times 3$
+    \item $1010 = 2^3 \times 1 + 2^2 \times 0 + 2^1 \times 1 + 2^0 \times 0 = 10$
+\end{itemize}
+
+\subsubsection{Negative numbers}
+
+There are two main mode of representing signed numbers:
+\begin{enumerate}
+    \item sign \& magnitude: $signedNumber[n-1:0] = \{sgn[0], value[n-2:0] \}$
+    \item 2's complement: $- signedNumber = \sim(signedNumber) + 1$
+\end{enumerate}
+where: $\sim$ is the operator bitwise complement (or 1's complement).
+
+Examples:
+\begin{enumerate}
+    \item using a 5-bit representation (the most significant bit for sign, and the rest of bits a magnitude) $+6 = 0\_0110$, while $-6 = 1\_0110$
+    \item using a 5-bit compact representation $+6 = 00110$ while $-6 = \sim(00110) + 1 = 11001 + 1 = 11010$. And if we convert back -6 to +6, then: $\sim(11010) + 1 = 00101 + 1 = 00110 = +6$
+\end{enumerate}
+
+\subsubsection{Adding binary numbers}
+
+Adding two 1-bit numbers provides sum and carry according to Table \ref{add}.
+
+{\small
+\begin{table}[H]
+  \begin{center}
+    \caption{Elementary adder}
+    \label{add}
+    \begin{tabular}{|c|c||c|c|}
+      \hline
+      A&    B &  sum & carry     \\ \hline \hline
+      0&  0&   0&       0    \\ \hline
+      0&  1&   1&       0    \\ \hline
+      1&  0&   1&       0    \\ \hline
+      1&  1&   0&       1    \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+}
+The carry signal is used in the addition of many-bit operation. It is added to the immediate upper binary level.
+
+Let be two unsigned binary  numbers: $A = \{a_3, a_2, a_1, a_0\}$ and $B = \{b_3, b_2, b_1, b0\}$.
+$$A + B = C$$
+where: $C = \{c_3, c_2, c_1, c_0\}$ with $c_i$ computed by turn:\\
+$c_0 = sum(a_0,b_0)$ and $carry0 = carry(a_0,b_0)$\\
+$c_1 = sum(sum(a_1, b_1), carry0)$ and $carry1 = carry(a_1, b_1) \; | \; carry(sum(a_1, b_1), carry0)$\\
+$c_2 = sum(sum(a_2, b_2), carry1)$ and $carry2 = carry(a_2, b_2) \; | \; carry(sum(a_2, b_2), carry1)$\\
+$c_3 = sum(sum(a_3, b_3), carry2)$ and $carry3 = carry(a_3, b_3) \; | \; carry(sum(a_3, b_3), carry2)$\\
+The operator $|$ is the bitwise OR.
+
+Example, for two 8-bit unsigned integers:
+\begin{verbatim}
+       101 => 01100101 +
+       142 => 10001110
+              --------
+       243 => 11110011
+\end{verbatim}
+
+\subsubsection{Subtracting binary numbers}
+
+The subtract operation is reduced to the addition operation. It is performed by adding the negative number, i.e., $A - B = A + (-B)$.
+Example, for two 8-bit signed integers:
+\begin{verbatim}
+        21 => 00010101 -
+        34 => 00100010
+              --------
+              00010101 +
+              11011101 +
+              00000001
+              --------
+              11110010 +
+              00000001
+              --------
+              11110011
+\end{verbatim}
+To check if the result is correct we must change the sign of the result:
+\begin{verbatim}
+              11110011 => 00001100 + 1 = 00001101 = 13 = -(21 - 34)
+\end{verbatim}
+
+\subsection{Hexadecimal Encoding}
+
+\begin{verbatim}
+     Decimal    Hexadecimal
+        0:          0000
+        1:          0001
+        2:          0010
+        3:          0011
+        4:          0100
+        5:          0101
+        6:          0110
+        7:          0111
+        8:          1000
+        9:          1001
+        a/A:        1010
+        b/B:        1011
+        c/C:        1100
+        d/D:        1101
+        e/E:        1110
+        f/F:        1111
+\end{verbatim}
+
+\begin{exemplu}
+$$(2AC6)_{16} = (0010\_1010\_1100\_0110)_2 = (0010101011000110)_2 = 0010\_1010\_1100\_0110$$
+$$(2AC6)_{16} = 2 \times 16^3 + (a)_{16} \times 16^2 + (c)_{16} \times 16^1 + 6 \times 16^0 = (10,950)_{10} = 10,950$$
+
+Underscore are used only for easy read.
+
+$\diamond$
+\end{exemplu}
+
+\subsection{Octal Encoding}
+
+\begin{verbatim}
+      Decimal      Octal
+        0:          000
+        1:          001
+        2:          010
+        3:          011
+        4:          100
+        5:          101
+        6:          110
+        7:          111
+\end{verbatim}
+
+\begin{exemplu}
+$$(236)_8 = (010\_011\_110)_2 = (010011110)_2 =  010011110$$
+$$(236)_8 = 2 \times 8^2 + 3 \times 8^1 + 6 \times 8^0 = (158)_{10} = 158$$
+
+$\diamond$
+\end{exemplu}
+
+\subsection{Behavioral vs. Structural Descriptions}
+
+The description of a digital circuit can be done in two ways:
+\begin{itemize}
+\item  by describing the functional behavior
+\item  by describing the internal structure of the circuit
+\end{itemize}
+We exemplify the two methods in the case of the addition function.
+
+
+\begin{exemplu}\label{adder}
+Let us use the {\em System Verilog} HDL to describe an adder for 4-bit
+numbers (see Figure \ref{first_ex}a). The description which
+follows is a {\bf behavioral} one, because we know {\bf what} we
+intend to design, but we do not know yet {\bf how} to design the
+internal structure of an adder.
+
+\placedrawing[h]{figures/01_04_4bit_adder.lp}{{\bf The first examples of  digital
+systems.} {\small {\bf a.} The two 4-bit numbers adder, called
+{\tt adder}. {\bf b.} The structure of an adder for 3 4-bit
+numbers, called {\tt threeAdder}.} }{first_ex}
+
+The Verilog code describing the module {\tt adder} is:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      adder.sv
+Circuit name:   Adder
+Description:    The module 'adder' has 2 4-bit inputs and one 4-bit output
+                The circuit adds modulo 16; do not use or provide carry
+                signal
+*************************************************************************/
+module adder(   output logic [3:0] out ,    // 4-bit output
+                input  logic [3:0] in0 ,    // 4-bit input
+                input  logic [3:0] in1 );   // 4-bit input
+
+    assign out = in0 + in1;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+The story just told by the previous Verilog module is: ``the 4-bit adder has two inputs, {\tt in0, in1}, one output, {\tt out}, and
+its output is continuously assigned to the value obtained by
+adding modulo 16 the two input numbers".
+
+  $\diamond$
+\end{exemplu}
+
+What we just learned from the previous first simple example is
+summarized in the following {\bf SystemVerilogSummary}.
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+\item[/*]: begin comment
+\item[*/]: end comment
+\item[module]: keyword which indicates the beginning of the
+description of a circuit as a module having the name which
+immediately follows (in our example, the name is: {\tt adder})
+
+\item[endmodule]: keyword which indicates the end of the module's
+description which started with the previous keyword {\bf module}
+
+\item[output]: keyword used to declare a terminal as an output (in
+our example the terminal {\tt out} is declared as output)
+
+\item[input]: keyword used to declare the terminal as an input (in
+our example the terminals {\tt in0} and {\tt in1} are declared as
+inputs)
+
+\item[logic]: a data type with 4-state bits: {\tt 0, 1, x, z} where 0 means low, 1 means high, x means unknown, and z means an undriven net.
+
+\item[initial]: a block which starts at the beginning of simulation
+
+\item[begin ... end]: block delimiters
+
+\item[\#]: indicate a raw value
+
+\item[forever]: indicate an unending operation
+
+\item[$\sim$]: negation operator
+
+\item[assign]: keyword called the {\em continuous assignment},
+used here to specify the function performed by the module (the
+output {\tt out} takes continuously the value computed by adding
+the two input numbers)
+
+\item[(...)]: delimiters used to delimit the list of terminals
+(external connections)
+
+\item[,]: delimiter to separate each terminal within a list of
+terminals
+
+\item[;]: delimiter for end of line
+
+\item[[ $ \dots$ ]]: delimiters which contains the definition of
+the bits associated with a connection, for example [3:0] define
+the number of bits for the three connections in the previous
+example
+
+\item[+]: the operator {\tt add}, the only one used in the
+previous example.
+\end{description}
+\rule[5mm]{16cm}{0.25mm}
+}
+\end{verisum}
+
+The description of a digital system is a {\bf hierarchical
+construct} starting from a top module populated by modules, which
+are similarly defined. The process continues until very simple
+module are directly described. Thus, the functions $f$ and $g$ are specified by HDL programs
+(in our case, in the previous example by a Verilog program).
+
+The main characteristic of the digital design is {\bf modularity}. A
+problem is decomposed in many simpler problems, which are solved
+similarly, and so on until very simple problems are identified.
+Modularity means also to define as many as possible identical
+modules in each design. This allow to replicate many times the
+same module, already designed and validated. {\em Many \& simple}
+modules! Is the main slogan of the digital designer. Let's take
+another example which uses as module the one just defined in the
+previous example.
+
+\begin{exemplu}
+The previously exemplified module ({\tt adder}) will be used to
+design a modulo 16 3-number adder, called {\tt threeAdder} (see Figure
+\ref{first_ex}b). It adds 3 4-bit numbers providing a 4-bit result
+(modulo 16 sum). Follows the {\bf structural} description:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      threeAdder.sv
+Circuit name:   Three Input Adder
+Description:    The module 'threeAdder' has 3 4-bit inputs and one 4-bit
+                output. The circuit adds modulo 16 three numbers;
+                do not provide carry output
+*************************************************************************/
+module threeAdder( output   logic [3:0]  out,
+                   input    logic [3:0]  in0,
+                   input    logic [3:0]  in1,
+                   input    logic [3:0]  in2);
+
+    logic [3:0] sum ;
+
+    adder   inAdder(.out(sum),
+                    .in0(in1),
+                    .in1(in2)),
+            outAdder(.out(out),
+                     .in0(in0),
+                     .in1(sum));
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+Two modules of {\tt adder} type (defined in the previous example)
+are instantiated as {\tt inAdder}, {\tt outAdder}, they are
+interconnected using the wire {\tt sum}, and are connected to the
+terminals of the {\tt threeAdder} module. The resulting structure
+computes the sum of three numbers. $\diamond$
+\end{exemplu}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{itemize}
+\item How a previously defined module (in our example: {\tt
+adder}) is two times instantiated using two different names ({\tt
+inAdder} and {\tt outAdder} in our example)
+
+\item A ``safe" way to allocate the terminals for a module
+previously defined and instantiated inside the current module:
+each original terminal name is preceded by a dot, and followed by
+a parenthesis containing the name of the wire or of the terminal
+where it is connected (in our example, {\tt outAdder( ...
+.in1(sum))} means: the terminal {\tt in1} of the instance {\tt
+outAdder} is connected to the wire {\tt sum})
+
+\item The successive instantiations of the same module can be
+separated by a ``,".
+\end{itemize}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+While the module {\tt adder} is a {\em behavioral} description,
+the module {\tt threeAdder} is a {\em structural} one. The first
+tells us {\em what} is the function of the module, and the second
+tells us {\em how} its functionality is performed by using a
+structure containing two instantiation of a previously defined
+subsystems, and an internal connection.

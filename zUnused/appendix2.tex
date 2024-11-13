@@ -1,0 +1,874 @@
+\chapter{toyRISC Structural Implementation}
+
+\section{Structure}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: toyRISC.sv
+Circuit name: 
+Description: 
+************************************************************************/
+`include "DEFINES.vh"
+module toyRISC( input   logic [31:0]  instr     ,
+                output  logic [9:0]   nextPC    ,
+                input   logic         intIn     ,
+                output  logic         inta      ,
+                input   logic [31:0]  dataIn    ,
+                output  logic [31:0]  dataOut   ,
+                output  logic [9:0]   addr      ,
+                output  logic         dataRead  ,
+                output  logic         dataWrite	,
+                input   logic         reset     ,
+                input   logic         clk       );
+    logic   [5:0]   opCode  ;
+    logic   [4:0]   d, l, r ; // dest, left, right addresses for rf
+    logic   [31:0]  v       ; // immediate value
+    logic   [31:0]  leftOp  ;
+    logic   [9:0]   pc      ;
+
+    assign opCode   = instr[31:26]                  ;
+    assign d        = instr[25:21]                  ;
+    assign l        = instr[20:16]                  ;
+    assign r        = instr[15:11]                  ;
+    assign v        = {{16{instr[15]}}, instr[15:0]};
+
+    DCDtoyRISC  DCD(opCode      ,
+                    intIn       ,
+                    inta        ,
+                    dataRead    ,
+                    dataWrite   ,
+                    reset       ,
+                    clk         );
+
+    PCtoyRISC   PC( nextPC  ,
+                    pc      ,
+                    leftOp  ,
+                    v[9:0]  ,
+                    opCode  ,
+                    inta    ,
+                    reset   ,
+                    clk     );
+
+    RALUtoyRISC RALU(   dataOut ,
+                        leftOp  ,
+                        pc      ,
+                        opCode  ,
+                        dataIn  ,
+                        v       ,
+                        l       ,
+                        r       ,
+                        d       ,
+                        inta    ,
+                        clk     );
+
+    assign addr = leftOp[15:0]  ;
+endmodule // Synthesis results: #LUT=455, #FF=11, #DSP=6
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: DCDtoyRISC.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module  DCDtoyRISC( input   logic   [5:0]   opCode      ,
+                    input   logic           intIn       ,
+                    output  logic           inta        ,
+                                            dataRead    ,
+                                            dataWrite   ,
+                    input   logic           reset       ,
+                                            clk         );
+
+    logic   ei  ;
+    always_ff @(posedge clk) if (reset)                         ei <= 0;
+                              else begin if (opCode == `eint)   ei <= 1;
+                                         if (opCode == `dint)   ei <= 0;
+                                         if (intIn & ei)        ei <= 0;
+                                     end
+    assign inta = intIn & ei;
+
+    always_comb begin
+        dataRead    = (opCode == `read)     ? 1'b1  : 1'b0  ;
+        dataWrite   = (opCode == `store)    ? 1'b1  : 1'b0  ;
+    end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: PCtoyRISC.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module PCtoyRISC(   output  logic   [9:0]   nextPC  ,
+                    output  logic   [9:0]   pc      ,
+                    input   logic   [31:0]  leftOp  ,
+                    input   logic   [9:0]   v       ,
+                    input   logic   [5:0]   opCode  ,
+                    input   logic           inta    ,
+                                            reset   ,
+                                            clk     );
+
+    always_ff @(posedge clk) if (reset)         pc <= -1            ;
+                              else if (inta)    pc <= leftOp[9:0]   ;
+                                    else        pc <= nextPC        ;
+    always_comb case(opCode)
+                    `rjmp   : nextPC = pc + v                         ;
+                    `zbr    : nextPC = (leftOp == 0) ? pc + v : pc + 1;
+                    `nzbr   : nextPC = (leftOp != 0) ? pc + v : pc + 1;
+                    `ret    : nextPC = leftOp                         ;
+                    `halt   : nextPC = pc                             ;
+                    default : nextPC = pc + 1                         ;
+                endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: RALUtoyRISC.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module RALUtoyRISC( output  logic   [31:0]  dataOut ,
+                    output  logic   [31:0]  leftOp  ,
+                    input   logic   [9:0]   pc      ,
+                    input   logic   [5:0]   opCode  ,
+                    input   logic   [31:0]  dataIn  ,
+                                            v       ,
+                    input   logic   [4:0]   l       ,
+                                            r       ,
+                                            d       ,
+                    input   logic           inta    ,
+                                            clk     );
+    logic   [31:0]  leftIn  ;
+    logic   [31:0]  rightIn ;
+    logic   [31:0]  muxOut  ;
+    logic   [31:0]  aluOut  ;
+
+    registerFile    regFile(.leftOp     (leftIn ),
+                            .rightOp    (rightIn),
+                            .in         (muxOut ),
+                            .leftAddr   (l      ),
+                            .rightAddr  (r      ),
+                            .destAddr   (d      ),
+                            .inta       (inta   ),
+                            .opCode     (opCode ),
+                            .clk        (clk    ));
+
+    assign dataOut  = rightIn   ;
+    assign leftOp   = leftIn    ;
+
+    ALU alu(.out    (aluOut),
+            .leftIn (leftIn ),
+            .rightIn(rightIn),
+            .value  (v      ),
+            .opCode (opCode ));
+
+    bigMux bigMux(  .aluOut (aluOut),
+                    .dataIn (dataIn),
+                    .value  (v      ),
+                    .pc     (pc     ),
+                    .opCode (opCode ),
+                    .inta   (inta   ),
+                    .muxOut (muxOut ));
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: registerFile.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module registerFile(output  logic   [31:0]  leftOp      ,
+                                            rightOp     ,
+                    input   logic   [31:0]  in          ,
+                    input   logic   [4:0]   leftAddr    ,
+                                            rightAddr   ,
+                                            destAddr    ,
+                    input                   inta        ,
+                    input   logic   [5:0]   opCode      ,
+                    input   logic           clk         );
+
+    logic   [31:0]  rf[0:31];
+    logic           we      ;
+
+    assign  we = inta | (opCode[5:4] == 2'b11) |
+                        (opCode[5:4] == 2'b01) |
+                        (opCode == 6'b10_0111)  ;
+
+    always_ff @(posedge clk) if (we) rf[inta ? 5'b11110 : destAddr] <= in;
+
+    assign leftOp   = rf[inta ? 5'b11111 : leftAddr];
+    assign rightOp  = rf[rightAddr]                 ;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: ALU.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module ALU( output  logic   [31:0]  out     ,
+            input   logic   [31:0]  leftIn  ,
+                                    rightIn ,
+                                    value   ,
+            input   logic   [5:0]   opCode  );
+
+    always_comb
+        case(opCode)
+            `add    : out = leftIn + rightIn              ;
+            `sub    : out = leftIn - rightIn              ;
+            `addv   : out = leftIn + value                ;
+            `mult   : out = leftIn * rightIn              ;
+            `multv  : out = leftIn * value                ;
+            `addc   : out = (leftIn + rightIn) > 2**32 - 1;
+            `subc   : out = (leftIn - rightIn) > 2**32 - 1;
+            `addvc  : out = (leftIn + value) > 2**32 - 1  ;
+            `lsh    : out = leftIn >> 1                   ;
+            `ash    : out = {leftIn[31], leftIn[31:1]}    ;
+            `move   : out = leftIn                        ;
+            `swap   : out = {leftIn[15:0], leftIn[31:16]} ;
+            `bwnot  : out = ~leftIn                       ;
+            `bwand  : out = leftIn & rightIn              ;
+            `bwor   : out = leftIn | rightIn              ;
+            `bwxor  : out = leftIn ^ rightIn              ;
+            default : out = leftIn                        ;
+        endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: bigMux.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module bigMux(  input   logic   [31:0]  aluOut  ,
+                                        dataIn  ,
+                                        value   ,
+                input   logic   [9:0]   pc      ,
+                input   logic   [5:0]   opCode  ,
+                input   logic           inta    ,
+                output  logic   [31:0]  muxOut  );
+    logic   [1:0]   sel ;
+
+    assign sel = inta ? 2'b00 : opCode[5:4] ;
+
+    always_comb case(sel)
+                    2'b00: muxOut = pc      ;
+                    2'b01: muxOut = value   ;
+                    2'b10: muxOut = dataIn  ;
+                    2'b11: muxOut = aluOut  ;
+                endcase
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+
+\placedrawing[H]{imA2_1.lp}{}{}
+
+
+\section{Code generator}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: RISCcodeGenerator.sv
+Circuit name:
+Description:
+************************************************************************/
+    reg [5:0]   opCode          ;
+    reg [4:0]   d               ;
+    reg [4:0]   l               ;
+    reg [4:0]   r               ;
+    reg [15:0]  v               ;
+    reg [9:0]   addrCounter     ;
+    reg [9:0]   labelTab[0:1023];
+
+    `include "DEFINES.vh"
+
+    task endLine;
+     begin
+        progMemory[addrCounter][31:0] =
+            {   opCode  ,
+                d       ,
+                l       ,
+                v       }                   ;
+            addrCounter = addrCounter + 1   ;
+     end
+    endtask
+
+    // sets labelTab in the first pass
+    // associating 'counter' with 'labelIndex'
+    task LB ;
+        input [5:0] labelIndex;
+
+        labelTab[labelIndex] = addrCounter;
+    endtask
+    // uses the content of labelTab in the second pass
+    task ULB;
+        input [5:0] labelIndex;
+
+        v = labelTab[labelIndex] - addrCounter;
+    endtask
+
+// CONTROL INSTRUCTIONS
+    task NOP; // no operation
+        begin   opCode  = `addv ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task RJMP; // relative jump
+        input   [15:0]  label   ;
+
+        begin   opCode  = `rjmp ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                ULB(label)      ;
+                endLine         ;
+        end
+    endtask
+
+    task BRZ; // branch if zero
+        input   [4:0]   left    ;
+        input   [9:0]   label   ;
+
+        begin   opCode  = `zbr  ;
+                d       = 5'b0  ;
+                l       = left  ;
+                ULB(label)      ;
+                endLine         ;
+        end
+    endtask
+
+    task BRNZ; // branch if not zero
+        input   [4:0]   left    ;
+        input   [9:0]   label   ;
+
+        begin   opCode  = `nzbr ;
+                d       = 5'b0  ;
+                l       = left  ;
+                ULB(label)      ;
+                endLine         ;
+        end
+    endtask
+
+    task RET; // return from subroutine
+        input   [4:0] left  ;
+
+        begin   opCode  = `ret  ;
+                d       = 5'b0  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task HALT; // halt running
+        begin   opCode  = `halt ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task EI; // enable interrupt
+        begin   opCode  = `eint ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task DI; // disable interrupt
+        begin   opCode  = `dint ;
+                d       = 5'b0  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+// ARITHMETIC & LOGIC INSTRUCTIONS
+    task ADD; // addition
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `add          ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task SUB; // subtract
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `sub          ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task ADDV; // addition with value
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [15:0]  value   ;
+
+        begin   opCode  = `addv ;
+                d       = dest  ;
+                l       = left  ;
+                v       = value ;
+                endLine         ;
+        end
+    endtask
+
+    task MULT; // multiplication
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `mult         ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task MULTV; // multiplication with value
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [15:0]  value   ;
+
+        begin   opCode  = `multv;
+                d       = dest  ;
+                l       = left  ;
+                v       = value ;
+                endLine         ;
+        end
+    endtask
+
+    task ADDC; // carry from addition
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `addc         ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task SUBC; // carry from subtract
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `subc         ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task ADDVC; // carry from addition with value
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [15:0]  value   ;
+
+        begin   opCode  = `addvc;
+                d       = dest  ;
+                l       = left  ;
+                v       = value ;
+                endLine         ;
+        end
+    endtask
+
+    task LSH; // logic shift with one position
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+
+        begin   opCode  = `lsh  ;
+                d       = dest  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task ASH; // arithmetic shift with one porition
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+
+        begin   opCode  = `ash  ;
+                d       = dest  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task MOVE; // data move inside register file
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+
+        begin   opCode  = `move ;
+                d       = dest  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task SWAP; // swap in register
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+
+        begin   opCode  = `swap ;
+                d       = dest  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task NOT; // bitwise NOT
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+
+        begin   opCode  = `bwnot;
+                d       = dest  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task AND; // bitwise AND
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `bwand        ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task OR; // bitwise OR
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `bwor     ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task XOR; // bitwise XOR
+        input   [4:0]   dest    ;
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `bwxor        ;
+                d       = dest          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+// DATA TRANSFER INSTRUCTIONS
+    task READ; // data read
+        input   [4:0]   left    ;
+
+        begin   opCode  = `read ;
+                d       = 5'b0  ;
+                l       = left  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task LOAD; // data load
+        input   [4:0]   dest    ;
+
+        begin   opCode  = `load ;
+                d       = dest  ;
+                l       = 5'b0  ;
+                v       = 16'b0 ;
+                endLine         ;
+        end
+    endtask
+
+    task STORE; // data store
+        input   [4:0]   left    ;
+        input   [4:0]   right   ;
+
+        begin   opCode  = `store        ;
+                d       = 5'b0          ;
+                l       = left          ;
+                v       = {right, 11'b0};
+                endLine                 ;
+        end
+    endtask
+
+    task VAL; // value load
+        input   [4:0]   dest    ;
+        input   [15:0]  value   ;
+
+        begin   opCode  = `val  ;
+                d       = dest  ;
+                l       = 5'b0  ;
+                v       = value;;
+                endLine         ;
+        end
+    endtask
+
+    // RUNNING
+    initial begin   addrCounter = 0;
+                    `include "program.sv" // first pass
+                    addrCounter = 0;
+                    `include "program.sv" // second pass
+            end
+\end{lstlisting}
+\end{shaded*}
+}
+
+\section{Simulator}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: testRISC.sv
+Circuit name:
+Description:
+************************************************************************/
+`include "DEFINES.vh"
+module testRISC;
+    logic           inta    ;
+    logic           intIn   ;
+    logic           reset   ;
+    logic           clk     ;
+
+    integer i   ;
+
+    `include "RISCcodeGenerator.sv"
+
+    initial begin               clk = 0     ;
+                    forever #1  clk = ~clk  ;
+            end
+
+    initial begin
+            intIn       = 1 ;
+            reset       = 1 ;
+            // DISPLAY THE CONTENT OF PROGRAM MEMORY
+            for (i=0; i<8; i=i+1)
+                $display("progMemory[%0d] \t = %b", i,
+                         progMemory[i]) ;
+        #4  reset       = 0 ;
+        #40 $finish     ;
+    end
+
+    logic   [31:0]  instr       ;
+    logic   [9:0]   nextPC      ;
+    logic   [31:0]  dataIn      ;
+    logic   [31:0]  dataOut     ;
+    logic   [9:0]   addr        ;
+    logic           dataRead    ;
+    logic           dataWrite   ;
+
+    logic   [31:0]  dataMemory[0:1023]  ;
+    logic   [31:0]  progMemory[0:1023]  ;
+    logic   [31:0]  dataMemOut          ;
+
+    always_ff @(posedge clk) begin
+        if (dataRead) dataIn <= dataMemory[addr]    ;
+        if (dataWrite) dataMemory[addr] <= dataOut  ;
+        instr <= progMemory[nextPC]                 ;
+    end
+
+    toyRISC dut(instr       ,
+                nextPC      ,
+                intIn       ,
+                inta        ,
+                dataIn      ,
+                dataOut     ,
+                addr        ,
+                dataRead    ,
+                dataWrite   ,
+                reset       ,
+                clk         );
+
+    // MONITOR FOR PROGRAM LAOD & CONTROLLER
+    initial begin
+        $monitor("t=%0d pc=%d  RF=[%0d, %0d, %0d, %0d] out=%0d 
+        gleftIn=%0d rightIn=%0d value=%0d opCode=%0d ei=%b inta=%b",
+                $time,
+                dut.PC.pc,
+                dut.RALU.regFile.rf[0],
+                dut.RALU.regFile.rf[1],
+                dut.RALU.regFile.rf[2],
+                dut.RALU.regFile.rf[3],
+                dut.RALU.alu.out,
+                dut.RALU.alu.leftIn ,
+                dut.RALU.alu.rightIn,
+                dut.RALU.alu.value  ,
+                dut.RALU.alu.opCode ,
+                dut.DCD.ei,
+                dut.inta);
+    end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+\section{Testing}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: program.sv
+Description: programs to validate the main types of instructions
+************************************************************************/
+// Testing instantiating registers & arithmetic operation
+/*
+            VAL(0,2)    ;
+            VAL(1,4)    ;
+            VAL(2,8)    ;
+            MULT(3,1,2) ;
+            HALT        ;
+//*/
+// Testing interrupt mechanism
+//*
+            VAL(31,10)  ;
+            VAL(2,23)   ;
+            VAL(0,13)   ;
+            EI          ;
+            ADDV(0,0,2) ;
+            NOP         ;
+            ADDV(0,0,4) ;
+            HALT        ;
+            NOP         ;
+            NOP         ;
+        // subroutine triggered by interrupt
+            DI          ;
+            VAL(3,44)   ;
+            RET(30)     ;
+//*/
+// Testing jump & branch
+/*
+            VAL(0,3)    ;
+    LB(1);  ADDV(0,0,-1);
+            NOP         ;
+            RJMP(1)     ; // BRNZ(0,1)
+            HALT        ;
+//*/
+// Testing data memory 
+/*
+            VAL(0,1)    ;
+            VAL(1,55)   ;
+            STORE(0,1)  ;
+            READ(0)     ;
+            LOAD(2)     ;
+            HALT        ;
+//*/
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\footnotesize
+\begin{verbatim}
+progMemory[0]    = 01011111111000000000000000001010
+progMemory[1]    = 01011100010000000000000000010111
+progMemory[2]    = 01011100000000000000000000001101
+progMemory[3]    = 00100000000000000000000000000000
+progMemory[4]    = 11001000000000000000000000000010
+progMemory[5]    = 11001000000000000000000000000000
+progMemory[6]    = 11001000000000000000000000000100
+progMemory[7]    = 00011000000000000000000000000000
+progMemory[8]    = 11001000000000000000000000000000
+progMemory[9]    = 11001000000000000000000000000000
+progMemory[10] 	 = 00100100000000000000000000000000
+progMemory[11] 	 = 01011100011000000000000000101100
+progMemory[12] 	 = 00010100000111100000000000000000
+progMemory[13] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+progMemory[14] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+progMemory[15] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+t=0  pc=   x  RF=[x, x, x, x]    out=x  leftIn=x  rightIn=x  value=x  opCode=x  ei=x inta=x
+t=1  pc=1023  RF=[x, x, x, x]    out=x  leftIn=x  rightIn=x  value=x  opCode=x  ei=0 inta=0
+t=3  pc=1023  RF=[x, x, x, x]    out=x  leftIn=x  rightIn=x  value=10 opCode=23 ei=0 inta=0
+t=5  pc=   0  RF=[x, x, x, x]    out=x  leftIn=x  rightIn=x  value=10 opCode=23 ei=0 inta=0
+t=7  pc=   1  RF=[x, x, x, x]    out=x  leftIn=x  rightIn=x  value=23 opCode=23 ei=0 inta=0
+t=9  pc=   2  RF=[x, x, 23, x]   out=x  leftIn=x  rightIn=x  value=13 opCode=23 ei=0 inta=0
+t=11 pc=   3  RF=[13, x, 23, x]  out=13 leftIn=13 rightIn=13 value=0  opCode=8  ei=0 inta=0
+t=13 pc=   4  RF=[13, x, 23, x]  out=12 leftIn=10 rightIn=13 value=2  opCode=50 ei=1 inta=1
+t=15 pc=  10  RF=[13, x, 23, x]  out=13 leftIn=13 rightIn=13 value=0  opCode=50 ei=0 inta=0
+t=17 pc=  11  RF=[13, x, 23, x]  out=13 leftIn=13 rightIn=13 value=44 opCode=23 ei=0 inta=0
+t=19 pc=  12  RF=[13, x, 23, 44] out=4  leftIn=4  rightIn=13 value=0  opCode=5  ei=0 inta=0
+t=21 pc=   4  RF=[13, x, 23, 44] out=15 leftIn=13 rightIn=13 value=2  opCode=50 ei=0 inta=0
+t=23 pc=   5  RF=[15, x, 23, 44] out=15 leftIn=15 rightIn=15 value=0  opCode=50 ei=0 inta=0
+t=25 pc=   6  RF=[15, x, 23, 44] out=19 leftIn=15 rightIn=15 value=4  opCode=50 ei=0 inta=0
+t=27 pc=   7  RF=[19, x, 23, 44] out=19 leftIn=19 rightIn=19 value=0  opCode=6  ei=0 inta=0
+\end{verbatim}
+}
