@@ -508,7 +508,6 @@ x = -s \cdot 2^{n-1} + \text{Unsigned value of remaining bits}, \quad s = \text{
 
 Note that there is a unique representation for zero (\( 0000 \)).
 
----
 
 %************************************************************
 \subsubsection{Arithmetic with Two's Complement Representation}
@@ -554,13 +553,86 @@ Step-by-step subtraction:
    \]
 \end{itemize}
 
----
+%*****************************************************************
+\subsubsection{Intermediate Overflow in 2's Complement Arithmetic}
+%*****************************************************************
+In 2's complement arithmetic, it is permissible for intermediate results to overflow during a sequence of arithmetic operations, as long as the final result falls within the representable range. This is because 2's complement arithmetic operates modulo \( 2^n \), where \( n \) is the number of bits, and modular arithmetic ensures correctness under these conditions.
+
+In a system with \( n \)-bit 2's complement representation:
+\begin{itemize}
+    \item Arithmetic operations (e.g., addition and subtraction) are performed modulo \( 2^n \).
+    \item Overflow occurs when intermediate results exceed the maximum representable value (\( 2^{n-1} - 1 \)) or go below the minimum representable value (\( -2^{n-1} \)).
+    \item Intermediate overflow wraps around modulo \( 2^n \), and as long as the final result is within the representable range, the computation is valid.
+\end{itemize}
+
+%********************************************
+\paragraph{Example of Intermediate Overflow.}
+%********************************************
+Consider an 8-bit 2's complement system (\( n = 8 \)), where the representable range is \( -128 \) to \( 127 \).
+
+\begin{enumerate}
+    \item \textbf{Compute \( 100 + 50 - 90 \):}
+    \begin{enumerate}
+        \item \textbf{Step 1: Compute \( 100 + 50 \):}
+        \begin{itemize}[noitemsep]
+            \item Decimal representation: \( 100 + 50 = 150 \), which exceeds the maximum representable value (\( 127 \)).
+            \item Binary representation of \( 100 \): \( 01100100_2 \).
+            \item Binary representation of \( 50 \): \( 00110010_2 \).
+            \item Binary result (9-bit, showing overflow): \( 10010110_2 \).
+            \item Truncated to 8 bits: \( 10010110_2 \), which represents \( -106 \) in 2's complement.
+        \end{itemize}
+        Intermediate result wraps around modulo \( 2^8 \):
+        \[
+        150 \mod 256 = -106 \quad (\text{in 2's complement: } 150 - 256 = -106).
+        \]
+
+        \item \textbf{Step 2: Subtract \( 90 \):}
+        \begin{itemize}[noitemsep]
+            \item Decimal representation: \( -106 - 90 = -196 \), which overflows again.
+            \item Binary representation of \( -106 \): \( 10010110_2 \).
+            \item Binary representation of \( 90 \): \( 01011010_2 \).
+            \item Binary result (9-bit, showing overflow): \( 101111100_2 \).
+            \item Truncated to 8 bits: \( 00111100_2 \), which represents \( 60 \) in 2's complement.
+        \end{itemize}
+        Final result wraps around modulo \( 2^8 \):
+        \[
+        -196 \mod 256 = 60 \quad (\text{in 2's complement: } -196 + 256 = 60).
+        \]
+
+        \item \textbf{Correctness Check:}
+        The true sum in \( \mathbb{Z} \) is \( 100 + 50 - 90 = 60 \), which is correctly represented within the range of 2's complement. The intermediate overflows did not affect the correctness of the final result due to modular arithmetic.
+    \end{enumerate}
+\end{enumerate}
+
+%*****************************************************
+\paragraph{Key Property of 2's Complement Arithmetic.}
+%*****************************************************
+2's complement arithmetic is closed under modular addition and subtraction, which ensures that the wrapping behavior of overflow does not affect the correctness of the final result. As long as the final sum or difference falls within the representable range, intermediate overflows are irrelevant.
+\begin{itemize}
+    \item Intermediate overflow results in wrapping around, but this is consistent with the properties of 2's complement arithmetic.
+    \item Binary truncation ensures that only the least significant 8 bits are retained, preserving correctness modulo \( 2^8 \).
+    \item The final result (\( 60 \)) lies within the representable range of \( -128 \) to \( 127 \).
+\end{itemize}
+
+%**********************************
+\paragraph{Practical Implications.}
+%**********************************
+\begin{itemize}
+    \item Hardware Arithmetic:
+    CPUs use fixed-width registers, allowing intermediate results to overflow without error detection unless explicitly checked.
+    \item Algorithms:
+    Algorithms relying on modular arithmetic, such as checksums or cryptographic methods, leverage this property for correctness.
+    \item Multiplication:
+    Intermediate overflow in multiplication may invalidate the result unless carefully managed, as modular behavior affects multiplication differently.
+\end{itemize}
+
 
 %************************************************************
 \subsubsection{Trade-offs of Two's Complement Representation}
 %************************************************************
 Advantages:
 \begin{itemize}
+    \item Closed Under Addition and Subtraction: ensures that the wrapping behavior of overflow does not affect the correctness of the final result.
     \item Simplified Arithmetic: Addition and subtraction use the same logic as unsigned integers, without requiring separate handling for the sign.
     \item Unique Representation of Zero: Avoids ambiguity and inefficiency caused by dual-zero representations.
     \item Widely Used: Two's complement is the standard representation for signed integers in modern computing systems.
