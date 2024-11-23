@@ -7,6 +7,44 @@ Complement systems, Binary-Coded Decimal (BCD), and floating-point formats, are 
 
 Depending upon the representation chosen, the same value may have more than one representation or no representation.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Sets of Numbers and Representations of Numbers}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In mathematics and computer science, it is essential to distinguish between sets of numbers, such as \( \mathbb{Z} \) (the set of integers), and representations of numbers, such as two's complement, excess-\( k \), or Binary Coded Decimal (BCD). While representations are methods for encoding and manipulating numbers in practical systems, the sets themselves are abstract mathematical constructs that define properties and operations independent of specific implementations. This distinction has significant implications for understanding the properties, limitations, and behaviors of numerical systems.
+
+%******************************
+\subsubsection{Sets of Numbers}
+%******************************
+A set of numbers is a mathematical construct that defines a collection of elements, operations, and properties. Common sets of numbers include:
+
+\begin{itemize}
+    \item \( \mathbb{N} \) (Natural Numbers): The set of non-negative integers \( \{0, 1, 2, \dots\} \).
+    \item \( \mathbb{Z} \) (Integers): The set of all integers \( \{\dots, -2, -1, 0, 1, 2, \dots\} \).
+    \item \( \mathbb{R} \) (Real Numbers): The set of all numbers on the continuous number line, including both rational and irrational numbers.
+\end{itemize}
+
+Each set is defined by specific properties:
+\begin{itemize}
+    \item Closure: Operations such as addition, subtraction, or multiplication remain within the set.
+    \item Associativity and Commutativity: Mathematical operations are consistent and well-defined.
+    \item Existence of Identity and Inverses: Sets may include elements like \( 0 \) (additive identity) or \( -x \) (additive inverse).
+\end{itemize}
+
+These sets are abstract and independent of how numbers are represented in physical or computational systems.
+
+%**************************************
+\subsubsection{Representations of Numbers}
+%**************************************
+Representations of numbers refer to the ways in which numbers are encoded, stored, and manipulated in practical systems, such as computers or calculators. Examples of representations include:
+
+\begin{itemize}
+    \item Two's Complement: A binary representation for signed integers.
+    \item Excess-\( k \): A biased representation commonly used in floating-point exponents.
+    \item Binary Coded Decimal (BCD): Encodes each decimal digit as a separate binary sequence.
+    \item IEEE 754 Floating-Point: A standardized representation for real numbers.
+\end{itemize}
+
+Unlike sets, representations are constrained by practical factors such as finite memory, bit-width, and computational efficiency. This can result in behaviors and limitations that deviate from the properties of the corresponding mathematical sets.
 
 
 %***********************************

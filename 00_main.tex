@@ -65,24 +65,6 @@
 \newcommand{\lstoflisting}[1]{\addcontentsline{lol}{section}{\protect\numberline{}#1}}
 
 
-\usepackage{enumitem} % Required for customizing list environments
-% Set global defaults for itemize
-\setlist[itemize]{
-    itemsep=1pt,
-    left=1.5em,
-    topsep=0.5pt
-}
-% Set custom defaults for enumerate
-\setlist[enumerate]{
-    label=\arabic*),     
-    itemsep=1pt,       % Space between items
-    left=1.5em,        % Standard paragraph is 1em indent
-    topsep=0.5pt         % Space above and below the list
-}
-
-\newenvironment{itemize_nosep}
-  {\begin{itemize}[noitemsep, left=1cm, topsep=0pt]}
-  {\end{itemize}}
 
 
 %%%%%%%%%%%%%%%%%%%
@@ -149,6 +131,29 @@
 \advance \leftmargin -\textwidth \divide \leftmargin by 2 \advance
 \leftmargin -1.0in \oddsidemargin \leftmargin \evensidemargin
 \leftmargin
+
+
+%\usepackage{etoolbox} % For patching commands
+\usepackage{enumitem} % Required for customizing list environments
+% Set global defaults for itemize
+\setlist[itemize]{ 
+    topsep=0.25em,       % Space above the list
+    partopsep=0em,      % Additional space above if starting a new paragraph
+    parsep=0em,         % Space between paragraphs inside the list
+    itemsep=0.5em,       % Space between list items
+    listparindent=0em,    % Space for paragraphs inside the list
+    %after=\vspace{1em}\noindent % Remove indentation after all lists
+}
+% Set custom defaults for enumerate
+\setlist[enumerate]{
+    label=\arabic*),     
+    topsep=0.25em,       % Space above the list
+    partopsep=0em,      % Additional space above if starting a new paragraph
+    parsep=0em,         % Space between paragraphs inside the list
+    itemsep=0.5em,       % Space between list items
+    listparindent=0em,    % Space for paragraphs inside the list
+    %after=\vspace{1em}\noindent % Remove indentation after all lists
+}
 
 
 \makeindex

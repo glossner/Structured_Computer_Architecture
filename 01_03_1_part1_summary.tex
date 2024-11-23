@@ -1,55 +1,35 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{A Brief History of Number Systems}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The development of number systems has a long and varied history that spans different civilizations and cultures. Early humans initially used tally marks to record quantities, such as notches on bones or stones, which are believed to date back to around 30,000 BCE \cite{ifrah2000universal}. As civilizations advanced, more sophisticated methods of counting and calculation were developed, such as the Babylonian base-60 system around 2000 BCE and the Egyptian hieroglyphic numerals around 3000 BCE \cite{ore1990number}. These early number systems paved the way for more advanced systems, eventually leading to the Hindu-Arabic numeral system, which is the basis of our modern decimal system.
-
-The binary number system, which uses only two symbols (0 and 1), was first described by Indian mathematician Pingala in the 2nd century BCE. However, it was not until the 17th century that Gottfried Wilhelm Leibniz formally developed binary arithmetic, recognizing its potential for simplifying computations \cite{kline1990mathematics}. This binary system is foundational to digital computing, as it aligns naturally with the on-off states of electrical circuits in modern computers.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Historical Development of Representations}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The evolution of numerical representations parallels the development of mathematical concepts such as integers, rational numbers, and real numbers. Each representation arose to address specific computational, theoretical, or practical challenges faced by mathematicians and engineers throughout history.
-
-%***************************************************
-\subsection{Early Numerical Systems and Integers}
-%****************************************************
-The earliest forms of number representation date back to ancient civilizations such as the Babylonians and Egyptians, who developed positional numeral systems to encode whole numbers for trade, astronomy, and geometry. The concept of integers (\( \mathbb{Z} \)) itself is ancient, but negative numbers were not widely accepted until much later.
-
-Negative numbers emerged in Indian mathematics. Brahmagupta (7th century CE) introduced rules for operations on positive and negative quantities, using them to represent debts and surpluses \cite{burton2010-history}. This conceptual breakthrough laid the foundation for representations that handle both positive and negative values, such as signed-magnitude systems and, eventually, two's complement.
-
-%*********************************************
-\subsection{Rational Numbers and Fractions}
-%*********************************************
-The Greeks, particularly the Pythagoreans, extensively explored rational numbers (\( \mathbb{Q} \)) through ratios and proportions in geometry. However, the discovery of irrational numbers, such as \( \sqrt{2} \), challenged their worldview and led to deeper inquiries into the nature of numbers \cite{maor2007}.
-
-Representations of rational numbers often relied on fractions, which were widely used across cultures. The decimal system developed much later, with the Hindu-Arabic numeral system (circa 500–1200 CE) introducing positional notation and a decimal point, enabling precise representation of fractional quantities.
-
-%***************************************
-\subsection{Real and Complex Numbers}
-%***************************************
-Real numbers (\( \mathbb{R} \)) emerged to address the need for continuity in geometry and calculus. The Greeks hinted at irrational numbers in Euclid's works on incommensurable lengths, but rigorous definitions came much later. Dedekind (via Dedekind cuts) and Cantor (via set theory) formalized the real number system in the 19th century \cite{rosen2018}.
-
-Complex numbers (\( \mathbb{C} \)) arose in the 16th century as mathematicians attempted to solve cubic and quartic equations. Initially dismissed as "imaginary," they were formalized by Euler, Argand, and Gauss. By the 19th century, complex numbers were recognized as essential in mathematics, physics, and engineering \cite{stewart2008-taming}.
-
-%*************************************************
-\subsection{Representations in the Digital Age}
-%*************************************************
-The digital age introduced new challenges for representing numbers in computing systems. Finite storage and efficiency constraints drove the development of binary-based representations:
+%**************************************************************
+\section{Summary of Numbers and their Representations}
+%***************************************************************
+While representations encode numbers from a specific set, they may not fully exhibit the properties of that set. For example:
 
 \begin{itemize}
-    \item Two's Complement: Developed to simplify arithmetic operations on signed integers. By encoding negative numbers as the binary complement of positive numbers plus one, it eliminated the ambiguity of zero found in earlier systems like signed magnitude.
-    \item Excess-\( k \): A biased representation first used in analog computing systems and later adopted for exponents in IEEE 754 floating-point standards. Its ability to simplify comparisons and normalize data made it indispensable in numerical computing.
-    \item Binary Coded Decimal (BCD): Designed to facilitate precise decimal arithmetic, particularly in financial systems. BCD encoding avoids errors associated with binary floating-point approximations but at the cost of storage inefficiency.
+    \item Closure: In two's complement, the result of adding two numbers can overflow and exceed the representable range, even though addition within \( \mathbb{Z} \) is closed.
+    \item Symmetry: The set \( \mathbb{Z} \) is symmetric around \( 0 \), but representations like two's complement have an asymmetric range due to the extra negative value (\( -2^{n-1} \)).
+    \item Arithmetic Operations: Subtraction in excess-\( k \) may require decoding and re-encoding, as direct subtraction of encoded values can produce incorrect results.
 \end{itemize}
 
-The introduction of IEEE 754 standards in 1985 further standardized the representation of real numbers in digital systems, balancing precision, range, and efficiency. These standards remain a cornerstone of numerical computation today.
+These deviations arise because representations are designed for efficiency and practicality rather than mathematical purity.
 
-\subsection{Contemporary Applications and Limitations}
-
-Modern systems employ diverse numerical representations tailored to specific applications:
+Representations often have a limited range and precision due to finite storage:
 \begin{itemize}
-    \item Floating-point representations enable accurate simulations in physics, graphics, and machine learning.
-    \item BCD remains important in financial and accounting software where decimal precision is required.
-    \item Custom representations, such as fixed-point arithmetic, are used in embedded systems to minimize hardware complexity.
+    \item In \( \mathbb{Z} \), there is no upper or lower bound on integers. However, in two's complement, the range is limited to \( [-2^{n-1}, 2^{n-1} - 1] \) for \( n \)-bit systems.
+    \item In \( \mathbb{R} \), real numbers are continuous and infinite. In IEEE 754, real numbers are approximated using finite precision, leading to rounding errors.
 \end{itemize}
+
+Errors can propagate in numerical representations, even when the underlying set is exact. For example:
+\begin{itemize}
+    \item Floating-point arithmetic introduces rounding errors due to the inability to represent certain numbers exactly (e.g., \( 0.1 \)).
+    \item BCD ensures exact decimal representation but requires correction during arithmetic operations like subtraction, which can be slower.
+\end{itemize}
+
+Representations often prioritize specific tasks or applications:
+\begin{itemize}
+    \item Excess-\( k \) simplifies comparisons in floating-point systems, but it is not closed under subtraction without decoding.
+    \item BCD facilitates precise decimal arithmetic for financial systems but is less efficient for general-purpose computation.
+\end{itemize}
+
+
+While sets like \( \mathbb{Z} \), \( \mathbb{Q} \), and \( \mathbb{R} \) define the abstract mathematical properties of numbers, representations are practical implementations tailored to computational systems. A representation may encode elements of a set, but it might not preserve all the properties of the set. Understanding these differences is critical in applications where precision, range, or specific properties (e.g., symmetry or closure) are required. Representations must be chosen carefully based on the demands of the task, as their limitations can impact accuracy, efficiency, and correctness in practical systems.
 
 

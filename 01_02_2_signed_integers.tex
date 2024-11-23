@@ -1000,90 +1000,85 @@ Step-by-step addition:
 \subsubsection{Subtraction in BCD}
 %*********************************
 We want to compute:
-\[
+\(
 75 - 46 = 29
-\]
+\)
 using Binary Coded Decimal arithmetic.
 
+\vspace{\baselineskip}\par
 BCD Representation:
 \begin{itemize}[noitemsep, left=1cm]
     \item \( 75 \) in BCD:
-    \[
+    \(
     0111 \; 0101
-    \]
+    \)
     \item \( 46 \) in BCD:
-    \[
+    \(
     0100 \; 0110
-    \]
+    \)
 \end{itemize}
 
+\vspace{\baselineskip}\par
 Step-by-Step Subtraction:
+\begin{enumerate}
+    \item Subtract Each Digit Individually:
+    \begin{itemize}
+        \item Perform the subtraction digit by digit, starting from the least significant digit (LSD):
+        \item The subtraction in the LSD results in \( 5 - 6 = -1 \), which is invalid in BCD.
+           \[
+           \begin{array}{c@{\;}c@{\;}cc}
+           & 0111 & 0101 \; & (\text{75 in BCD}) \\
+           - & 0100 & 0110 \; &(\text{46 in BCD}) \\
+           \hline
+           & 0011 & -0001 &
+           \end{array}
+           \]
+    \end{itemize}
 
-1. **Subtract Each Digit Individually**:
-   Perform the subtraction digit by digit, starting from the least significant digit (LSD):
-   \[
-   \begin{array}{c@{\;}c@{\;}c}
-   & 0111 & 0101 \; (\text{75 in BCD}) \\
-   - & 0100 & 0110 \; (\text{46 in BCD}) \\
-   \hline
-   & 0011 & -0001
-   \end{array}
-   \]
-   - The subtraction in the LSD results in \( 5 - 6 = -1 \), which is invalid in BCD.
+    \item Apply Borrow Correction:
+    \begin{itemize}
+        \item Since \( 5 - 6 = -1 \), borrow \( 1 \) from the next higher digit.
+        \item In BCD, borrowing subtracts \( 1 \) from the higher digit and adds \( 10 \) (binary \( 1010 \)) to the lower digit.
 
-2. **Apply Borrow Correction**:
-   - Since \( 5 - 6 = -1 \), borrow \( 1 \) from the next higher digit.
-   - In BCD, borrowing subtracts \( 1 \) from the higher digit and adds \( 10 \) (binary \( 1010 \)) to the lower digit.
-
+    \vspace{\baselineskip}\par
    Corrected subtraction:
    \[
-   \begin{array}{c@{\;}c@{\;}c}
-   & 0110 & 1111 \; (\text{After Borrowing}) \\
-   - & 0100 & 0110 \\
+   \begin{array}{c@{\;}c@{\;}cc}
+   & 0110 & 1111 \; & (\text{After Borrowing}) \\
+   - & 0100 & 0110 & \\
    \hline
-   & 0010 & 1001
+   & 0010 &  1001  &
    \end{array}
    \]
+    \end{itemize}
 
-3. **Result**:
-   - The final result in BCD is:
+    \item The final result in BCD is:
      \[
      0010 \; 1001 \; (\text{BCD for } 29)
      \]
 
----
+\end{enumerate}
 
- Verification:
-Convert \( 0010 \; 1001 \) back to decimal:
-\[
-2 \times 10 + 9 = 29
-\]
-
----
-
- Conclusion:
-Subtraction in BCD requires handling invalid results (e.g., negative digits) through **borrow correction**. By borrowing and adding \( 10 \) to the LSD, we ensure the result remains valid in BCD.
-
-
+%***********************************************
 \subsubsection{Trade-offs of BCD Representation}
-\begin{itemize}
-    \item \textbf{Advantages:}
+%***********************************************
+Advantages:
     \begin{itemize}
         \item Precise representation of decimal numbers.
         \item Avoids errors due to floating-point approximations in decimal systems.
         \item Simplifies display formatting for human-readable outputs.
     \end{itemize}
-    \item \textbf{Disadvantages:}
+Disadvantages:
     \begin{itemize}
         \item Inefficient use of storage, as only 10 out of 16 possible 4-bit values are used.
         \item Arithmetic operations are slower compared to binary due to correction steps.
+        \item Subtraction in BCD requires handling invalid results (e.g., negative digits) through borrow correction. By borrowing and adding \( 10 \) to the LSD, we ensure the result remains valid in BCD.
         \item Less common in modern general-purpose computing due to inefficiencies.
     \end{itemize}
-\end{itemize}
 
----
-
+%**********************************
 \subsubsection{Applications of BCD}
+%**********************************
 BCD is commonly used in applications requiring exact decimal representation and arithmetic, such as:
 \begin{itemize}
     \item Financial systems (e.g., accounting and banking software).
@@ -1091,68 +1086,73 @@ BCD is commonly used in applications requiring exact decimal representation and 
     \item Embedded systems where human-readable output is necessary.
 \end{itemize}
 
-
 %************************************************************
-\subsection{Example: Floating-Point vs. BCD in Financial Applications}
+\subsubsection{Example: Floating-Point vs. BCD in Financial Applications}
 %************************************************************
+This example shows why BCD is used in financial applications. A financial application needs to add \$1.10 and \$0.30, which should result in \$1.40. The values are represented in both binary floating-point  and BCD to illustrate the differences in accuracy \cite{goldberg1991}.
 
- Scenario:
-A financial application needs to add \$1.10 and \$0.30, which should result in \$1.40. The values are represented in both **binary floating-point** and **BCD** to illustrate the differences in accuracy \cite{goldberg1991}.
+\paragraph{Floating-Point Representation:}
+Floating-point uses binary fractions to approximate decimal values. We encode \$1.10 and \$0.30 as 32-bit IEEE 754 single-precision floating-point numbers.
 
----
-
-\subsubsection{Floating-Point Representation}
-
-Floating-point uses binary fractions to approximate decimal values. Let's encode \$1.10 and \$0.30 as 32-bit IEEE 754 single-precision floating-point numbers.
-
-1. **Representation**:
-   - For \$1.10:
-     \[
+\begin{enumerate}
+    \item Representation:
+    \begin{itemize}
+        \item  For \$1.10:
+     \(
      1.10_{10} = 1.00011001100110011\ldots_2 \quad (\text{recurring in binary})
-     \]
-     Approximated in floating-point as:
-     \[
-     1.10 \approx 1.099999904632568359375
-     \]
-   - For \$0.30:
-     \[
-     0.30_{10} = 0.010011001100110011\ldots_2 \quad (\text{recurring in binary})
-     \]
-     Approximated in floating-point as:
-     \[
-     0.30 \approx 0.2999999821186065673828125
-     \]
+     \)    
+     \begin{itemize}
 
-2. **Addition**:
-   Adding these approximations:
+     \item Approximated in floating-point as:
+     \(
+     1.10 \approx 1.099999904632568359375
+     \)
+    \end{itemize}
+    
+   \item For \$0.30:
+     \(
+     0.30_{10} = 0.010011001100110011\ldots_2 \quad (\text{recurring in binary})
+     \)
+     \begin{itemize}
+     \item Approximated in floating-point as:
+     \(
+     0.30 \approx 0.2999999821186065673828125
+     \)
+     \end{itemize}     
+    \end{itemize}
+
+    \item Add approximations
    \[
    1.099999904632568359375 + 0.2999999821186065673828125 = 1.3999998867511749267578125
    \]
 
-3. **Result**:
-   The floating-point result is approximately:
+    \item The floating-point result is approximately:
    \[
    \text{\$1.3999999 (not exactly \$1.40)}.
    \]
+    
+\end{enumerate}
 
----
+\paragraph{BCD Representation:}
+In BCD, each decimal digit is encoded precisely without approximation. We encode \$1.10 and \$0.30 in BCD.
 
-\subsubsection{BCD Representation}
-
-In BCD, each decimal digit is encoded precisely without approximation. Let's represent \$1.10 and \$0.30 in BCD.
-
-1. **Representation**:
-   - For \$1.10:
-     \[
+\begin{enumerate}
+    \item Representation:
+    \begin{enumerate}
+        \item For \$1.10:
+     \(
      \text{BCD: } 0001 \; 0001 \; 0000
-     \]
-   - For \$0.30:
-     \[
-     \text{BCD: } 0000 \; 0011 \; 0000
-     \]
+     \)
 
-2. **Addition**:
-   Adding the BCD values:
+        \item For \$0.30:
+     \(
+     \text{BCD: } 0000 \; 0011 \; 0000
+     \)
+    \end{enumerate}
+
+    \item Addition:
+    \begin{itemize}
+        \item Adding the BCD values:
    \[
    \begin{array}{cccc}
      & 0001 & 0001 & 0000 \; (\$1.10) \\
@@ -1161,84 +1161,59 @@ In BCD, each decimal digit is encoded precisely without approximation. Let's rep
      & 0001 & 0100 & 0000 \; (\$1.40)
    \end{array}
    \]
+    \end{itemize}
 
-3. **Result**:
-   The BCD result is exactly:
+   \item The BCD result is exactly:
    \[
    \text{\$1.40 (no rounding error)}.
    \]
 
----
+\end{enumerate}
 
-\subsubsection{Comparison}
+This example highlights why BCD is preferred in financial applications. It guarantees exact decimal arithmetic, avoiding the rounding errors and inaccuracies inherent in binary floating-point representation. While floating-point is more efficient for general-purpose computation, its limitations make it unsuitable for contexts like financial systems, where precision is critical.
 
-\begin{itemize}[noitemsep, left=1cm]
-    \item \textbf{Floating-Point:}
-    \begin{itemize}[noitemsep]
+Floating-Point:
+    \begin{itemize}
         \item Binary fractions cannot precisely represent many decimal values (e.g., 0.1, 0.3).
         \item Arithmetic introduces small inaccuracies, such as \$1.3999999 instead of \$1.40.
         \item Errors accumulate over multiple operations, making floating-point unsuitable for precise financial calculations.
     \end{itemize}
-    \item \textbf{BCD:}
-    \begin{itemize}[noitemsep]
+    
+BCD:
+    \begin{itemize}
         \item Decimal digits are encoded exactly, avoiding conversion errors.
         \item Arithmetic is performed directly on decimal representations, ensuring precision.
         \item The result is always exact for decimal numbers, as seen with the correct sum of \$1.40.
     \end{itemize}
-\end{itemize}
-
----
-
-\subsubsection{Conclusion}
-
-This example highlights why **BCD** is preferred in financial applications. It guarantees exact decimal arithmetic, avoiding the rounding errors and inaccuracies inherent in binary floating-point representation. While floating-point is more efficient for general-purpose computation, its limitations make it unsuitable for contexts like financial systems, where precision is critical.
 
 
-%********************************************************
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Other Representations for Signed Numbers}
-%********************************************************
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In addition to the widely known methods of signed-magnitude, one's complement, two's complement, and excess-\( k \), other binary representations for signed numbers have been used historically or in specialized systems. These alternative representations often address specific challenges, such as reducing error, improving computational efficiency, or handling broader dynamic ranges.
 
----
 
-\textbf{1. Sign-and-Logarithm Representation} \\
+\paragraph{Sign-and-Logarithm Representation: } 
 Numbers are represented using a sign bit and the logarithm of their absolute value. This method is particularly useful for encoding a wide dynamic range of values with fewer bits. Sign-and-logarithm representations have been used in early scientific computations and audio processing systems where efficiency in representation outweighed complexity in arithmetic. However, addition and subtraction operations are computationally expensive, as they require converting numbers back to linear scale. This method is conceptually similar to floating-point representations but lacks their generality \cite{hamming1980}.
 
----
-
-\textbf{2. Gray Code} \\
+\paragraph{Gray Code: } 
 Gray code is a binary numeral system where consecutive numbers differ by only one bit. Although Gray code is typically used in signal encoding and rotary encoders, it has been adapted for signed number representations in niche applications. This representation reduces errors in digital communication systems by minimizing bit transitions. However, arithmetic operations in Gray code are nontrivial and require conversion to standard binary \cite{gray1953}.
 
----
-
-\textbf{3. Offset Binary (Biased Binary)} \\
+\paragraph{Offset Binary (Biased Binary: )} 
 Offset binary, also known as biased binary, is similar to excess-\( k \) but applies a fixed bias directly to the binary representation of both positive and negative numbers. This representation is often used in digital signal processing (DSP) systems to encode signals symmetrically around zero. Applications include Analog-to-Digital Converters (ADCs) and Digital-to-Analog Converters (DACs). The primary drawback is that arithmetic operations require normalization to adjust for the bias, similar to excess-\( k \) \cite{oppenheim2014}.
 
----
-
-\textbf{4. Base-2 Signed-Digit (SD) Representation} \\
+\paragraph{Base-2 Signed-Digit (SD) Representation: } 
 A signed-digit representation allows each digit to independently represent a value of \(-1\), \( 0 \), or \( +1 \). This system enables carry-free addition, making it highly efficient for certain high-speed arithmetic systems and redundant number systems. However, it requires special encoding and decoding processes, which complicates implementation. This method is primarily used in specific high-performance computing applications \cite{koren2002}.
 
----
-
-\textbf{5. Balanced Ternary} \\
+\paragraph{Balanced Ternary: }
 Balanced ternary is a non-binary numeral system that uses three digits: \(-1\), \( 0 \), and \( +1 \). While not strictly binary, it has been considered for signed representations in early computing systems. One notable example is the Soviet Setun computer, which used balanced ternary due to its efficiency in certain calculations. However, its lack of compatibility with modern binary-based digital systems limits its applicability today \cite{lukyanov1961}.
 
----
-
-\textbf{6. Segmented Representations} \\
+\paragraph{Segmented Representations: }
 In segmented representations, numbers are divided into multiple segments, with some segments used to encode the sign and others for magnitude or auxiliary components. These representations are rarely used in general-purpose systems but have been employed in specialized hardware architectures for non-standard data types. Segmented representations are complex to decode and implement for arithmetic operations, which has limited their adoption \cite{smith1991}.
 
----
-
-\textbf{7. Residue Number System (RNS)} \\
+\paragraph{Residue Number System (RNS): }
 The residue number system represents numbers as a set of residues modulo several pairwise coprime integers. This system supports signed numbers by choosing appropriate moduli. RNS is advantageous for high-speed computation in specialized domains such as cryptography and signal processing. While addition, subtraction, and multiplication are efficient in RNS, comparison and division operations are significantly more complex, which limits its use in general computing \cite{heydari2016}.
 
----
-
-\textbf{Summary} \\
+\paragraph{Summary: } 
 While signed-magnitude, one's complement, two's complement, and excess-\( k \) dominate practical use cases for signed number representations, alternative methods like sign-and-logarithm, Gray code, and residue number systems have found applications in specialized domains. These representations are often chosen to address specific challenges, such as reducing error, enhancing computational speed, or simplifying logical comparisons. However, their complexity and limited hardware compatibility have restricted their adoption in general-purpose computing.
-
-
-
