@@ -2,11 +2,71 @@
 
 \minitoc
 
-In this lesson we will accelerate the closing of the loops, but we will focus on the third loop that allows us to introduce the concept of the processor exemplified with a simple engine called {\bf {\em toyRISC}}. We will practice the processor concept in the context provided by the fifth loop, the one that defines the computer concept in the currently practiced understanding, that of Reduced Instruction Set Computer (RISC) type computing systems. Only for those interested and familiar with System Verilog HDL, at the end of this text there is an appendix that allows the simulation of the system described in this lesson.
+
+In this lesson we will  close the third loop. It can be closed through a combinational circuit, through a memory circuit, or through an automaton. For our purpose, we are interested only on this last case, that of closing the third loop over an automaton through another automaton. We will focus, but not limited  on the third loop that allows us to introduce the concept of the processor exemplified with a simple engine called {\bf {\em toyRISC}}. We will practice the processor concept in the context provided by the fifth loop, the one that defines the computer concept in the currently practiced understanding, that of Reduced Instruction Set Computer (RISC) type computing systems. Only for those interested and familiar with System Verilog HDL, at the end of this text there is an appendix that allows the simulation of the system described in this lesson.
 
 At the level of the third loop, we are at a {\em turning point} where the physical structure of the circuits will meet the informational structure of the programs. The functionality will be determined starting from this point by the circuit-information combination. The interface between structural and informational aspects is provided by the concept of {\bf {\em architecture}} borrowed from the field of construction.
 
-\section{Architecture vs. Organization}
+\section{Counter-Expanded Automata}
+
+Let's remember how we solved the problem of recognizing strings of the form $1^n0^m$ using a finite automaton. What should we do if we try to recognize strings of the form $1^n0^n$, strings that have a higher complexity because we have an additional restriction: the number of 1s is the same as the number of 0s? A finite automaton, with a number of states independent of the value of $n$, cannot solve the problem. The solution is to add a reversible counter in the loop of a finite automaton. In Figure \ref{cea} a counter-expanded automaton is represented that returns to the automaton that controls it a flag indicating its zero state.
+
+\placedrawing[h]{figures/F69.LP}{Counter-expanded automaton.}{cea}
+
+Because both FA and UD/COUNTER are 2-OS, connecting them in loop results in having a 3-OS.
+
+\begin{exemplu}
+The (context-free) language $(a^nb^n | \; n>0)$ is recognized by the  counter-expended automaton based on the following FA:
+$$FA = ((X \times flag),(Y \times com),Q,f,g) =$$ 
+$$= ((\{a,b,e\} \times \{zero\}), (\{idle, run, yes, no\} \times \{nop, up, down\}), Q, f, g)$$
+
+\placedrawing[H]{figures/F70.lp}{The graph describing the behavior of the finite automaton used to build the counter-expanded automaton for the $(a^nb^n | \; n>0)$ language.}{ceaEx}
+
+\hspace{-6mm}where $e$ is a delimiter symbol (a well-formed string is, for example, of the form $\ldots eeaaabbbee\ldots$),  and the set of states, $Q$, and the functions $f$ and $g$ are given by the graph in Figure \ref{ceaEx}. Establishing the  graph of the automaton allows us to also define the set of states: {\tt Q = \{q0, q1, q2, q3, q4\}}.
+
+The top module for the System Verilog design is:
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: CEA.sv
+Description: Counter expanded automaton with a 32-bit counter for
+             recognizing the language a^nb^n
+************************************************************************/
+`define nop     2'b00
+`define up      2'b01
+`define down    2'b10
+module CEA(input    logic [1:0] X           ,
+            output  logic [1:0] Y           ,
+            output  logic       reset, clock);
+
+    FA fa(  X               ,
+            Y               ,
+            conterCommand   ,
+            zero            ,
+            reset           ,
+            clock           );
+
+    logic [31;0] UD/COUNTER ;
+
+    always_ff @(posedge clock)
+        if(reset)   UD/COUNTER <= 0             ;
+            else if(up)             UD/COUNTER <= UD/COUNTER + 1;
+                    else if(down)   UD/COUNTER <= UD/COUNTER - 1;
+                            else    UD/COUNTER <= UD/COUNTER    ;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}}
+\hspace{-6mm}while for the finite automaton FA the implementation is similar for the design in Example \ref{mealySV}.
+
+$\diamond$
+\end{exemplu}
+
+\section{Processor: Three-Loop, Three-Order System ({\bf 3-OS})}
+
+\subsection{Architecture vs. Organization}
 
 {\small
  \hfill{
@@ -23,7 +83,7 @@ In the beginning it was only the hardware and the software. At some point there 
 {\em ... to describe the
 attributes of a system as seen by the programmer, i.e., the conceptual structure
 and functional behavior, as distinct from the organization of the data flow and
-controls, the logical design, and the physical implementation.} \cite{Amdahl}
+controls, the logical design, and the physical implementation.} \citep{Amdahl64}
 \end{quote}
 And so the Hardware -- Software duet turned into the Hardware -- Architecture -- Software triplet. Architecture being the short form for Instruction Set Architecture.
 \begin{table}[H]
@@ -45,8 +105,7 @@ And so the Hardware -- Software duet turned into the Hardware -- Architecture --
 \end{table}
 
 
-
-\section{Processor: Three-Loop, Three-Order System ({\bf 3-OS})}
+\section{Processor}
 
 There are several ways to close the third loop over a generic 2-OS represented by an automaton in order to obtain the generic structure o a {\bf processor}. On the closed loop over an automaton we can connect a 0-OS (a combinational circuit), a 1-OS (a memory), or a 2-OS (an automaton). The last version is the most significant (see Figure \ref{fig40}). It is the subject of this lesson.
 
@@ -152,7 +211,7 @@ support, the program memory.
 
 \placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}
 
-{\bf Important note}: the organization presented in the following is designed only from the circuit point of view with emphasis on the {\em competence} of the system. In order to maximize the performance the design must apply specific techniques to increase the frequency of the clock cycle. This concern goes beyond the aims of this lecture. We will partially address these issues in the next lesson. Books on the organization and architecture of computing systems deal extensively with issues of maximizing performance. (Books on the architecture and organization of computers written by John Hennessy and David Patterson are recommended  \cite{Hennessy1} \cite{Patterson2}.)
+{\bf Important note}: the organization presented in the following is designed only from the circuit point of view with emphasis on the {\em competence} of the system. In order to maximize the performance the design must apply specific techniques to increase the frequency of the clock cycle. This concern goes beyond the aims of this lecture. We will partially address these issues in the next lesson. Books on the organization and architecture of computing systems deal extensively with issues of maximizing performance. Books on the architecture and organization of computers written by John Hennessy and David Patterson are recommended  \citep{Hennessy19, Patterson19}.
 
 
 In Figure \ref{fig43}, the organization of the processor {\bf {\em toyRISC}} is represented. It contains two simple loop-connected automata, PC and RALU, serially connected with a complex and small section, DCD.
@@ -266,7 +325,7 @@ the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing syste
 
 
 The first field of the instruction, {\tt opCode}, contains the information used to determine what is the the action performed by  the current instruction.
-Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign} the entire design is listed. This design is meant to illustrate mainly the competence of the circuits without aiming to reach some performances in execution. In order to maximize the performance, it is necessary to apply special techniques (usually in the category of pipelines) related to the field of quantitative optimization of the organization of the computer system. See more on the quantitative approach in \cite{Hennessy}.
+Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign} the entire design is listed. This design is meant to illustrate mainly the competence of the circuits without aiming to reach some performances in execution. In order to maximize the performance, it is necessary to apply special techniques (usually in the category of pipelines) related to the field of quantitative optimization of the organization of the computer system. See more on the quantitative approach in \citep{Hennessy19}.
 
 \subsection{Assembly Code}
 
@@ -723,7 +782,8 @@ The increase in speed performance will be illustrated in the next lesson by usin
 
 As we already said, we use the term ISA to refer to the actual
 programmer-visible instruction set. The ISA serves as the boundary
-between the software engineer  and hardware engineer. We will list and comment further on the main characteristics of an ISA \cite{Patterson4}:
+between the software engineer  and hardware engineer. We will list and comment further on the main characteristics of an ISA 
+% FIXME: Not in bib \cite{Patterson4}:
 \begin{itemize}
     \item Class of ISA
         \begin{itemize}

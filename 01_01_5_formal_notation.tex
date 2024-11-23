@@ -1,0 +1,619 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formal Notation for Numerical Sets}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Our description of number systems and algorithms has been informal. We now formalize what sets of numbers we will be computing with. The development of mathematical sets, including integers, rational numbers, real numbers, and complex numbers, define what numbers a processor can compute. Integers are used for memory addressing, while processors use real and complex numbers to solve problems in many applications, including calculus and physics. 
+
+%**************************************************
+\subsection{The Set of Integers (\( \mathbb{Z} \))}
+%**************************************************
+The set of integers, denoted by \( \mathbb{Z} \) (from the German word "Zahlen," meaning "numbers"), consists of positive and negative whole numbers, as well as zero \cite{knuth1997}. Integers are foundational concepts in arithmetic, memory addressing, and computer architecture.
+
+Formally:
+\[
+\mathbb{Z} = \{\dots, -3, -2, -1, 0, 1, 2, 3, \dots\}
+\]
+
+%*****************************************
+\subsubsection{Properties of $\mathbb{Z}$}
+%*****************************************
+
+\begin{itemize}
+    \item \textbf{Closure}: \( \mathbb{Z} \) is closed under addition, subtraction, and multiplication. 
+    \[
+      \text{For any } a, b \in \mathbb{Z} \text{, } a + b  \text{,  }  a - b \text{, and }  a \cdot b \text{ are also in } \mathbb{Z}
+    \]
+    \item \textbf{Associativity}: Addition and multiplication in \( \mathbb{Z} \) are associative:
+    \[
+    (a + b) + c = a + (b + c) \quad \text{and} \quad (a \cdot b) \cdot c = a \cdot (b \cdot c).
+    \]
+    \item \textbf{Commutativity}: Addition and multiplication are commutative:
+    \[
+    a + b = b + a \quad \text{and} \quad a \cdot b = b \cdot a.
+    \]
+    \item \textbf{Existence of Identity Elements}: The additive identity is \( 0 \), and the multiplicative identity is \( 1 \):
+    \[
+    a + 0 = a \quad \text{and} \quad a \cdot 1 = a \quad \forall a \in \mathbb{Z}.
+    \]
+    \item \textbf{Existence of Inverses}: Every integer \( a \) has an additive inverse \( -a \) such that:
+    \[
+    a + (-a) = 0.
+    \]
+    However, \( \mathbb{Z} \) does not contain multiplicative inverses for nonzero elements, as division does not always yield an integer.
+    
+    \vspace{\baselineskip}\par
+    \item \textbf{Distributive Property}: Multiplication distributes over addition:
+    \[
+    a \cdot (b + c) = (a \cdot b) + (a \cdot c).
+    \]
+    \item \textbf{Ordered Set}: \( \mathbb{Z} \) is an ordered set with a natural less-than relation (\( < \)) satisfying:
+    \[
+    a < b \implies a + c < b + c \quad \text{and} \quad a < b, \; c > 0 \implies a \cdot c < b \cdot c.
+    \]
+\end{itemize}
+
+
+%******************************************
+\subsubsection{Subsets of \( \mathbb{Z} \)}
+%******************************************
+Various subsets of integers are frequently used:
+
+\begin{itemize}
+    \item \textbf{Positive integers:} Denoted as \( \mathbb{Z}^+ \) or \( \mathbb{N}^+ \), representing all integers greater than zero:
+    \[
+    \mathbb{Z}^+ = \mathbb{N}^+ = \{1, 2, 3, \dots\}
+    \]
+    \item \textbf{Negative integers:} Denoted as \( \mathbb{Z}^- \), representing all integers less than zero:
+    \[
+    \mathbb{Z}^- = \{-1, -2, -3, \dots\}
+    \]
+    \item \textbf{Natural numbers including zero:} Denoted as \( \mathbb{N} \), representing non-negative integers:
+    \[
+    \mathbb{N} = \{0, 1, 2, 3, \dots\}
+    \]
+\end{itemize}
+
+
+%******************************************************
+\subsection{The Set of Real Numbers (\( \mathbb{R} \))}
+%******************************************************
+The set of real numbers, denoted as \( \mathbb{R} \), represents a continuous spectrum of numbers along the number line. This set includes both rational and irrational numbers and is fundamental in mathematics and science.
+
+%*********************************************
+\subsubsection{Properties of \( \mathbb{R} \)}
+%*********************************************
+\begin{itemize}
+    \item \textbf{Closure}: \( \mathbb{R} \) is closed under addition, subtraction, multiplication, and division (except by zero). For all \( a, b \in \mathbb{R} \):
+    \[
+    a + b \in \mathbb{R}, \quad a - b \in \mathbb{R}, \quad a \cdot b \in \mathbb{R}, \quad \text{and, if } b \neq 0, \; \frac{a}{b} \in \mathbb{R}.
+    \]
+    
+    \item \textbf{Associativity}: Addition and multiplication in \( \mathbb{R} \) are associative:
+    \[
+    (a + b) + c = a + (b + c), \quad (a \cdot b) \cdot c = a \cdot (b \cdot c).
+    \]
+
+    \item \textbf{Commutativity}: Addition and multiplication are commutative:
+    \[
+    a + b = b + a, \quad a \cdot b = b \cdot a.
+    \]
+
+    \item \textbf{Existence of Identity Elements}: \( \mathbb{R} \) has both additive and multiplicative identity elements:
+    \[
+    a + 0 = a \quad \text{(additive identity)}, \quad a \cdot 1 = a \quad \text{(multiplicative identity)}.
+    \]
+
+    \item \textbf{Existence of Inverses}:
+    \begin{itemize}
+        \item For every \( a \in \mathbb{R} \), there exists an additive inverse \( -a \) such that:
+        \[
+        a + (-a) = 0.
+        \]
+        \item For every \( a \in \mathbb{R}, \; a \neq 0 \), there exists a multiplicative inverse \( a^{-1} \) such that:
+        \[
+        a \cdot a^{-1} = 1.
+        \]
+    \end{itemize}
+
+    \item \textbf{Distributive Property}: Multiplication distributes over addition:
+    \[
+    a \cdot (b + c) = (a \cdot b) + (a \cdot c).
+    \]
+
+    \item \textbf{Density}: \( \mathbb{R} \) is dense, meaning that between any two distinct real numbers \( a, b \in \mathbb{R} \), there exists another real number \( c \in \mathbb{R} \) such that:
+    \[
+    a < c < b.
+    \]
+
+    \item \textbf{Completeness}: \( \mathbb{R} \) is a complete metric space. This means that every Cauchy sequence (see Section \ref{sub:cauchy}) of real numbers converges to a limit that is also in \( \mathbb{R} \).
+
+\vspace{\baselineskip}\par
+    \item \textbf{Ordered Field}: \( \mathbb{R} \) is an ordered field, meaning it is equipped with a total order \( \leq \) that satisfies:
+    \[
+    a \leq b \implies a + c \leq b + c, \quad a \leq b \; \text{and} \; c > 0 \implies a \cdot c \leq b \cdot c.
+    \]
+
+    \item \textbf{Continuity}: The real numbers form a continuum with no gaps, enabling the definition of limits, derivatives, and integrals in calculus.
+\end{itemize}
+
+%**************************************
+\subsubsection{Subsets of $\mathbb{R}$} 
+%**************************************
+    \begin{itemize}
+        \item Rational numbers (\( \mathbb{Q} \)): Numbers expressible as fractions of integers.
+        \item Irrational numbers: Numbers not expressible as fractions (e.g., \( \sqrt{2} \), \( \pi \)).
+    \end{itemize}
+    
+%****************************
+\subsection{Cauchy Sequences} \label{sub:cauchy}
+%****************************
+A Cauchy sequence is a mathematical concept used to describe sequences of numbers (or elements in a metric space) that become arbitrarily close to each other as the sequence progresses \cite{rudin1976}. It plays a fundamental role in real analysis and the study of completeness in metric spaces (see Section \ref{sub:metric_space}).
+
+%*****************************************
+\subsubsection{Cauchy Sequence Definition}
+%*****************************************
+A sequence \( \{x_n\} \) in a metric space \( (X, d) \) is called a Cauchy sequence if, for every \( \epsilon > 0 \), there exists a positive integer \( N \) such that for all \( m, n \geq N \):
+\[
+d(x_m, x_n) < \epsilon.
+\]
+Where:
+\begin{itemize}
+    \item \( d(x_m, x_n) \): The distance between the elements \( x_m \) and \( x_n \).
+    \item \( \epsilon > 0 \): An arbitrarily small positive number.
+\end{itemize}
+
+In simpler terms, a Cauchy sequence is one in which the terms get "closer and closer" to each other as the sequence progresses. This closeness is defined without reference to a specific limit point, relying instead on the internal behavior of the sequence.
+
+%********************************************
+\subsubsection{Properties of Cauchy Sequence}
+%********************************************
+\begin{enumerate}
+    \item Cauchy Sequences in \( \mathbb{R} \):
+    \begin{itemize}
+        \item In the set of real numbers (\( \mathbb{R} \)), every Cauchy sequence converges to a limit within \( \mathbb{R} \).
+        \item This property arises because \( \mathbb{R} \) is a complete metric space.
+    \end{itemize}
+
+    \item Cauchy Sequences in General Metric Spaces:
+    \begin{itemize}
+        \item Not all Cauchy sequences converge in general metric spaces.
+        \item A metric space is called a complete metric space if every Cauchy sequence in the space converges to a limit within the space.
+    \end{itemize}
+
+    \item Examples:
+    \begin{itemize}
+        \item The sequence \( \{1, 1/2, 1/3, 1/4, \dots\} \) is a Cauchy sequence in \( \mathbb{R} \), as the terms get arbitrarily close to each other as \( n \to \infty \).
+        \item In \( \mathbb{Q} \) (the set of rational numbers), the sequence \( \{3, 3.1, 3.14, 3.141, \dots\} \), which approaches \( \pi \), is a Cauchy sequence. However, it does not converge in \( \mathbb{Q} \) because \( \pi \notin \mathbb{Q} \).
+    \end{itemize}
+\end{enumerate}
+
+%**************************
+\subsubsection{Importance}
+%**************************
+Cauchy sequences:
+\begin{itemize}
+    \item Define completeness: A space is complete if all Cauchy sequences converge within the space.
+    \item Analyze convergence: They allow studying the behavior of sequences independently of a known limit.
+    \item Construct the real numbers: The real numbers (\( \mathbb{R} \)) can be constructed by "completing" the rational numbers (\( \mathbb{Q} \)) using equivalence classes of Cauchy sequences.
+\end{itemize}
+
+%**********************************************
+\subsection{\( \mathbb{R} \) as a Metric Space} \label{sub:metric_space}
+%**********************************************
+\( \mathbb{R} \), the set of real numbers, is a metric space when equipped with the standard metric (distance function) \cite{rudin1976}. A metric space is defined as a set \( X \) along with a metric \( d: X \times X \to \mathbb{R} \) that satisfies the following properties for all \( x, y, z \in X \):
+
+%*************************
+\subsubsection{Properties}
+%*************************
+\begin{enumerate}[noitemsep, left=1cm, topsep=0pt]
+    \item \textbf{Non-negativity}: \( d(x, y) \geq 0 \), and \( d(x, y) = 0 \) if and only if \( x = y \).
+    \item \textbf{Symmetry}: \( d(x, y) = d(y, x) \).
+    \item \textbf{Triangle inequality}: \( d(x, z) \leq d(x, y) + d(y, z) \).
+    \item \textbf{Definiteness}: \( d(x, y) > 0 \) if \( x \neq y \).
+\end{enumerate}
+
+\subsubsection{ \( \mathbb{R} \) with the Standard Metric}
+
+The real numbers form a metric space under the \textit{standard metric}, defined as:
+\[
+d(x, y) = |x - y|,
+\]
+where \( |x - y| \) is the absolute value of the difference between \( x \) and \( y \).
+
+\subsubsection{Standard Metric Properties:}
+
+\begin{itemize}
+    \item \textbf{Non-negativity}: \( |x - y| \geq 0 \), and \( |x - y| = 0 \) if and only if \( x = y \).
+    \item \textbf{Symmetry}: \( |x - y| = |y - x| \).
+    \item \textbf{Triangle inequality}: For any \( x, y, z \in \mathbb{R} \),
+    \[
+    |x - z| \leq |x - y| + |y - z|.
+    \]
+    \item \textbf{Definiteness}: \( |x - y| > 0 \) when \( x \neq y \).
+\end{itemize}
+
+Since the standard metric satisfies these properties, \( (\mathbb{R}, d) \) is a metric space.
+
+%************************************************
+\subsubsection{Completeness of \( \mathbb{R} \)}
+%************************************************
+In addition, \( \mathbb{R} \) is a \textit{complete metric space}, meaning every Cauchy sequence in \( \mathbb{R} \) converges to a limit that is also in \( \mathbb{R} \). This property distinguishes \( \mathbb{R} \) from other metric spaces such as \( \mathbb{Q} \) (the rationals), where Cauchy sequences may not converge within \( \mathbb{Q} \).
+
+%******************************************************
+\subsubsection{Alternative Metrics on \( \mathbb{R} \)}
+%******************************************************
+While \( d(x, y) = |x - y| \) is the most common, other metrics can also be defined on \( \mathbb{R} \). Examples include:
+
+\begin{itemize}
+    \item The maximum norm:
+    \[
+    d_\infty(x, y) = \max\{|x|, |y|\}.
+    \]
+    \item The generalized \( p \)-metric for \( p > 0 \):
+    \[
+    d_p(x, y) = (|x - y|^p)^{1/p}.
+    \]
+\end{itemize}
+
+The metric choice determines the metric space's topology and properties, making \( \mathbb{R} \) a versatile mathematical structure in different contexts.
+
+%*********************************
+\subsubsection{Historical Context}
+%*********************************
+The need for \( \mathbb{R} \) arose from limitations in rational numbers for describing geometric concepts. For example:
+
+\begin{itemize}
+    \item The diagonal of a square (\( \sqrt{2} \)) is irrational.
+    \item The ratio of a circle's circumference to its diameter (\( \pi \)) is irrational.
+\end{itemize}
+
+Rigorous definitions of \( \mathbb{R} \) emerged in the 19th century through Dedekind cuts and Cauchy sequences, establishing its completeness \cite{rosen2018, stewart2015}.
+
+\subsubsection{Applications}
+Real numbers underpin analysis, continuity, and the infinite processes essential in mathematics and physics. They enable the definition of functions, derivatives, and integrals as well as modeling real-world phenomena.
+
+%*****************************************************************************
+\subsection{Comparing the Properties of \( \mathbb{Z} \) and \( \mathbb{R} \)}
+%*****************************************************************************
+Since most processors compute using $\mathbb{Z}$ and $\mathbb{R}$, we compare the differences between these sets.
+The sets \( \mathbb{Z} \) (integers) and \( \mathbb{R} \) (real numbers) have distinct properties that reflect their differing algebraic and topological structures. This section highlights the properties unique to \( \mathbb{Z} \), those unique to \( \mathbb{R} \), and their implications.
+
+%*****************************************************************************
+\subsubsection{Properties of \( \mathbb{Z} \) Not Shared by \( \mathbb{R} \)}
+%****************************************************************************
+\begin{enumerate}[topsep=0pt]
+    \item Discrete Structure:
+        \begin{itemize}
+            \item \( \mathbb{Z} \) is a discrete set, meaning there is a "gap" between consecutive elements. For any \( a, b \in \mathbb{Z} \), if \( a \neq b \), then \( |a - b| \geq 1 \).
+            \item In contrast, \( \mathbb{R} \) is a continuous set, with no gaps between elements.
+        \end{itemize}
+        
+    \item No Multiplicative Inverses (Non-Divisible):
+        \begin{itemize}
+            \item Nonzero integers in \( \mathbb{Z} \) do not have multiplicative inverses within \( \mathbb{Z} \). For example, \( \frac{1}{2} \notin \mathbb{Z} \).
+            \item In \( \mathbb{R} \), every nonzero element has a multiplicative inverse.
+        \end{itemize}
+
+    \item Subring:
+     \begin{itemize}
+        \item \( \mathbb{Z} \) is a subring of \( \mathbb{R} \), meaning it is closed under addition, subtraction, and multiplication but not division.
+        \item \( \mathbb{R} \) is a field that supports division.
+    \end{itemize}
+
+    \item Discrete Order:
+     \begin{itemize}
+        \item \( \mathbb{Z} \) is ordered such that the "next" integer is uniquely defined (e.g., \( a+1 \) for any \( a \in \mathbb{Z} \)).
+        \item In \( \mathbb{R} \), there is no "next" real number due to its continuity.
+    \end{itemize}
+
+    \item Unique Factorization:
+     \begin{itemize}
+        \item \( \mathbb{Z} \) has the property of unique factorization, where every integer can be expressed uniquely (up to order and sign) as a product of prime numbers.
+        \item \( \mathbb{R} \), as a field, does not have a concept of factorization into primes.
+    \end{itemize}
+\end{enumerate}
+
+%*****************************************************************************
+\subsubsection{Properties of \( \mathbb{R} \) Not Shared by \( \mathbb{Z} \)}
+%*****************************************************************************
+\begin{enumerate}[topsep=0pt]
+    \item Completeness:
+    \begin{itemize}
+        \item \( \mathbb{R} \) is a complete metric space, meaning every Cauchy sequence in \( \mathbb{R} \) converges to a limit within \( \mathbb{R} \) \cite{rudin1976}.
+        \item \( \mathbb{Z} \) is not complete because sequences that seem to converge (e.g., \( \{1, 2, 3, \dots\} \)) do not have limits within \( \mathbb{Z} \).
+    \end{itemize}
+
+    \item Field Structure:
+    \begin{itemize}
+        \item \( \mathbb{R} \) is a field, allowing addition, subtraction, multiplication, and division (except by zero) \cite{Sutherland02}.
+        \item \( \mathbb{Z} \) is only a ring, lacking division as a closed operation.
+    \end{itemize}
+
+    \item Density:
+    \begin{itemize}
+        \item \( \mathbb{R} \) is dense, meaning that between any two real numbers, there exists another real number.
+        \item \( \mathbb{Z} \) is not dense; there are no integers between \( n \) and \( n+1 \) for any \( n \in \mathbb{Z} \).
+    \end{itemize}
+
+    \item Infinite Subdivisibility:
+    \begin{itemize}
+        \item \( \mathbb{R} \) includes fractions, irrationals, and transcendental numbers, allowing infinite precision and continuity.
+        \item \( \mathbb{Z} \) only contains whole numbers.
+    \end{itemize}
+
+    \item Metric Space with Infinitesimal Distances:
+    \begin{itemize}
+        \item \( \mathbb{R} \) has a natural metric \( d(x, y) = |x - y| \) with arbitrarily small distances.
+        \item \( \mathbb{Z} \) has a discrete metric \( d(x, y) = 1 \) for \( x \neq y \), with no intermediate values \cite{munkres2000}.
+    \end{itemize}
+\end{enumerate}
+
+%********************************************************************************
+\subsubsection{Summary Table of Differences between $\mathbb{Z}$ and $\mathbb{R}$}
+%**********************************************************************************
+\[
+\begin{array}{|c|c|c|}
+\hline
+\textbf{Property} & \mathbb{Z} & \mathbb{R} \\
+\hline
+\text{Structure} & \text{Discrete set} & \text{Continuous set} \\
+\hline
+\text{Division} & \text{Not closed under division} & \text{Closed under division (except by zero)} \\
+\hline
+\text{Density} & \text{Not dense (gaps between elements)} & \text{Dense (no gaps)} \\
+\hline
+\text{Completeness} & \text{Not complete} & \text{Complete (Cauchy sequences converge)} \\
+\hline
+\text{Factorization} & \text{Unique factorization into primes} & \text{No concept of factorization} \\
+\hline
+\text{Metric} & \text{Discrete metric: } d(x, y) = 1 & \text{Standard metric: } d(x, y) = |x - y| \\
+\hline
+\end{array}
+\]
+
+%***********************************************************
+\subsection{The Set of Rational Numbers (\( \mathbb{Q} \))}
+%**********************************************************
+The set of rational numbers, denoted \( \mathbb{Q} \), consists of all numbers that can be expressed as the ratio of two integers:
+\[
+\mathbb{Q} = \left\{ \frac{p}{q} \; \middle| \; p, q \in \mathbb{Z}, \; q \neq 0 \right\}.
+\]
+
+%*********************************************
+\subsubsection{Properties of \( \mathbb{Q} \)}
+%*********************************************
+\begin{itemize}
+    \item \textbf{Closure}: \( \mathbb{Q} \) is closed under addition, subtraction, multiplication, and division (except by zero). For any \( a, b \in \mathbb{Q} \):
+    \[
+    a + b \in \mathbb{Q}, \quad a - b \in \mathbb{Q}, \quad a \cdot b \in \mathbb{Q}, \quad \text{and, if } b \neq 0, \; \frac{a}{b} \in \mathbb{Q}.
+    \]
+
+    \item \textbf{Associativity}: Addition and multiplication in \( \mathbb{Q} \) are associative:
+    \[
+    (a + b) + c = a + (b + c), \quad (a \cdot b) \cdot c = a \cdot (b \cdot c).
+    \]
+
+    \item \textbf{Commutativity}: Addition and multiplication in \( \mathbb{Q} \) are commutative:
+    \[
+    a + b = b + a, \quad a \cdot b = b \cdot a.
+    \]
+
+    \item \textbf{Existence of Identity Elements}: \( \mathbb{Q} \) has additive and multiplicative identity elements:
+    \[
+    a + 0 = a \quad \text{(additive identity)}, \quad a \cdot 1 = a \quad \text{(multiplicative identity)}.
+    \]
+
+    \item \textbf{Existence of Inverses}:
+    \begin{itemize}
+        \item Every \( a \in \mathbb{Q} \) has an additive inverse \( -a \) such that:
+        \[
+        a + (-a) = 0.
+        \]
+        \item Every nonzero \( a \in \mathbb{Q} \) has a multiplicative inverse \( a^{-1} \) such that:
+        \[
+        a \cdot a^{-1} = 1.
+        \]
+    \end{itemize}
+
+    \item \textbf{Distributive Property}: Multiplication distributes over addition:
+    \[
+    a \cdot (b + c) = (a \cdot b) + (a \cdot c).
+    \]
+
+    \item \textbf{Density}: \( \mathbb{Q} \) is dense in \( \mathbb{R} \), meaning that between any two distinct real numbers \( a, b \in \mathbb{R} \), there exists a rational number \( c \in \mathbb{Q} \) such that:
+    \[
+    a < c < b.
+    \]
+
+    \item \textbf{Countability}: \( \mathbb{Q} \) is countable, meaning its elements can be arranged in a one-to-one correspondence with the natural numbers \( \mathbb{N} \). Unlike \( \mathbb{R} \), which is uncountable, \( \mathbb{Q} \) is a smaller infinity.
+
+\vspace{\baselineskip}\par
+    \item \textbf{Incompleteness}: \( \mathbb{Q} \) is not complete. There exist Cauchy sequences in \( \mathbb{Q} \) that do not converge within \( \mathbb{Q} \). For example, the sequence \( \{1, 1.4, 1.41, 1.414, \dots\} \) (approaching \( \sqrt{2} \)) has no limit in \( \mathbb{Q} \) because \( \sqrt{2} \notin \mathbb{Q} \).
+\end{itemize}
+
+
+%**************************************
+\subsubsection{Subsets of $\mathbb{Q}$}
+%**************************************
+\begin{itemize}
+    \item \textbf{Proper Fractions}:
+    Rational numbers whose absolute value is less than \( 1 \), excluding \( 0 \):
+    \[
+    \text{Proper fractions} = \{q \in \mathbb{Q} \mid 0 < |q| < 1\}.
+    \]
+
+    \item \textbf{Improper Fractions}:
+    Rational numbers whose absolute value is greater than or equal to \( 1 \):
+    \[
+    \text{Improper fractions} = \{q \in \mathbb{Q} \mid |q| \geq 1\}.
+    \]
+\end{itemize}
+
+
+
+%**********************************************************
+\subsection{The Set of Complex Numbers (\( \mathbb{C} \))}
+%*********************************************************
+% TODO: Get references ADI TI Mfast
+Most processors do not directly support operations on complex numbers. However, special purpose processors including some Digital Signal Processors have provided limited support particularly for Fast Fourier Transform operations. 
+
+The set of complex numbers, denoted \( \mathbb{C} \), consists of all numbers that can be expressed in the form:
+\[
+z = a + bi, \quad \text{where } a, b \in \mathbb{R} \text{ and } i^2 = -1.
+\]
+Here, \( a \) is called the real part of \( z \), denoted \( \text{Re}(z) \), and \( b \) is called the imaginary part, denoted \( \text{Im}(z) \). Complex numbers extend the real number system to include solutions to polynomial equations that have no real roots, such as \( x^2 + 1 = 0 \).
+
+%**********************************************
+\subsubsection{Properties of \( \mathbb{C} \)}
+%**********************************************
+\begin{itemize}
+    \item \textbf{Closure}: \( \mathbb{C} \) is closed under addition, subtraction, multiplication, and division (except division by zero). For all \( z_1, z_2 \in \mathbb{C} \):
+    \[
+    z_1 + z_2 \in \mathbb{C}, \quad z_1 - z_2 \in \mathbb{C}, \quad z_1 \cdot z_2 \in \mathbb{C}, \quad \text{and, if } z_2 \neq 0, \; \frac{z_1}{z_2} \in \mathbb{C}.
+    \]
+
+    \item \textbf{Associativity}: Addition and multiplication in \( \mathbb{C} \) are associative:
+    \[
+    (z_1 + z_2) + z_3 = z_1 + (z_2 + z_3), \quad (z_1 \cdot z_2) \cdot z_3 = z_1 \cdot (z_2 \cdot z_3).
+    \]
+
+    \item \textbf{Commutativity}: Addition and multiplication in \( \mathbb{C} \) are commutative:
+    \[
+    z_1 + z_2 = z_2 + z_1, \quad z_1 \cdot z_2 = z_2 \cdot z_1.
+    \]
+
+    \item \textbf{Existence of Identity Elements}: \( \mathbb{C} \) has additive and multiplicative identity elements:
+    \[
+    z + 0 = z \quad \text{(additive identity)}, \quad z \cdot 1 = z \quad \text{(multiplicative identity)}.
+    \]
+
+    \item \textbf{Existence of Inverses}:
+    \begin{itemize}
+        \item Every \( z \in \mathbb{C} \) has an additive inverse \( -z \) such that:
+        \[
+        z + (-z) = 0.
+        \]
+        \item Every nonzero \( z \in \mathbb{C} \) has a multiplicative inverse \( z^{-1} \) such that:
+        \[
+        z \cdot z^{-1} = 1.
+        \]
+    \end{itemize}
+
+    \item \textbf{Distributive Property}: Multiplication distributes over addition:
+    \[
+    z_1 \cdot (z_2 + z_3) = (z_1 \cdot z_2) + (z_1 \cdot z_3).
+    \]
+
+\vspace{\baselineskip}\par
+    \item \textbf{Field Structure}: \( \mathbb{C} \) is a field, satisfying all the axioms of a field under addition and multiplication.
+
+    \item \textbf{Algebraic Closure}: \( \mathbb{C} \) is **algebraically closed**, meaning that every non-constant polynomial with coefficients in \( \mathbb{C} \) has a root in \( \mathbb{C} \). For example:
+    \[
+    z^n + c_{n-1}z^{n-1} + \dots + c_1z + c_0 = 0, \quad c_i \in \mathbb{C}, \; \exists z \in \mathbb{C}.
+    \]
+
+    \item \textbf{Non-Orderable}: Unlike \( \mathbb{R} \), \( \mathbb{C} \) cannot be totally ordered in a way that is compatible with its field operations. There is no relation \( \leq \) such that \( a \leq b \implies a + c \leq b + c \) and \( a \cdot c \leq b \cdot c \).
+
+\vspace{\baselineskip}\par
+    \item \textbf{Complex Conjugate}: Every \( z = a + bi \in \mathbb{C} \) has a complex conjugate \( \overline{z} = a - bi \), which satisfies:
+    \[
+    z \cdot \overline{z} = a^2 + b^2 \quad \text{(a non-negative real number)}.
+    \]
+
+    \item \textbf{Norm (Magnitude)}: The norm or magnitude of \( z = a + bi \) is given by:
+    \[
+    |z| = \sqrt{a^2 + b^2}.
+    \]
+    This satisfies the triangle inequality:
+    \[
+    |z_1 + z_2| \leq |z_1| + |z_2|.
+    \]
+\end{itemize}
+
+
+These properties make \( \mathbb{C} \) an essential mathematical system for solving equations, analyzing systems, and modeling phenomena in engineering, physics, signal processing, and quantum mechanics.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Sets of Numbers and Representations of Numbers}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In mathematics and computer science, it is essential to distinguish between sets of numbers, such as \( \mathbb{Z} \) (the set of integers), and representations of numbers, such as two's complement, excess-\( k \), or Binary Coded Decimal (BCD). While representations are methods for encoding and manipulating numbers in practical systems, the sets themselves are abstract mathematical constructs that define properties and operations independent of specific implementations. This distinction has significant implications for understanding the properties, limitations, and behaviors of numerical systems.
+
+%******************************
+\subsubsection{Sets of Numbers}
+%******************************
+A set of numbers is a mathematical construct that defines a collection of elements, operations, and properties. Common sets of numbers include:
+
+\begin{itemize}
+    \item \( \mathbb{N} \) (Natural Numbers): The set of non-negative integers \( \{0, 1, 2, \dots\} \).
+    \item \( \mathbb{Z} \) (Integers): The set of all integers \( \{\dots, -2, -1, 0, 1, 2, \dots\} \).
+    \item \( \mathbb{R} \) (Real Numbers): The set of all numbers on the continuous number line, including both rational and irrational numbers.
+\end{itemize}
+
+Each set is defined by specific properties:
+\begin{itemize}
+    \item Closure: Operations such as addition, subtraction, or multiplication remain within the set.
+    \item Associativity and Commutativity: Mathematical operations are consistent and well-defined.
+    \item Existence of Identity and Inverses: Sets may include elements like \( 0 \) (additive identity) or \( -x \) (additive inverse).
+\end{itemize}
+
+These sets are abstract and independent of how numbers are represented in physical or computational systems.
+
+%**************************************
+\subsubsection{Representations of Numbers}
+%**************************************
+Representations of numbers refer to the ways in which numbers are encoded, stored, and manipulated in practical systems, such as computers or calculators. Examples of representations include:
+
+\begin{itemize}
+    \item Two's Complement: A binary representation for signed integers.
+    \item Excess-\( k \): A biased representation commonly used in floating-point exponents.
+    \item Binary Coded Decimal (BCD): Encodes each decimal digit as a separate binary sequence.
+    \item IEEE 754 Floating-Point: A standardized representation for real numbers.
+\end{itemize}
+
+Unlike sets, representations are constrained by practical factors such as finite memory, bit-width, and computational efficiency. This can result in behaviors and limitations that deviate from the properties of the corresponding mathematical sets.
+
+%**************************************************************
+\subsubsection{Key Differences Between Sets and Representations}
+%***************************************************************
+While representations encode numbers from a specific set, they may not fully exhibit the properties of that set. For example:
+
+\begin{itemize}
+    \item Closure: In two's complement, the result of adding two numbers can overflow and exceed the representable range, even though addition within \( \mathbb{Z} \) is closed.
+    \item Symmetry: The set \( \mathbb{Z} \) is symmetric around \( 0 \), but representations like two's complement have an asymmetric range due to the extra negative value (\( -2^{n-1} \)).
+    \item Arithmetic Operations: Subtraction in excess-\( k \) may require decoding and re-encoding, as direct subtraction of encoded values can produce incorrect results.
+\end{itemize}
+
+These deviations arise because representations are designed for efficiency and practicality rather than mathematical purity.
+
+Representations often have a limited range and precision due to finite storage:
+\begin{itemize}
+    \item In \( \mathbb{Z} \), there is no upper or lower bound on integers. However, in two's complement, the range is limited to \( [-2^{n-1}, 2^{n-1} - 1] \) for \( n \)-bit systems.
+    \item In \( \mathbb{R} \), real numbers are continuous and infinite. In IEEE 754, real numbers are approximated using finite precision, leading to rounding errors.
+\end{itemize}
+
+Errors can propagate in numerical representations, even when the underlying set is exact. For example:
+\begin{itemize}
+    \item Floating-point arithmetic introduces rounding errors due to the inability to represent certain numbers exactly (e.g., \( 0.1 \)).
+    \item BCD ensures exact decimal representation but requires correction during arithmetic operations like subtraction, which can be slower.
+\end{itemize}
+
+Representations often prioritize specific tasks or applications:
+\begin{itemize}
+    \item Excess-\( k \) simplifies comparisons in floating-point systems, but it is not closed under subtraction without decoding.
+    \item BCD facilitates precise decimal arithmetic for financial systems but is less efficient for general-purpose computation.
+\end{itemize}
+
+
+While sets like \( \mathbb{Z} \), \( \mathbb{Q} \), and \( \mathbb{R} \) define the abstract mathematical properties of numbers, representations are practical implementations tailored to computational systems. A representation may encode elements of a set, but it might not preserve all the properties of the set. Understanding these differences is critical in applications where precision, range, or specific properties (e.g., symmetry or closure) are required. Representations must be chosen carefully based on the demands of the task, as their limitations can impact accuracy, efficiency, and correctness in practical systems.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Historical Development of Sets}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The concept of integers (\( \mathbb{Z} \)) dates back to ancient civilizations, such as the Babylonians and Egyptians, who used whole numbers for trade and astronomy. Negative numbers were later introduced in India, as seen in the works of Brahmagupta (7th century CE), who used them to represent debts \cite{burton2010-number}.
+
+Rational numbers (\( \mathbb{Q} \)) were used by the Greeks, particularly in their exploration of ratios and proportions in geometry. The Pythagoreans initially believed all quantities were rational until the discovery of irrational numbers challenged this view \cite{maor2007}.
+
+Real Numbers (\( \mathbb{R} \)) evolved to address the need for completeness in geometry and calculus. Euclid's work on incommensurable lengths (circa 300 BCE) hinted at irrational numbers, while 19th-century mathematicians such as Dedekind and Cantor rigorously defined the real number system \cite{rosen2018}.
+
+Complex Numbers (\( \mathbb{C} \)) arose from attempts to solve polynomial equations. Initially regarded as "imaginary," they were formalized by mathematicians like Euler and Gauss in the 18th and 19th centuries. Today, \( \mathbb{C} \) is essential in fields ranging from engineering to quantum mechanics \cite{stewart2015-foundations}.
+

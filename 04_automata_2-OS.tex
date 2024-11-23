@@ -2,6 +2,77 @@
 
 \minitoc
 
+
+\section{PLACE HOLDER TURING}
+\section{Theoretical Foundations of Number Representations in Turing's Work}
+
+Alan Turing’s 1937 paper, “On Computable Numbers, with an Application to the Entscheidungsproblem,” primarily focuses on the concept of computability rather than explicit number representations used in modern computer systems. However, the theoretical groundwork Turing established lays the foundation for how numbers (and more broadly, data) can be represented and manipulated by machines. Here are the key theoretical points from Turing's paper that relate to number representations:
+
+\subsection{Definition of Computable Numbers}
+
+Turing defines a \textbf{computable number} as a real number that can be calculated to any desired precision by a mechanical process. Formally, a number \( x \) is \textbf{computable} if there exists an algorithm (what Turing termed a \textbf{computing machine}, now known as a Turing Machine) that, given an integer \( n \), can compute the \( n \)-th digit of \( x \) in a finite number of steps.
+
+In modern terms:
+\[
+x = \sum_{i=1}^{\infty} d_i \cdot b^{-i}
+\]
+where \( d_i \) are digits (either binary, decimal, or other bases) and \( b \) is the base. Turing’s framework implies that, to represent \( x \) as computable, there must be a recursive procedure for determining \( d_i \) for all \( i \).
+
+\subsection{Representation of Numbers Using Symbols and States}
+
+Turing’s model introduced the concept of a machine that reads, writes, and moves over a tape. The tape holds symbols from a finite alphabet, which can be used to represent numbers in various bases, including binary. Each number can thus be represented by a sequence of symbols on the tape, with the \textbf{state of the machine} directing operations on these symbols.
+
+Formally:
+\begin{itemize}
+    \item Let \( \Sigma = \{0, 1\} \) represent the binary alphabet.
+    \item A \textbf{string} \( w \in \Sigma^* \) on the tape can represent a binary number, where the position and value of each symbol denote its magnitude.
+\end{itemize}
+
+\subsection{Finite State Automaton for Number Manipulation}
+
+Turing proposed that any computable function, including arithmetic operations on numbers, could be executed by a finite set of states. Each state directs the machine to either:
+1. Write a symbol.
+2. Erase a symbol.
+3. Move left or right along the tape.
+4. Transition to another state.
+
+This \textbf{finite state control} is the precursor to binary arithmetic and logical operations on numbers. It implies that any number representation (binary, decimal, or otherwise) can be manipulated using a sequence of state transitions based on the machine's rules.
+
+Formally, for a Turing Machine \( M \), we have:
+\[
+M = (Q, \Sigma, \delta, q_0, F)
+\]
+where:
+\begin{itemize}
+    \item \( Q \) is a finite set of states.
+    \item \( \Sigma \) is the tape alphabet.
+    \item \( \delta: Q \times \Sigma \to Q \times \Sigma \times \{L, R\} \) is the transition function.
+    \item \( q_0 \in Q \) is the initial state.
+    \item \( F \subseteq Q \) is the set of final (or halting) states.
+\end{itemize}
+
+This structure allows Turing Machines to handle number representations in binary or any base by processing symbol strings according to their state rules.
+
+\subsection{Concept of Universal Representation}
+
+Turing’s concept of a \textbf{Universal Turing Machine} suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
+
+If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a Universal Turing Machine capable of simulating \( p \).
+
+\subsection{Summary of Key Theoretical Points in Turing's Paper}
+
+\begin{enumerate}
+    \item \textbf{Computable Numbers}: Defined as numbers that can be calculated to any precision using a finite, mechanical process.
+    \item \textbf{Finite State Control}: Established that a finite set of states could operate on symbols to represent numbers in various bases.
+    \item \textbf{Machine-Based Representation}: Showed that numbers could be represented as sequences of symbols on a tape, manipulated by a machine’s states and transitions.
+    \item \textbf{Universal Representation}: Introduced the idea that numbers (or their representations) could be treated as data or instructions, leading to flexible encoding schemes for number manipulation.
+\end{enumerate}
+
+Turing’s formal model set the stage for understanding how numbers can be systematically represented, stored, and manipulated by computational systems, laying foundational principles that influence number representations in modern computing.
+
+
+\section{GEORGE'S MATERIAL}
+
 In this lesson we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes, that is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
 
 Our final target in this lesson is RALU: {\bf {\em Registers with Arithmetic \& Logic Unit}}.
@@ -136,8 +207,8 @@ definition.
 $\diamond$
 \end{definition}
 
-Definition \ref{circCompl} is inspired by Gregory Chaitin's definition for the
-algorithmic complexity of a string of symbols \cite{Chaitin '77}. The
+Definition \ref{circCompl} is inspired by \cite{Chaitin77}'s definition for the
+algorithmic complexity of a string of symbols. The
 {\em algorithmic complexity} of a string is related to the
 dimension of the smallest program that generates it.  Our $C_{digital
 \; circuit}$ can be associated to the shortest unambiguous circuit description

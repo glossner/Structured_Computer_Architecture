@@ -6,9 +6,11 @@
 \usepackage{latexcad}  % Position sensitive
 \usepackage[maxfloats=25]{morefloats}
 \usepackage[english]{babel}
+\usepackage{enumitem} % For custom list spacing
 
 \usepackage{graphicx}
 \graphicspath{{}{Images/}}  % Look in ./ and Images/
+\usepackage{xcolor}  % Make cells of an array a specific color
 
 \usepackage{makeidx}
 \usepackage{mathptmx}
@@ -24,16 +26,122 @@
 %\usepackage{pstricks}
 
 \usepackage{mathptmx, listings, framed, xcolor}
-\definecolor{shadecolor}{rgb}{0.9,0.9,0.9} %code background
+
+\definecolor{shadecolor}{rgb}{0.97,0.97,0.97} % light gray code background
+%\definecolor{shadecolor}{rgb}{1.0,1.0,1.0} % white code background (saves ink)
+
 \usepackage{amsmath}
 \usepackage{float}
 \usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{makecell}
 
 \usepackage{fancyhdr}
+
+\usepackage{tocloft}  % Code listings and ToC Control
+% The first argument (2em) is the indentation of \subsubsection entries in the ToC.
+%The second argument (3em) controls the width allotted for the section numbering.
+\cftsetindents{subsubsec}{9em}{3em} % First argument to set indentation
+
+
 \usepackage{tocbibind}
 \usepackage{shorttoc}
 \usepackage{minitoc}
 \dominitoc % Initialize mini tables of contents
+
+                           
+% Swap the behavior of \cite and \citep
+% \cite{} -> (Author, 2024)
+ % \citep{}  -> Author (2024)
+\usepackage[round]{natbib} 
+\let\citeold\cite
+\let\cite\citep
+\let\citep\citeold
+
+
+\newlistof{listoflistings}{lol}{List of Listings}
+\newcommand{\listlistingname}{Listing} % Title for individual listings
+\newcommand{\lstoflisting}[1]{\addcontentsline{lol}{section}{\protect\numberline{}#1}}
+
+
+\usepackage{enumitem} % Required for customizing list environments
+% Set global defaults for itemize
+\setlist[itemize]{
+    itemsep=1pt,
+    left=1.5em,
+    topsep=0.5pt
+}
+% Set custom defaults for enumerate
+\setlist[enumerate]{
+    label=\arabic*),     
+    itemsep=1pt,       % Space between items
+    left=1.5em,        % Standard paragraph is 1em indent
+    topsep=0.5pt         % Space above and below the list
+}
+
+\newenvironment{itemize_nosep}
+  {\begin{itemize}[noitemsep, left=1cm, topsep=0pt]}
+  {\end{itemize}}
+
+
+%%%%%%%%%%%%%%%%%%%
+% Code Listings
+%%%%%%%%%%%%%%%%%%%
+% Define toggle variables for Chisel and Both Versions
+\usepackage{ifthen}
+\newboolean{verilogversion}
+\newboolean{chiselversion}
+\setboolean{verilogversion}{true}  % Set to true to include Verilog listings
+\setboolean{chiselversion}{true}   % Set to true to include Chisel listings
+\newcommand{\ifverilog}[1]{\ifthenelse{\boolean{verilogversion}}{#1}{}}
+\newcommand{\ifchisel}[1]{\ifthenelse{\boolean{chiselversion}}{#1}{}}
+
+% Define a color scheme for code
+\definecolor{keywordcolor}{rgb}{0.3, 0.3, 0.7} % Blueish for keywords
+\definecolor{commentcolor}{rgb}{0.3, 0.5, 0.3} % Greenish for comments
+\definecolor{stringcolor}{rgb}{0.6, 0.2, 0.2}  % Redish for strings
+
+% Define Verilog style
+\lstdefinestyle{verilogStyle}{
+    language=Verilog,
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
+    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
+    stringstyle=\color{stringcolor},     % Strings in red
+    frame=single,                        % Frame around the code
+    captionpos=b,                        % Caption position below
+    morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for} % Extra keywords
+}
+
+% Define Chisel style
+\lstdefinestyle{chiselStyle}{
+    language=Scala,                      % Chisel uses Scala syntax
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
+    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
+    stringstyle=\color{stringcolor},     % Strings in red
+    frame=single,                        % Frame around the code
+    captionpos=b,                        % Caption position below
+    morekeywords={val, var, def, module, for, when, otherwise} % Extra keywords for Chisel
+}
+% Includecode command
+\newcommand{\includecode}[2]{%
+    \ifthenelse{\boolean{chiselversion}}{%
+        \lstinputlisting[
+            style=chiselStyle,
+            caption={#2 Code (Chisel)},
+            label={lst:chisel_#2}
+        ]{#1/Chisel/src/#2.scala}
+    }{}%
+    \ifthenelse{\boolean{verilogversion}}{%
+        \lstinputlisting[
+            style=verilogStyle,
+            caption={#2 Code (Verilog)},
+            label={lst:verilog_#2}
+        ]{#1/Verilog/src/#2.sv}
+    }{}%
+}
 
 \setlength{\textheight}{22cm} \setlength{\textwidth}{16cm}
 \topmargin 323mm \advance \topmargin -\textheight \divide
@@ -45,6 +153,8 @@
 
 \makeindex
 
+%\includeonly{01_preliminaries, 08_parallel_computing_N-OS}
+% 02_combinational_circuits_0-OS,             03_memory_circuits_1-OS, 04_automata_2-OS}
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 % DOCUMENT
@@ -70,9 +180,9 @@
 % Title
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Structured Computer Architecture: \par
-An Order-Based Approach \par From Logic Gates to Parallel Distributed Systems
+An Order-Based Approach 
 }
-\author{{\bf {\em John Glosner, Gheorghe M. \c{S}tefan}}}
+\author{{\bf {\em John Glossner and Gheorghe M. \c{S}tefan}}}
  \date{{{\today \\ \bf {\em -- First Edition  --}}}}
 
 
@@ -87,32 +197,35 @@ An Order-Based Approach \par From Logic Gates to Parallel Distributed Systems
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter*{}
+\chapter*{Copyright}
 \addcontentsline{toc}{chapter}{Copyright}
 
-\vspace*{\fill}
 \noindent
-This document was prepared with \LaTeX $\, 2_{\epsilon}$
 
-
-%\section*{Copyright Notice}
+\section*{Copyright Notice}
+\addcontentsline{toc}{section}{CC-BY-NC-ND 4.0}
 \vspace{2em}
-© 2024 John Glosner, Gheorghe M. \c{S}tefan. This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0).
+The text of this book is copyright CC-BY-NC-ND
 
+Copyright © 2024 John Glossner and Gheorghe M. \c{S}tefan. This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0).
 
-\vspace*{\fill}
+\section*{Code License}
+\addcontentsline{toc}{section}{Code License}
 
+\includecode{.}{copyright}
+
+This document was prepared with \LaTeX $\, 2_{\epsilon}$
 
 \sloppy
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preface
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\chapter*{Preface}
-%\addcontentsline{toc}{chapter}{Preface}
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
 
-%\section*{Forward}
-%\addcontentsline{toc}{section}{Forward}
+\section*{Forward}
+\addcontentsline{toc}{section}{Forward}
 
 This textbook arose from an introductory course on Computer Architecture taught at Rivier University in the Fall of 2024. It draws on Gheorghe M. \c{S}tefan's years of teaching Computer Architecture at the University of Bucharest.
 
@@ -174,6 +287,8 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \listoftables
 %\addcontentsline{toc}{chapter}{List of Tables}
 
+%\listoflistings
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MAIN DOCUMENT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -192,17 +307,44 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \newtheorem{corollary}{Corollary}[chapter]
 \newtheorem{proof}{Proof}[chapter]
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART 1
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\part{NUMBERS AND REPRESENTATIONS}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%*************************
+% Chapter 1 Number Systems
+%*************************
+\chapter{Number Systems}\label{chapt:number_systems}
+\minitoc
+\include{01_01_1_number_systems}
+\include{01_01_2_decimal_arithmetic}
+\include{01_01_3_positional_notation}
+\include{01_01_4_binary_arithmetic}
+\include{01_01_5_formal_notation}
 
+%*********************************
+% Chapter 2 Number Representations
+%*********************************
+\chapter{Number Representations}
+\minitoc
+\include{01_02_1_unsigned_integers}
+\include{01_02_2_signed_integers}
+\include{01_02_3_floating_point}
+\include{01_02_4_character_encodings}
+
+%*************************
+% Chapter 3 Part 1 Summary
+%*************************
+\chapter{Historical Development of Number Systems and Representations}
+\minitoc
+\include{01_03_1_part1_summary}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{FROM GATES TO PROCESSORS}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %*************************
-% Chapters for Part 1
+% Chapter 2+
 %*************************
-\include{01_preliminaries}
 \include{02_combinational_circuits_0-OS}
 \include{03_memory_circuits_1-OS}
 \include{04_automata_2-OS}
@@ -214,7 +356,7 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \include{06_von_neumann_4-OS}
 \include{07_harvard_5-OS}
 \include{08_parallel_computing_N-OS}
-\include{09_open_problems}
+%\include{09_open_problems}
 
 
 \clearpage
@@ -225,20 +367,39 @@ Most of the descriptions of the structures and the simulation of their behavior 
 
 \part*{Appendices}
 
+\section{Introduction to Chisel}
+\lipsum[1]
+
+\section{Introduction to System Verilog}
+\lipsum[1]
+
+
+
 \include{A01_implementations}
+\begin{comment}
 \include{A02_simulations}
 \include{A03_toyRISCimp}
 \include{A04_pipelinedToyRISCimp}
 \include{A05_pipeForwardToyRISCimp}
 \include{A06_verilogToyRISC}
 \include{A07_verilogFIFO}
-
+\end{comment}
 
 
 \clearpage
 %\addcontentsline{toc}{chapter}{Bibliography}
 
-\include{99_bibliography} % Bibliography
+
+%**********************
+% Bibliography
+%
+% use \cite{} at the beginning of a sentence
+% use \cite{} at the end of a sentence
+%**********************
+\bibliographystyle{apalike}
+\bibliography{bibliography} 
+%\include{bibliography} % Bibliography
+
 
 \clearpage
 %\addcontentsline{toc}{chapter}{Index}

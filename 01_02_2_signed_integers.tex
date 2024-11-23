@@ -1,0 +1,1244 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Finite Signed Binary Integer Representations in $\mathbb{Z}$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Signed implementations implement a finite subset of $\mathbb{Z}$ and thus overlap operations with unsigned natural number $\mathbb{N}$ In a computer, the equivalent of placing a minus sign in front of a number led to the sign-magnitude representation. Other representations turn out to be more computationally efficient.  We saw in Section \ref{sub:10s_complement} that a 10's complement representation turns a decimal subtraction into an addition. 
+
+We now generalize binary representations to include negative numbers. In unsigned binary systems, numbers are limited to non-negative values within the range \( [0, 2^n - 1] \), where \( n \) is the number of bits. To represent negative numbers, several methods are employed, each with unique properties and use cases. These methods extend the binary representation system to include both positive and negative integers, enabling a broader range of applications such as arithmetic operations, signed comparisons, and signed data storage.
+
+The most common methods for representing negative numbers in binary include:
+\begin{itemize}
+    \item Signed-Magnitude Representation
+    \item One's Complement
+    \item Two's Complement
+    \item Excess-\( k \) Representation
+\end{itemize}
+
+Each method modifies the interpretation of the most significant bit (MSB) to indicate the sign of the number, allowing the binary system to represent both positive and negative values. In the following sections, we explore each of these methods in detail, highlighting their advantages, disadvantages, and applications.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Signed-Magnitude Representation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The signed-magnitude representation is one of the simplest methods for representing negative numbers in binary. It extends the unsigned binary system by reserving the most significant bit (MSB) as a \textit{sign bit}, while the remaining bits represent the magnitude of the number. This approach allows for both positive and negative integers to be encoded within the same binary system.
+
+%*************************
+\subsubsection{Definition}
+%*************************
+In an \( n \)-bit signed-magnitude system:
+\begin{itemize}
+    \item The MSB (bit \( n-1 \)) indicates the sign:
+    \begin{itemize}
+        \item \( 0 \): Positive number
+        \item \( 1 \): Negative number
+    \end{itemize}
+    \item The remaining \( n-1 \) bits represent the magnitude of the number, interpreted as an unsigned binary value.
+\end{itemize}
+
+Formally, a number \( x \) in signed-magnitude representation can be expressed as:
+\[
+x = (-1)^{s} \cdot M,
+\]
+where:
+\begin{itemize}
+    \item \( s \) is the MSB (sign bit: \( 0 \) for positive, \( 1 \) for negative),
+    \item \( M \) is the magnitude represented by the remaining \( n-1 \) bits.
+\end{itemize}
+
+
+
+%************************************************************
+\subsubsection{Properties of Signed-Magnitude Representation}
+%************************************************************
+The following are the mathematical properties of this representation:
+
+\begin{enumerate}[left=1cm]
+    \item Bit Allocation:
+    \begin{itemize}
+        \item For an \( n \)-bit signed-magnitude representation:
+        \item The Most Significant Bit (MSB) is the \textit{sign bit}, denoted \( s \):
+       \[
+       s = 
+       \begin{cases} 
+       0, & \text{if the number is non-negative} \\
+       1, & \text{if the number is negative.}
+       \end{cases}
+       \]
+        \item The remaining \( n-1 \) bits represent the \textit{magnitude}, denoted \( m \), where \( m \in \{0, 1, \dots, 2^{n-1} - 1\} \).
+    \end{itemize}
+
+    \item Range:
+    \begin{itemize}
+        \item The representable range of numbers is:
+     \[
+     -\left(2^{n-1} - 1\right) \leq x \leq 2^{n-1} - 1.
+     \]
+     For example, in a 4-bit system:
+     \[
+     x \in \{-7, -6, -5, -4, -3, -2, -1, +0, +1, +2, +3, +4, +5, +6, +7\}.
+     \]
+     \end{itemize}
+
+    \item Dual Representation of Zero:
+     \[
+     0000_2 \; (\text{positive zero, } +0) \quad \text{and} \quad 1000_2 \; (\text{negative zero, } -0).
+     \]
+
+     \item Arithmetic Operations:
+     \begin{itemize}
+        \item Arithmetic operations must account for the separation of sign and magnitude:
+        \item Addition: Requires determining the signs of both operands and performing magnitude-based addition or subtraction based on the signs.
+        \item Subtraction: Requires determining the relative magnitudes of the operands and adjusting the sign of the result accordingly.
+    \end{itemize}
+
+    \item Symmetry:
+    \begin{itemize}
+        \item The representation is symmetric about zero. For any \( x \) with \( s = 0 \), the negative counterpart is obtained by setting \( s = 1 \) while keeping the same magnitude \( m \).
+    \end{itemize}
+
+    \item Sign Bit Interpretation:
+    \begin{itemize}
+        \item The MSB (sign bit) does not contribute to the magnitude of the number but determines the polarity:
+        \[
+        x = (-1)^s \cdot m.
+        \]
+    \end{itemize}
+
+    \item Magnitude Interpretation:
+    \begin{itemize}
+        \item The magnitude is interpreted as a standard unsigned integer using the remaining \( n-1 \) bits:
+        \[
+            m = \sum_{i=0}^{n-2} b_i \cdot 2^i, \quad b_i \in \{0, 1\}.
+        \]
+    \end{itemize}
+\end{enumerate}
+
+
+ Example
+For a 4-bit signed-magnitude representation:
+\[
+x = (-1)^s \cdot m, \quad s = \text{MSB}, \; m = \text{binary value of remaining bits}.
+\]
+
+\[
+\begin{array}{|c|c|}
+\hline
+\textbf{Positive Numbers (\( s = 0 \))} & \textbf{Negative Numbers (\( s = 1 \))} \\
+\hline
+0000 = 0 & 1000 = -0 \\
+0001 = 1 & 1001 = -1 \\
+0010 = 2 & 1010 = -2 \\
+0011 = 3 & 1011 = -3 \\
+0100 = 4 & 1100 = -4 \\
+0101 = 5 & 1101 = -5 \\
+0110 = 6 & 1110 = -6 \\
+0111 = 7 & 1111 = -7 \\
+\hline
+\end{array}
+\]
+
+Note that $-0$ is often treated as equivalent to \( +0 \)
+
+
+
+%**************************************************************
+\subsubsection{Arithmetic with Signed-Magnitude Representation}
+%**************************************************************
+Addition Example (4-bit signed-magnitude):
+\[
+3 + (-2)
+\]
+In signed-magnitude:
+\[
+3 = 0011, \quad -2 = 1010
+\]
+
+Step-by-step addition:
+\begin{itemize}
+    \item Determine the larger magnitude (\( 3 > 2 \)).
+    \item Subtract the smaller magnitude from the larger:
+   \[
+   3 - 2 = 1
+   \]
+    \item Assign the sign of the larger magnitude (\( + \)):
+   \[
+   \text{Result: } 0001 = 1.
+   \]
+
+\end{itemize}
+
+Subtraction Example (4-bit signed-magnitude):
+\[
+-3 - 2
+\]
+In signed-magnitude:
+\[
+-3 = 1011, \quad 2 = 0010
+\]
+Step-by-step subtraction:
+\begin{itemize}
+    \item Determine the larger magnitude (\( 3 > 2 \)).
+    \item Add the magnitudes:
+   \[
+   3 + 2 = 5
+   \]
+    \item Assign the sign of the first operand (\( - \)):
+   \[
+   \text{Result: } 1101 = -5.
+   \]
+\end{itemize}
+
+%************************************************************
+\subsubsection{Trade-offs of Signed-Magnitude Representation}
+%************************************************************
+Advantages:
+\begin{itemize}
+    \item Simple to Understand: The use of a sign bit and magnitude closely mirrors the way humans write signed decimal numbers.
+    \item Clear Separation of Sign and Magnitude: The MSB clearly indicates the sign, while the remaining bits represent the magnitude.
+\end{itemize}
+
+Disadvantages:
+\begin{itemize}
+    \item Two Representations for Zero: Both \( 0000 \) (\( +0 \)) and \( 1000 \) (\( -0 \)) exist, which can lead to inconsistencies and inefficiencies.
+    \item Complex Arithmetic: Arithmetic operations, such as addition and subtraction, require extra steps to manage the sign bit and may involve separate logic for handling positive and negative values.
+    \item Limited Practical Use: Except for IEEE-754 floating point, signed-magnitude is rarely used in modern digital systems due to its inefficiencies.
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{One's Complement Representation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The one's complement representation is a method for representing signed integers in binary. It improves upon the signed-magnitude representation by eliminating the dual representation of zero, while still maintaining a straightforward method for negating numbers. In one's complement, negative numbers are represented by inverting (complementing) all the bits of their positive counterparts.
+
+%*************************
+\subsubsection{Definition}
+%*************************
+
+In an \( n \)-bit one's complement system:
+\begin{itemize}
+    \item **Positive Numbers**: Represented the same way as in unsigned binary, with the MSB (most significant bit) set to \( 0 \) for non-negative values.
+    \item **Negative Numbers**: Represented by inverting all the bits (one's complement) of the positive value.
+\end{itemize}
+
+Formally, for an integer \( x \) in one's complement representation:
+\[
+x =
+\begin{cases}
+\text{Binary representation of } x, & \text{if } x \geq 0, \\
+\sim (\text{Binary representation of } |x|), & \text{if } x < 0,
+\end{cases}
+\]
+where \( \sim \) represents the bitwise NOT operation (inversion of all bits).
+
+%************************************************************
+\subsubsection{Properties of One's Complement Representation}
+%************************************************************
+
+The following are the mathematical properties of this representation:
+
+\begin{enumerate}[left=1cm]
+    \item Bit Allocation:
+    \begin{itemize}
+        \item For an \( n \)-bit one's complement representation:
+        \item The Most Significant Bit (MSB) is the \textit{sign bit}, denoted \( s \):
+       \[
+       s = 
+       \begin{cases} 
+       0, & \text{if the number is non-negative} \\
+       1, & \text{if the number is negative.}
+       \end{cases}
+       \]
+        \item The remaining \( n-1 \) bits represent the \textit{magnitude}, with negative numbers represented as the bitwise complement of their positive counterparts.
+    \end{itemize}
+
+    \item Range:
+    \begin{itemize}
+        \item The representable range of numbers is:
+     \[
+     -(2^{n-1} - 1) \leq x \leq 2^{n-1} - 1.
+     \]
+     For example, in a 4-bit system:
+     \[
+     x \in \{-7, -6, -5, -4, -3, -2, -1, +0, -0, +1, +2, +3, +4, +5, +6, +7\}.
+     \]
+     \end{itemize}
+
+    \item Dual Representation of Zero:
+     \[
+     0000_2 \; (\text{positive zero, } +0) \quad \text{and} \quad 1111_2 \; (\text{negative zero, } -0).
+     \]
+
+    \item Arithmetic Operations:
+    \begin{itemize}
+        \item Arithmetic operations use standard binary addition, with carries propagated as needed.
+        \item Addition and subtraction are consistent for positive and negative numbers, but special care must be taken to handle the dual representation of zero.
+    \end{itemize}
+
+    \item Symmetry:
+    \begin{itemize}
+        \item The representation is symmetric about zero. For any \( x \) with \( s = 0 \), the negative counterpart is obtained by flipping all bits in the binary representation.
+    \end{itemize}
+
+    \item Sign Bit Interpretation:
+    \begin{itemize}
+        \item The MSB (sign bit) determines the polarity:
+        \[
+        x = (-1)^s \cdot \text{Magnitude}.
+        \]
+    \end{itemize}
+
+    \item Magnitude Interpretation:
+    \begin{itemize}
+        \item Negative numbers are interpreted as the bitwise complement of their positive counterpart.
+        \[
+        \text{Magnitude} = 
+        \begin{cases} 
+        \text{Unsigned value of bits}, & \text{if } s = 0, \\
+        \text{Bitwise complement of unsigned value}, & \text{if } s = 1.
+        \end{cases}
+        \]
+    \end{itemize}
+\end{enumerate}
+
+---
+
+Example
+For a 4-bit one's complement representation:
+\[
+x = (-1)^s \cdot \text{Magnitude}, \quad s = \text{MSB}.
+\]
+
+\[
+\begin{array}{|c|c|}
+\hline
+\textbf{Positive Numbers (\( s = 0 \))} & \textbf{Negative Numbers (\( s = 1 \))} \\
+\hline
+0000 = +0 & 1111 = -0 \\
+0001 = +1 & 1110 = -1 \\
+0010 = +2 & 1101 = -2 \\
+0011 = +3 & 1100 = -3 \\
+0100 = +4 & 1011 = -4 \\
+0101 = +5 & 1010 = -5 \\
+0110 = +6 & 1001 = -6 \\
+0111 = +7 & 1000 = -7 \\
+\hline
+\end{array}
+\]
+
+Note that \( -0 \) is often treated as equivalent to \( +0 \).
+
+---
+
+%************************************************************
+\subsubsection{Arithmetic with One's Complement Representation}
+%************************************************************
+Addition Example (4-bit one's complement):
+\[
+3 + (-2)
+\]
+In one's complement:
+\[
+3 = 0011, \quad -2 = 1101
+\]
+
+Step-by-step addition:
+\begin{itemize}
+    \item Add the binary numbers:
+   \[
+   0011 + 1101 = 10000
+   \]
+    \item Discard the carry bit:
+   \[
+   \text{Result: } 0000 = +0 \; (\text{or } -0).
+   \]
+\end{itemize}
+
+Subtraction Example (4-bit one's complement):
+\[
+-3 - 2
+\]
+In one's complement:
+\[
+-3 = 1100, \quad 2 = 0010
+\]
+Step-by-step subtraction:
+\begin{itemize}
+    \item Add the first operand and the complement of the second operand:
+   \[
+   1100 + 1101 = 1 1001
+   \]
+    \item Discard the carry bit:
+   \[
+   \text{Result: } 1001 = -6.
+   \]
+\end{itemize}
+
+---
+
+%************************************************************
+\subsubsection{Trade-offs of One's Complement Representation}
+%************************************************************
+Advantages:
+\begin{itemize}
+    \item Simple Hardware: Arithmetic operations can be performed using standard binary addition and subtraction logic.
+    \item Symmetry: The representation is symmetric, simplifying certain mathematical operations.
+\end{itemize}
+
+Disadvantages:
+\begin{itemize}
+    \item Dual Representation of Zero: Both \( 0000 \) (\( +0 \)) and \( 1111 \) (\( -0 \)) exist, which can cause ambiguity.
+    \item Carry Handling: Addition requires special handling for the end-around carry, complicating hardware design.
+    \item Limited Practical Use: Due to its inefficiencies, one's complement is rarely used in modern systems, having been largely replaced by two's complement representation.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Two's Complement Representation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The two's complement representation is the most widely used method for representing signed integers in modern computing systems. It resolves the inefficiencies of signed-magnitude and one's complement, providing a simple and consistent way to represent both positive and negative integers, while ensuring efficient arithmetic operations. In two's complement, negative numbers are represented by the bitwise complement of their positive counterparts, plus one.
+
+%**************************
+\subsubsection{Definition}
+%*************************
+In an \( n \)-bit two's complement system:
+\begin{itemize}
+    \item Positive Numbers: Represented the same way as in unsigned binary, with the most significant bit (MSB) set to \( 0 \).
+    \item Negative Numbers: Represented by the two's complement of their positive counterpart, calculated as:
+    \[
+    \text{Two's complement of } x = \sim x + 1,
+    \]
+    where \( \sim x \) denotes the bitwise complement (inversion) of \( x \).
+\end{itemize}
+
+Formally, the value \( x \) in two's complement representation is:
+\[
+x =
+\begin{cases}
+\text{Binary representation of } x, & \text{if } x \geq 0, \\
+2^n + x, & \text{if } x < 0.
+\end{cases}
+\]
+
+This method simplifies arithmetic operations and eliminates the ambiguity of multiple representations for zero.
+
+%************************************************************
+\subsubsection{Properties of Two's Complement Representation}
+%************************************************************
+
+The following are the mathematical properties of this representation:
+
+\begin{enumerate}[left=1cm]
+    \item Bit Allocation:
+    \begin{itemize}
+        \item For an \( n \)-bit two's complement representation:
+        \item The Most Significant Bit (MSB) is the \textit{sign bit}, denoted \( s \):
+       \[
+       s = 
+       \begin{cases} 
+       0, & \text{if the number is non-negative} \\
+       1, & \text{if the number is negative.}
+       \end{cases}
+       \]
+        \item The remaining \( n-1 \) bits represent the magnitude, with negative numbers represented as the two's complement (bitwise complement plus 1) of their positive counterparts.
+    \end{itemize}
+
+    \item Range:
+    \begin{itemize}
+        \item The representable range of numbers is:
+     \[
+     -2^{n-1} \leq x \leq 2^{n-1} - 1.
+     \]
+     For example, in a 4-bit system:
+     \[
+     x \in \{-8, -7, -6, -5, -4, -3, -2, -1, 0, +1, +2, +3, +4, +5, +6, +7\}.
+     \]
+     \end{itemize}
+
+    \item Unique Representation of Zero:
+     \[
+     0000_2 = 0.
+     \]
+
+    \item Arithmetic Operations:
+    \begin{itemize}
+        \item Arithmetic operations use standard binary addition and subtraction, including the sign bit, without special handling for the sign.
+        \item Overflow detection is necessary when performing operations near the boundaries of the representable range.
+    \end{itemize}
+
+    \item Symmetry:
+    \begin{itemize}
+        \item The representation is nearly symmetric, except for the most negative number (\( -2^{n-1} \)), which does not have a positive counterpart in the range.
+    \end{itemize}
+
+    \item Sign Bit Interpretation:
+    \begin{itemize}
+        \item The MSB (sign bit) determines the polarity and contributes to the magnitude:
+        \[
+        x = -s \cdot 2^{n-1} + \sum_{i=0}^{n-2} b_i \cdot 2^i, \quad b_i \in \{0, 1\}.
+        \]
+    \end{itemize}
+
+    \item Magnitude Interpretation:
+    \begin{itemize}
+        \item The magnitude of a negative number is obtained by taking its two's complement:
+        \[
+        \text{Two's complement} = \text{Bitwise complement} + 1.
+        \]
+    \end{itemize}
+\end{enumerate}
+
+Example for a 4-bit two's complement representation:
+\[
+x = -s \cdot 2^{n-1} + \text{Unsigned value of remaining bits}, \quad s = \text{MSB}.
+\]
+
+\[
+\begin{array}{|c|c|}
+\hline
+\textbf{Positive Numbers (\( s = 0 \))} & \textbf{Negative Numbers (\( s = 1 \))} \\
+\hline
+0000 = 0 & 1000 = -8 \\
+0001 = 1 & 1001 = -7 \\
+0010 = 2 & 1010 = -6 \\
+0011 = 3 & 1011 = -5 \\
+0100 = 4 & 1100 = -4 \\
+0101 = 5 & 1101 = -3 \\
+0110 = 6 & 1110 = -2 \\
+0111 = 7 & 1111 = -1 \\
+\hline
+\end{array}
+\]
+
+Note that there is a unique representation for zero (\( 0000 \)).
+
+---
+
+%************************************************************
+\subsubsection{Arithmetic with Two's Complement Representation}
+%************************************************************
+Addition Example (4-bit two's complement):
+\[
+3 + (-2)
+\]
+In two's complement:
+\[
+3 = 0011, \quad -2 = 1110
+\]
+
+Step-by-step addition:
+\begin{itemize}
+    \item Add the binary numbers:
+   \[
+   0011 + 1110 = 1 0001
+   \]
+    \item Discard the carry bit:
+   \[
+   \text{Result: } 0001 = 1.
+   \]
+\end{itemize}
+
+Subtraction Example (4-bit two's complement):
+\[
+-3 - 2
+\]
+In two's complement:
+\[
+-3 = 1101, \quad 2 = 0010
+\]
+Step-by-step subtraction:
+\begin{itemize}
+    \item Add the first operand and the two's complement of the second operand:
+   \[
+   1101 + 1110 = 1 1011
+   \]
+    \item Discard the carry bit:
+   \[
+   \text{Result: } 1011 = -5.
+   \]
+\end{itemize}
+
+---
+
+%************************************************************
+\subsubsection{Trade-offs of Two's Complement Representation}
+%************************************************************
+Advantages:
+\begin{itemize}
+    \item Simplified Arithmetic: Addition and subtraction use the same logic as unsigned integers, without requiring separate handling for the sign.
+    \item Unique Representation of Zero: Avoids ambiguity and inefficiency caused by dual-zero representations.
+    \item Widely Used: Two's complement is the standard representation for signed integers in modern computing systems.
+\end{itemize}
+
+Disadvantages:
+\begin{itemize}
+    \item Asymmetric Range: The most negative number (\( -2^{n-1} \)) has no positive counterpart, which can lead to edge-case issues in arithmetic.
+    \item Overflow Detection: Additional logic is needed to detect overflow in operations near the boundaries of the range.
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Excess-\( k \) Representation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The excess-\( k \) (or biased) representation is a method for representing signed integers in binary by introducing a bias (offset) \( k \) to the actual value. This approach effectively maps both positive and negative integers to non-negative binary representations, simplifying certain arithmetic and logical operations. Excess-\( k \) is widely used in applications such as floating-point exponent representation, where a purely positive range of values is advantageous.
+
+%*************************
+\subsubsection{Definition}
+%*************************
+In an \( n \)-bit system using excess-\( k \) representation:
+\begin{itemize}
+    \item \( k = 2^{n-1} \) (the midpoint of the representable range) is the bias applied to the actual value.
+    \item A signed integer \( x \) is encoded as:
+    \[
+    \text{Excess-} k \text{ value} = x + k,
+    \]
+    where \( x \) is the actual signed integer, and \( k \) is the bias.
+\end{itemize}
+
+The binary representation of the excess-\( k \) value corresponds to its unsigned binary encoding.
+
+%************************************************************
+\subsubsection{Properties of Excess-\( k \) Representation}
+%************************************************************
+
+The following are the mathematical properties of this representation:
+
+\begin{enumerate}[left=1cm]
+    \item Bit Allocation:
+    \begin{itemize}
+        \item For an \( n \)-bit excess-\( k \) representation, the value of \( k \) is:
+       \[
+       k = 2^{n-1} - 1.
+       \]
+        \item The encoded value \( E \) is calculated as:
+        \[
+        E = x + k, \quad \text{where } x \text{ is the actual signed integer.}
+        \]
+        \item All \( n \) bits represent the biased (offset) value, with no explicit sign bit.
+    \end{itemize}
+
+    \item Range:
+    \begin{itemize}
+        \item The representable range of numbers is:
+     \[
+     -k \leq x \leq 2^n - 1 - k.
+     \]
+     For example, in a 4-bit system (\( k = 7 \)):
+     \[
+     x \in \{-7, -6, -5, -4, -3, -2, -1, 0, +1, +2, +3, +4, +5, +6, +7\}.
+     \]
+     \end{itemize}
+
+    \item Unique Representation of Zero:
+     \[
+     E = k, \quad \text{or } 0111_2 \text{ in a 4-bit system.}
+     \]
+
+    \item Arithmetic Operations:
+    \begin{itemize}
+        \item Arithmetic requires converting the biased value back to its true signed integer form:
+        \[
+        x = E - k.
+        \]
+        \item After performing arithmetic on \( x \), the result is re-encoded as:
+        \[
+        E = x + k.
+        \]
+    \end{itemize}
+
+    \item Symmetry:
+    \begin{itemize}
+        \item The representation is symmetric about zero, as the bias \( k \) ensures equal spacing for positive and negative values.
+    \end{itemize}
+
+    \item Interpretation:
+    \begin{itemize}
+        \item The value is interpreted as:
+        \[
+        x = E - k, \quad E \in \{0, 1, \dots, 2^n - 1\}.
+        \]
+        \item The excess-\( k \) representation shifts the range of representable integers so that the minimum value corresponds to \( 0 \), and zero corresponds to \( k \).
+    \end{itemize}
+\end{enumerate}
+
+Example for a 4-bit excess-\( 7 \) representation (\( k = 7 \)):
+\[
+x = E - 7, \quad E = \text{binary value}.
+\]
+
+\[
+\begin{array}{|c|c|}
+\hline
+\textbf{Encoded Value (\( E \))} & \textbf{Actual Value (\( x \))} \\
+\hline
+0000 = 0 & -7 \\
+0001 = 1 & -6 \\
+0010 = 2 & -5 \\
+0011 = 3 & -4 \\
+0100 = 4 & -3 \\
+0101 = 5 & -2 \\
+0110 = 6 & -1 \\
+0111 = 7 & 0 \\
+1000 = 8 & +1 \\
+1001 = 9 & +2 \\
+1010 = 10 & +3 \\
+1011 = 11 & +4 \\
+1100 = 12 & +5 \\
+1101 = 13 & +6 \\
+1110 = 14 & +7 \\
+1111 = 15 & +8 \\
+\hline
+\end{array}
+\]
+
+%************************************************************
+\subsubsection{Comparisons with Excess-\( k \) Representation}
+%************************************************************
+One of the key advantages of excess-\( k \) representation is that it allows direct comparison of encoded values without needing to decode them into their actual signed values. This simplifies hardware design and improves computational efficiency for certain applications.
+
+Example: Comparing \( -2 \) and \( 1 \) in Excess-\( 7 \)
+\[
+E = x + k, \quad \text{where } x \text{ is the actual value}.
+\]
+
+Step 1: Encode the values for \( -2 \) and \( 1 \):
+\[
+E = -2 + 7 = 5, \quad \text{or } 0101_2.
+\]
+\[
+E = 1 + 7 = 8, \quad \text{or } 1000_2.
+\]
+
+Step 2: Compare the encoded values.
+In excess-\( 7 \), the comparison of \( E \) values directly determines the result:
+\[
+0101_2 < 1000_2 \quad \Rightarrow \quad -2 < 1.
+\]
+
+There is no need to decode \( E \) back into \( x \), as the ordering of \( E \) values mirrors the ordering of the actual values \( x \). This property of excess-\( k \) representation makes it particularly useful in systems where frequent comparisons are required, such as in sorting algorithms or conditional logic in floating-point exponent comparisons. By avoiding decoding, the computational overhead is significantly reduced.
+
+%************************************************************
+\subsubsection{Addition with Excess-\( k \) Representation}
+%************************************************************
+In excess-\( k \) notation, addition can always be performed directly on the encoded values without converting to their actual values. This is because the bias \( k \) is consistent across all numbers, and the addition operation preserves this bias. Below is a detailed explanation of why this works.
+
+In excess-\( k \), a number \( x \) is encoded as:
+\[
+E = x + k
+\]
+where \( k \) is the bias.
+
+When adding two numbers \( x_1 \) and \( x_2 \):
+\begin{enumerate}[left=1cm]
+    \item Their encoded values are:
+    \[
+    E_1 = x_1 + k, \quad E_2 = x_2 + k
+    \]
+    \item Adding these encoded values directly:
+    \[
+    E_{\text{sum}} = E_1 + E_2 = (x_1 + k) + (x_2 + k) = (x_1 + x_2) + 2k
+    \]
+    \item The result is encoded with an excess of \( 2k \), not \( k \). To interpret the result in excess-\( k \), subtract \( k \) from the result:
+    \[
+    E_{\text{corrected}} = E_{\text{sum}} - k = (x_1 + x_2) + k
+    \]
+\end{enumerate}
+
+Thus, the encoded values can be added directly, and the result will remain valid in the excess-\( k \) system after interpreting it correctly (i.e., accounting for the excess \( k \)).
+
+ \vspace{\baselineskip}\par
+\textbf{Addition Example} (4-bit excess-\( 7 \)):
+\[
+3 + (-2)
+\]
+In excess-\( 7 \):
+\[
+3 = 1010, \quad -2 = 0101
+\]
+
+Step-by-step addition:
+\begin{itemize}
+    \item Add the encoded values directly:
+    \[
+    1010 + 0101 = 1111.
+    \]
+    \item Subtract the excess (\( 7 \)) to interpret the result:
+    \[
+    1111 - 0111 = 1000.
+    \]
+    \item The result in excess-\( 7 \) is \( 1000 \), corresponding to the actual value \( 1 \).
+\end{itemize}
+
+%************************************************************
+\subsubsection{Subtraction with Excess-\( k \) Representation}
+%************************************************************
+Attempting to perform subtraction directly in excess-\( 7 \) notation using binary arithmetic can lead to incorrect results due to the way the bias affects the encoded values. Subtraction is not symmetric in excess-\( k \), as directly subtracting encoded values \( E_1 \) and \( E_2 \) includes the bias \( k \) in both values. When subtracting:
+\[
+E_{\text{diff}} = E_1 - E_2 = (x_1 + k) - (x_2 + k) = (x_1 - x_2)
+\]
+The bias cancels out, so the result is correct in terms of the actual value. However, handling negative results in binary may require re-encoding or adjustments to ensure the result stays within the bounds of the representation.
+
+ \vspace{\baselineskip}\par
+Assume (4-bit excess-\( 7 \)):
+\[
+-3 - 2
+\]
+In excess-\( 7 \):
+\[
+-3 = 0100, \quad 2 = 1001
+\]
+
+Step-by-step subtraction:
+\begin{itemize}
+    \item Compute the two's complement of \( 1001 \) (the encoded value of \( 2 \)):
+    \begin{itemize}[noitemsep, left=1.5cm]
+        \item Find the one's complement of \( 1001 \):
+        \[
+        \text{One's complement of } 1001 = 0110
+        \]
+        \item Add \( 1 \) to obtain the two's complement:
+        \[
+        0110 + 0001 = 0111
+        \]
+    \end{itemize}
+    \item Add the two's complement of \( 1001 \) to \( 0100 \):
+    \[
+    0100 + 0111 = 1011
+    \]
+    \item Since there is no carry out, the result is \( 1011 \).
+    \item Subtract the excess (\( 0111 \)) to interpret the result:
+    \[
+    1011 - 0111 = 0100
+    \]
+    \item The result in excess-\( 7 \) is \( 0100 \), corresponding to:
+    \[
+    x = E - k = 0100_2 - 0111_2 = 4 - 7 = -3
+    \]
+    \item However, this does not match the expected result of \( -5 \).
+\end{itemize}
+
+To accurately perform the subtraction \( -3 - 2 \) in excess-\( 7 \) notation, it's necessary to convert the encoded values back to their actual decimal values:
+
+
+%************************************************************
+\subsubsection{Trade-offs of Excess-\( k \) Representation}
+%************************************************************
+Advantages:
+\begin{itemize}[topsep=0pt]
+    \item Simplified Comparison: Excess-\( k \) enables direct comparison of encoded values without decoding. Since the bias is uniform across all numbers, their relative magnitudes are preserved, allowing comparisons like \( E_1 < E_2 \) to directly reflect \( x_1 < x_2 \).
+    \item Simplified Addition: Addition can be performed directly on the encoded values without decoding, as the bias \( k \) does not affect the sum. The result remains valid in excess-\( k \) form as long as the interpretation accounts for the bias.
+    \item Symmetry: The representation ensures equal spacing between positive and negative values, making it suitable for balanced encoding systems.
+    \item Common in Floating Point: Widely used in the exponent field of IEEE-754 floating-point numbers, where excess-\( k \) simplifies comparisons and operations on exponents.
+\end{itemize}
+
+ \vspace{\baselineskip}\par
+Disadvantages:
+\begin{itemize}[topsep=0pt]
+    \item Conversion Overhead for Subtraction: Subtraction often requires decoding the values into their actual numerical equivalents to handle differences correctly, especially when the result is negative. Re-encoding is needed after the operation.
+    \item Ambiguity: The value of \( k \) (the bias) must be known to interpret the representation correctly, which can introduce complexity in systems where multiple biases are used.
+    \item Limited Use in General Arithmetic: Excess-\( k \) is not commonly used for general-purpose integer arithmetic because of its dependence on decoding and re-encoding for operations like subtraction.
+    \item Overflow/Underflow Handling: Care must be taken to ensure that results of arithmetic operations stay within the valid range of encoded values, as excess-\( k \) systems do not naturally handle overflow or underflow.
+\end{itemize}
+
+
+%*****************************************************************
+\subsection{Summary Table of Common Signed Number Representations}
+%*****************************************************************
+Table \ref{tab:signed_number_representations} summarizes the key properties of signed-magnitude, one's complement, two's complement, and excess-\( k \) representations:
+
+\renewcommand{\arraystretch}{1.3} % Adjust row height for better readability
+\setlength{\tabcolsep}{5pt} % Adjust column separation for better spacing
+
+\begin{longtable}{|m{2.8cm}|m{4.8cm}|m{2.1cm}|m{4.8cm}|}
+\caption{Comparison of signed number representations with fixed column widths and wrapped text.}
+\label{tab:signed_number_representations} \\
+\hline
+\makecell{\textbf{Representation}} & \makecell{\textbf{Key Features}} & \makecell{\textbf{Range}} & \makecell{\textbf{Advantages/Disadvantages}} \\ \hline
+\endfirsthead
+\hline
+\textbf{Representation} & \textbf{Key Features} & \textbf{Range} & \textbf{Advantages/Disadvantages} \\ \hline
+\endhead
+\hline
+\endfoot
+
+\makecell{\textbf{Signed} \\ \textbf{Magnitude}} & 
+MSB indicates the sign (0 for positive, 1 for negative). 
+\vspace{\baselineskip}\par
+Remaining bits represent magnitude. 
+\vspace{\baselineskip}\par
+Dual representation of zero (+0, -0). &
+\makecell{$-2^{n-1} + 1$ \\ \\ to \\ \\ $2^{n-1} - 1$} &
+Simple to understand.
+\vspace{\baselineskip}\par
+Complex arithmetic due to sign handling.
+\vspace{\baselineskip}\par
+Inefficient for general computation.
+\\ \hline
+
+\makecell{\textbf{One's} \\ \textbf{Complement}} &
+MSB indicates the sign (0 for positive, 1 for negative). 
+\vspace{\baselineskip}\par
+Negative numbers are bitwise complements of positive numbers. 
+\vspace{\baselineskip}\par
+Negative zero exists but treated as equivalent to positive zero. &
+\makecell{$-2^{n-1} + 1$ \\ \\ to \\ \\ $2^{n-1} - 1$} &
+Simplified negation by bit inversion.
+\vspace{\baselineskip}\par
+Slightly improved arithmetic efficiency.
+\vspace{\baselineskip}\par
+Requires end-around carry for addition/subtraction.
+\vspace{\baselineskip}\par
+Negative zero can cause inefficiencies.
+ \\ \hline
+
+\makecell{\textbf{Two's} \\ \textbf{Complement}} &
+MSB indicates the sign (0 for positive, 1 for negative). 
+\vspace{\baselineskip}\par
+Negative numbers are represented as bitwise complements plus one. 
+\vspace{\baselineskip}\par
+Single representation for zero. &
+\makecell{$-2^{n-1}$ \\ \\ to \\ \\ $2^{n-1} - 1$} &
+Efficient arithmetic without special handling.
+\vspace{\baselineskip}\par
+Eliminates ambiguity of zero.
+\vspace{\baselineskip}\par
+Standard representation in modern computing.
+\vspace{\baselineskip}\par
+Asymmetric range (one extra negative value).
+ \\ \hline
+
+\makecell{\textbf{Excess-}\( k \)} &
+Encodes values by adding a bias $k$ ($k = 2^{n-1}$). 
+\vspace{\baselineskip}\par
+Values are shifted to ensure all are non-negative. Common in floating-point exponent representation. &
+\makecell{$-2^{n-1}$ \\ \\ to \\ \\ $2^{n-1} - 1$} &
+Uniform binary range simplifies comparisons.
+\vspace{\baselineskip}\par
+Ideal for exponent encoding in floating-point systems.
+\vspace{\baselineskip}\par
+Requires bias adjustments for arithmetic.
+\vspace{\baselineskip}\par
+Less intuitive for human interpretation.
+\\ \hline
+\end{longtable}
+\renewcommand{\arraystretch}{1} % Reset to default value
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Binary Coded Decimal (BCD) Representation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Binary Coded Decimal (BCD) is a class of binary encoding for decimal numbers where each decimal digit is represented by a fixed number of binary bits, typically four. This encoding allows decimal digits to be stored and manipulated directly in a binary system, avoiding conversion between decimal and binary representations. BCD is widely used in financial applications, calculators, and digital systems where precision and human-readability of decimal values are critical \cite{Hennessy19, stallings2020}.
+
+%********************************
+\subsubsection{Definition of BCD}
+%********************************
+In BCD, each decimal digit (0 through 9) is encoded as a 4-bit binary value. For example:
+\[
+\text{Decimal: } 0 \; \rightarrow \; \text{BCD: } 0000, \quad \text{Decimal: } 9 \; \rightarrow \; \text{BCD: } 1001.
+\]
+A decimal number is represented by concatenating the BCD codes of its individual digits. For example:
+\[
+\text{Decimal: } 47 \; \rightarrow \; \text{BCD: } 0100 \; 0111.
+\]
+
+%*******************************************************
+\subsubsection{Properties of Binary Coded Decimal (BCD)}
+%*******************************************************
+\begin{enumerate}
+    \item Bit Allocation
+    \begin{itemize}
+        \item Each decimal digit is represented by a 4-bit binary code.
+        \item Invalid combinations (e.g., \( 1010 \) through \( 1111 \)) are unused and may trigger errors in systems that strictly enforce BCD.
+    \end{itemize}
+
+    \item Range:
+    \begin{itemize}
+        \item Each 4-bit group represents a decimal digit from 0 to 9.
+        \item For an \( n \)-digit decimal number, BCD requires \( 4n \) bits.
+        \item Example: A 3-digit decimal number (\( 0 \; \text{to} \; 999 \)) requires \( 12 \) bits in BCD.
+    \end{itemize}
+
+    \item Unique Representation of Numbers:
+    \begin{itemize}
+        \item Each decimal digit has a unique 4-bit representation, ensuring that conversions between decimal and BCD are exact.
+    \end{itemize}
+
+    \item Arithmetic Operations:
+    \begin{itemize}
+        \item Addition and subtraction require special handling to ensure results remain in valid BCD.
+        \item Overflow is corrected by adding \( 6 \) (binary \( 0110 \)) to the result when a sum exceeds 9.
+    \end{itemize}
+
+    \item Human-Readable Decimal Encoding:
+    \begin{itemize}
+        \item BCD aligns closely with human-readable decimal notation, making it useful in systems requiring precise representation of decimal numbers, such as financial and accounting systems.
+    \end{itemize}
+\end{enumerate}
+
+%*********************************
+\subsubsection{Addition using BCD}
+%**********************************
+Encoding Example:
+\[
+\text{Decimal: } 259 \; \rightarrow \; \text{BCD: } 0010 \; 0101 \; 1001
+\]
+
+ Addition Example (in BCD):
+\[
+7 + 8
+\]
+Step-by-step addition:
+\begin{itemize}
+    \item Add the binary representations:
+    \[
+    0111 + 1000 = 1111 \; (\text{invalid BCD code}).
+    \]
+    \item Correct the result by adding \( 0110 \):
+    \[
+    1111 + 0110 = 0001 \; 0101.
+    \]
+    \item The result is \( 15 \), encoded as \( 0001 \; 0101 \) in BCD.
+\end{itemize}
+
+%*********************************
+\subsubsection{Subtraction in BCD}
+%*********************************
+We want to compute:
+\[
+75 - 46 = 29
+\]
+using Binary Coded Decimal arithmetic.
+
+BCD Representation:
+\begin{itemize}[noitemsep, left=1cm]
+    \item \( 75 \) in BCD:
+    \[
+    0111 \; 0101
+    \]
+    \item \( 46 \) in BCD:
+    \[
+    0100 \; 0110
+    \]
+\end{itemize}
+
+Step-by-Step Subtraction:
+
+1. **Subtract Each Digit Individually**:
+   Perform the subtraction digit by digit, starting from the least significant digit (LSD):
+   \[
+   \begin{array}{c@{\;}c@{\;}c}
+   & 0111 & 0101 \; (\text{75 in BCD}) \\
+   - & 0100 & 0110 \; (\text{46 in BCD}) \\
+   \hline
+   & 0011 & -0001
+   \end{array}
+   \]
+   - The subtraction in the LSD results in \( 5 - 6 = -1 \), which is invalid in BCD.
+
+2. **Apply Borrow Correction**:
+   - Since \( 5 - 6 = -1 \), borrow \( 1 \) from the next higher digit.
+   - In BCD, borrowing subtracts \( 1 \) from the higher digit and adds \( 10 \) (binary \( 1010 \)) to the lower digit.
+
+   Corrected subtraction:
+   \[
+   \begin{array}{c@{\;}c@{\;}c}
+   & 0110 & 1111 \; (\text{After Borrowing}) \\
+   - & 0100 & 0110 \\
+   \hline
+   & 0010 & 1001
+   \end{array}
+   \]
+
+3. **Result**:
+   - The final result in BCD is:
+     \[
+     0010 \; 1001 \; (\text{BCD for } 29)
+     \]
+
+---
+
+ Verification:
+Convert \( 0010 \; 1001 \) back to decimal:
+\[
+2 \times 10 + 9 = 29
+\]
+
+---
+
+ Conclusion:
+Subtraction in BCD requires handling invalid results (e.g., negative digits) through **borrow correction**. By borrowing and adding \( 10 \) to the LSD, we ensure the result remains valid in BCD.
+
+
+\subsubsection{Trade-offs of BCD Representation}
+\begin{itemize}
+    \item \textbf{Advantages:}
+    \begin{itemize}
+        \item Precise representation of decimal numbers.
+        \item Avoids errors due to floating-point approximations in decimal systems.
+        \item Simplifies display formatting for human-readable outputs.
+    \end{itemize}
+    \item \textbf{Disadvantages:}
+    \begin{itemize}
+        \item Inefficient use of storage, as only 10 out of 16 possible 4-bit values are used.
+        \item Arithmetic operations are slower compared to binary due to correction steps.
+        \item Less common in modern general-purpose computing due to inefficiencies.
+    \end{itemize}
+\end{itemize}
+
+---
+
+\subsubsection{Applications of BCD}
+BCD is commonly used in applications requiring exact decimal representation and arithmetic, such as:
+\begin{itemize}
+    \item Financial systems (e.g., accounting and banking software).
+    \item Digital clocks and calculators.
+    \item Embedded systems where human-readable output is necessary.
+\end{itemize}
+
+
+%************************************************************
+\subsection{Example: Floating-Point vs. BCD in Financial Applications}
+%************************************************************
+
+ Scenario:
+A financial application needs to add \$1.10 and \$0.30, which should result in \$1.40. The values are represented in both **binary floating-point** and **BCD** to illustrate the differences in accuracy \cite{goldberg1991}.
+
+---
+
+\subsubsection{Floating-Point Representation}
+
+Floating-point uses binary fractions to approximate decimal values. Let's encode \$1.10 and \$0.30 as 32-bit IEEE 754 single-precision floating-point numbers.
+
+1. **Representation**:
+   - For \$1.10:
+     \[
+     1.10_{10} = 1.00011001100110011\ldots_2 \quad (\text{recurring in binary})
+     \]
+     Approximated in floating-point as:
+     \[
+     1.10 \approx 1.099999904632568359375
+     \]
+   - For \$0.30:
+     \[
+     0.30_{10} = 0.010011001100110011\ldots_2 \quad (\text{recurring in binary})
+     \]
+     Approximated in floating-point as:
+     \[
+     0.30 \approx 0.2999999821186065673828125
+     \]
+
+2. **Addition**:
+   Adding these approximations:
+   \[
+   1.099999904632568359375 + 0.2999999821186065673828125 = 1.3999998867511749267578125
+   \]
+
+3. **Result**:
+   The floating-point result is approximately:
+   \[
+   \text{\$1.3999999 (not exactly \$1.40)}.
+   \]
+
+---
+
+\subsubsection{BCD Representation}
+
+In BCD, each decimal digit is encoded precisely without approximation. Let's represent \$1.10 and \$0.30 in BCD.
+
+1. **Representation**:
+   - For \$1.10:
+     \[
+     \text{BCD: } 0001 \; 0001 \; 0000
+     \]
+   - For \$0.30:
+     \[
+     \text{BCD: } 0000 \; 0011 \; 0000
+     \]
+
+2. **Addition**:
+   Adding the BCD values:
+   \[
+   \begin{array}{cccc}
+     & 0001 & 0001 & 0000 \; (\$1.10) \\
+   + & 0000 & 0011 & 0000 \; (\$0.30) \\
+   \hline
+     & 0001 & 0100 & 0000 \; (\$1.40)
+   \end{array}
+   \]
+
+3. **Result**:
+   The BCD result is exactly:
+   \[
+   \text{\$1.40 (no rounding error)}.
+   \]
+
+---
+
+\subsubsection{Comparison}
+
+\begin{itemize}[noitemsep, left=1cm]
+    \item \textbf{Floating-Point:}
+    \begin{itemize}[noitemsep]
+        \item Binary fractions cannot precisely represent many decimal values (e.g., 0.1, 0.3).
+        \item Arithmetic introduces small inaccuracies, such as \$1.3999999 instead of \$1.40.
+        \item Errors accumulate over multiple operations, making floating-point unsuitable for precise financial calculations.
+    \end{itemize}
+    \item \textbf{BCD:}
+    \begin{itemize}[noitemsep]
+        \item Decimal digits are encoded exactly, avoiding conversion errors.
+        \item Arithmetic is performed directly on decimal representations, ensuring precision.
+        \item The result is always exact for decimal numbers, as seen with the correct sum of \$1.40.
+    \end{itemize}
+\end{itemize}
+
+---
+
+\subsubsection{Conclusion}
+
+This example highlights why **BCD** is preferred in financial applications. It guarantees exact decimal arithmetic, avoiding the rounding errors and inaccuracies inherent in binary floating-point representation. While floating-point is more efficient for general-purpose computation, its limitations make it unsuitable for contexts like financial systems, where precision is critical.
+
+
+%********************************************************
+\subsection{Other Representations for Signed Numbers}
+%********************************************************
+
+In addition to the widely known methods of signed-magnitude, one's complement, two's complement, and excess-\( k \), other binary representations for signed numbers have been used historically or in specialized systems. These alternative representations often address specific challenges, such as reducing error, improving computational efficiency, or handling broader dynamic ranges.
+
+---
+
+\textbf{1. Sign-and-Logarithm Representation} \\
+Numbers are represented using a sign bit and the logarithm of their absolute value. This method is particularly useful for encoding a wide dynamic range of values with fewer bits. Sign-and-logarithm representations have been used in early scientific computations and audio processing systems where efficiency in representation outweighed complexity in arithmetic. However, addition and subtraction operations are computationally expensive, as they require converting numbers back to linear scale. This method is conceptually similar to floating-point representations but lacks their generality \cite{hamming1980}.
+
+---
+
+\textbf{2. Gray Code} \\
+Gray code is a binary numeral system where consecutive numbers differ by only one bit. Although Gray code is typically used in signal encoding and rotary encoders, it has been adapted for signed number representations in niche applications. This representation reduces errors in digital communication systems by minimizing bit transitions. However, arithmetic operations in Gray code are nontrivial and require conversion to standard binary \cite{gray1953}.
+
+---
+
+\textbf{3. Offset Binary (Biased Binary)} \\
+Offset binary, also known as biased binary, is similar to excess-\( k \) but applies a fixed bias directly to the binary representation of both positive and negative numbers. This representation is often used in digital signal processing (DSP) systems to encode signals symmetrically around zero. Applications include Analog-to-Digital Converters (ADCs) and Digital-to-Analog Converters (DACs). The primary drawback is that arithmetic operations require normalization to adjust for the bias, similar to excess-\( k \) \cite{oppenheim2014}.
+
+---
+
+\textbf{4. Base-2 Signed-Digit (SD) Representation} \\
+A signed-digit representation allows each digit to independently represent a value of \(-1\), \( 0 \), or \( +1 \). This system enables carry-free addition, making it highly efficient for certain high-speed arithmetic systems and redundant number systems. However, it requires special encoding and decoding processes, which complicates implementation. This method is primarily used in specific high-performance computing applications \cite{koren2002}.
+
+---
+
+\textbf{5. Balanced Ternary} \\
+Balanced ternary is a non-binary numeral system that uses three digits: \(-1\), \( 0 \), and \( +1 \). While not strictly binary, it has been considered for signed representations in early computing systems. One notable example is the Soviet Setun computer, which used balanced ternary due to its efficiency in certain calculations. However, its lack of compatibility with modern binary-based digital systems limits its applicability today \cite{lukyanov1961}.
+
+---
+
+\textbf{6. Segmented Representations} \\
+In segmented representations, numbers are divided into multiple segments, with some segments used to encode the sign and others for magnitude or auxiliary components. These representations are rarely used in general-purpose systems but have been employed in specialized hardware architectures for non-standard data types. Segmented representations are complex to decode and implement for arithmetic operations, which has limited their adoption \cite{smith1991}.
+
+---
+
+\textbf{7. Residue Number System (RNS)} \\
+The residue number system represents numbers as a set of residues modulo several pairwise coprime integers. This system supports signed numbers by choosing appropriate moduli. RNS is advantageous for high-speed computation in specialized domains such as cryptography and signal processing. While addition, subtraction, and multiplication are efficient in RNS, comparison and division operations are significantly more complex, which limits its use in general computing \cite{heydari2016}.
+
+---
+
+\textbf{Summary} \\
+While signed-magnitude, one's complement, two's complement, and excess-\( k \) dominate practical use cases for signed number representations, alternative methods like sign-and-logarithm, Gray code, and residue number systems have found applications in specialized domains. These representations are often chosen to address specific challenges, such as reducing error, enhancing computational speed, or simplifying logical comparisons. However, their complexity and limited hardware compatibility have restricted their adoption in general-purpose computing.
+
+
+

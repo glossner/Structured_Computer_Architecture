@@ -909,7 +909,7 @@ in a superscalar processor the out-of-order execution is requested. It consists 
 The benefit of out-of-order execution processing grows as the instruction pipeline deepens and the speed difference between main memory or cache memory and the processor widens. On modern machines, the processor runs few times faster than the cache memory and many times faster then system memory, so during the time an in-order processor  waits for data, a large number of instructions could be executed.
 
 \begin{exemplu}\label{warwaw}
-In the following sequence of instructions (see \cite{Patterson2}, p. 185):
+In the following sequence of instructions (see \citep{Patterson05}, p. 185):
 \begin{verbatim}
     DIV(0,2,4)  ;
     ADD(6,0,8)  ;
@@ -960,7 +960,7 @@ For the purpose we are pursuing, it is enough to understand that the operation w
 
 \subsubsection{Tomasulo's Algorithm}
 
-The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers. For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for whole or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \cite{Patterson3}:
+The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers. For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for whole or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \citep{Patterson19}:
 \begin{itemize}
     \item Op—The operation to perform on source operands S1 and S2.
 \item Qj, Qk—The reservation stations that will produce the corresponding source

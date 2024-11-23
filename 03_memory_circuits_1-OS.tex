@@ -1,4 +1,5 @@
-\chapter{Memory Circuits: One-Loop, First-Order Systems (1-OS)}\label{lect1}
+\chapter{Memory Circuits: One-Loop, First-Order Systems (1-OS)}
+% FIXME: \label{lect1}
 
 \minitoc
 
@@ -381,8 +382,149 @@ endmodule
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
-\section{Problems}
 
+%****************************************************************************
+\subsection{Representation of \( B_n \) in MSB and LSB Forms with Endianness}
+%****************************************************************************
+The set \( B_n \), representing \( n \)-bit unsigned binary numbers, can be expressed using two common conventions for bit ordering: Most Significant Bit (MSB) first and Least Significant Bit (LSB) first. These conventions are closely tied to the concept of endianness in computer architecture, which determines how binary numbers are stored or transmitted in memory.
+
+%****************************************************
+\subsubsection{MSB Representation (Big-Endian Order)}
+%****************************************************
+In the Most Significant Bit (MSB) representation, the leftmost bit (\( b_{n-1} \)) corresponds to the highest positional value (\( 2^{n-1} \)), and the rightmost bit (\( b_0 \)) corresponds to the lowest positional value (\( 2^0 \)). This is the standard positional notation for binary numbers. 
+
+For \( B_n \), the value of \( x \) is calculated as:
+\[
+x = b_{n-1} \cdot 2^{n-1} + b_{n-2} \cdot 2^{n-2} + \dots + b_1 \cdot 2^1 + b_0 \cdot 2^0, \quad b_i \in \{0, 1\}.
+\]
+
+%*******************************************************
+\subsubsection{LSB Representation (Little-Endian Order)}
+%*******************************************************
+In the Least Significant Bit (LSB) representation, the least significant bit (\( b_0 \)) is stored or transmitted first. However, the numerical value of the number remains the same, as the binary digits are still interpreted using the same positional notation. The formula remains:
+\[
+x = b_{n-1} \cdot 2^{n-1} + b_{n-2} \cdot 2^{n-2} + \dots + b_1 \cdot 2^1 + b_0 \cdot 2^0, \quad b_i \in \{0, 1\}.
+\]
+
+The difference lies in the physical storage or transmission order:
+- In big-endian systems, bits are stored or transmitted starting with the most significant bit (\( b_{n-1} \)).
+- In little-endian systems, bits are stored or transmitted starting with the least significant bit (\( b_0 \)).
+
+
+Example for \( n = 3 \)
+
+For \( B_3 = \{0, 1, 2, 3, 4, 5, 6, 7\} \), the logical representation (big-endian) is:
+
+\textbf{Logical Representation (Big-Endian)}:
+\[
+\begin{aligned}
+x = 0 & \Rightarrow 000, \\
+x = 1 & \Rightarrow 001, \\
+x = 2 & \Rightarrow 010, \\
+x = 3 & \Rightarrow 011, \\
+x = 4 & \Rightarrow 100, \\
+x = 5 & \Rightarrow 101, \\
+x = 6 & \Rightarrow 110, \\
+x = 7 & \Rightarrow 111.
+\end{aligned}
+\]
+
+In a little-endian system, the storage or transmission order of bits is reversed. For instance:
+- \( x = 1 \) (big-endian: \( 001 \)) is stored as \( 100 \) (little-endian).
+- \( x = 6 \) (big-endian: \( 110 \)) is stored as \( 011 \) (little-endian).
+
+\textbf{Physical Representation in Little-Endian (Stored Order)}:
+\[
+\begin{aligned}
+x = 0 & \Rightarrow 000, \\
+x = 1 & \Rightarrow 100, \\
+x = 2 & \Rightarrow 010, \\
+x = 3 & \Rightarrow 110, \\
+x = 4 & \Rightarrow 001, \\
+x = 5 & \Rightarrow 101, \\
+x = 6 & \Rightarrow 011, \\
+x = 7 & \Rightarrow 111.
+\end{aligned}
+\]
+
+%***************************************
+\subsubsection{Commentary on Endianness}
+%***************************************
+- **Big-Endian Systems**:
+  - Big-endian systems store numbers in memory starting with the most significant bit. This is often the default in higher-level representations of binary numbers and is consistent with standard positional notation.
+
+- **Little-Endian Systems**:
+  - Little-endian systems store numbers in memory starting with the least significant bit. This convention simplifies certain hardware operations, such as incrementing binary counters, and is widely used in modern processors like x86 architectures.
+
+- **Practical Implications**:
+  - While the logical representation of binary numbers is the same regardless of endianness, understanding the storage or transmission order is crucial for tasks like data serialization, memory addressing, and communication protocols.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Mathematical Preference and Use of MSB and LSB Expansions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The binary expansions of \( x \) differ in the ordering of bits depending on whether the **Most Significant Bit (MSB)** or **Least Significant Bit (LSB)** form is used. These differences arise from practical applications in engineering versus conventions in mathematics.
+
+Mathematical Preference: MSB Form
+
+Mathematicians universally use the **MSB expansion** to represent binary numbers. The MSB form is consistent with the positional arithmetic taught in grade school, where each digit corresponds to a specific positional value. For \( n \)-bit unsigned binary numbers, the MSB expansion is:
+
+\[
+x = b_{n-1} \cdot 2^{n-1} + b_{n-2} \cdot 2^{n-2} + \dots + b_1 \cdot 2^1 + b_0 \cdot 2^0, \quad b_i \in \{0, 1\}.
+\]
+
+This form aligns naturally with:
+\begin{itemize}[noitemsep, left=1cm, topsep=0pt]
+    \item **Grade school arithmetic**: Positional notation, where the leftmost digit has the highest weight, and each subsequent digit corresponds to decreasing powers of the base.
+    \item **Decimal analogy**: For example, the decimal number \( 345 \) is interpreted as:
+    \[
+    345 = 3 \cdot 10^2 + 4 \cdot 10^1 + 5 \cdot 10^0.
+    \]
+    Similarly, in binary, \( 110 \) is interpreted as:
+    \[
+    110 = 1 \cdot 2^2 + 1 \cdot 2^1 + 0 \cdot 2^0.
+    \]
+\end{itemize}
+
+Thus, the MSB form is preferred in mathematics for its clarity and compatibility with standard positional arithmetic.
+
+---
+
+Use of LSB Form in Engineering and Computing
+
+In contrast, the **LSB expansion** reverses the storage or transmission order of bits, prioritizing the least significant bit (\( b_0 \)). The formula remains the same, but the physical ordering differs, reflecting how the bits are handled in memory or transmitted serially. For example:
+\[
+x = b_0 \cdot 2^0 + b_1 \cdot 2^1 + \dots + b_{n-2} \cdot 2^{n-2} + b_{n-1} \cdot 2^{n-1}.
+\]
+
+The LSB form is not used in pure mathematics but is important in:
+\begin{itemize}[noitemsep, left=1cm, topsep=0pt]
+    \item **Computer systems**:
+        - Little-endian architectures (e.g., x86) use LSB-first order for storing and transmitting binary numbers.
+        - This simplifies certain hardware operations, such as incrementing binary counters or performing addition bit-by-bit starting from the least significant bit.
+    \item **Data communication**:
+        - Serial communication protocols often transmit the least significant bit first due to hardware design constraints.
+\end{itemize}
+
+---
+
+Commentary on MSB as Positional Arithmetic
+
+The MSB expansion closely resembles the positional arithmetic taught in elementary education. Each digit (or bit) contributes to the total value based on its position, with weights corresponding to powers of the base (in this case, \( 2 \)). This positional system is universally understood and forms the foundation for number systems across different bases (e.g., decimal, binary, hexadecimal).
+
+In contrast, the LSB form prioritizes computational efficiency in specific applications rather than logical clarity. While it has practical importance in engineering and computing, it is rarely used for manual or theoretical calculations.
+
+---
+
+Conclusion
+
+Mathematicians exclusively use the MSB form due to its consistency with positional arithmetic and its alignment with grade school notation. The LSB form is primarily a practical convention in computer architecture and data communication, where hardware efficiency and specific operational needs dictate its use.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problems}
+%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Registers}
 
 \begin{problem}\label{mean}

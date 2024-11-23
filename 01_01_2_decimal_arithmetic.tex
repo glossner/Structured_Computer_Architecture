@@ -1,0 +1,393 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Decimal Arithmetic}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%****************************
+\subsection{Decimal Addition}
+%****************************
+In the decimal system, addition is performed by aligning numbers according to their place values (units, tens, hundreds, etc.), adding each column from right to left. If the sum in a column exceeds 9, the digit in the "tens" place of the sum becomes a "carry," which is added to the next column on the left.
+\vspace{\baselineskip}\par
+For example, let's add \( 456 \) and \( 378 \) step-by-step:
+\vspace{\baselineskip}\par
+Initial Setup:
+  \begin{itemize}
+       \item  Start by arranging the numbers vertically by place value.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1: Add the Units Column:
+   \begin{itemize}
+       \item Add the units column: \( 6 + 8 = 14 \), which is greater than 9.
+       \item Write down 4 in the units place and carry over 1 to the tens column.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & & 1 & \\ % Carry row shifted left by one column
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+    & & & 4 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 2: Add the Tens Column:
+  \begin{itemize}
+       \item Now, move to the tens column.
+       \item Add \( 5 + 7 = 12 \), and add the carry of 1, which gives \( 12 + 1 = 13 \).
+       \item Write down 3 in the tens place and carry over 1 to the hundreds column.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 1 & 1 & \\ % Carry row shifted left
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+    & & 3 & 4 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 3: Add the Hundreds Column:
+  \begin{itemize}
+       \item Finally, add the hundreds column.
+       \item Add \( 4 + 3 = 7 \), then add the carry of 1, which gives \( 7 + 1 = 8 \).
+       \item Write down 8 in the hundreds place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 1 & 1 & \\ % Carry row remains the same
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+    & 8 & 3 & 4 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Final Result:
+  \begin{itemize}
+       \item The sum of \( 456 + 378 \) is \( 834 \).
+   \end{itemize}
+
+
+
+%**********************************
+\subsection{Decimal Multiplication}
+%**********************************
+Decimal multiplication involves breaking down the operation into several smaller multiplications and then adding the results. Here’s a step-by-step example multiplying \( 23 \) by \( 45 \):
+
+\vspace{\baselineskip}\par
+Set Up the Multiplication:
+  \begin{itemize}
+    \item Arrange \( 23 \) and \( 45 \) in a vertical multiplication layout.
+   \end{itemize}
+\[
+\begin{array}{rcccc}
+    & & 2 & 3 \\ % First number (23)
+  \times & & 4 & 5 \\ % Second number (45)
+  \hline
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1: Multiply by the Units Digit (5):
+  \begin{itemize}
+   \item Multiply each digit in \( 23 \) by \( 5 \), starting from the rightmost digit (units).
+    \begin{itemize}
+      \item Units Column: \( 3 \times 5 = 15 \). Write down 5 and carry over 1.
+   \item Tens Column: \( 2 \times 5 = 10 \), plus the carry of 1 gives 11. Write down 1 and carry over 1 to the next column.
+   \end{itemize}
+   \item Result after multiplying \( 23 \) by \( 5 \): \( 115 \).
+
+\end{itemize}
+\[
+\begin{array}{rccccc}
+   & 1 & 1 &  &  \\ % Carry row shifted left by one column
+   & & 2 & 3 \\ % Number 23
+  \times & & & 5 \\ % Multiplier 5
+  \hline
+  & 1 & 1 & 5 &  \\ % Result of 23 * 5
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 2: Multiply by the Tens Digit (4):
+  \begin{itemize}
+  \item Write a 0 in the units place
+   \item Multiply each digit in \( 23 \) by \( 4 \)
+   \item Tens column: \( 3 \times 4 = 12 \). Write down 2 and carry over 1.
+   \item Hundres column: \( 2 \times 4 = 8 \), plus the carry of 1 gives 9. Write down 9.
+  \end{itemize}
+
+\[
+\begin{array}{rcccccc}
+         &  & 1 &   &   & & \\ % Carry row
+         &  & 2 & 3 &   & &\\ 
+  \times &  &   & 4 &   & &\\ 
+  \hline
+        &   & 1 & 1 & 5 & & \\ 
+        &   & 9 & 2 & 0 &
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 3: Add the Results:
+  \begin{itemize}
+  \item \(5 + 0 = 0 \). Write a 5 in the units place
+   \item \(1 + 2 = 3\). Write a 3 in the tens place
+   \item \(9 + 1 = 10\). Write a 0 in the hundreds place. Carry the 1.
+   \item \(1 + 0 = 1\). Write a 1 in the thousands place.
+  \end{itemize}
+\[
+\begin{array}{rcccccc}
+        & 1 &  &    &  &  & \\
+        &   & 1 & 1 & 5 & & \\ 
+        &   & 9 & 2 & 0 &   \\
+        \hline
+        & 1 & 0  & 3  & 5  &  
+\end{array}
+\]
+
+Thus, \( 23 \times 45 = 1035 \).
+
+
+
+%*******************************
+\subsection{Decimal Subtraction}
+%*******************************
+The concepts of carrying (in addition) and borrowing (in subtraction) are important in basic arithmetic:
+
+\begin{itemize}
+    \item Carrying occurs in addition when a sum exceeds the base value (10 in decimal). The extra value is "carried" to the next column.
+    \item Borrowing occurs in subtraction when the top digit in a column is smaller than the bottom digit. We "borrow" 1 from the next column to the left.
+\end{itemize}
+
+For example, let’s subtract \( 456 \) from \( 812 \):
+
+\vspace{\baselineskip}\par
+Initial Setup:
+  \begin{itemize}
+     \item Write the numbers vertically, aligning them by place value.
+     \end{itemize}
+\[
+\begin{array}{cccc}
+    & 8 & 1 & 2 \\
+  - & 4 & 5 & 6 \\
+  \hline
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1. Right Column (Units Place):
+  \begin{itemize}
+   \item Start with the units column. \( 2 - 6 \) is not possible because 2 is less than 6, so we need to borrow.
+   \item  Borrow 1 from the tens column. This turns the 2 into 12 and reduces the tens place from 1 to 0.
+   \item Now, \( 12 - 6 = 6 \), so we write down 6 in the units place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 8 & 0 & 12 \\ % Show the borrow
+  - & 4 & 5 & 6 \\
+  \hline
+    & & & 6 \\
+\end{array}
+\]
+   
+
+\vspace{\baselineskip}\par
+Step 2. Middle Column (Tens Place):
+ \begin{itemize}
+   \item Move to the tens column, where we now have \( 0 - 5 \).
+   \item Since 0 is less than 5, we need to borrow again.
+   \item Borrow 1 from the hundreds column, turning the 0 into 10 and reducing the hundreds column from 8 to 7.
+   \item Now, \( 10 - 5 = 5 \), so we write down 5 in the tens place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 7 & 10 & 12 \\ % Show the second borrow
+  - & 4 & 5 & 6 \\
+  \hline
+    & & 5 & 6 \\
+\end{array}
+\]
+   
+
+\vspace{\baselineskip}\par
+Step 3. Left Column (Hundreds Place):
+ \begin{itemize}
+   \item Finally, move to the hundreds column.
+   \item \( 7 - 4 = 3 \), so we write down 3 in the hundreds place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 7 & 10 & 12 \\ % Carry rows remain for context
+  - & 4 & 5 & 6 \\
+  \hline
+    & 3 & 5 & 6 \\
+\end{array}
+\]
+
+This yields \( 812 - 456 = 356 \).
+
+
+
+%****************************
+\subsection{Decimal Division}
+%****************************
+Long division is a method for dividing two numbers to find how many times one number fits into another. We’ll illustrate this by dividing \( 853 \) by \( 4 \), showing each step in detail.
+
+\vspace{\baselineskip}\par
+Set Up the Division Problem:
+ \begin{itemize}
+    \item We write \( 853 \) as the dividend (the number being divided) and \( 4 \) as the divisor (the number we’re dividing by).
+    \end{itemize}
+
+\[
+\begin{array}{r@{\hskip\arraycolsep}c@{\hskip\arraycolsep}l}
+&  & \\
+4 &\big)& \overline{853} \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1. Divide the Hundreds Place:
+ \begin{itemize}
+    \item First, see how many times \( 4 \) fits into the hundreds digit of \( 853 \), which is \( 8 \).
+    \item \( 4 \) fits into \( 8 \) exactly \( 2 \) times. Write \( 2 \) above the \( 8 \) in the quotient position.
+    \item Multiply \( 2 \times 4 = 8 \) and subtract from \( 8 \), leaving \( 0 \).
+    \end{itemize}
+\[
+\begin{array}{rrrr}
+       & 2 &   &  \\
+       \cline{2-4}
+    4) & 8 & 5 & 3 \\
+       & -8 &  &    \\
+\hline
+    & 0 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 2. Bring Down the Next Digit (Tens Place):
+ \begin{itemize}
+    \item Bring down the next digit in \( 853 \), which is \( 5 \).
+    \item Now, determine how many times \( 4 \) fits into \( 5 \). It fits \( 1 \) time. Write \( 1 \) above the \( 5 \) in the quotient.
+    \item Multiply \( 1 \times 4 = 4 \) and subtract from \( 5 \), leaving \( 1 \).
+\end{itemize}
+\[
+\begin{array}{rrrr}
+       & 2 & 1  &  \\
+       \cline{2-4}
+    4) & 8 & 5 & 3 \\
+       &  & -4  &    \\
+\hline
+    & & 1 &\\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 3. Bring Down the Last Digit (Units Place):
+ \begin{itemize}
+    \item Bring down the last digit in \( 853 \), which is \( 3 \).
+    \item Determine how many times \( 4 \) fits into \( 13 \). It fits \( 3 \) times. Write \( 3 \) in the quotient.
+    \item Multiply \( 3 \times 4 = 12 \) and subtract from \( 13 \), leaving \( 1 \).
+  \end{itemize}
+\[
+\begin{array}{rrrr}
+       & 2 & 1 & 3 \\
+       \cline{2-4}
+    4) & 8 & 5 & 13 \\
+       &  &   & -12   \\
+\hline
+    & &  & 1 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Final Quotient:
+Since there are no more digits to bring down and the remainder is \( 1 \), the division is complete. The result of \( 853 \div 4 \) is \( 213 \) with a remainder of \( 1 \).
+\[
+853 \div 4 = 213 \text{ with a remainder of } 1
+\]
+
+
+
+%*****************************************************
+\subsection{Alternative Decimal Arithmetic Algorithms}
+%*****************************************************
+Alternative algorithms for addition and subtraction provide efficient strategies that are often different from standard grade-school methods. For example, left-to-right addition, also known as column-wise addition, allows numbers to be added starting from the leftmost digit, making it easier to track partial sums and perform mental calculations \cite{maharaj2010}. Another technique, the breaking apart method, or partial sums addition, involves adding corresponding place values individually before summing them together, which is particularly effective for simplifying multi-digit addition \cite{ashlock1998}. The compensation method, widely used in mental arithmetic, adjusts one number to a nearby round number, simplifying the addition or subtraction process and then compensating for the change afterward \cite{bobis2004}. 
+
+Subtraction techniques also include counting up, where the user counts up from the subtrahend to the minuend, eliminating the need for borrowing \cite{neill1993}. The equal additions method, often called European subtraction, adds the same amount to both numbers to avoid borrowing entirely, making subtraction easier \cite{martin1992}. Swedish subtraction, or direct subtraction, allows for direct subtraction of digits without borrowing, even if intermediate negative values occur; these values are later adjusted with a single borrowing step \cite{nelson2002}. Finally, the complements method for subtraction, often used in digital systems, involves converting the subtrahend to its 10’s complement and adding it to the minuend, simplifying the subtraction process in certain contexts \cite{niven1991}. 
+
+Alternative algorithms for multiplication and division offer different approaches that can often be more intuitive or efficient than standard methods. The Russian Peasant Multiplication algorithm, also known as the doubling and halving method, involves doubling one factor and halving the other, discarding rows where the halved value is even, and summing the remaining doubled values to reach the final product \cite{ifrah2000}. Lattice multiplication, or the grid method, simplifies multi-digit multiplication by arranging the partial products within a lattice and summing along diagonals, providing a highly visual way to handle carrying and alignment \cite{smith2009}. Egyptian multiplication, similar to the Russian method, involves doubling but skips halving, using only sums of doubles that match the multiplicand to achieve the product \cite{koch1970}. 
+
+For division, the chunking or partial quotients method involves repeated subtraction of multiples of the divisor from the dividend, allowing for a flexible approach that does not require exact division at each step \cite{reys1995}. Another approach is cross multiplication for division, which leverages factors to simplify division tasks through a series of multiplications and subtractions \cite{parker2014}. Finally, Vedic mathematics techniques, such as vertically and crosswise multiplication, enable complex multiplications and divisions through specific rules that streamline steps by focusing on place values and relationships between numbers \cite{tirthaji1992}. Each of these methods provides unique strategies for simplifying multiplication and division, and they are especially helpful for mental calculations or visual learners.
+
+%******************************
+\subsection{10's Complement} \label{sub:10s_complement}
+%******************************
+Because 2's complement is used in nearly all modern computers, we show an example of 10's complement to illustrate the technique.
+The 10’s complement is a method for simplifying subtraction by converting it into addition. 
+
+\vspace{\baselineskip}\par
+For any \( n \)-digit number:
+ \begin{itemize}
+    \item The 10's complement of a number is obtained by subtracting each digit from 9 and then adding 1 to the least significant digit of the result.
+    \item If the result of the addition results in a leading carry (a "1" at the beginning of the number), it can be dropped, which effectively gives the correct result for the subtraction.
+  \end{itemize}
+
+\vspace{\baselineskip}\par
+In essence:
+\[
+\text{10's complement of a number } x = (10^n - x)
+\]
+where \( n \) is the number of digits in the number.
+
+\vspace{\baselineskip}\par
+To subtract a number \( B \) from \( A \) using 10’s complement:
+ \begin{itemize}
+    \item Find the 10’s complement of \( B \).
+    \item Add this complement to \( A \).
+    \item Drop the leading 1 if there’s an overflow (carry) in the result, which finalizes the subtraction.
+    \end{itemize}
+  
+\vspace{\baselineskip}\par
+Example: Subtract \( 275 \) from \( 500 \) using 10’s complement
+\vspace{\baselineskip}\par
+Step 1. Find the 10’s Complement of 275:
+  \begin{itemize}
+    \item Subtract each digit of 275 from 9
+  \end{itemize}  
+     \[
+     999 - 275 = 724
+     \]
+  \begin{itemize}
+    \item Add 1 to the result:
+  \end{itemize}
+     \[
+     724 + 1 = 725
+     \]
+   So, the 10’s complement of 275 is 725.
+
+\vspace{\baselineskip}\par
+Step 2. Add the 10’s Complement of 275 to 500:
+   \[
+   500 + 725 = 1225
+   \]
+
+Step 3. Drop the Leading 1:
+   - Since 1225 has a leading 1, we drop it to get the final result:
+   \[
+   1225 \rightarrow 225
+   \]
+
+Thus, \( 500 - 275 = 225 \).
+

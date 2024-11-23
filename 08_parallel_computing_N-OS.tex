@@ -1,9 +1,247 @@
 \chapter{Parallel Computation: N-Loop, N-Order systems (N-OS)}\label{lect6b}
 
+As we saw in the first chapters, we were able to achieve the requirements of a computing system by successively introducing feedback loops starting from combinational circuits, circuits without loops. Can we continue the process of closing new loops? Could we have an additional gain from these additional loops? We will try to answer these questions in the following.
+
 \section{Cellular Automata (CA)}
+
+Each new loop increases, as we have seen in the previous chapters, the complexity of the system. When the number of loops is $N$, for any large N, we cannot keep the increase in complexity at a level that corresponds to the number of loops. For this, the loops must close over identical systems to keep the complexity independent of $N$. Thus, even once the size becomes proportional to $N$, the complexity (the size of the shortest description) remains independent of $N$ and we can afford to keep the complexity independent of size. Moore's law ensures exponential growth only for size, not for complexity. In other words, we can exponentially increase the size of the hardware only if it has a repetitive pattern that keeps the description at a controllable size.
+
+\placedrawing[h]{figures/09_05_Nth_order_system.lp}{An example of cellular structure as a Nth order system, N-OS. In this example, each cell is a second order system, 2-OS.}{nos}
+
+In Figure \ref{nos} a system of order N, N-OS is represented. The size of this system is in $O(N)$, while the complexity can also be in $O(N)$ or in $O(1)$. In the first case the system is complex, and in the second case the system is simple. The first case corresponds to the situation in which the cells $c_0, \ldots, c_1, \ldots$ are different, requiring, consequently, independent descriptions. The second case corresponds to the situation in which the cells are identical, in which case the description of the system involves the description of the cell and the regular way of interconnection of $n-1$ cells. Only the second case can be of interest. The first case involves a complexity that, for a large $N$, is impossible to control. And we are only interested in the case in which $N$ is as large as possible. 
+
+\subsection{Theoretical Cellular Automaton}
+
+Digital systems theory introduces, for the case we are interested in, the concept of {\bf {\em cellular automaton}}.
+
+\placedrawing[h]{figures/09_06_cellular_automaton.lp}{One-dimensional cellular automaton.}{ca}
+
+The theoretical concept of a cellular automaton is represented in Figure \ref{ca}. It consists of an unlimited number of identical linearly connected cells. Each cell is a automaton. All cells switch synchronously according to their internal states and to the signals received from the left cell and the right cell.
+
+\begin{exemplu}
+Let us consider the simplest cellular automaton described by the following modules:
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= ,  morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name:      cellularAutomaton.sv
+Circuit name:   One-bit cell cellular automaton
+Description:    
+************************************************************************/
+`define n 1024
+module cellAut 	
+    (   output  logic [`n-1:0]  out ,
+        input   logic [7:0]     func,
+        input   logic [`n-1:0]  init,
+        input   logic           rst , clk );
+    genvar i;
+    generate for (i=0; i<`n; i=i+1) begin: C
+        eCell eCell(.out    (out[i]                         ),
+                    .func   (func                           ),
+                    .init   (init[i]                        ),
+                    .in0    ((i==0) ? out[`n-1] : out[i-1]  ),
+                    .in1    ((i==(`n-1)) ? out[0] : out[i+1]),
+                    .rst    (rst                            ),
+                    .clk    (clk                            ));
+        end
+    endgenerate
+endmodule
+
+module eCell(   output  logic       out ,
+                input   logic [7:0] func,
+                input   logic       init, in0, in1, rst, clk );
+    always_ff @(posedge clk) if (rst)   out <= init                 ;
+                               else     out <= func[{in1, out, in0}];
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+The size of the definition is constant, which means it does not depend by the number of cells $n$, i.e, the cellular automaton is a simple circuit.  
+
+$\diamond$
+\end{exemplu}
+
+\subsection{Controlled Cellular Automaton}
+
+The theoretical model of the cellular automaton is not practically usable to perform computation efficiently. Real problems cannot be solved efficiently with a cellular automaton. It is necessary to move from the theoretical model to an abstract model of a parallel computing system. We will do this in several steps. The first is to define a cellular automaton in which the space required for computation can be balanced with the time required for computation. The space-time trade-off is usually achieved by a suitable sequencing of the computation steps.
+
+The theoretical model of a cellular automaton assumes a vector whose components are the states of the $N$ cells. In each cycle, all components of the vector are involved in the computation. Two difficulties arise in such a theoretical model of computation:
+\begin{itemize}
+    \item real problems cannot be effectively reduced to such a completely unstructured mechanism
+    \item the size of the physical structure involved becomes inefficiently large.
+\end{itemize}
+
+\placedrawing[h]{figures/09_07_controlledCA.lp}{Controlled Cellular Automaton (CCA).}{controledCA}
+
+The solution that allows increasing the flexibility of the computing process and reducing the size of the hardware structure involves:
+\begin{itemize}
+    \item structuring the state space of the automaton in each cell by replacing the state register, $Q$, with a register file where the state has a structure of a Cartesian product $Q = \{Q_0 \times  Q_1 \times \ldots \times Q_{m-1}\}$ (see the RALU circuit in subsection \ref{rALU})
+    \item adding a controller, SQ, that sequences the evolution of the internal state in each cell. 
+\end{itemize}
+Results the system represented in Figure \ref{controledCA} where:
+\begin{itemize}
+    \item SQ is a controller (processor + data memory + program memory) which issues in each clock cycle the same command for each cell
+    \item Distribute is a $log$-depth network (see Figure \ref{distribute}) used to send to each cell, with a $log$-latency, the command issued by SQ  
+
+ \placedrawing[h]{figures/09_11_distribution_net.lp}{Distribution network for a circuit with $p = 16$.}{distribute}
+    
+    \item $c_0, c_1, \ldots, c_{p-1}$ form a cellular automaton with a finite number of cells, each equipped with a RALU type execution unit
+\end{itemize}
+The command issued by SQ is organized in the form of an instruction that contains logical-arithmetic operations, addressing modes of local memory resources in each cell, addresses and constants. The cells are serially connected to the SQ for data transfer between the SQ's memory and the local memory resource distributed in the cells. If in a cellular automaton its global state is represented by an unlimited  vector, in a controlled cellular automaton the internal state is represented by the matrix:
+\[
+{\bf M_{mp}} = \begin{bmatrix}
+    s_{00} & s_{01} & \dots  & s_{0 \; p-1}\\
+    s_{10} & s_{11} & \dots  & s_{1 \; p-1}\\
+    \vdots & \vdots & \ddots & \vdots\\
+    s_{m-1 \; 0} & s_{m-1 \; 1} & \dots  & s_{m-1 \; p-1}
+    \end{bmatrix}
+\]
+whose columns represent the local memory (register file) in each cell. SQ issues operations applied to the line of the matrix {\bf M} seen as a vector, 
+$$V_i = [s_{i0} \; s_{i1} \; \ldots \; s_{i(p-1)}]$$ for $i = 0, \ldots, m-1$ distributed along the cells, so that an operation of the form:
+$$V_i \Leftarrow V_j + V_k$$
+which involves $p$ additions is executed in constant time, i.e, is executed in {\bf {\em parallel}}.
+
+If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
 
 \section{First Global Loop in CA}
 
+Just as we did in the case of the structural growth process, by successively closing reaction loops, until reaching the level required by mono-core computing, we will also do in the case of controlled cellular automation by successively closing global loops.
+
+By a global loop we mean a circuit that takes a scalar from each cell of a controlled cellular automaton, thus forming a vector. The result of processing this vector is reapplied to the cells, thus closing a loop.
+
+The first global loop that we close is the {\bf {\em reduction}} type, which reduces the vector received from the controlled cellular automaton to a scalar. In Figure \ref{firstLoop} the resulting structure, called MapReduced, is represented. It consists of:
+
+\placedrawing[h]{figures/09_08_first_global_loop.lp}{The {\bf {\em MapReduce}} structure obtained by closing the first global loop over a controlled cellular automaton.}{firstLoop}
+
+\begin{itemize}
+    \item MAP: a cellular automaton with $p$ components whose cells are execution units equipped, mainly, with an arithmetic-logic unit and a register file with $m$ locations
+    \item SQ: a controller that issues commands to the Map network and can receive scalars from the Reduce network that closes the first global loop
+    \item Distribute: a pipelined $log$-depth network used to distribute the instruction issued by the controller SQ
+
+\placedrawing[h]{figures/09_12_reduce_net.lp}{Reduce network for $p=16$, with the size in $O(p)$ and the depth in $O(log \; p)$.}{reduceNet}
+    
+    \item Reduce: a pipelined $log$-depth network (see Figure \ref{reduceNet}  which reduce the vector received from Map to a scalar sent to SQ with a $log$ latency; it performs usually few functions, such as:
+        $$sumReduce(V_i) = \sum_{j=0}^{p-1} s_{ij}$$
+        $$minReduce(V_i) = MIN(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$$
+       $$maxReduce(V_i) = MAX(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$$
+       $$orReduce(V_i) =s_{i0} \; | \; s_{i1} \; | \; \ldots \; | \;s_{i \; p-1}$$
+\end{itemize}
+
+The hardware structure of the Reduce network is a binary tree, so it contains $p/2 + p/4 + \ldots + 1$ modules. For $p$ a power of 2, the usual case, the network contains $p-1$ modules. So the size of the MapReduce system is in $O(p)$.
+
+\begin{exemplu}
+To calculate the scalar product of two vectors in such a system, the following is performed, under the SQ command:
+$$V_i \cdot V_j = sumReduce(V_i \times V_j)$$
+where the vector product, $V_i \times V_j$, is performed in Map in constant time and is transmitted to the Reduce network which performs the sum in time $log_2 \; p$ and sends it to SQ. Thus, $2p-1$ operations -- $p$ multiplications and $p-1$ additions -- are performed in $1 + log_2 \; p$ clock cycles. 
+
+$\diamond$
+\end{exemplu}
+
+In the previous example, $2p-1$ computational results -- $p$ multipliers from Map and $p-1$ adders from Reduce -- are used in $1+log_2 \; p$ cycles to perform $2p-1$ operations. This results, for $p=1024$, in an average of 186 operations/cycle. So, we must be careful! We need algorithms that allow for the most intensive use of hardware resources.
+
 \section{Second Global Loop in CA}
 
-\section{Heterogenous Computing}
+The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{red}).
+
+\placedrawing[h]{figures/09_09_second_global_loop.lp}{MapScanReduce structure obtained  by closing the second global loop over a controlled cellular automaton.}{secondLoop}
+
+\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation.} {red}
+
+We use the term {\em scan} by extension, starting from the already established use for prefix-type networks.
+
+\begin{definition}
+Let be an associative and commutative  operation, {\tt OP}. OP-prefix computation is defined on the scalar vectors, $[s_0 \; s_1 \; \ldots \; s_{n-1}]$ and returns the vector $[p_0 \; p_1 \; \ldots \; p_{n-1}]$, where:
+$$ p_i = OP_0^i s_i$$
+
+$\diamond$
+\end{definition}
+\begin{exemplu}
+For OP arithmetic sum we have addPrexix:
+$$p_0 = s_0$$
+$$p_1 = p_0 + s_1 = s_0 + s_1$$
+$$p_2 = p_1 + s_2 = s_0 +s_1 + s_2$$
+$$\ldots$$
+$$p_{n-1} = p_{n-2} + s_{n-1} = s_0 + s_1 + \ldots \; s_{n-1}$$
+
+$\diamond$
+\end{exemplu}
+
+{\bf Note}: the last output of $addPrefix$ is the output of $sumReduce$, thus justifying the simplified representation of the two loops in Figure \ref{secondLoop}.
+
+The size of the pipeline implemented Scan network is in $O(p \times log \; p$, and the depth is in $O(log \; p$. Therefore, the size of the MapScanReduce structure is in $O(p \times log \; p$.
+
+
+
+\section{Heterogeneous Computing}
+
+The main application of the MapScanReduce structure is in heterogeneous computing were the distinction between complex computing and intense computing is meaningful.
+
+\subsection{Complexity vs. intensity in computation}
+
+let's define the two types of computations. In this respect, we use the {\em algorithmic complexity} \cite{Chaitin} which helps us make the necessary distinction between size and complexity.
+
+\begin{definition}
+The algorithmic complexity of an entity is given by the length of its shortest description.
+$\diamond$
+\end{definition}
+
+\begin{definition}
+An entity is complex when its size is in the same magnitude order with its algorithmic complexity, and is simple when with a size in $O(f(N))$ its complexity remains in $O(1)$.
+$\diamond$
+\end{definition}
+Now, regarding computation the following two definitions can be accepted.
+\begin{definition}
+Complex computation is characterized by an execution time proportional to the number of lines of executable code by which it is described.
+$\diamond$
+\end{definition}
+
+\begin{definition}
+The intensive, simple computation is described by a constant number, in $O(1)$, of lines of executable code, independent of the execution time which is in $O(f(N))$, where $N$ is used to define the size of the precessed data.
+$\diamond$
+\end{definition}
+
+The previous definitions follow the algorithmic complexity \cite{Chaitin70} definition stating  mainly that the complexity of a computation is given by the length of its shortest description. While for complex computation the Turing tax can be reduced using {\em instruction-level parallelism}, for simple, intense computation a promising solution is  {\em cellular parallelism}. A typical example for intense, simple computation is the multiplication of $N \times N$ matrices performed on a mono-core engine in $O(N^3)$ time. An accelerator with $p$ execution units (cells) is expected to reduce execution times by at least $O(p/log \; p)$ times. It runs a constant (independent of N) code size.
+
+\subsection{Heterogeneous system}
+
+Heterogeneous computing takes into account the distinction between complex and intensive computing. This segregation is possible using a system in which a single-core computer, instantiated as a HOST, uses a library of functions implemented in hardware in a MapScanReduce structure to perform complex calculations. In Figure \ref{hetSyst}, such a heterogeneous computing system is represented.
+
+\placedrawing[h]{figures/09_10_heterogeneous_system.lp}{}{hetSyst}
+
+\subsection{Programming a heterogeneous system}
+
+Concerning the programming of multicellular processors, which have seen a rapid proliferation primarily driven by corporate considerations, the scientific community has yet to universally embrace effective solutions. The challenge arises from the prioritization of hardware criteria that promoted multi- and many-cell solutions without sufficient regard for their programmability. This is due to:
+{\small
+\begin{quote}
+{\em "the semiconductor industry threw the equivalent of a Hail
+Mary pass when it switched from making microprocessors run faster to
+putting more of them on a chip—doing so without any clear notion of how
+such devices would in general be programmed. The hope is that someone
+will be able to figure out how to do that, but at the moment, the ball is still in the air."} \cite{Patterson}
+\end{quote}
+}
+
+%It seems that the solution is not specific languages for parallel structures:
+
+It appears that the solution does not entail specific languages tailored for parallel structures:
+{\small
+\begin{quote}
+{\em "The software span connecting applications to hardware relies more on parallel software architectures than on parallel programming languages. Instead of traditional optimizing compilers, we depend on autotuners, using a combination of empirical search and performance modeling to create highly optimized libraries tailored to specific machines."} \cite{Asanovic09}
+\end{quote}
+}
+
+As a result, our heterogeneous approach imposes, for efficiency, a three level programming system:
+\begin{enumerate}
+    \item ACCELERATOR-level programming is done in assembly language providing a highly optimized library of primitives.
+    \item HOST-level libraries  developed  in a high-level programming language  based on primitives provided by ACCELERATOR.
+    \item HOST-level programming running  in a high-level programming language based on "highly optimized libraries tailored to specific machines".
+\end{enumerate}
+
+
+
+
+
+
+

@@ -12,16 +12,16 @@ We are still faced, after three quarters of a century, with problems for which s
 
 Instruction Level parallelism is not the genuine parallelism we expect from multi-cell structures.
 
-While the hardware's size accommodated on a single die of silicon increases exponentially, according to Moore's Law \cite{Moore, Moore1}, its use for increasing the complexity and the intensity of computation grows much slowly. We are able to build big machines but we fail in using all their computational power efficiently. For example:
+While the hardware's size accommodated on a single die of silicon increases exponentially, according to Moore's Law \citep{Moore65, Moore75}, its use for increasing the complexity and the intensity of computation grows much slowly. We are able to build big machines but we fail in using all their computational power efficiently. For example:
 \begin{itemize}
-    \item  Tensor Processing Unit, is reported for $>90\%$ of the applications  with the use of $3\%$ to $13.4\%$ from its peak performance \cite{Jouppi} \cite{Hennessy1}. Only for one application (involving exclusively convolutional layers in a deep neural network) used in less than $5\%$ of cases, $93\%$ from its peak performance is used
-    \item the real time image recognition, where Nvidia's Titan X GPU, uses maximum 63 GFLOPs/sec from its peak performance of 6 TFLOPs/sec \cite{Redmon}
-    \item Intel's Xeon Phi  accelerator with 57 cores, having  peak performance at 2 TFLOPs/sec, involves only 35.2 GFLOPs/sec for a similar task \cite{Raina}.
+    \item  Tensor Processing Unit, is reported for $>90\%$ of the applications  with the use of $3\%$ to $13.4\%$ from its peak performance \citep{Jouppi17} \citep{Hennessy19}. Only for one application (involving exclusively convolutional layers in a deep neural network) used in less than $5\%$ of cases, $93\%$ from its peak performance is used
+    \item the real time image recognition, where Nvidia's Titan X GPU, uses maximum 63 GFLOPs/sec from its peak performance of 6 TFLOPs/sec \citep{Redmon16}
+    \item Intel's Xeon Phi  accelerator with 57 cores, having  peak performance at 2 TFLOPs/sec, involves only 35.2 GFLOPs/sec for a similar task \citep{Raina16}.
 \end{itemize}
 
 If we can't effectively use many-core structures, why are we still struggling with parallelism? Because we have no other solution to make use of the potential offered by increasing the number of transistors on a chip. In Figure \ref{whyPar}, the only parameter that increases is the number of transistors.
 
-\placedrawing[H]{figures/09_01_why_parallelism.lp   F67.lp}{Why Parallelism? Because only the transistors number goes up \cite{MooreC}.}{whyPar}
+\placedrawing[H]{figures/09_01_why_parallelism.lp   F67.lp}{Why Parallelism? Because only the transistors number goes up \citep{MooreC11}.}{whyPar}
 
 
 Is it hard to explain why we use such a small percentage of the peak computing power of these many-core programmable accelerators. We assume that it highlights an architectural and organizational inadequacy such as:
@@ -36,9 +36,9 @@ Many people agree on an imminent change. Some see this change as a gradual one, 
 
 \subsection{{\em Ad Hoc} Parallelism}
 
-After the year 2000, the clock speed race started to slowdown \cite{Asanovic06, Asanovic09}. Instead of a clock with increasing frequency, the number of cores per chip started to grow with the hope that the programmer will find a way to take out more performance form the silicon maintaining the clock frequency around  of few GHz.  The situation is very clearly expressed by David Patterson:
+After the year 2000, the clock speed race started to slowdown \citep{Asanovic06, Asanovic09}. Instead of a clock with increasing frequency, the number of cores per chip started to grow with the hope that the programmer will find a way to take out more performance form the silicon maintaining the clock frequency around  of few GHz.  The situation is very clearly expressed by David Patterson:
 \begin{quote}
-$\ldots$ {\em the semiconductor industry threw the equivalent of a Hail Mary pass when it switched from making microprocessors run faster to putting more of them on a chip -- doing so without any clear notion of how such devices would in general be programmed. The hope is that someone will be able to figure out how to do that, but at the moment, the ball is still in the air}. \cite{Patterson}
+$\ldots$ {\em the semiconductor industry threw the equivalent of a Hail Mary pass when it switched from making microprocessors run faster to putting more of them on a chip -- doing so without any clear notion of how such devices would in general be programmed. The hope is that someone will be able to figure out how to do that, but at the moment, the ball is still in the air}. \citep{Patterson10}
 \end{quote}
 
 {\small
@@ -52,15 +52,15 @@ $\ldots$ {\em the semiconductor industry threw the equivalent of a Hail Mary pas
 The conceptual stages leading to computation:
 \begin{itemize}
   \item 7th or 6th century BC: a Cretan philosopher-poet, Epimenides of Knossos, stated that ``Cretans, always liars" thus challenging, for two and half millennia, the logically driven minds of the Occident
-  \item 1900-1928: David Hilbert \cite{Hilbert, Hilbert28} reformulated rigorously the problem as the {\bf {\em decision problem}}
-  \item 1931: Kurt G\" odel \cite{Godel} proved that the decision problem, and consequently the liar paradox, has no a logic solution
-  \item 1936: Alonzo Church \cite{Church}, Stephene Kleene \cite{kleene}, Emil Post \cite{Post}, Alan Turing \cite{Turing} published independently their mathematical version of G\" odel's approach thus providing four equivalent {\bf {\em mathematical models}} for computing as a mechanism based on logic decision
-  \item 1937: Claude E. Shannon \cite{Shannon48} defended at MIT its master thesis which became the foundation of practical digital circuit design during and after World War II
-  \item 1946: John von Neumann \cite{von Neumann}, based on the Turing's approach and on the design and implementation made by John Mauchly and J. Presper Eckert for ENIAC, provided the {\bf {\em abstract model}} for a mono-core computing machine (his approach  is paralleled  by the {\em Harvard} version)
+  \item 1900-1928: David Hilbert \citep{Hilbert1900, HilbertAckermann28} reformulated rigorously the problem as the {\bf {\em decision problem}}
+  \item 1931: Kurt G\" odel \citep{Godel31} proved that the decision problem, and consequently the liar paradox, has no a logic solution
+  \item 1936: Alonzo Church \citep{Church36}, Stephene Kleene \citep{Kleene36}, Emil Post \citep{Post36}, Alan Turing \citep{Turing36} published independently their mathematical version of G\" odel's approach thus providing four equivalent {\bf {\em mathematical models}} for computing as a mechanism based on logic decision
+  \item 1937: Claude E. Shannon \citep{Shannon48} defended at MIT its master thesis which became the foundation of practical digital circuit design during and after World War II
+  \item 1946: John von Neumann \citep{vonNeumann45}, based on the Turing's approach and on the design and implementation made by John Mauchly and J. Presper Eckert for ENIAC, provided the {\bf {\em abstract model}} for a mono-core computing machine (his approach  is paralleled  by the {\em Harvard} version)
   \item 1952: IBM announced the first mass-produced computer: IBM 701
   \item 1954: John Backus made the draft specification for the first high level programming language: FORTRAN
   \item 1964: the concept of computer {\bf {\em architecture}}, as the term used {\em ``to describe the attributes of a system as seen by the programmer, i.e., the conceptual structure and functional behavior, as distinct from the organization of the data flow
-and controls, the logical design, and the physical implementation"} \cite{Amdahl}, is introduced when specifying the IBM 360 computer.
+and controls, the logical design, and the physical implementation"} \citep{Amdahl64}, is introduced when specifying the IBM 360 computer.
 \end{itemize}
 Thus, the most important negative result in the history of mathematics, the G\" odel's incompleteness theorem, founded theoretically the computing science.
 \end{quote}
@@ -82,9 +82,9 @@ Thus, the most important negative result in the history of mathematics, the G\" 
 The first steps  leading to parallel computation:
 \begin{itemize}
     \item 1962 -- {\bf {\em manufacturing in quantity}}: the first symmetrical MIMD engine is introduced on the computer market by Burroughs Corporation
-    \item 1965-75 -- {\bf {\em architectural issues}}: Edsger W. Dijkstra formulates, starting with  \cite{Dijkstra}, the first concerns about specific parallel programming issues (such as critical regions problem, semaphores, the dining philosophers problem, guarded commands)
-    \item 1974-82 -- {\bf {\em abstract machine models}}: proposals of the first abstract models (bit vector  models in \cite{Pratt74} and PRAM models in \cite{Fortune}, \cite{Goldschlage}) start to come in after almost two decades of non-systematic experiments (started in the late 1950s) and the too early market production
-    \item {\bf ?} -- {\bf {\em mathematical parallel computation model}}: no one yet really considered it as mandatory, regrettably confusing it with abstract machine models, although it is there and wait to be considered (see Kleene's mathematical model for computation  \cite{kleene}).
+    \item 1965-75 -- {\bf {\em architectural issues}}: Edsger W. Dijkstra formulates, starting with  \citep{Dijkstra65}, the first concerns about specific parallel programming issues (such as critical regions problem, semaphores, the dining philosophers problem, guarded commands)
+    \item 1974-82 -- {\bf {\em abstract machine models}}: proposals of the first abstract models (bit vector  models in \citep{Pratt74} and PRAM models in \citep{Fortune78}, \citep{Goldschlage82}) start to come in after almost two decades of non-systematic experiments (started in the late 1950s) and the too early market production
+    \item {\bf ?} -- {\bf {\em mathematical parallel computation model}}: no one yet really considered it as mandatory, regrettably confusing it with abstract machine models, although it is there and wait to be considered (see Kleene's mathematical model for computation  \citep{Kleene36}).
 \end{itemize}
 Now, in the 3rd decade of the 3rd millennium, after more than half century of chaotic development, it is obvious that {\em the history of parallel computing is distorted by missing stages and uncorrelated evolutions}.
 \end{quote}
@@ -100,14 +100,14 @@ Many people seem to accept the fact that the evolution of the parallel computing
 
 
 
-The systems with global loops can be related with the model of {\em partial recursive functions} proposed by Stephen Cole Kleene \cite{kleene}.
+The systems with global loops can be related with the model of {\em partial recursive functions} proposed by Stephen Cole Kleene \citep{Kleene36}.
 {\small
 \begin{shaded*}
 %\begin{lstlisting}[language=, caption= , morekeywords={define}]
 \begin{quote}
 {\bf Kleene's Definition of Partial Recursion}
 
-Let be the positive integers $x,y,i \in {\bf N}$ and the sequence $X = \langle x_0, x_1, \ldots, x_{n-1} \rangle \in {\bf N}^n$. Any partial recursive function $f: {\bf N}^n \rightarrow {\bf N}$ can be computed, according to \cite{kleene}, using three {\bf {\em initial functions}}:
+Let be the positive integers $x,y,i \in {\bf N}$ and the sequence $X = \langle x_0, x_1, \ldots, x_{n-1} \rangle \in {\bf N}^n$. Any partial recursive function $f: {\bf N}^n \rightarrow {\bf N}$ can be computed, according to \citep{Kleene36}, using three {\bf {\em initial functions}}:
 \begin{itemize}
 \item $ZERO(x) = 0:$ the variable $x$ takes the value {\bf zero}
 \item $INC(x) = x+1:$ {\bf increment}s the variable $x \in {\bf N}$
@@ -126,12 +126,12 @@ and the application of the following three {\bf {\em rules}}:
 %\end{lstlisting}
 \end{shaded*}
 }
-While for  initial functions the circuit aspects are obvious, for the three rules we must do some work. We will see that the composition rule has a direct circuit correspondent, but for the other two rules, primitive recursiveness and minimization, we where obliged to prove two theorems (see \cite{Stefan1}) which reduce them to multiple applications of specific forms of the first rule.
+While for  initial functions the circuit aspects are obvious, for the three rules we must do some work. We will see that the composition rule has a direct circuit correspondent, but for the other two rules, primitive recursiveness and minimization, we where obliged to prove two theorems (see \citep{Stefan20}) which reduce them to multiple applications of specific forms of the first rule.
 
 
 \placedrawing[h]{figures/09_02_circuit_composition.lp}{{\bf The circuit version of composition: $f(X) = g(h_1(X), \ldots, h_p(X))$.} {\small It is a two-layer construct: the parallel expanded {\em map} layer serially connected with the $log$-dept {\em reduction} layer.}}{compCirc}
 
-Starting from the suggestion offered by the representation in Figure \ref{compCirc} one can conceive, based on the mathematical model of partially recursive functions, an abstract model for what a parallel computing system must be. A first approach is outlined in \cite{Stefan14}.
+Starting from the suggestion offered by the representation in Figure \ref{compCirc} one can conceive, based on the mathematical model of partially recursive functions, an abstract model for what a parallel computing system must be. A first approach is outlined in \citep{Stefan14}.
 
 \section{Main Limits in Computation}
 
@@ -141,7 +141,7 @@ The main technological challenges we face in computer science are on the one han
 
 \subsubsection{John von Neumann Bottleneck}
 
-We have focused on the development of powerful processors and large memories, but we have not yet found a way to connect them efficiently. The problem became more serious with the development of multi- and many-core systems, which prove more hungry for data because their processing capacity has increased significantly. The term {\em "von Neumann Bottleneck"} was introduced by John Backus \cite{Backus} and refers to the limitation introduced by the connection, too narrow, between a processor and its data and program memory.
+We have focused on the development of powerful processors and large memories, but we have not yet found a way to connect them efficiently. The problem became more serious with the development of multi- and many-core systems, which prove more hungry for data because their processing capacity has increased significantly. The term {\em "von Neumann Bottleneck"} was introduced by John Backus \citep{Backus78} and refers to the limitation introduced by the connection, too narrow, between a processor and its data and program memory.
 
 Recently, we have been proposing cellular solutions that assume the advanced interleaving of processing elements with memory structures in the so-called in-memory-processing systems, but we still do not manage to control them effectively.
 
