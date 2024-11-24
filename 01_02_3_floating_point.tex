@@ -2,7 +2,7 @@
 \section{Finite Real Numbers in $\mathbb{R}$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The set of real numbers, denoted \( \mathbb{R} \), includes all rational and irrational numbers and forms a continuous, uncountable set. While theoretically infinite, practical computations in digital systems can only represent a finite subset of \( \mathbb{R} \). Finite representations of real numbers are constrained by the limitations of hardware and software, leading to approximations in many cases. This section explores finite real numbers, their representations, and their implications in computation.
+The set of real numbers, denoted \( \mathbb{R} \), includes all rational and irrational numbers and forms a continuous, uncountable set. While theoretically infinite, practical computations in digital systems can only represent a finite subset of \( \mathbb{R} \). Finite representations of real numbers are constrained by the limitations of hardware and software, leading to approximations in many cases. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Definition and Characteristics}
@@ -16,14 +16,18 @@ x \in \mathbb{R} \quad \text{and} \quad \text{finite precision representation ex
 
 Unlike integers, which are discrete, real numbers encompass rational values (e.g., \( \frac{1}{2} \), \( 0.75 \)) and irrational values (e.g., \( \sqrt{2} \), \( \pi \)). Finite real numbers are typically confined to the subset of \( \mathbb{R} \) that can be approximated by rational representations due to hardware precision constraints.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Representation of Real Numbers}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In computation, real numbers are often represented using floating-point or fixed-point formats:
 
-In computation, real numbers are often represented using **floating-point** or **fixed-point** formats:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Floating Point Representation of Real Numbers}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{Floating-Point Representation.}
-The IEEE 754 standard defines floating-point formats, which approximate real numbers using a finite number of bits. A floating-point number is expressed as:
+The IEEE 754 standard defines floating-point formats, which provide an efficient and scalable way to approximate real numbers using a finite number of bits. These formats are widely used in scientific computations, graphics, and machine learning due to their ability to balance precision, range, and efficiency.
+
+%********************************************
+\subsubsection{General Floating-Point Format}
+%********************************************
+A floating-point number under the IEEE 754 standard \cite{ieee2008} is expressed as:
 
 \[
 x = (-1)^s \cdot m \cdot 2^e,
@@ -31,20 +35,386 @@ x = (-1)^s \cdot m \cdot 2^e,
 
 where:
 \begin{itemize}[noitemsep]
-    \item \( s \): The sign bit (0 for positive, 1 for negative),
-    \item \( m \): The significand or mantissa, representing the precision,
-    \item \( e \): The exponent, representing the range.
+    \item \( s \): The sign bit, which determines whether the number is positive (\( s = 0 \)) or negative (\( s = 1 \)).
+    \item \( m \): The significand (or mantissa), which represents the precision of the number. It is normalized to the form \( 1.f \), where \( f \) is the fractional part in binary.
+    \item \( e \): The exponent, which determines the scale or range of the number. The exponent is stored in a biased format to allow both positive and negative exponents.
 \end{itemize}
 
-For example, the decimal number \( 6.25 \) can be represented as:
+For example, the decimal number \( 6.25 \) is represented as:
 
 \[
 6.25 = 1.5625 \cdot 2^2 \quad \text{(binary: \( 1.101 \cdot 2^2 \))}.
 \]
 
-This representation enables a wide range of real numbers to be stored efficiently, but it introduces rounding errors for numbers that cannot be precisely represented.
+In a floating-point format, \( s = 0 \), \( m = 1.101 \), and \( e = 2 \) (adjusted with the exponent bias).
 
-\paragraph{Fixed-Point Representation.}
+%***************************************************
+\subsubsection{Rounding in Floating-Point Arithmetic}
+%****************************************************
+Finite precision requires approximating real numbers (\( \mathbb{R} \)) with a subset of representable values. Floating-point numbers have a finite number of bits, limiting the precision with which real numbers can be represented. When a computation produces a result that cannot be represented exactly (e.g., \( 1/3 \) in binary), rounding is applied to map the result to the nearest representable value.
+
+Without consistent rounding rules, numerical computations could yield unpredictable results, especially in iterative algorithms or when combining multiple operations. The IEEE 754 standard specifies several rounding modes to handle this approximation, each designed to suit specific computational needs and numerical properties.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{IEEE 754 Rounding Modes.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The IEEE 754 standard defines the following five rounding modes:
+
+\begin{enumerate}
+    \item Round to Nearest, Ties to Even (Default):
+    \begin{itemize}
+        \item The value is rounded to the nearest representable number.
+        \item If the result is exactly halfway between two representable values, it is rounded to the nearest even value.
+        \item Use Case: This is the default rounding mode and minimizes overall rounding error in repeated computations.
+    \end{itemize}
+    
+    \item Round to Nearest, Ties Away from Zero:
+    \begin{itemize}
+        \item The value is rounded to the nearest representable number.
+        \item If the result is exactly halfway between two representable values, it is rounded away from zero.
+        \item Use Case: Useful in financial applications where avoiding bias toward zero is important.
+    \end{itemize}
+    
+    \item Round Toward Zero (Truncation):
+    \begin{itemize}
+        \item The fractional part is discarded, effectively truncating the value toward zero.
+        \item Use Case: Often used in integer arithmetic conversions to avoid exceeding bounds.
+    \end{itemize}
+    
+    \item Round Toward Positive Infinity (\(+\infty\)):
+    \begin{itemize}
+        \item The value is rounded up to the nearest representable number.
+        \item Use Case: Useful in applications requiring upper bounds, such as interval arithmetic or error estimation.
+    \end{itemize}
+    
+    \item Round Toward Negative Infinity (\(-\infty\)):
+    \begin{itemize}
+        \item The value is rounded down to the nearest representable number.
+        \item Use Case: Useful in applications requiring lower bounds or ensuring conservative estimates.
+    \end{itemize}
+\end{enumerate}
+
+%**************************************
+\paragraph{Examples of Rounding Modes.}
+%**************************************
+Consider rounding the number \( x = 2.625 \) in binary (\( 10.101_2 \)) to 3 bits of precision in the fractional part.
+
+\begin{enumerate}
+    \item Round to Nearest, Ties to Even:
+     \( x \) rounds to \( 10.10_2 \) (2.5 in decimal) because it is closer to \( 10.10_2 \) than \( 10.11_2 \).
+    \item Round to Nearest, Ties Away from Zero:
+     \( x \) rounds to \( 10.11_2 \) (2.75 in decimal).
+    \item Round Toward Zero:
+     \( x \) rounds to \( 10.10_2 \) (2.5 in decimal) by truncating the fractional part.
+    \item Round Toward Positive Infinity:
+     \( x \) rounds to \( 10.11_2 \) (2.75 in decimal).
+    \item Round Toward Negative Infinity:
+     \( x \) rounds to \( 10.10_2 \) (2.5 in decimal).
+\end{enumerate}
+
+%*************************************
+\paragraph{Summary of Rounding Modes.}
+%*************************************
+Table \ref{tab:rounding_modes} shows the IEEE-754 rounding modes.
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row height for readability
+\setlength{\tabcolsep}{6pt} % Adjust column spacing
+\caption{IEEE 754 Rounding Modes}
+\label{tab:rounding_modes}
+\begin{tabular}{|p{4cm}|p{8cm}|}
+\hline
+\textbf{Rounding Mode}                 & \textbf{Description and Use Case}                                                                                     \\ \hline
+Round to Nearest, Ties to Even         & Rounds to the nearest representable number; ties go to the nearest even number. Default mode for minimizing bias.     \\ \hline
+Round to Nearest, Ties Away from Zero  & Rounds to the nearest representable number; ties go away from zero. Used in financial and accounting applications.     \\ \hline
+Round Toward Zero                      & Discards the fractional part, effectively truncating the value. Useful in integer conversions.                         \\ \hline
+Round Toward Positive Infinity (\(+\infty\)) & Rounds up to the nearest representable number. Useful for bounding errors or interval arithmetic.                     \\ \hline
+Round Toward Negative Infinity (\(-\infty\)) & Rounds down to the nearest representable number. Useful for conservative lower bounds.                                 \\ \hline
+\end{tabular}
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The Role of Denormalized Numbers in Floating-Point Arithmetic}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Floating-point systems, such as those defined by the IEEE 754 standard, provide an approximation of the real number line (\( \mathbb{R} \)) within a finite precision. This approximation forms a discrete metric space, where the representable numbers are distributed non-uniformly. Denormalized numbers (also called subnormal numbers) are introduced to address the issue of spacing near zero, improving the system's ability to approximate \( \mathbb{R} \).
+
+%******************************************************
+\paragraph{Discrete Spacing in Standard Floating-Point.}
+%*******************************************************
+
+In normalized floating-point representation, the spacing between consecutive representable numbers is determined by the precision (significand bits) and the magnitude of the exponent. For a normalized floating-point number:
+
+\[
+x = (-1)^s \cdot (1.f) \cdot 2^e,
+\]
+
+The discrete spacing between successive numbers doubles as the magnitude of \( x \) increases. For example, near zero (for small exponents), the numbers are closely packed, but as \( e \) grows, the spacing becomes increasingly larger. This doubling of spacing is a direct result of the binary scaling factor \( 2^e \) applied in the IEEE 754 standard. This spacing leaves a gap near zero, creating a discontinuity in the metric space.
+
+\vspace{\baselineskip}\par
+\noindent Consider a simplified 4-bit floating-point system with the following structure:
+\begin{itemize}
+    \item Sign bit (\( s \)): 1 bit.
+    \item Exponent (\( e \)): 2 bits, biased by 1 (\( \text{bias} = 1 \)).
+    \item Fraction (mantissa) (\( f \)): 1 bit.
+\end{itemize}
+
+The value of a normalized number is given by:
+\[
+x = (-1)^s \cdot (1.f) \cdot 2^{e - \text{bias}}.
+\]
+
+In this system:
+\begin{itemize}
+    \item The exponent range is \( e \in [0, 3] \), corresponding to actual exponents \( e - 1 \in [-1, 2] \).
+    \item The significand range is \( 1.0 \) or \( 1.5 \) (depending on \( f \)).
+\end{itemize}
+
+We now show how the spacing changes. For each exponent value, the spacing doubles as \( e \) increases:
+
+\begin{itemize}
+    \item Exponent \( e = 0 \) (\( 2^{-1} \)):
+    \[
+    x \in \{1.0 \cdot 2^{-1} = 0.5, \; 1.5 \cdot 2^{-1} = 0.75\}.
+    \]
+    Spacing: \( 0.75 - 0.5 = 0.25 \).
+
+    \item Exponent \( e = 1 \) (\( 2^{0} \)):
+    \[
+    x \in \{1.0 \cdot 2^0 = 1.0, \; 1.5 \cdot 2^0 = 1.5\}.
+    \]
+    Spacing: \( 1.5 - 1.0 = 0.5 \).
+
+    \item Exponent \( e = 2 \) (\( 2^{1} \)):
+    \[
+    x \in \{1.0 \cdot 2^1 = 2.0, \; 1.5 \cdot 2^1 = 3.0\}.
+    \]
+    Spacing: \( 3.0 - 2.0 = 1.0 \).
+\end{itemize}
+
+As the exponent increases, the spacing between consecutive representable numbers doubles:
+\begin{itemize}
+    \item For \( e = 0 \), spacing is \( 0.25 \).
+    \item For \( e = 1 \), spacing is \( 0.5 \).
+    \item For \( e = 2 \), spacing is \( 1.0 \).
+\end{itemize}
+
+This behavior reflects the structure of normalized floating-point numbers, where the range of the significand remains fixed, but the scaling factor \( 2^e \) determines the magnitude and spacing.
+
+The doubling of spacing as the exponent increases reduces the precision of floating-point representation for larger magnitudes. While this allows for a wide dynamic range, it introduces rounding errors in computations involving large and small numbers.
+
+%*********************************
+\paragraph{Limitations Near Zero.}
+%*********************************
+When the exponent \( e \) reaches its minimum value (e.g., \( e_{\text{min}} = -126 \) for single precision), the smallest normalized floating-point number is:
+
+\[
+x_{\text{min}} = 1.0 \cdot 2^{e_{\text{min}}}.
+\]
+
+Numbers smaller than \( x_{\text{min}} \) cannot be represented in the normalized format, leaving a gap between \( 0 \) and \( x_{\text{min}} \). This discontinuity can cause issues in numerical computations, such as abrupt underflow to zero, which leads to a loss of precision in operations involving small values.
+
+%*********************************************************
+\paragraph{Denormalized Numbers Improve the Metric Space.}
+%*********************************************************
+Denormalized numbers are introduced to fill the gap near zero by allowing a leading significand bit of \( 0 \), instead of the implicit \( 1 \) required for normalized numbers. A denormalized number is represented as:
+
+\[
+x = (-1)^s \cdot (0.f) \cdot 2^{e_{\text{min}}}.
+\]
+
+This representation permits a gradual decrease in the magnitude of \( x \) as the fractional part \( f \) decreases. For single precision, the range of denormalized numbers is:
+
+\[
+x \in \left[ 2^{-149}, 2^{-126} \right].
+\]
+
+By introducing smaller spacings near zero, denormalized numbers extend the metric space of floating-point numbers, enabling a more continuous approximation of \( \mathbb{R} \).
+
+Consider a simplified 4-bit floating-point system with:
+\begin{itemize}
+    \item Sign bit (\( s \)): 1 bit.
+    \item Exponent (\( e \)): 2 bits, biased by 1 (\( \text{bias} = 1 \)).
+    \item Fraction (mantissa) (\( f \)): 1 bit.
+\end{itemize}
+
+In this system, denormalized numbers allow the leading bit of the significand to be \( 0 \), enabling the representation of smaller values close to zero. The value of a denormalized number is:
+
+\[
+x = (-1)^s \cdot (0.f) \cdot 2^{e_{\text{min}}}.
+\]
+
+Representation of Denormalized Numbers
+For \( e = 0 \) (the smallest exponent, used for denormalized numbers), the representable values are:
+
+\begin{itemize}
+    \item Fraction \( f = 0.0 \):
+    \(
+    x = 0.0 \cdot 2^{-1} = 0.
+    \)
+
+    \item Fraction \( f = 0.25 \):
+    \(
+    x = 0.25 \cdot 2^{-1} = 0.125.
+    \)
+
+    \item Fraction \( f = 0.5 \):
+    \(
+    x = 0.5 \cdot 2^{-1} = 0.25.
+    \)
+
+    \item Fraction \( f = 0.75 \):
+    \(
+    x = 0.75 \cdot 2^{-1} = 0.375.
+    \)
+\end{itemize}
+
+\vspace{\baselineskip}\par
+\noindent 
+The spacing between consecutive denormalized numbers remains constant:
+\begin{itemize}
+    \item Between \( 0.0 \) and \( 0.125 \): Spacing is \( 0.125 \).
+    \item Between \( 0.125 \) and \( 0.25 \): Spacing is \( 0.125 \).
+    \item Between \( 0.25 \) and \( 0.375 \): Spacing is \( 0.125 \).
+\end{itemize}
+
+Table \ref{tab:denormalized_spacing} shows the denormalized spacing for IEEE formats. The inclusion of denormalized numbers affects the spacing within the floating-point metric space:
+\begin{itemize}
+    \item Better Approximation Near Zero: Denormalized numbers significantly improve the precision of calculations involving very small values, reducing the abrupt transition to zero caused by underflow.
+    \item Smooth Gradation: The gradual decrease in representable values leads to smoother behavior in numerical algorithms, particularly in iterative methods that rely on small updates.
+    \item Support for Gradual Underflow: Instead of truncating to zero, operations involving small values can produce denormalized results, preserving information that would otherwise be lost.
+\end{itemize}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row height for readability
+\setlength{\tabcolsep}{6pt} % Adjust column spacing for better layout
+\caption{Denormalized Spacing in IEEE 754 Floating-Point Formats}
+\label{tab:denormalized_spacing}
+\begin{tabular}{|p{3.5cm}|p{4cm}|p{4cm}|p{1.5cm}|}
+\hline
+\textbf{Format}          & \textbf{Minimum Denormalized Value} & \textbf{Next Larger Denormalized Value} & \textbf{Spacing} \\ \hline
+Half-Precision (f16)     & \( 2^{-24} \approx 5.96 \times 10^{-8} \) & \( 2^{-23} \approx 1.19 \times 10^{-7} \) & \( 2^{-24} \) \\ \hline
+Single-Precision (f32)   & \( 2^{-149} \approx 1.4 \times 10^{-45} \) & \( 2^{-148} \approx 2.8 \times 10^{-45} \) & \( 2^{-149} \) \\ \hline
+Double-Precision (f64)   & \( 2^{-1074} \approx 4.9 \times 10^{-324} \) & \( 2^{-1073} \approx 9.9 \times 10^{-324} \) & \( 2^{-1074} \) \\ \hline
+Quadruple-Precision (f128) & \( 2^{-16494} \approx 6.5 \times 10^{-4966} \) & \( 2^{-16493} \approx 1.3 \times 10^{-4965} \) & \( 2^{-16494} \) \\ \hline
+\end{tabular}
+\end{table}
+
+
+Consider a single-precision system (\( e_{\text{min}} = -126 \)):
+\begin{itemize}[noitemsep]
+    \item Without Denormalized Numbers: The smallest representable positive number is \( 2^{-126} \), with a large gap to zero.
+    \item With Denormalized Numbers: Values like \( 2^{-127}, 2^{-128}, \dots, 2^{-149} \) are introduced, reducing the spacing and providing a closer approximation to \( \mathbb{R} \).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{IEEE Supported Formats}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+IEEE-754 and later editions support many different formats. We look at f16 in detail due to the ease of displaying bit widths. However, all formats work similarly. \ref{tab:ieee_precisions} shows the IEEE format definitions. Note that Decimal representations use Densely Packed Decimal (DPD) representations which require $n \times \frac{10}{3}$ bits for n-digits rather than standard BCD which would require $n \times 4$ bits per digit.
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.5} % Adjust row height for readability
+\setlength{\tabcolsep}{5pt} % Adjust column separation for spacing
+\caption{Summary of IEEE 754 Supported Floating-Point Precisions}
+\label{tab:ieee_precisions}
+\begin{tabular}{|p{3cm}|>{\raggedleft\arraybackslash}p{1cm}|>{\raggedleft\arraybackslash}p{2cm}|>{\raggedleft\arraybackslash}p{2cm}|p{5cm}|}
+\hline
+\textbf{Format}            & \textbf{Total Bits} & \textbf{Exponent Bits} & \textbf{Significand Bits} & \textbf{Applications}                           \\ \hline
+Half-Precision (f16)       & 16            & 5                      & 10                        & Graphics, machine learning                      \\ \hline
+Single-Precision (f32)     & 32            & 8                      & 23                        & Scientific computing, gaming                    \\ \hline
+Double-Precision (f64)     & 64            & 11                     & 52                        & High-precision engineering, financial work      \\ \hline
+Quadruple-Precision (f128) & 128           & 15                     & 112                       & Cryptography, scientific research               \\ \hline
+Decimal32                  & 32            & 8                      & 7 digits                  & Financial applications                          \\ \hline
+Decimal64                  & 64            & 11                    & 16 digits                 & Financial applications                          \\ \hline
+Decimal128                 & 128           & 15                    & 34 digits                 & Precision-critical financial applications       \\ \hline
+\end{tabular}
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Half-Precision Floating-Point (f16)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The IEEE 754 half-precision (f16) format is a compact 16-bit representation, commonly used in graphics, machine learning, and resource-constrained environments. It is defined as follows:
+
+\begin{itemize}
+    \item Bit Layout: A 16-bit number is divided into three components:
+    \begin{center}
+    \texttt{Sign (1 bit) | Exponent (5 bits) | Fraction (10 bits)}
+    \end{center}
+    \item Sign Bit (\( s \)): The first bit determines the sign of the number (0 for positive, 1 for negative).
+    \item Exponent (\( e \)): The next 5 bits represent the exponent in a biased format. The bias for f16 is \( 2^{k-1} - 1 = 15 \) (where \( k = 5 \)).
+    \item Fraction (\( f \)): The final 10 bits store the fractional part of the significand. The leading bit of the significand is implicitly \( 1 \) for normalized numbers.
+\end{itemize}
+
+\paragraph{Value Calculation:}
+The value of an f16 floating-point number is calculated as:
+\[
+x = (-1)^s \cdot (1.f) \cdot 2^{e - 15},
+\]
+where \( s \) is the sign bit, \( f \) is the fraction, and \( e \) is the biased exponent.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Special Cases in f16:}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{itemize}
+    \item Normalized Numbers: For \( 1 \leq e \leq 30 \), the number is normalized, and the leading bit of the significand is \( 1 \). The value is:
+    \[
+    x = (-1)^s \cdot (1.f) \cdot 2^{e - 15}.
+    \]
+    \item Denormalized Numbers: For \( e = 0 \), the number is denormalized (used to represent values close to zero). The leading bit of the significand is \( 0 \), and the value is:
+    \[
+    x = (-1)^s \cdot (0.f) \cdot 2^{-14}.
+    \]
+    \item Zero: When \( e = 0 \) and \( f = 0 \), the value is \( x = 0 \) (with a sign determined by \( s \)).
+    \item Infinity: When \( e = 31 \) and \( f = 0 \), the value is \( x = \pm \infty \) (depending on the sign bit \( s \)).
+    \item NaN (Not a Number): When \( e = 31 \) and \( f \neq 0 \), the value is NaN, used for undefined operations (e.g., \( 0/0 \)).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Example: Representing 6.25 in f16}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+To represent \( 6.25 \) in f16:
+\begin{enumerate}
+    \item Convert \( 6.25 \) to binary: \( 6.25 = 1.101 \cdot 2^2 \).
+    \item Determine the components:
+    \begin{itemize}[noitemsep]
+        \item \( s = 0 \) (positive number).
+        \item \( e = 2 + 15 = 17 \) (add the bias of 15).
+        \item \( f = 1010000000_2 \) (fractional part padded to 10 bits).
+    \end{itemize}
+    \item Write the bit layout:
+    \[
+    \texttt{0 | 10001 | 1010000000}.
+    \]
+    \item Verify:
+    \[
+    x = (-1)^0 \cdot (1.101) \cdot 2^{17 - 15} = 6.25.
+    \]
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Applications and Trade-Offs}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The f16 format is widely used in applications where memory and computational efficiency are important:
+\begin{itemize}[noitemsep]
+    \item Graphics: In rendering pipelines, f16 provides sufficient precision for colors, lighting, and textures.
+    \item Machine Learning: Many AI accelerators and frameworks (e.g., TensorFlow, PyTorch) use half-precision floating-point formats like IEEE f16 or bfloat16 for faster training and inference.
+    \item Embedded Systems: The compact size of f16 makes it ideal for low-power devices with limited memory.
+\end{itemize}
+
+However, the limited precision of f16 can lead to significant rounding errors in calculations, particularly for values requiring high precision or a large dynamic range \cite{goldberg1991, ieee2008}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Fixed-Point Representation.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Fixed-point representation divides the available bits into integer and fractional parts. For example, in an 8-bit fixed-point format with 4 bits for the integer part and 4 for the fractional part, the number \( 6.25 \) is represented as:
 
 \[
@@ -105,53 +475,5 @@ Despite their limitations, finite representations provide a practical means to a
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Finite real numbers are a computationally tractable subset of \( \mathbb{R} \), enabling efficient approximations of both rational and irrational numbers. However, their limitations, including rounding errors and range constraints, necessitate careful consideration in algorithm design. As computational systems evolve, innovations in numerical representation may further mitigate these challenges, expanding the utility of finite real numbers in \( \mathbb{R} \).
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Finite Real Numbers in $\mathbb{R}$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Floating-point representation is designed to approximate real numbers in \( \mathbb{R} \) within the constraints of a finite bit-width. It provides a practical way to represent a vast, continuous range of values, including both very large and very small magnitudes, but only at discrete points within that range. The set of numbers representable in floating-point format depends on the specific encoding scheme, such as the IEEE 754 standard, which defines numbers in terms of a sign bit, an exponent, and a mantissa (or significand). Formally, a floating-point number \( x \) can be expressed as:
-
-\[
-x = (-1)^s \cdot (1 + m) \cdot 2^e,
-\]
-
-where:
-\begin{itemize}
-    \item \( s \) is the sign bit (\( 0 \) for positive and \( 1 \) for negative numbers),
-    \item \( m \) is the fractional part of the mantissa in normalized form (\( 0 \leq m < 1 \)),
-    \item \( e \) is the exponent, which determines the range.
-\end{itemize}
-
-The representation divides the real line into a finite set of points due to limited precision, creating gaps between successive representable numbers. These gaps increase with magnitude, leading to a logarithmic distribution of representable values. This allows floating-point systems to handle a broad dynamic range but introduces rounding errors for values that fall between representable points. Additionally, special values such as \( \pm \infty \) and Not-a-Number (NaN) extend the representation to handle overflow, underflow, and undefined operations. Thus, floating-point numbers form a finite subset of \( \mathbb{R} \), optimized for computational efficiency in scientific and engineering applications.
-
-
-\subsection{Floating-Point Representation}
-
-For real numbers or values with fractional components, \textbf{floating-point representation} uses a finite bit sequence to approximate numbers over a broad range. The IEEE 754 standard for floating-point numbers defines a representation:
-\[
-x = (-1)^s \times (1.m) \times 2^{(e - \text{bias})}
-\]
-where:
-\begin{itemize}
-    \item \( s \) is the sign bit.
-    \item \( m \) represents the fractional part (or mantissa) in normalized binary form.
-    \item \( e \) is the exponent, stored with an offset (bias) to handle positive and negative exponents.
-\end{itemize}
-
-The finite bit-width used for the mantissa limits precision, while the exponent range constrains the representable magnitude of numbers, leading to rounding errors and overflow or underflow in extreme cases. This format enables a flexible range of values, suitable for scientific and engineering computations within finite constraints.
-
-\subsection{Summary}
-
-In contrast to the theoretically infinite positional notation of standard numeral systems, finite representations in digital computing encode numbers within a limited bit-width, each tailored to optimize specific aspects of computation, precision, or range. By partitioning bits into designated roles (e.g., sign, exponent, mantissa), these representations strike a balance between fidelity and computational efficiency \cite{knuth1997art, rosen2018, tanenbaum2013}.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Fixed Point}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 

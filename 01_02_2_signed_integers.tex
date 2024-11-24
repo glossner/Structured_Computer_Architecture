@@ -26,7 +26,7 @@ The signed-magnitude representation is one of the simplest methods for represent
 In an \( n \)-bit signed-magnitude system:
 \begin{itemize}
     \item The MSB (bit \( n-1 \)) indicates the sign:
-    \begin{itemize}
+    \begin{itemize}[label={}]
         \item \( 0 \): Positive number
         \item \( 1 \): Negative number
     \end{itemize}
@@ -112,7 +112,6 @@ The following are the mathematical properties of this representation:
 \end{enumerate}
 
 
- Example
 For a 4-bit signed-magnitude representation:
 \[
 x = (-1)^s \cdot m, \quad s = \text{MSB}, \; m = \text{binary value of remaining bits}.
@@ -142,7 +141,7 @@ Note that $-0$ is often treated as equivalent to \( +0 \)
 %**************************************************************
 \subsubsection{Arithmetic with Signed-Magnitude Representation}
 %**************************************************************
-Addition Example (4-bit signed-magnitude):
+\paragraph{Addition} Example (4-bit signed-magnitude):
 \[
 3 + (-2)
 \]
@@ -165,7 +164,7 @@ Step-by-step addition:
 
 \end{itemize}
 
-Subtraction Example (4-bit signed-magnitude):
+\paragraph{Subtraction} Example (4-bit signed-magnitude):
 \[
 -3 - 2
 \]
@@ -298,10 +297,8 @@ The following are the mathematical properties of this representation:
     \end{itemize}
 \end{enumerate}
 
----
 
-Example
-For a 4-bit one's complement representation:
+Example for a 4-bit one's complement representation:
 \[
 x = (-1)^s \cdot \text{Magnitude}, \quad s = \text{MSB}.
 \]
@@ -325,12 +322,10 @@ x = (-1)^s \cdot \text{Magnitude}, \quad s = \text{MSB}.
 
 Note that \( -0 \) is often treated as equivalent to \( +0 \).
 
----
-
 %************************************************************
 \subsubsection{Arithmetic with One's Complement Representation}
 %************************************************************
-Addition Example (4-bit one's complement):
+\paragraph{Addition} Example (4-bit one's complement):
 \[
 3 + (-2)
 \]
@@ -351,7 +346,7 @@ Step-by-step addition:
    \]
 \end{itemize}
 
-Subtraction Example (4-bit one's complement):
+\paragraph{Subtraction} Example (4-bit one's complement):
 \[
 -3 - 2
 \]
@@ -371,8 +366,6 @@ Step-by-step subtraction:
    \]
 \end{itemize}
 
----
-
 %************************************************************
 \subsubsection{Trade-offs of One's Complement Representation}
 %************************************************************
@@ -382,7 +375,7 @@ Advantages:
     \item Symmetry: The representation is symmetric, simplifying certain mathematical operations.
 \end{itemize}
 
-Disadvantages:
+\noindent Disadvantages:
 \begin{itemize}
     \item Dual Representation of Zero: Both \( 0000 \) (\( +0 \)) and \( 1111 \) (\( -0 \)) exist, which can cause ambiguity.
     \item Carry Handling: Addition requires special handling for the end-around carry, complicating hardware design.
@@ -512,18 +505,21 @@ Note that there is a unique representation for zero (\( 0000 \)).
 %************************************************************
 \subsubsection{Arithmetic with Two's Complement Representation}
 %************************************************************
-Addition Example (4-bit two's complement):
-\[
+\paragraph{Addition} Example (4-bit two's complement):
+%******************************************************
+\(
 3 + (-2)
-\]
-In two's complement:
+\)
+\begin{enumerate}
+    \item Representation in 2's Complement
+
 \[
 3 = 0011, \quad -2 = 1110
 \]
 
-Step-by-step addition:
+    \item Addition
 \begin{itemize}
-    \item Add the binary numbers:
+    \item Add the binary numbers
    \[
    0011 + 1110 = 1 0001
    \]
@@ -532,16 +528,21 @@ Step-by-step addition:
    \text{Result: } 0001 = 1.
    \]
 \end{itemize}
+\end{enumerate}
 
-Subtraction Example (4-bit two's complement):
-\[
+%*********************************************************
+\paragraph{Subtraction} Example (4-bit two's complement):
+%*********************************************************
+\(
 -3 - 2
-\]
-In two's complement:
+\)
+\begin{enumerate}
+    \item Representation in 2's Complement
 \[
 -3 = 1101, \quad 2 = 0010
 \]
-Step-by-step subtraction:
+
+    \item Subtraction
 \begin{itemize}
     \item Add the first operand and the two's complement of the second operand:
    \[
@@ -552,6 +553,36 @@ Step-by-step subtraction:
    \text{Result: } 1011 = -5.
    \]
 \end{itemize}
+\end{enumerate}
+
+
+\paragraph{Multiplication} 4-bit 2's Complement Multiplication: $-3 \times 2$
+\begin{enumerate}
+    \item Representation in 2's Complement:
+   \begin{itemize}
+       \item Decimal \( -3 \): Represented in 4-bit 2's complement as \( 1101_2 \).
+       \item Decimal \( 2 \): Represented in 4-bit 2's complement as \( 0010_2 \).
+   \end{itemize}
+
+    \item Perform Unsigned Multiplication
+    \begin{itemize}
+        \item To preserve precision, it can be shown that multiplication require $2n$ bits for $n-bit$ operands.
+        \item Treat the binary numbers as unsigned values and multiply them. This requires extending to 8 bits to avoid truncation during intermediate calculations. 
+    \end{itemize}   
+   \[
+   1101_2 \times 0010_2 = 11010_2.
+   \]
+
+    \item Interpreting the Result in 2's Complement:
+   
+   \begin{itemize}
+        \item Since this is a signed multiplication in 4-bit 2's complement, the result needs to fit within 4 bits, and overflow is possible.
+       \item Truncate the result to the lower 4 bits: \( 1010_2 \).
+       \item \( 1010_2 \) in 4-bit 2's complement represents \( -6 \) (calculated as \( -2^{3} + 2^{1} = -8 + 2 = -6 \)).
+   \end{itemize}
+   
+\end{enumerate}
+
 
 %*****************************************************************
 \subsubsection{Intermediate Overflow in 2's Complement Arithmetic}
@@ -571,10 +602,10 @@ In a system with \( n \)-bit 2's complement representation:
 Consider an 8-bit 2's complement system (\( n = 8 \)), where the representable range is \( -128 \) to \( 127 \).
 
 \begin{enumerate}
-    \item \textbf{Compute \( 100 + 50 - 90 \):}
+    \item Compute \( 100 + 50 - 90 \):
     \begin{enumerate}
-        \item \textbf{Step 1: Compute \( 100 + 50 \):}
-        \begin{itemize}[noitemsep]
+        \item Step 1: Compute \( 100 + 50 \):
+        \begin{itemize}
             \item Decimal representation: \( 100 + 50 = 150 \), which exceeds the maximum representable value (\( 127 \)).
             \item Binary representation of \( 100 \): \( 01100100_2 \).
             \item Binary representation of \( 50 \): \( 00110010_2 \).
@@ -586,8 +617,8 @@ Consider an 8-bit 2's complement system (\( n = 8 \)), where the representable r
         150 \mod 256 = -106 \quad (\text{in 2's complement: } 150 - 256 = -106).
         \]
 
-        \item \textbf{Step 2: Subtract \( 90 \):}
-        \begin{itemize}[noitemsep]
+        \item Step 2: Subtract \( 90 \):
+        \begin{itemize}
             \item Decimal representation: \( -106 - 90 = -196 \), which overflows again.
             \item Binary representation of \( -106 \): \( 10010110_2 \).
             \item Binary representation of \( 90 \): \( 01011010_2 \).
@@ -598,10 +629,8 @@ Consider an 8-bit 2's complement system (\( n = 8 \)), where the representable r
         \[
         -196 \mod 256 = 60 \quad (\text{in 2's complement: } -196 + 256 = 60).
         \]
-
-        \item \textbf{Correctness Check:}
-        The true sum in \( \mathbb{Z} \) is \( 100 + 50 - 90 = 60 \), which is correctly represented within the range of 2's complement. The intermediate overflows did not affect the correctness of the final result due to modular arithmetic.
     \end{enumerate}
+        \item     The true sum in \( \mathbb{Z} \) is \( 100 + 50 - 90 = 60 \), which is correctly represented within the range of 2's complement. The intermediate overflows did not affect the correctness of the final result due to modular arithmetic.
 \end{enumerate}
 
 %*****************************************************
@@ -759,8 +788,10 @@ x = E - 7, \quad E = \text{binary value}.
 \end{array}
 \]
 
+
+\subsubsection{Arithmetic with Excess-\( k \) Representation}
 %************************************************************
-\subsubsection{Comparisons with Excess-\( k \) Representation}
+\paragraph{Comparisons}
 %************************************************************
 One of the key advantages of excess-\( k \) representation is that it allows direct comparison of encoded values without needing to decode them into their actual signed values. This simplifies hardware design and improves computational efficiency for certain applications.
 
@@ -786,10 +817,13 @@ In excess-\( 7 \), the comparison of \( E \) values directly determines the resu
 There is no need to decode \( E \) back into \( x \), as the ordering of \( E \) values mirrors the ordering of the actual values \( x \). This property of excess-\( k \) representation makes it particularly useful in systems where frequent comparisons are required, such as in sorting algorithms or conditional logic in floating-point exponent comparisons. By avoiding decoding, the computational overhead is significantly reduced.
 
 %************************************************************
-\subsubsection{Addition with Excess-\( k \) Representation}
+\paragraph{Addition}
 %************************************************************
 In excess-\( k \) notation, addition can always be performed directly on the encoded values without converting to their actual values. This is because the bias \( k \) is consistent across all numbers, and the addition operation preserves this bias. Below is a detailed explanation of why this works.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: Fix to use enumerate
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In excess-\( k \), a number \( x \) is encoded as:
 \[
 E = x + k
@@ -838,7 +872,7 @@ Step-by-step addition:
 \end{itemize}
 
 %************************************************************
-\subsubsection{Subtraction with Excess-\( k \) Representation}
+\paragraph{Subtraction}
 %************************************************************
 Attempting to perform subtraction directly in excess-\( 7 \) notation using binary arithmetic can lead to incorrect results due to the way the bias affects the encoded values. Subtraction is not symmetric in excess-\( k \), as directly subtracting encoded values \( E_1 \) and \( E_2 \) includes the bias \( k \) in both values. When subtracting:
 \[
@@ -900,7 +934,7 @@ Advantages:
 \end{itemize}
 
  \vspace{\baselineskip}\par
-Disadvantages:
+\noindent Disadvantages:
 \begin{itemize}[topsep=0pt]
     \item Conversion Overhead for Subtraction: Subtraction often requires decoding the values into their actual numerical equivalents to handle differences correctly, especially when the result is negative. Re-encoding is needed after the operation.
     \item Ambiguity: The value of \( k \) (the bias) must be known to interpret the representation correctly, which can introduce complexity in systems where multiple biases are used.
@@ -1044,7 +1078,8 @@ A decimal number is represented by concatenating the BCD codes of its individual
 \end{enumerate}
 
 %*********************************
-\subsubsection{Addition using BCD}
+\subsubsection{Arithmetic using BCD}
+\paragraph{Addition}
 %**********************************
 Encoding Example:
 \[
@@ -1069,7 +1104,7 @@ Step-by-step addition:
 \end{itemize}
 
 %*********************************
-\subsubsection{Subtraction in BCD}
+\paragraph{Subtraction}
 %*********************************
 We want to compute:
 \(
@@ -1140,7 +1175,9 @@ Advantages:
         \item Avoids errors due to floating-point approximations in decimal systems.
         \item Simplifies display formatting for human-readable outputs.
     \end{itemize}
-Disadvantages:
+    
+\vspace{\baselineskip}\par    
+\noindent Disadvantages:
     \begin{itemize}
         \item Inefficient use of storage, as only 10 out of 16 possible 4-bit values are used.
         \item Arithmetic operations are slower compared to binary due to correction steps.
