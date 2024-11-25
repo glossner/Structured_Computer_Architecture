@@ -1,9 +1,118 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Encoding Alphabetic Characters in Computers}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Modern computers operate using binary data, and to process text, they require a mechanism to encode alphabetic characters, digits, symbols, and control commands into binary representations. Character encoding is fundamental to storing, transmitting, and processing text data across systems, enabling interoperability between hardware and software platforms.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Alphabetic Characters}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Computers represent all data using binary values (0s and 1s). However, human languages rely on diverse sets of characters and symbols. To bridge this gap, encoding systems map characters to unique binary values. The requirements for character encoding include:
+\begin{itemize}
+    \item Storage and Transmission: Characters must be converted to binary for storage on disk, transmission over networks, and display on screens.
+    \item Standardization: Encoding standards ensure that data can be correctly interpreted across different systems and applications.
+    \item Compatibility: Encodings allow older systems to communicate with newer ones while supporting a range of languages and symbols.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Early Character Encodings: EBCDIC and ASCII}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%********************************************************************
+\subsection{EBCDIC (Extended Binary Coded Decimal Interchange Code)}
+%********************************************************************
+
+Developed by IBM in the 1960s for mainframe computers, EBCDIC was designed to encode text for punch cards and early data processing systems \cite{ibm1964ebcdic}. EBCDIC uses 8 bits per character, allowing for 256 possible values. Key features include:
+\begin{itemize}
+    \item A focus on backward compatibility with IBM's earlier systems.
+    \item Separate blocks of values for uppercase letters, lowercase letters, digits, and control characters.
+    \item Limited adoption outside IBM systems.
+\end{itemize}
+
+Example EBCDIC values:
+\[
+\text{A: } 11000001_2, \quad \text{B: } 11000010_2, \quad \text{0: } 11110000_2.
+\]
+
+%***********************************************************************
+\subsection{ASCII (American Standard Code for Information Interchange).}
+%***********************************************************************
+Introduced in 1963, ASCII quickly became the dominant character encoding standard for text. ASCII uses 7 bits per character, providing 128 unique values \cite{mackenzie1980coded}. Key features of ASCII include:
+\begin{itemize}
+    \item Standardized mappings for English alphabets (both uppercase and lowercase), digits, punctuation, and control characters.
+    \item Compatibility with early printers and telecommunication systems.
+    \item Limited to English, making it unsuitable for internationalization.
+\end{itemize}
+
+Example ASCII values:
+\[
+\text{A: } 1000001_2, \quad \text{B: } 1000010_2, \quad \text{a: } 1100001_2, \quad \text{0: } 0110000_2.
+\]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Modern Character Encodings}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%*******************
+\subsection{Unicode}
+%*******************
+ASCII has limitations. Many languages require more characters than ASCII's 128 values. To address this, the Unicode standard was developed in the 1990s to support nearly all written languages \cite{mackenzie1980coded, unicode2020standard}.
+
+Unicode assigns a unique numeric code (code point) to every character, independent of the underlying binary representation. For example:
+\[
+\text{A: U+0041, \quad Ω: U+03A9, \quad 你好: U+4F60 U+597D}.
+\]
+
+While Unicode defines code points, it does not specify how these points are stored in binary. This led to the development of various Unicode Transformation Formats (UTFs).
+
+%*************************
+\subsection{UTF Encodings}
+%*************************
+\paragraph{UTF-8} is the most widely used Unicode encoding today \cite{unicode2020standard}. It is a variable-length encoding that uses 1 to 4 bytes per character:
+\begin{itemize}
+    \item ASCII characters (U+0000 to U+007F) are encoded in 1 byte, preserving backward compatibility.
+    \item Characters outside the ASCII range use 2 to 4 bytes, depending on their code point.
+\end{itemize}
+
+Example UTF-8 encodings:
+\[
+\text{A: } 01000001_2 \; (1 \text{ byte}), \quad \text{Ω: } 11001110\;10101001_2 \; (2 \text{ bytes}), \quad \text{你好: } 11100100\;10111100\;10000000_2 \; 11100101\;10100111\;10101101_2 \; (6 \text{ bytes}).
+\]
+
+\paragraph{UTF-16.}
+UTF-16 uses 2 or 4 bytes per character. Characters in the Basic Multilingual Plane (BMP) are stored in 2 bytes, while supplementary characters require 4 bytes. UTF-16 is popular in Windows systems and programming environments like Java.
+
+\paragraph{UTF-32.}
+UTF-32 uses a fixed 4 bytes per character, simplifying indexing and processing at the cost of memory efficiency. It is rarely used due to its high storage requirements.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Additional Encodings}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In addition to Unicode-based encodings, various modern encodings have been developed for specific use cases:
+
+    \paragraph{Base64.} Encodes binary data as printable ASCII characters, widely used in email and web applications.
+    \paragraph{MIME Encodings.} Designed for encoding text and attachments in email protocols.
+    \paragraph{Custom Encodings.} Certain systems, such as legacy hardware or proprietary software, use custom encoding schemes optimized for their requirements.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Comparison of Encoding Schemes}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Table \ref{tab:char_encodings} summarizes the key differences between encoding schemes:
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row height for better readability
+\setlength{\tabcolsep}{5pt} % Adjust column spacing for better layout
+\begin{tabular}{|p{3.5cm}|p{2cm}|p{3.5cm}|p{5cm}|} % Define column widths
+\hline
+\textbf{Encoding Scheme} & \textbf{Bits per Character} & \textbf{Characters Supported} & \textbf{Key Features} \\ \hline
+EBCDIC & 8 & 256 & IBM mainframes, legacy compatibility \\ \hline
+ASCII & 7 & 128 & English text, limited international support \\ \hline
+UTF-8 & 1--4 bytes & All Unicode characters & Backward compatible with ASCII \\ \hline
+UTF-16 & 2--4 bytes & All Unicode characters & Efficient for BMP, used in Windows \\ \hline
+UTF-32 & 4 bytes & All Unicode characters & Simplifies indexing, high storage cost \\ \hline
+Base64 & 6 bits & 64 printable characters & Encodes binary data into text for email, URLs, and web use \\ \hline
+MIME (Multipurpose Internet Mail Extensions) & Variable & Text, images, and other media types & Standard for encoding email attachments and multimedia \\ \hline
+\end{tabular}
+\caption{Comparison of Character Encoding Schemes, including Base64 and MIME.}
+\label{tab:char_encodings}
+\end{table}
 
