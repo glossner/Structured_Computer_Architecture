@@ -1,5 +1,4 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Finite Unsigned Integer Binary Representations in $\mathbb{N}$}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Unlike traditional positional notation, where the number of digits can extend indefinitely, digital systems must represent both integers and non-integer values within a constrained bit-width. This finite bit-width limits the precision and range of values that can be represented, necessitating specialized schemes to approximate an infinite set of values.
 
@@ -8,12 +7,12 @@ Complement systems, Binary-Coded Decimal (BCD), and floating-point formats, are 
 Depending upon the representation chosen, the same value may have more than one representation or no representation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Sets of Numbers and Representations of Numbers}
+\section{Sets of Numbers and Representations of Numbers}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In mathematics and computer science, it is essential to distinguish between sets of numbers, such as \( \mathbb{Z} \) (the set of integers), and representations of numbers, such as two's complement, excess-\( k \), or Binary Coded Decimal (BCD). While representations are methods for encoding and manipulating numbers in practical systems, the sets themselves are abstract mathematical constructs that define properties and operations independent of specific implementations. This distinction has significant implications for understanding the properties, limitations, and behaviors of numerical systems.
 
 %******************************
-\subsubsection{Sets of Numbers}
+\subsection{Sets of Numbers}
 %******************************
 A set of numbers is a mathematical construct that defines a collection of elements, operations, and properties. Common sets of numbers include:
 
@@ -33,7 +32,7 @@ Each set is defined by specific properties:
 These sets are abstract and independent of how numbers are represented in physical or computational systems.
 
 %**************************************
-\subsubsection{Representations of Numbers}
+\subsection{Representations of Numbers}
 %**************************************
 Representations of numbers refer to the ways in which numbers are encoded, stored, and manipulated in practical systems, such as computers or calculators. Examples of representations include:
 
@@ -48,7 +47,7 @@ Unlike sets, representations are constrained by practical factors such as finite
 
 
 %***********************************
-\subsection{Unsigned Binary Numbers}
+\section{Unsigned Binary Numbers}
 %***********************************
 Unsigned binary numbers are a subset of the natural numbers \( \mathbb{N} \), where each number is represented in binary form using a finite sequence of binary digits, or bits. Formally, let \( B = \{0, 1\} \) be the set of binary digits. For an \( n \)-bit representation, a natural number \( x \in \mathbb{N} \) can be expressed as:
 
@@ -73,7 +72,7 @@ Here:
 
 
 %***********************************************
-\subsection{Range of Unsigned Binary Numbers}
+\section{Range of Unsigned Binary Numbers}
 %***********************************************
 
 Since digital systems are finite, the number of bits, \( n \), limits the range of values that can be represented. For \( n \)-bit unsigned binary numbers, the range is:
@@ -122,7 +121,7 @@ This means that increasing \( n \) by one bit doubles the range of values that c
 Mathematically, \( < 2^n \) ensures clarity in interval definitions. In engineering, the range is often expressed as \( [0, 2^n - 1] \), explicitly naming the smallest and largest values. Mathematics focuses on the formal definition of the set and its properties, whereas engineering prioritizes practical application, particularly the endpoints of the range. The maximum value \( 2^n - 1 \) is a natural consequence of the interval \( [0, 2^n) \). Engineers often emphasize \( 2^n - 1 \) because it corresponds to the largest representable value in an \( n \)-bit binary system. The mathematical definition \( 0 \leq x < 2^n \) and the engineering range \( 0 \text{ to } 2^n - 1 \) describe the same set \( B_n \), with \( |B_n| = 2^n \).
 
 %*******************************************************
-\subsection{Example Ranges for Different Bit Lengths}
+\section{Example Ranges for Different Bit Lengths}
 %*******************************************************
 
 Table \ref{tab:binary_representations} shows the minimum and maximum values for different bit lengths, along with the representation of the number 5 in each range.
@@ -145,7 +144,7 @@ Table \ref{tab:binary_representations} shows the minimum and maximum values for 
 \end{table}
 
 %*********************************************************************
-\subsection{\( B_n \) with Overflow and Underflow (Modulo Arithmetic)}
+\section{\( B_n \) with Overflow and Underflow (Modulo Arithmetic)}
 %*********************************************************************
 In digital systems, the representation of unsigned binary numbers is constrained by a fixed number of bits, \( n \). When computations exceed the representable range of \( n \)-bit numbers, an \textit{overflow} occurs, and when computations fall below zero, an \textit{underflow} occurs. In both cases, numbers are typically handled using \textit{modulo arithmetic}, where the result "wraps around" to stay within the range defined by \( n \) bits. This behavior ensures that computations remain bounded within the cyclic range \( [0, 2^n - 1] \) and is fundamental in computer arithmetic, particularly for operations in finite fields, cryptography, and low-level programming.
 
@@ -173,7 +172,7 @@ This equation defines the set \( B_n \), which represents the set of \( n \)-bit
 This representation ensures that any \( x \in \mathbb{N} \) maps to an equivalent value \( y \) in the range \( [0, 2^n - 1] \) using the modulo \( 2^n \) operation.
 
 %**********************************************
-\subsubsection{Overflow and Underflow Behavior}
+\subsection{Overflow and Underflow Behavior}
 %**********************************************
 In this system, the arithmetic operations are defined modulo \( 2^n \), which handles both \textit{overflow} and \textit{underflow} by wrapping around within the range \( [0, 2^n - 1] \). For any two numbers \( a, b \in B_n \):
 \begin{itemize}
@@ -206,7 +205,7 @@ If \( a = 2 \) and \( b = 5 \), then:
 This modulo behavior ensures that results always wrap around into the valid range \( [0, 2^n - 1] \), regardless of whether the computation results in overflow (values exceeding \( 2^n - 1 \)) or underflow (negative values).
 
 %********************************************************
-\subsubsection{Computer Arithmetic Example Overflow} \label{subsub:overflow_example}
+\subsection{Computer Arithmetic Example Overflow} \label{subsub:overflow_example}
 %********************************************************
 In a 4-bit binary system, the maximum representable unsigned integer is \( 1111_2 \) (or 15 in decimal). If we add 1 to this value, it results in an overflow, as the sum exceeds the 4-bit limit and requires a 5th bit (carry bit) to fully represent the result. However, since we’re limited to 4 bits, this overflow is often discarded, causing the result to wrap around to 0.
 
@@ -234,7 +233,7 @@ If we limit ourselves to only 4 bits, we discard the carry (the leftmost bit), a
 In systems that do not handle overflow, such operations may produce unintended results, particularly when only the lower 4 bits are retained, causing the system to interpret the result as 0.
 
 %********************************************************
-\subsubsection{Computer Arithmetic Example Underflow} \label{subsub:underflow_example}
+\subsection{Computer Arithmetic Example Underflow} \label{subsub:underflow_example}
 %********************************************************
 In a 4-bit binary system, the minimum representable unsigned integer is \( 0000_2 \) (or 0 in decimal). If we subtract 1 from this value, it results in an underflow, as the difference falls below the representable range for unsigned numbers. In modulo arithmetic, this causes the result to wrap around to the maximum value for a 4-bit system.
 
@@ -263,7 +262,7 @@ In systems that use modulo arithmetic, this behavior ensures that all results re
 
 
 %*************************************************************************
-\subsection{Definition of \( B_n \) with Clipping (Saturation Arithmetic)}
+\section{Definition of \( B_n \) with Clipping (Saturation Arithmetic)}
 %*************************************************************************
 In certain digital systems, particularly in Digital Signal Processors (DSPs), overflow and underflow are handled differently from the standard modulo arithmetic approach. Instead of wrapping around, values that exceed the representable range are clipped to the largest representable value. Values that are less than the representable range are clipped to $0$. 
 This behavior ensures that computations remain within bounds without introducing wraparound artifacts, which can be undesirable in signal processing applications. This is sometimes called saturation arithmetic or saturating arithmetic.
@@ -288,7 +287,7 @@ This definition ensures that:
 \end{itemize}
 
 %**************************************************************
-\subsubsection{Behavior of Arithmetic Operations with Clipping}
+\subsection{Behavior of Arithmetic Operations with Clipping}
 %**************************************************************
 The clipping operation effectively maps \( x \geq 2^n \) to the maximum value \( 2^n - 1 \), providing a bounded and monotonic representation of results. For any operation (addition, subtraction, multiplication) resulting in \( r \):
 \[
@@ -308,7 +307,7 @@ Example for \( n = 3 \) (\( B_3 = \{0, 1, 2, 3, 4, 5, 6, 7\} \)):
 
 
 %********************************************************
-\subsubsection{Computer Arithmetic Example: Overflow with Clipping} \label{subsub:overflow_clipping_example}
+\subsection{Computer Arithmetic Example: Overflow with Clipping} \label{subsub:overflow_clipping_example}
 %********************************************************
 In a 4-bit binary system with clipping, the maximum representable unsigned integer is \( 1111_2 \) (or 15 in decimal). If we add 1 to this value, instead of wrapping around, the result is clipped to the maximum value \( 1111_2 \).
 
@@ -329,7 +328,7 @@ Since the result exceeds the 4-bit limit, it is clipped to the maximum value:
 In this system, clipping prevents the value from wrapping around to 0 and ensures that the result remains within the representable range \( [0, 15] \).
 
 %********************************************************
-\subsubsection{Computer Arithmetic Example: Underflow with Clipping} \label{subsub:underflow_clipping_example}
+\subsection{Computer Arithmetic Example: Underflow with Clipping} \label{subsub:underflow_clipping_example}
 %********************************************************
 In a 4-bit binary system with clipping, the minimum representable unsigned integer is \( 0000_2 \) (or 0 in decimal). If we subtract 1 from this value, instead of wrapping around to the maximum value, the result is clipped to the minimum value \( 0000_2 \).
 

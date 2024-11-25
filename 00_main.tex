@@ -42,7 +42,10 @@
 \usepackage{tocloft}  % Code listings and ToC Control
 % The first argument (2em) is the indentation of \subsubsection entries in the ToC.
 %The second argument (3em) controls the width allotted for the section numbering.
-\cftsetindents{subsubsec}{9em}{3em} % First argument to set indentation
+\cftsetindents{subsubsec}{9em}{3em} 
+\cftsetindents{paragraph}{9em}{3em} 
+
+
 
 
 \usepackage{tocbibind}
@@ -321,34 +324,48 @@ Most of the descriptions of the structures and the simulation of their behavior 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\part{NUMBERS AND REPRESENTATIONS}
+\part{NUMBER SYSTEMS AND REPRESENTATIONS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{A Brief History of Numbers and Representations}
 \include{01_01_1_number_systems}
 
 %*************************
-% Chapter 2 Number Systems
+% Chapter 2 Arithmetic
 %*************************
 \chapter{Number Systems}\label{chapt:number_systems}
 \minitoc
-
 \include{01_01_2_decimal_arithmetic}
 \include{01_01_3_positional_notation}
 \include{01_01_4_binary_arithmetic}
+
+%*************************
+% Chapter 3 Formal Notation
+%*************************
+\chapter{Numerical Sets}
+\minitoc
 \include{01_01_5_formal_notation}
 
 %*********************************
-% Chapter 3 Number Representations
+% Number Representations
 %*********************************
-\chapter{Number Representations}
+\chapter{Finite Unsigned Integer Binary Representations in $\mathbb{N}$}
 \minitoc
 \include{01_02_1_unsigned_integers}
+
+\chapter{Finite Signed Binary Integer Representations in $\mathbb{Z}$}
+\minitoc
 \include{01_02_2_signed_integers}
+
+\chapter{Finite Real Number Representations in $\mathbb{R}$}
+\minitoc
 \include{01_02_3_floating_point}
+
+\chapter{Character Representations}
+\minitoc
 \include{01_02_4_character_encodings}
 
 %*************************
-% Chapter 4 Part 1 Summary
+% Part 1 Summary
 %*************************
 \chapter{Summary of Number Systems and Representations}
 \minitoc

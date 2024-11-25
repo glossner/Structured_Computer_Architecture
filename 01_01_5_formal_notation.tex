@@ -4,7 +4,7 @@
 Our description of number systems and algorithms has been informal. We now formalize what sets of numbers we will be computing with. The development of mathematical sets, including integers, rational numbers, real numbers, and complex numbers, define what numbers a processor can compute. Integers are used for memory addressing, while processors use real and complex numbers to solve problems in many applications, including calculus and physics. 
 
 %**************************************************
-\subsection{The Set of Integers (\( \mathbb{Z} \))}
+\section{The Set of Integers (\( \mathbb{Z} \))}
 %**************************************************
 The set of integers, denoted by \( \mathbb{Z} \) (from the German word "Zahlen," meaning "numbers"), consists of positive and negative whole numbers, as well as zero \cite{knuth1997}. Integers are foundational concepts in arithmetic, memory addressing, and computer architecture.
 
@@ -14,7 +14,7 @@ Formally:
 \]
 
 %*****************************************
-\subsubsection{Properties of $\mathbb{Z}$}
+\subsection{Properties of $\mathbb{Z}$}
 %*****************************************
 
 \begin{itemize}
@@ -53,7 +53,7 @@ Formally:
 
 
 %******************************************
-\subsubsection{Subsets of \( \mathbb{Z} \)}
+\subsection{Subsets of \( \mathbb{Z} \)}
 %******************************************
 Various subsets of integers are frequently used:
 
@@ -74,12 +74,12 @@ Various subsets of integers are frequently used:
 
 
 %******************************************************
-\subsection{The Set of Real Numbers (\( \mathbb{R} \))}
+\section{The Set of Real Numbers (\( \mathbb{R} \))}
 %******************************************************
 The set of real numbers, denoted as \( \mathbb{R} \), represents a continuous spectrum of numbers along the number line. This set includes both rational and irrational numbers and is fundamental in mathematics and science.
 
 %*********************************************
-\subsubsection{Properties of \( \mathbb{R} \)}
+\subsection{Properties of \( \mathbb{R} \)}
 %*********************************************
 \begin{itemize}
     \item \textbf{Closure}: \( \mathbb{R} \) is closed under addition, subtraction, multiplication, and division (except by zero). For all \( a, b \in \mathbb{R} \):
@@ -136,7 +136,7 @@ The set of real numbers, denoted as \( \mathbb{R} \), represents a continuous sp
 \end{itemize}
 
 %**************************************
-\subsubsection{Subsets of $\mathbb{R}$} 
+\subsection{Subsets of $\mathbb{R}$} 
 %**************************************
     \begin{itemize}
         \item Rational numbers (\( \mathbb{Q} \)): Numbers expressible as fractions of integers.
@@ -144,12 +144,12 @@ The set of real numbers, denoted as \( \mathbb{R} \), represents a continuous sp
     \end{itemize}
     
 %****************************
-\subsection{Cauchy Sequences} \label{sub:cauchy}
+\section{Cauchy Sequences} \label{sub:cauchy}
 %****************************
 A Cauchy sequence is a mathematical concept used to describe sequences of numbers (or elements in a metric space) that become arbitrarily close to each other as the sequence progresses \cite{rudin1976}. It plays a fundamental role in real analysis and the study of completeness in metric spaces (see Section \ref{sub:metric_space}).
 
 %*****************************************
-\subsubsection{Cauchy Sequence Definition}
+\subsection{Cauchy Sequence Definition}
 %*****************************************
 A sequence \( \{x_n\} \) in a metric space \( (X, d) \) is called a Cauchy sequence if, for every \( \epsilon > 0 \), there exists a positive integer \( N \) such that for all \( m, n \geq N \):
 \[
@@ -164,7 +164,7 @@ Where:
 In simpler terms, a Cauchy sequence is one in which the terms get "closer and closer" to each other as the sequence progresses. This closeness is defined without reference to a specific limit point, relying instead on the internal behavior of the sequence.
 
 %********************************************
-\subsubsection{Properties of Cauchy Sequence}
+\subsection{Properties of Cauchy Sequence}
 %********************************************
 \begin{enumerate}
     \item Cauchy Sequences in \( \mathbb{R} \):
@@ -187,7 +187,7 @@ In simpler terms, a Cauchy sequence is one in which the terms get "closer and cl
 \end{enumerate}
 
 %**************************
-\subsubsection{Importance}
+\subsection{Importance}
 %**************************
 Cauchy sequences:
 \begin{itemize}
@@ -197,12 +197,12 @@ Cauchy sequences:
 \end{itemize}
 
 %**********************************************
-\subsection{\( \mathbb{R} \) as a Metric Space} \label{sub:metric_space}
+\section{\( \mathbb{R} \) as a Metric Space} \label{sub:metric_space}
 %**********************************************
 \( \mathbb{R} \), the set of real numbers, is a metric space when equipped with the standard metric (distance function) \cite{rudin1976}. A metric space is defined as a set \( X \) along with a metric \( d: X \times X \to \mathbb{R} \) that satisfies the following properties for all \( x, y, z \in X \):
 
 %*************************
-\subsubsection{Properties}
+\subsection{Properties}
 %*************************
 \begin{enumerate}[noitemsep, left=1cm, topsep=0pt]
     \item \textbf{Non-negativity}: \( d(x, y) \geq 0 \), and \( d(x, y) = 0 \) if and only if \( x = y \).
@@ -219,7 +219,7 @@ d(x, y) = |x - y|,
 \]
 where \( |x - y| \) is the absolute value of the difference between \( x \) and \( y \).
 
-\subsubsection{Standard Metric Properties:}
+\subsection{Standard Metric Properties:}
 
 \begin{itemize}
     \item \textbf{Non-negativity}: \( |x - y| \geq 0 \), and \( |x - y| = 0 \) if and only if \( x = y \).
@@ -234,12 +234,12 @@ where \( |x - y| \) is the absolute value of the difference between \( x \) and 
 Since the standard metric satisfies these properties, \( (\mathbb{R}, d) \) is a metric space.
 
 %************************************************
-\subsubsection{Completeness of \( \mathbb{R} \)}
+\subsection{Completeness of \( \mathbb{R} \)}
 %************************************************
 In addition, \( \mathbb{R} \) is a \textit{complete metric space}, meaning every Cauchy sequence in \( \mathbb{R} \) converges to a limit that is also in \( \mathbb{R} \). This property distinguishes \( \mathbb{R} \) from other metric spaces such as \( \mathbb{Q} \) (the rationals), where Cauchy sequences may not converge within \( \mathbb{Q} \).
 
 %******************************************************
-\subsubsection{Alternative Metrics on \( \mathbb{R} \)}
+\subsection{Alternative Metrics on \( \mathbb{R} \)}
 %******************************************************
 While \( d(x, y) = |x - y| \) is the most common, other metrics can also be defined on \( \mathbb{R} \). Examples include:
 
@@ -257,7 +257,7 @@ While \( d(x, y) = |x - y| \) is the most common, other metrics can also be defi
 The metric choice determines the metric space's topology and properties, making \( \mathbb{R} \) a versatile mathematical structure in different contexts.
 
 %*********************************
-\subsubsection{Historical Context}
+\subsection{Historical Context}
 %*********************************
 The need for \( \mathbb{R} \) arose from limitations in rational numbers for describing geometric concepts. For example:
 
@@ -268,17 +268,17 @@ The need for \( \mathbb{R} \) arose from limitations in rational numbers for des
 
 Rigorous definitions of \( \mathbb{R} \) emerged in the 19th century through Dedekind cuts and Cauchy sequences, establishing its completeness \cite{rosen2018, stewart2015}.
 
-\subsubsection{Applications}
+\subsection{Applications}
 Real numbers underpin analysis, continuity, and the infinite processes essential in mathematics and physics. They enable the definition of functions, derivatives, and integrals as well as modeling real-world phenomena.
 
 %*****************************************************************************
-\subsection{Comparing the Properties of \( \mathbb{Z} \) and \( \mathbb{R} \)}
+\section{Comparing the Properties of \( \mathbb{Z} \) and \( \mathbb{R} \)}
 %*****************************************************************************
 Since most processors compute using $\mathbb{Z}$ and $\mathbb{R}$, we compare the differences between these sets.
 The sets \( \mathbb{Z} \) (integers) and \( \mathbb{R} \) (real numbers) have distinct properties that reflect their differing algebraic and topological structures. This section highlights the properties unique to \( \mathbb{Z} \), those unique to \( \mathbb{R} \), and their implications.
 
 %*****************************************************************************
-\subsubsection{Properties of \( \mathbb{Z} \) Not Shared by \( \mathbb{R} \)}
+\subsection{Properties of \( \mathbb{Z} \) Not Shared by \( \mathbb{R} \)}
 %****************************************************************************
 \begin{enumerate}[topsep=0pt]
     \item Discrete Structure:
@@ -313,7 +313,7 @@ The sets \( \mathbb{Z} \) (integers) and \( \mathbb{R} \) (real numbers) have di
 \end{enumerate}
 
 %*****************************************************************************
-\subsubsection{Properties of \( \mathbb{R} \) Not Shared by \( \mathbb{Z} \)}
+\subsection{Properties of \( \mathbb{R} \) Not Shared by \( \mathbb{Z} \)}
 %*****************************************************************************
 \begin{enumerate}[topsep=0pt]
     \item Completeness:
@@ -348,7 +348,7 @@ The sets \( \mathbb{Z} \) (integers) and \( \mathbb{R} \) (real numbers) have di
 \end{enumerate}
 
 %********************************************************************************
-\subsubsection{Summary Table of Differences between $\mathbb{Z}$ and $\mathbb{R}$}
+\subsection{Summary Table of Differences between $\mathbb{Z}$ and $\mathbb{R}$}
 %**********************************************************************************
 \[
 \begin{array}{|c|c|c|}
@@ -371,7 +371,7 @@ The sets \( \mathbb{Z} \) (integers) and \( \mathbb{R} \) (real numbers) have di
 \]
 
 %***********************************************************
-\subsection{The Set of Rational Numbers (\( \mathbb{Q} \))}
+\section{The Set of Rational Numbers (\( \mathbb{Q} \))}
 %**********************************************************
 The set of rational numbers, denoted \( \mathbb{Q} \), consists of all numbers that can be expressed as the ratio of two integers:
 \[
@@ -379,7 +379,7 @@ The set of rational numbers, denoted \( \mathbb{Q} \), consists of all numbers t
 \]
 
 %*********************************************
-\subsubsection{Properties of \( \mathbb{Q} \)}
+\subsection{Properties of \( \mathbb{Q} \)}
 %*********************************************
 \begin{itemize}
     \item \textbf{Closure}: \( \mathbb{Q} \) is closed under addition, subtraction, multiplication, and division (except by zero). For any \( a, b \in \mathbb{Q} \):
@@ -432,7 +432,7 @@ The set of rational numbers, denoted \( \mathbb{Q} \), consists of all numbers t
 
 
 %**************************************
-\subsubsection{Subsets of $\mathbb{Q}$}
+\subsection{Subsets of $\mathbb{Q}$}
 %**************************************
 \begin{itemize}
     \item \textbf{Proper Fractions}:
@@ -451,7 +451,7 @@ The set of rational numbers, denoted \( \mathbb{Q} \), consists of all numbers t
 
 
 %**********************************************************
-\subsection{The Set of Complex Numbers (\( \mathbb{C} \))}
+\section{The Set of Complex Numbers (\( \mathbb{C} \))}
 %*********************************************************
 % TODO: Get references ADI TI Mfast
 Most processors do not directly support operations on complex numbers. However, special purpose processors including some Digital Signal Processors have provided limited support particularly for Fast Fourier Transform operations. 
@@ -463,7 +463,7 @@ z = a + bi, \quad \text{where } a, b \in \mathbb{R} \text{ and } i^2 = -1.
 Here, \( a \) is called the real part of \( z \), denoted \( \text{Re}(z) \), and \( b \) is called the imaginary part, denoted \( \text{Im}(z) \). Complex numbers extend the real number system to include solutions to polynomial equations that have no real roots, such as \( x^2 + 1 = 0 \).
 
 %**********************************************
-\subsubsection{Properties of \( \mathbb{C} \)}
+\subsection{Properties of \( \mathbb{C} \)}
 %**********************************************
 \begin{itemize}
     \item \textbf{Closure}: \( \mathbb{C} \) is closed under addition, subtraction, multiplication, and division (except division by zero). For all \( z_1, z_2 \in \mathbb{C} \):
