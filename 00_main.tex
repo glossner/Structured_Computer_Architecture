@@ -6,7 +6,6 @@
 \usepackage{latexcad}  % Position sensitive
 \usepackage[maxfloats=25]{morefloats}
 \usepackage[english]{babel}
-\usepackage{enumitem} % For custom list spacing
 
 \usepackage{graphicx}
 \graphicspath{{}{Images/}}  % Look in ./ and Images/
@@ -52,7 +51,7 @@
 \usepackage{tocbibind}
 \usepackage{shorttoc}
 \usepackage{minitoc}
-\dominitoc % Initialize mini tables of contents
+%\dominitoc % Initialize mini tables of contents
 
                            
 % Swap the behavior of \cite and \citep
@@ -183,6 +182,7 @@
     %after=\vspace{1em}\noindent
 }
 
+\dominitoc % initialize minitoc
 
 \makeindex
 
@@ -345,6 +345,7 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \part{NUMBER SYSTEMS AND REPRESENTATIONS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{A Brief History of Numbers and Representations}
+\minitoc
 \include{01_01_1_number_systems}
 
 %*************************
@@ -392,9 +393,8 @@ Most of the descriptions of the structures and the simulation of their behavior 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{FROM GATES TO PROCESSORS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%*************************
-% Chapter 2+
-%*************************
+\chapter{Combinational Circuits:  No-Loop, Zero-Order Systems (0-OS)}\label{lect1}
+\minitoc
 \include{02_combinational_circuits_0-OS}
 \include{03_memory_circuits_1-OS}
 \include{04_automata_2-OS}
@@ -412,17 +412,16 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \clearpage
 \addcontentsline{toc}{part}{APPENDIXES}
 \part*{APPENDIXES}
-
 \appendix
 
-\part*{Appendices}
+\chapter{Introduction to Chisel}
+\include{A001_Chisel}
 
-\section{Introduction to Chisel}
-\lipsum[1]
+\chapter{Introduction to System Verilog}
+\include{A002_System_Verilog}
 
-\section{Introduction to System Verilog}
-\lipsum[1]
-
+\chapter{Chisel Compared with System Verilog}
+\include{A003_Chisel_vs_System_Verilog}
 
 
 \include{A01_implementations}

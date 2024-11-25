@@ -1,0 +1,360 @@
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%
+Chisel (\textbf{C}onstructing \textbf{H}ardware \textbf{I}n a \textbf{S}cala \textbf{E}mbedded \textbf{L}anguage) is a hardware design language embedded within Scala. It offers hardware designers the ability to write complex, parameterizable, and reusable hardware components using high-level programming constructs \cite{bachrach2012chisel}. 
+
+This Appendix is a very brief introduction to Chisel primarily for designers to quickly reference features. For processor design, \citep{chisel:book} is a highly recommended free book.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview of Chisel}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Chisel is a domain-specific language (DSL) for hardware design, leveraging Scala's object-oriented and functional programming features \cite{chisel-doc}. It compiles to synthesizable Verilog, integrating seamlessly with traditional hardware development flows.
+
+\subsection{Key Features}
+
+\begin{itemize}
+    \item Hardware Construction Language: High-level abstractions for hardware components.
+    \item Parameterization: Easy creation of generic and reusable modules.
+    \item Strong Typing: Reduces errors through rigorous type checking.
+    \item Functional Programming: Utilizes Scala's functional paradigms for concise code.
+\end{itemize}
+
+\section{Basic Syntax}
+
+\subsection{Scala Basics}
+
+Understanding basic Scala syntax is essential for Chisel programming \cite{odersky2008programming}.
+
+\begin{itemize}
+    \item Immutable Variables: Declared with \texttt{val}, cannot be reassigned.
+    \item Mutable Variables: Declared with \texttt{var}, can be reassigned.
+    \item Functions: Defined using the \texttt{def} keyword.
+    \item Classes and Objects: Used to define hardware modules and singletons.
+\end{itemize}
+
+\subsection{Import Statements}
+
+Include necessary Chisel libraries at the beginning of your file:
+
+\begin{lstlisting}[language=Scala]
+import chisel3._
+import chisel3.util._
+\end{lstlisting}
+
+\section{Data Types}
+
+Chisel provides specialized data types for hardware representation \cite{chisel-doc}.
+
+\subsection{Base Types}
+
+\begin{itemize}
+    \item Bool: Single-bit boolean (\texttt{true}/\texttt{false}).
+        \newline Declaration: \texttt{val myBool = Bool()}
+    \item UInt: Unsigned integer with specified width.
+        \newline Declaration: \texttt{val myUInt = UInt(8.W)}
+    \item SInt: Signed integer with specified width.
+        \newline Declaration: \texttt{val mySInt = SInt(16.W)}
+    \item FixedPoint: Fixed-point number with total and fractional bits.
+        \newline Declaration: \texttt{val myFixed = FixedPoint(16.W, 8.BP)}
+    \item Clock: Represents a clock signal.
+    \item Reset: Represents a reset signal.
+\end{itemize}
+
+\subsection{Aggregate Types}
+
+\begin{itemize}
+    \item Bundle: Custom data structures combining multiple fields.
+        \newline Declaration: \texttt{class MyBundle extends Bundle \{ val a = UInt(8.W) \}}
+    \item Vec: Indexable collection of elements of the same type.
+        \newline Declaration: \texttt{val myVec = Vec(4, UInt(8.W))}
+\end{itemize}
+
+\subsection{Literals}
+
+\begin{itemize}
+    \item Unsigned Integer: \texttt{10.U}, \texttt{3.U(8.W)}
+    \item Signed Integer: \texttt{-5.S}, \texttt{-2.S(8.W)}
+    \item Boolean: \texttt{true.B}, \texttt{false.B}
+\end{itemize}
+
+\subsection{Operators}
+
+\begin{itemize}
+    \item Arithmetic: \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, \texttt{\%}
+    \item Logical: \texttt{\&}, \texttt{|}, \texttt{\^}, \texttt{!}
+    \item Comparison: \texttt{===}, \texttt{=/=}, \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=}
+    \item Bitwise Reduction: \texttt{\&}, \texttt{|}, \texttt{\^} (applied to a single operand)
+    \item Shift: \texttt{<<}, \texttt{>>}
+\end{itemize}
+
+\section{Modules and Hierarchy}
+
+\subsection{Defining Modules}
+
+Modules are defined by extending the \texttt{Module} class \cite{chisel-doc}.
+
+\begin{lstlisting}[language=Scala]
+class MyModule extends Module {
+  // Module implementation
+}
+\end{lstlisting}
+
+\subsection{Input/Output Ports}
+
+Ports are declared using the \texttt{IO} method with a \texttt{Bundle}.
+
+\begin{lstlisting}[language=Scala]
+class MyModule extends Module {
+  val io = IO(new Bundle {
+    val in  = Input(UInt(8.W))
+    val out = Output(UInt(8.W))
+  })
+  // Module logic
+}
+\end{lstlisting}
+
+\subsection{Instantiating Modules}
+
+Modules can be instantiated within other modules.
+
+\begin{lstlisting}[language=Scala]
+val subModule = Module(new SubModule)
+subModule.io.in := io.in
+io.out := subModule.io.out
+\end{lstlisting}
+
+\subsection{Parameterized Modules}
+
+Modules can be parameterized for reusability.
+
+\begin{lstlisting}[language=Scala]
+class MyModule(val width: Int) extends Module {
+  val io = IO(new Bundle {
+    val in  = Input(UInt(width.W))
+    val out = Output(UInt(width.W))
+  })
+  // Module logic
+}
+\end{lstlisting}
+
+\section{Wires and Registers}
+
+\subsection{Wires}
+
+Wires represent combinational logic signals \cite{chisel-doc}.
+
+\begin{lstlisting}[language=Scala]
+val tempWire = Wire(UInt(8.W))
+tempWire := io.in + 1.U
+\end{lstlisting}
+
+\subsection{Registers}
+
+Registers store state across clock cycles.
+
+\begin{itemize}
+    \item \texttt{Reg}: Creates a register without an initial value.
+        \newline Declaration: \texttt{val myReg = Reg(UInt(8.W))}
+    \item \texttt{RegInit}: Creates a register with an initial value.
+        \newline Declaration: \texttt{val myReg = RegInit(0.U(8.W))}
+\end{itemize}
+
+\subsection{Register Updates}
+
+Registers are updated using non-blocking assignment.
+
+\begin{lstlisting}[language=Scala]
+myReg := myReg + 1.U
+\end{lstlisting}
+
+\section{Control Structures}
+
+\subsection{\texttt{when} Statements}
+
+Conditional hardware execution.
+
+\begin{lstlisting}[language=Scala]
+when (condition) {
+  // Actions when condition is true
+} .elsewhen (anotherCondition) {
+  // Actions when anotherCondition is true
+} .otherwise {
+  // Actions when all conditions are false
+}
+\end{lstlisting}
+
+\subsection{\texttt{switch} Statements}
+
+Multi-way conditional execution.
+
+\begin{lstlisting}[language=Scala]
+switch(selector) {
+  is(value1) {
+    // Actions for value1
+  }
+  is(value2) {
+    // Actions for value2
+  }
+}
+\end{lstlisting}
+
+\subsection{\texttt{Mux} Function}
+
+Multiplexer for conditional selection.
+
+\begin{lstlisting}[language=Scala]
+val result = Mux(condition, trueValue, falseValue)
+\end{lstlisting}
+
+\subsection{Loops}
+
+Used for hardware generation, not for creating sequential logic \cite{chisel-tutorial}.
+
+\begin{lstlisting}[language=Scala]
+for (i <- 0 until n) {
+  // Generate n instances of hardware
+}
+\end{lstlisting}
+
+\section{Functions and Procedures}
+
+\subsection{Defining Functions}
+
+Functions encapsulate reusable logic.
+
+\begin{lstlisting}[language=Scala]
+def add(a: UInt, b: UInt): UInt = {
+  a + b
+}
+\end{lstlisting}
+
+\subsection{Invoking Functions}
+
+\begin{lstlisting}[language=Scala]
+val sum = add(io.in1, io.in2)
+\end{lstlisting}
+
+\section{Parameters and Generics}
+
+\subsection{Parameterized Types}
+
+Types can be parameterized for flexibility.
+
+\begin{lstlisting}[language=Scala]
+def myFunction[T <: Data](in: T): T = {
+  // Function body
+}
+\end{lstlisting}
+
+\subsection{Generic Modules}
+
+Modules can be generic over data types.
+
+\begin{lstlisting}[language=Scala]
+class MyGenericModule[T <: Data](genType: T) extends Module {
+  val io = IO(new Bundle {
+    val in  = Input(genType)
+    val out = Output(genType)
+  })
+  // Module logic
+}
+\end{lstlisting}
+
+\section{Hardware Construction in Chisel}
+
+\subsection{Vectors (\texttt{Vec})}
+
+Indexable collections of elements.
+
+\begin{lstlisting}[language=Scala]
+val myVec = VecInit(Seq.fill(4)(0.U(8.W)))
+myVec(0) := io.in
+\end{lstlisting}
+
+\subsection{Memories (\texttt{Mem})}
+
+Memory elements for storage.
+
+\begin{lstlisting}[language=Scala]
+val myMem = Mem(1024, UInt(8.W))
+val dataOut = myMem.read(addr)
+myMem.write(addr, dataIn)
+\end{lstlisting}
+
+\subsection{Bundles}
+
+Custom data structures grouping multiple fields.
+
+\begin{lstlisting}[language=Scala]
+class MyBundle extends Bundle {
+  val field1 = UInt(8.W)
+  val field2 = Bool()
+}
+\end{lstlisting}
+
+\section{Testing and Verification}
+
+\subsection{ChiselTest Framework}
+
+ChiselTest provides tools for testing Chisel modules \cite{chiseltest}.
+
+\begin{lstlisting}[language=Scala]
+import chiseltest._
+import org.scalatest.flatspec.AnyFlatSpec
+
+class MyModuleTest extends AnyFlatSpec with ChiselScalatestTester {
+  "MyModule" should "perform correctly" in {
+    test(new MyModule) { c =>
+      c.io.in.poke(0.U)
+      c.clock.step(1)
+      c.io.out.expect(0.U)
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{Assertions}
+
+In-module checks using \texttt{assert}.
+
+\begin{lstlisting}[language=Scala]
+assert(io.out === expectedValue)
+\end{lstlisting}
+
+\section{Peculiarities of Chisel}
+
+\subsection{Chisel is Embedded in Scala}
+
+Chisel code is Scala code. This means:
+
+\begin{itemize}
+    \item Full access to Scala's features.
+    \item Potential confusion between hardware constructs and software constructs.
+\end{itemize}
+
+\subsection{Delayed Execution Model}
+
+Chisel builds a hardware graph during elaboration, which may lead to unexpected behavior if side effects are not managed properly \cite{chisel-doc}.
+
+\subsection{Assignment Operators}
+
+\begin{itemize}
+    \item \texttt{:=}: Used for updating hardware signals.
+    \item \texttt{=}: Used for variable assignment in Scala.
+\end{itemize}
+
+\subsection{Type System}
+
+Chisel enforces strict type checking, which may differ from SystemVerilog or VHDL.
+
+\subsection{Combining Hardware and Software Constructs}
+
+Be cautious when mixing Scala control structures (e.g., \texttt{if}, \texttt{for}) with Chisel constructs (\texttt{when}, \texttt{switch}) \cite{chisel-tutorial}.
+
+\subsection{Hardware vs. Software Mindset}
+
+Designers must think in terms of hardware concurrency, even when writing code that resembles sequential software.
+
+\section{Conclusion}
+
+Chisel provides a modern approach to hardware design, combining the rigor of hardware description with the flexibility of a high-level programming language. By understanding Chisel's syntax and peculiarities, hardware designers can leverage its powerful features to create complex and reusable hardware components.
