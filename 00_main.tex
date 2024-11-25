@@ -48,6 +48,7 @@
 
 
 
+
 \usepackage{tocbibind}
 \usepackage{shorttoc}
 \usepackage{minitoc}
@@ -136,33 +137,50 @@
 \leftmargin
 
 
+%******************
+% List Parameters
+%*****************
 %\usepackage{etoolbox} % For patching commands
 \usepackage{enumitem} % Required for customizing list environments
-% Set global defaults for itemize
-\setlist[itemize]{ 
+\setlist[itemize,1]{ 
+    %label=\scalebox{1.5}{\textbullet},
+    left=3em,           % Increase indent 
     topsep=0.25em,       % Space above the list
     partopsep=0em,      % Additional space above if starting a new paragraph
-    parsep=0em,         % Space between paragraphs inside the list
+    parsep=0.5em,         % Space between paragraphs inside the list
+    itemsep=0.5em,       % Space between list items
+    listparindent=0em,    % Space for paragraphs inside the list
+    after=\vspace{0.5em}\noindent % Remove indentation after all lists
+}
+\setlist[itemize,2]{
+    label=$\diamond$,
+    left=3em,           % Increase indent 
+    topsep=0.25em,       % Space above the list
+    partopsep=0em,      % Additional space above if starting a new paragraph
+    parsep=0.5em,         % Space between paragraphs inside the list
     itemsep=0.5em,       % Space between list items
     listparindent=0em,    % Space for paragraphs inside the list
     %after=\vspace{1em}\noindent % Remove indentation after all lists
 }
-% Set custom defaults for enumerate
+
 \setlist[enumerate,1]{ % Top-level list
     label=\arabic*),   % 1), 2), 3), ...
+    left=3em,         
     topsep=0.25em,     
     partopsep=0em,     
-    parsep=0em,        
+    parsep=0.5em,        
     itemsep=0.5em,     
     listparindent=0em, 
+    after=\vspace{0.5em}\noindent
 }
 \setlist[enumerate,2]{ % Second-level nested list
     label=\alph*),     % a), b), c), ...
     topsep=0.25em,     
     partopsep=0em,     
-    parsep=0em,        
+    parsep=0.5em,        
     itemsep=0.5em,     
     listparindent=0em, 
+    %after=\vspace{1em}\noindent
 }
 
 

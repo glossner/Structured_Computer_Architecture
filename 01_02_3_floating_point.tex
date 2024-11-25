@@ -1,7 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 The set of real numbers, denoted \( \mathbb{R} \), includes all rational and irrational numbers and forms a continuous, uncountable set. While theoretically infinite, practical computations in digital systems can only represent a finite subset of \( \mathbb{R} \). Finite representations of real numbers are constrained by the limitations of hardware and software, leading to approximations in many cases. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -415,19 +411,17 @@ However, the limited precision of f16 can lead to significant rounding errors in
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Fixed-Point Representation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 Fixed-point representation is a method for storing and processing numbers by dividing a fixed number of bits into integer and fractional parts. This approach enables efficient computations, particularly in resource-constrained environments such as embedded systems, digital signal processing (DSP), and real-time control systems \cite{lathi2005digital}.
 
-Compared to floating-point representation, fixed-point arithmetic offers simplicity, lower computational overhead, and predictable precision, making it ideal for systems with stringent performance and memory requirements. However, it comes with limitations in dynamic range and precision, which must be carefully managed during implementation.
+Compared to floating-point representation, fixed-point arithmetic offers simplicity, lower computational overhead, and predictable precision. However, it comes with limitations in dynamic range and precision.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Basic Structure of Fixed-Point Numbers}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%********************************************
+\subsection{Structure of Fixed-Point Numbers}
+%*********************************************
 In fixed-point representation, a number is divided into two parts:
 \begin{itemize}[noitemsep]
-    \item **Integer Part:** Specifies the whole number portion.
-    \item **Fractional Part:** Specifies the fractional portion using a fixed scaling factor.
+    \item Integer Part: Specifies the whole number portion.
+    \item Fractional Part: Specifies the fractional portion using a fixed scaling factor.
 \end{itemize}
 
 The scaling factor \( 2^q \) determines how the binary digits in the fractional part are interpreted. For an \( n \)-bit representation with \( p \) bits for the integer part and \( q \) bits for the fractional part:
@@ -442,11 +436,11 @@ For example, in an 8-bit fixed-point format with 4 integer bits and 4 fractional
     \item The scaling factor is \( 2^4 = 16 \), so \( 6.25 \) is stored as \( 6 + \frac{4}{16} = 6.25 \).
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Signed Fixed-Point Representation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Signed fixed-point numbers include a sign bit to represent negative values. The sign bit occupies the most significant bit (MSB), and the remaining bits are divided into integer and fractional parts. Negative numbers are typically represented using **two's complement**.
+%*********************************************
+\subsection{Range of Signed Fixed-Point Representation}
+%*********************************************
+Signed fixed-point numbers include a sign bit to represent negative values. The sign bit occupies the most significant bit (MSB), and the remaining bits are divided into integer and fractional parts. Negative numbers are typically represented using two's complement because it allows the same hardware to be used as with 2's complement integers.
 
 For example, in an 8-bit signed fixed-point system with 4 fractional bits:
 \begin{itemize}[noitemsep]
@@ -463,86 +457,182 @@ For the 8-bit system with \( p = 4 \) and \( q = 4 \), the range is:
 [-8.000, +7.9375].
 \]
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Corner Cases and Challenges}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%************************************************
+\subsection{Properties of Fixed-Point Arithmetic}
+%************************************************
 
-Fixed-point arithmetic faces challenges due to its inherent limitations in precision and range. Key corner cases include:
+Fixed-point arithmetic has distinct properties that make it well-suited for certain applications. These properties arise from its representation, where numbers are stored as integers with an implied binary point. 
 
-\paragraph{Overflow:} When a value exceeds the representable range, it results in an overflow. For example, in a signed 8-bit system with 4 fractional bits:
+%******************************************
+\paragraph{Fixed Precision and Scaling.}
+%******************************************
+
+Fixed-point arithmetic divides a number into two parts: an integer part \( X \in \mathbb{Z} \) and a fractional part, allowing it to approximate real numbers \( x \in \mathbb{R} \). A predetermined scaling factor \( 2^q \), where \( q \) is the number of fractional bits, determines the granularity of the representation. Each fixed-point number is expressed as:
+\[
+x = \frac{X}{2^q}, \quad \text{where } X \in \mathbb{Z} \text{ and } x \in \mathbb{R}.
+\]
+
+This representation allows precise mapping between integer values and their scaled equivalents in the real number domain:
+\begin{itemize}
+    \item The integer part determines the range of representable values.
+    \item The fractional part determines the smallest difference (\( 2^{-q} \)) between two consecutive representable values, ensuring a fixed level of precision.
+
+\end{itemize}
+
+\begin{itemize}
+    \item Precision remains constant for all values within the representable range, providing predictable granularity.
+    \item Numbers that cannot be exactly represented within the fixed precision must be rounded or truncated, introducing small errors in computation.
+\end{itemize}
+
+
+
+%************************************
+\paragraph{Deterministic Arithmetic.}
+%************************************
+Fixed-point arithmetic performs operations deterministically:
+\begin{itemize}
+    \item \textbf{Shift Operations:} A left shift multiplies the number by \( 2 \), while a right shift divides it by \( 2 \), effectively adjusting the scaling factor.
+    
+    \item \textbf{Addition and Subtraction:} Operations are performed like integer arithmetic, and the results remain within the fixed-point format as long as overflow does not occur.
+    
+    \item \textbf{Multiplication:} The product of two fixed-point numbers requires adjustment to account for the implied binary point. For two numbers \( a \) and \( b \) with \( q \) fractional bits:
+\[
+a \cdot b = \frac{A \cdot B}{2^q},
+\]
+where \( A \) and \( B \) are the integer representations of \( a \) and \( b \).
+
+Example of $6.25 \times 0.5$ with $q=4$ fractional bits,
+\begin{enumerate}
+
+    \item Encode the operands in fixed point
+    \[
+        6.25_{10} = 0110.0100_2 \quad \text{ and } \quad 0.5_{10} = 0000.1000_2    
+    \]
+    
+    \item Perform 2's complement multiplication:
+    \[
+    01100100_2 \cdot 00001000_2 = 0000001100100000_2.
+    \]
+
+    \item Shift the result right by $q=4$ bits and retain the lower $n=8$ bits:
+    \[
+    0000001100100000_2 \rightarrow 000000110010xxxx_2 \rightarrow 00110010_2
+    \]
+
+    \item Interpret the number with radix point at $q=4$:
+    \[
+    0011.0010_2
+    \]
+    This corresponds to \( 3.125 \) in decimal.
+\end{enumerate}
+
+The same example with (\( q = 3 \))
+\begin{enumerate}
+    \item Encode the operands in fixed-point representation:
+    Represent each operand with \( q = 3 \) fractional bits:
+    \[
+    6.25_{10} = 00110.010_2 \quad \text{ and } \quad 0.5_{10} = 00000.100_2.
+    \]
+
+    \item Perform 2's complement multiplication:
+    \[
+    00110010_2 \cdot 00000.100_2 = 0000000011001000_2.
+    \]
+
+   \item Shift the result right by $q=3$ bits and retain the lower $n=8$ bits:
+    \[
+    0000000011001000_2 \rightarrow 0000000011001xxx_2 \rightarrow 00011001_2
+    \]
+
+    \item Interpret the number with radix point at $q=3$:
+    \[
+   00011.001_2
+    \]
+    This corresponds to \( 3.125 \) in decimal.
+
+\end{enumerate}
+    \item \textbf{Division:} Division requires rescaling to maintain precision, often introducing rounding errors:
+\[
+a / b = \frac{A \cdot 2^q}{B}.
+\]
+\end{itemize}
+
+
+%*******************************************
+\paragraph{Overflow and Underflow Behavior.}
+%*******************************************
+Unlike floating-point arithmetic, fixed-point numbers cannot dynamically adjust their range, resulting in strict overflow and underflow behavior:
+\begin{itemize}
+    \item Overflow: Values exceeding the maximum representable range wrap around (in unsigned systems) or saturate (in signed systems with clipping). 
+    \begin{itemize}[label={}]
+        \item For example, in a signed 8-bit system with 4 fractional bits:
 \[
 +8.0 \quad \text{is unrepresentable and results in overflow.}
 \]
+    \end{itemize}
+    
+    \item Underflow: Values closer to zero than the smallest representable value are rounded to zero, losing precision.  
+    
+    For \( q = 4 \), the smallest representable nonzero value is \( \pm \frac{1}{16} \).
 
-\paragraph{Underflow:} Values smaller than the smallest representable nonzero number lead to underflow. For \( q = 4 \), the smallest representable nonzero value is \( \pm \frac{1}{16} \).
-
-\paragraph{Rounding Errors:} Fixed-point arithmetic cannot precisely represent all real numbers. For example, \( 0.1 \) in decimal is approximately \( 0000.1100_2 \) in binary, resulting in a small rounding error.
-
-\paragraph{Precision Loss in Multiplication:} Multiplying two fixed-point numbers requires scaling and can lead to precision loss. For example:
-\[
-(6.25 \cdot 0.5) = 3.125,
-\]
-but if the result is truncated to 4 fractional bits, it becomes \( 3.12 \).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Examples of Fixed-Point Arithmetic}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Consider an 8-bit fixed-point system with 4 fractional bits:
-
-\paragraph{Addition:}
-\[
-6.25 + (-3.5) = 0110.0100_2 + 1100.1000_2 = 0011.1100_2.
-\]
-The result, \( 0011.1100_2 \), corresponds to \( +2.75 \) in decimal.
-
-\paragraph{Multiplication:}
-\[
-6.25 \cdot 0.5 = 0110.0100_2 \cdot 0000.1000_2.
-\]
-The intermediate result is scaled by \( 2^8 = 256 \), requiring adjustment:
-\[
-\text{Result} = 3.125 \quad \text{(represented as } 0011.0010_2).
-\]
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Applications of Fixed-Point Arithmetic}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Fixed-point arithmetic is widely used in applications where computational efficiency and predictability are critical:
-\begin{itemize}[noitemsep]
-    \item **Embedded Systems:** Fixed-point representation minimizes hardware complexity in microcontrollers and DSPs.
-    \item **Real-Time Signal Processing:** Ensures predictable execution times for filters, transforms, and controllers.
-    \item **Graphics and Gaming:** Fixed-point arithmetic provides efficient calculations for lighting and transformations.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Comparison with Floating-Point Representation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%***********************************
+\paragraph{Rounding and Truncation.}
+%***********************************
+Fixed-point arithmetic introduces rounding or truncation when numbers cannot be exactly represented. For example, \( 0.1 \) in decimal is approximately \( 0000.1100_2 \) in binary, resulting in a small rounding error. Common methods to deal with this include:
+\begin{itemize}
+    \item Truncation: Simply removes excess fractional bits, leading to predictable but potentially biased errors.
+    \item Rounding: Rounds to the nearest representable value, reducing bias but requiring additional computation.
 
+\end{itemize}
+
+%**************************************
+\subsection{Fixed Point Considerations}
+%**************************************
+\paragraph{Trade-offs Between Precision and Range.}
+%**************************************************
+Fixed-point representation inherently balances precision and range:
+\begin{itemize}
+    \item Increasing the number of fractional bits (\( q \)) improves precision but reduces the representable range.
+    \item Increasing the number of integer bits (\( p \)) extends the range but reduces precision.
+\end{itemize}
+For example 
+a 16-bit fixed-point number with 12 fractional bits has a higher precision but a smaller range than one with 8 fractional bits.
+
+%*********************************************
+\paragraph{Efficient Hardware Implementation.}
+%*********************************************
+Fixed-point arithmetic often uses the same hardware as two's complement integer arithmetic, with the distinction lying primarily in how the bits are interpreted. This close relationship allows fixed-point arithmetic to reuse existing hardware while supporting fractional precision. Arithmetic operations such as addition, subtraction, and shifts directly map to standard integer operations, reducing computational complexity.
+
+ Fixed-point numbers are essentially integers with an \textit{implied binary point} that is not physically stored in the hardware. For example, in a 16-bit fixed-point number with 4 fractional bits, the value \( 0110.0100_2 \) is treated as \( 6.25 \) but stored and manipulated as the integer \( 100 \). Arithmetic operations like addition and subtraction can use the same integer-based hardware because the binary point’s location is an interpretation applied at the software or algorithm level.
+
+Fixed-point numbers require consistent scaling factors. When performing operations, both operands must be in the same fixed-point format (same number of fractional bits). Multiplication results may need to be scaled back to the original format, which involves shifting the binary point. This introduces precision management, as the fractional part can lead to truncation or rounding errors.
+
+In two's complement, the integer result is directly usable. In fixed-point arithmetic, the integer result must be interpreted based on the scaling factor to obtain the actual numerical value.
+
+
+
+
+%*********************************************************
+\subsection{Comparison with Floating-Point Representation}
+%*********************************************************
 While fixed-point arithmetic is simpler and more efficient, it lacks the flexibility and dynamic range of floating-point numbers. Floating-point systems dynamically adjust the scaling factor using an exponent, making them suitable for applications requiring high precision or a wide dynamic range.
 
-\paragraph{Trade-offs:}
-\begin{itemize}[noitemsep]
-    \item **Fixed-Point Advantages:**
-        \begin{itemize}[noitemsep]
+Fixed-Point Advantages:
+        \begin{itemize}
             \item Lower computational cost.
             \item Predictable rounding behavior.
             \item Simpler hardware implementation.
         \end{itemize}
-    \item **Fixed-Point Disadvantages:**
-        \begin{itemize}[noitemsep]
+        
+Fixed-Point Disadvantages:
+        \begin{itemize}
             \item Limited dynamic range.
             \item Susceptible to overflow and underflow.
             \item Loss of precision in arithmetic operations.
         \end{itemize}
-\end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Conclusion}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Fixed-point representation offers a compelling balance of simplicity and efficiency for many practical applications, especially in systems with constrained resources. By carefully managing the trade-offs between precision and range, fixed-point arithmetic provides reliable solutions for real-world problems in embedded systems, signal processing, and beyond.
 
 
 
@@ -550,18 +640,16 @@ Fixed-point representation offers a compelling balance of simplicity and efficie
 \section{Examples of Finite Real Numbers}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Consider practical examples of finite real numbers:
-
-\begin{itemize}[noitemsep]
-    \item **Rational Numbers:** Numbers like \( 0.75 \) or \( 0.333... \) are approximated with a finite number of decimal or binary digits, depending on the precision.
-    \item **Irrational Numbers:** Irrationals like \( \pi \) or \( \sqrt{2} \) are represented by truncated or rounded approximations. For instance, \( \pi \) may be approximated as \( 3.14159265358979 \) in double precision.
-    \item **Large or Small Magnitudes:** Real numbers with large or small magnitudes, such as \( 6.022 \times 10^{23} \) (Avogadro's number) or \( 1.602 \times 10^{-19} \) (charge of an electron), are stored in scientific notation using floating-point systems.
+Practical examples of finite real numbers include:
+\begin{itemize}
+    \item Rational Numbers: Numbers like \( 0.75 \) or \( 0.333... \) are approximated with a finite number of decimal or binary digits, depending on the precision.
+    \item Irrational Numbers: Irrationals like \( \pi \) or \( \sqrt{2} \) are represented by truncated or rounded approximations. For instance, \( \pi \) may be approximated as \( 3.14159265358979 \) in double precision.
+    \item Large or Small Magnitudes: Real numbers with large or small magnitudes, such as \( 6.022 \times 10^{23} \) (Avogadro's number) or \( 1.602 \times 10^{-19} \) (charge of an electron), are stored in scientific notation using floating-point systems.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Challenges in Finite Real Representations}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 The finite representation of real numbers introduces challenges in computation:
 
 \paragraph{Rounding Errors.}
@@ -595,10 +683,6 @@ Beyond traditional floating-point formats, alternative finite number representat
 \paragraph{Brain Floating Point} In machine learning, bfloat16 balances the range of `float32` with reduced precision, optimizing performance on large-scale AI workloads \cite{wang2019bfloat16}. 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Conclusion}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Finite real numbers are a computationally tractable subset of \( \mathbb{R} \), enabling efficient approximations of both rational and irrational numbers. However, their limitations, including rounding errors and range constraints, necessitate careful consideration in algorithm design. As computational systems evolve, innovations in numerical representation may further mitigate these challenges, expanding the utility of finite real numbers in \( \mathbb{R} \).
 
 
