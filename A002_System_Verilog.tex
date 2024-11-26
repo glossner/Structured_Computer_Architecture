@@ -1,13 +1,16 @@
+%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%
+SystemVerilog is a hardware description and hardware verification language, which extends the capabilities of Verilog by incorporating advanced modeling features and constructs \cite{ieee1800-2017}. It combines design specification and verification features, making it a unified language for hardware design and verification. This chapter serves as a reference guide for hardware designers familiar with Verilog or VHDL, providing syntax and commands of SystemVerilog.
 
-SystemVerilog is a hardware description and hardware verification language, which extends the capabilities of Verilog by incorporating advanced modeling features and constructs \cite{ieee1800-2017}. It combines design specification and verification features, making it a unified language for hardware design and verification. This chapter serves as a reference guide for hardware designers familiar with Verilog or VHDL, providing syntax and commands of SystemVerilog for quick consultation, and highlighting the differences between Verilog and SystemVerilog.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Overview of SystemVerilog}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SystemVerilog enhances Verilog by introducing new data types, operators, and constructs for modeling complex hardware designs. It provides advanced features for design abstraction, code reusability, and verification, making it suitable for modern hardware development \cite{baker2010systemverilog}.
 
+%******************************************
 \subsection{Key Enhancements over Verilog}
-
+%*****************************************
 \begin{itemize}
     \item Richer data types and user-defined types.
     \item Enhanced procedural blocks and control flow.
@@ -16,108 +19,114 @@ SystemVerilog enhances Verilog by introducing new data types, operators, and con
     \item Assertions and coverage constructs for verification.
 \end{itemize}
 
-\section{Basic Syntax}
+%%%%%%%%%%%%%%%%
+\section{Syntax}
+%%%%%%%%%%%%%%%%
 
+%***********************
 \subsection{Data Types}
-
+%**********************
 SystemVerilog introduces new data types in addition to those available in Verilog.
 
+%***********************************
 \subsubsection{Built-in Data Types}
+%**********************************
+\paragraph{\texttt{logic}} Replaces \texttt{reg} and can be driven by continuous assignments.
 
-\begin{itemize}
-    \item \texttt{logic}: Replaces \texttt{reg} and can be driven by continuous assignments.
-    \item \texttt{bit}: Unsigned, 2-state data type (0 or 1).
-    \item \texttt{byte}: 8-bit signed integer.
-    \item \texttt{shortint}: 16-bit signed integer.
-    \item \texttt{int}: 32-bit signed integer.
-    \item \texttt{longint}: 64-bit signed integer.
-    \item \texttt{integer}: Equivalent to \texttt{int}.
-    \item \texttt{time}: 64-bit unsigned integer.
-\end{itemize}
+\paragraph{\texttt{bit}} Unsigned, 2-state data type (0 or 1).
 
+\paragraph{\texttt{byte}} 8-bit signed integer.
+
+\paragraph{\texttt{shortint}} 16-bit signed integer.
+
+\paragraph{\texttt{int}} 32-bit signed integer.
+
+\paragraph{\texttt{longint}} 64-bit signed integer.
+
+\paragraph{\texttt{integer}} Equivalent to \texttt{int}.
+
+\paragraph{\texttt{time}} 64-bit unsigned integer.
+
+%*********************************
 \subsubsection{User-Defined Types}
+%*********************************
+\paragraph{\texttt{typedef}} Used to create new type names. Example: \texttt{typedef logic [7:0] byte\_t;}
 
-\begin{itemize}
-    \item \texttt{typedef}: Used to create new type names.
-        \newline Example: \texttt{typedef logic [7:0] byte\_t;}
-    \item \texttt{enum}: Enumerated types.
-        \newline Example: \texttt{enum logic [1:0] \{IDLE, BUSY, DONE\} state;}
-    \item \texttt{struct}: Composite data types grouping variables.
-        \newline Example: \texttt{struct \{logic [7:0] addr; logic [15:0] data;\} packet;}
-    \item \texttt{union}: Overlapping data storage.
-        \newline Example: \texttt{union \{int i; byte b[4];\} u;}
-\end{itemize}
+\paragraph{\texttt{enum}} Enumerated types. Example: \texttt{enum logic [1:0] \{IDLE, BUSY, DONE\} state;}
 
+\paragraph{\texttt{struct}} Composite data types grouping variables. Example: \texttt{struct \{logic [7:0] addr; logic [15:0] data;\} packet;}
+
+\paragraph{\texttt{union}} Overlapping data storage. Example: \texttt{union \{int i; byte b[4];\} u;}
+
+%******************
 \subsection{Arrays}
-
+%******************
 \subsubsection{Packed and Unpacked Arrays}
 
-\begin{itemize}
-    \item \textbf{Packed Arrays}: Continuous set of bits.
-        \newline Declaration: \texttt{logic [7:0] data\_byte;}
-    \item \textbf{Unpacked Arrays}: Arrays of elements.
-        \newline Declaration: \texttt{logic [7:0] memory [0:255];}
-\end{itemize}
+\paragraph{\textbf{Packed Arrays}} Continuous set of bits. Declaration: \texttt{logic [7:0] data\_byte;}
 
+\paragraph{\textbf{Unpacked Arrays}} Arrays of elements. Declaration: \texttt{logic [7:0] memory [0:255];}
+
+%*********************************************
 \subsubsection{Dynamic and Associative Arrays}
+%*********************************************
+\paragraph{\texttt{dynamic array}} Size can change at runtime. Declaration: \texttt{int dynamic\_array[];}
 
-\begin{itemize}
-    \item \texttt{dynamic array}: Size can change at runtime.
-        \newline Declaration: \texttt{int dynamic\_array[];}
-    \item \texttt{associative array}: Indexed by arbitrary data types.
-        \newline Declaration: \texttt{int associative\_array[string];}
-    \item \texttt{queue}: Variable-size ordered collection.
-        \newline Declaration: \texttt{int queue[\$];}
-\end{itemize}
+\paragraph{\texttt{associative array}} Indexed by arbitrary data types. Declaration: \texttt{int associative\_array[string];}
 
+\paragraph{\texttt{queue}} Variable-size ordered collection. Declaration: \texttt{int queue[\$];}
+
+%*********************
 \subsection{Operators}
-
+%*********************
 SystemVerilog extends Verilog operators with new ones.
 
-\begin{itemize}
-    \item \textbf{Streaming Operators}: \texttt{<<}, \texttt{>>}
-        \newline Used for packing and unpacking bits.
-    \item \textbf{Type Casting}: \texttt{\$cast}, static casting (\texttt{type'(expression)})
-    \item \textbf{Conditional Operator}: Ternary operator (\texttt{? :}) enhanced for 4-state expressions.
-\end{itemize}
+\paragraph{\textbf{Streaming Operators}} \texttt{<<}, \texttt{>>} Used for packing and unpacking bits.
 
+\paragraph{\textbf{Type Casting}} \texttt{\$cast}, static casting (\texttt{type'(expression)})
+
+\paragraph{\textbf{Conditional Operator}} Ternary operator (\texttt{? :}) enhanced for 4-state expressions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Procedural Blocks and Control Flow}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%**************************************
 \subsection{Enhanced Procedural Blocks}
+%**************************************
+\paragraph{\texttt{always\_comb}} Replaces \texttt{always @(*)} for combinational logic.
 
-\begin{itemize}
-    \item \texttt{always\_comb}: Replaces \texttt{always @(*)} for combinational logic.
-    \item \texttt{always\_ff}: For sequential logic triggered by clock edges.
-    \item \texttt{always\_latch}: For latch inference.
-\end{itemize}
+\paragraph{\texttt{always\_ff}} For sequential logic triggered by clock edges.
 
+\paragraph{\texttt{always\_latch}} For latch inference.
+
+%***********************************
 \subsection{Control Flow Statements}
-
+%***********************************
 SystemVerilog introduces new control flow constructs.
 
+%**********************************
 \subsubsection{Looping Constructs}
+%*********************************
+\paragraph{\texttt{foreach}} Iterates over arrays. Example: \texttt{foreach (array[i]) array[i] = 0;}
 
-\begin{itemize}
-    \item \texttt{foreach}: Iterates over arrays.
-        \newline Example: \texttt{foreach (array[i]) array[i] = 0;}
-    \item \texttt{do...while}: Post-test loop.
-    \item \texttt{break}, \texttt{continue}: Loop control.
-    \item \texttt{return}: Exits a function or task.
-\end{itemize}
+\paragraph{\texttt{do...while}} Post-test loop.
 
+\paragraph{\texttt{break}, \texttt{continue}} Loop control.
+
+\paragraph{\texttt{return}} Exits a function or task.
+
+%**************************************
 \subsubsection{Conditional Compilation}
+%**************************************
+\paragraph{\texttt{`\$ifdef}, \texttt{`\$ifndef}, \texttt{`\$elsif}, \texttt{`\$else}, \texttt{`\$endif}}
 
-\begin{itemize}
-    \item \texttt{`\$ifdef}, \texttt{`\$ifndef}, \texttt{`\$elsif}, \texttt{`\$else}, \texttt{`\$endif}
-\end{itemize}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Interfaces and Modports}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Interfaces}
-
-Interfaces encapsulate communication between modules \cite{guyer2005introduction}.
-
-\begin{verbatim}
+Interfaces encapsulate communication between modules.
+\begin{verilogcode}
 interface bus_if(input logic clk);
     logic [7:0] addr;
     logic [15:0] data;
@@ -125,9 +134,7 @@ interface bus_if(input logic clk);
     modport master (output addr, data, valid);
     modport slave (input addr, data, valid);
 endinterface
-\end{verbatim}
-
-\subsection{Modports}
+\end{verilogcode}
 
 Modports define the direction of signals for different roles.
 
@@ -136,19 +143,15 @@ Modports define the direction of signals for different roles.
     \item Enhance readability and enforce directionality.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Tasks and Functions}
-
-\subsection{Functions}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Functions return values and execute in zero simulation time.
-
 \begin{itemize}
     \item Can have input arguments only.
     \item Cannot consume time (no delays or event controls).
     \item Declared using \texttt{function} keyword.
 \end{itemize}
-
-\subsection{Tasks}
 
 Tasks can consume time and have input/output/inout arguments.
 
@@ -157,11 +160,11 @@ Tasks can consume time and have input/output/inout arguments.
     \item Declared using \texttt{task} keyword.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%
 \section{Packages}
-
+%%%%%%%%%%%%%%%%%%%
 Packages allow the grouping of declarations that can be shared across modules.
-
-\begin{verbatim}
+\begin{verilogcode}
 package my_pkg;
     typedef logic [7:0] byte_t;
     function int increment(int a);
@@ -171,33 +174,38 @@ endpackage
 
 // Importing a package
 import my_pkg::*;
-\end{verbatim}
+\end{verilogcode}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Object-Oriented Programming Features}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SystemVerilog introduces classes for verification purposes \cite{stapko2008advanced}.
 
+%********************
 \subsection{Classes}
-
+%*******************
 \begin{itemize}
     \item Support for inheritance, polymorphism, and encapsulation.
     \item Used primarily in testbenches.
 \end{itemize}
 
+%*************************
 \subsection{Randomization}
-
+%*************************
 \begin{itemize}
     \item Constraint random variables using \texttt{rand}, \texttt{randc}.
     \item Use \texttt{constraint} blocks to specify constraints.
     \item Randomize using \texttt{\$urandom}, \texttt{randomize()} method.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Assertions and Coverage}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%**********************
 \subsection{Assertions}
-
+%**********************
 SystemVerilog assertions (SVA) are used for design verification \cite{foster2003assertions}.
-
 \begin{itemize}
     \item Immediate Assertions: Checked immediately when executed.
         \newline Syntax: \texttt{assert(expression) else ...}
@@ -205,48 +213,55 @@ SystemVerilog assertions (SVA) are used for design verification \cite{foster2003
         \newline Syntax: \texttt{assert property (property\_expression);}
 \end{itemize}
 
+%********************
 \subsection{Coverage}
-
+%********************
 Coverage metrics help measure how much of the design has been tested.
-
 \begin{itemize}
     \item \texttt{covergroup}: Defines coverage points.
     \item \texttt{coverpoint}: Specifies variables or expressions to be covered.
     \item \texttt{cross}: Cross-coverage between coverpoints.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Peculiarities of SystemVerilog}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%**************************************
 \subsection{Multiple Procedural Blocks}
-
+%**************************************
 SystemVerilog introduces specialized procedural blocks (\texttt{always\_comb}, \texttt{always\_ff}, \texttt{always\_latch}) that help avoid common coding errors by automatically inferring the sensitivity list.
 
+%*******************************
 \subsection{Data Type Confusion}
-
+%*******************************
 The introduction of new data types like \texttt{logic}, \texttt{bit}, and \texttt{byte} can cause confusion with traditional Verilog types (\texttt{reg}, \texttt{wire}).
 
+%*************************************
 \subsection{Implicit Net Declarations}
-
+%**************************************
 In Verilog, undeclared identifiers default to a one-bit wire. SystemVerilog requires all nets and variables to be explicitly declared unless the compiler directive \texttt{`default\_nettype} is used.
 
+%******************************
 \subsection{Use of Interfaces}
-
+%*****************************
 Interfaces can significantly simplify module connections but require a shift in design methodology compared to traditional Verilog module port lists.
 
+%******************************
 \subsection{Enhanced For Loops}
-
+%******************************
 The \texttt{foreach} loop in SystemVerilog can only be used with arrays and can lead to less readable code if not used carefully.
 
+%*****************************************
 \subsection{Randomization and Constraints}
-
+%*****************************************
 While powerful for verification, the randomization features and constraints are complex and can lead to non-intuitive behaviors if constraints are not properly defined.
 
+%*****************************************************
 \subsection{Mixing Verification and Design Constructs}
-
+%*****************************************************
 SystemVerilog allows mixing design and verification constructs, which can lead to code that is not synthesizable. Designers need to be careful to use synthesizable constructs in design code.
 
-\section{Conclusion}
 
-SystemVerilog provides significant enhancements over Verilog, offering advanced features for both design and verification. Understanding the differences and new constructs is essential for hardware designers to effectively utilize the language's capabilities.
 
 
