@@ -83,9 +83,12 @@
 \newcommand{\ifchisel}[1]{\ifthenelse{\boolean{chiselversion}}{#1}{}}
 
 % Define a color scheme for code
-\definecolor{keywordcolor}{rgb}{0.3, 0.3, 0.7} % Blueish for keywords
-\definecolor{commentcolor}{rgb}{0.3, 0.5, 0.3} % Greenish for comments
-\definecolor{stringcolor}{rgb}{0.6, 0.2, 0.2}  % Redish for strings
+\definecolor{keywordcolor}{RGB}{0,0,255}
+\definecolor{commentcolor}{RGB}{0,128,0}
+\definecolor{stringcolor}{RGB}{163,21,21}
+
+\usepackage{etoolbox}
+\robustify{\lstinputlisting}
 
 % Define Verilog style
 \lstdefinestyle{verilogStyle}{
@@ -94,7 +97,7 @@
     keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
     commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
     stringstyle=\color{stringcolor},     % Strings in red
-    frame=single,                        % Frame around the code
+    %frame=single,                        % Frame around the code
     captionpos=b,                        % Caption position below
     morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for} % Extra keywords
 }
@@ -109,24 +112,6 @@
     %frame=single,                        % Frame around the code
     captionpos=b,                        % Caption position below
     morekeywords={val, var, def, module, for, when, otherwise} % Extra keywords for Chisel
-}
-
-% Includecode command
-\newcommand{\includecode}[2]{%
-    \ifthenelse{\boolean{chiselversion}}{%
-        \lstinputlisting[
-            style=chiselStyle,
-            caption={#2 Code (Chisel)},
-            label={lst:chisel_#2}
-        ]{#1/Chisel/src/#2.scala}
-    }{}%
-    \ifthenelse{\boolean{verilogversion}}{%
-        \lstinputlisting[
-            style=verilogStyle,
-            caption={#2 Code (Verilog)},
-            label={lst:verilog_#2}
-        ]{#1/Verilog/src/#2.sv}
-    }{}%
 }
 
 \usepackage{mdframed} % Replace 'framed' with 'mdframed'
@@ -147,6 +132,70 @@
 }{
     \endmdframed
 }
+
+% Define verilogcode environment
+\lstnewenvironment{verilogcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,
+      linecolor=black,
+      skipabove=10pt,
+      skipbelow=10pt,
+      leftmargin=0pt,
+      rightmargin=0pt,
+      innerleftmargin=5pt,
+      innerrightmargin=5pt,
+      innertopmargin=5pt,
+      innerbottommargin=5pt,
+    ]
+    \lstset{style=verilogStyle,#1}
+}{
+    \endmdframed
+}
+
+\DeclareRobustCommand{\includechiselcode}[2][]{%
+    \begin{mdframed}[
+        backgroundcolor=gray!10,
+        linecolor=black,
+        skipabove=10pt,
+        skipbelow=10pt,
+        leftmargin=0pt,
+        rightmargin=0pt,
+        innerleftmargin=5pt,
+        innerrightmargin=5pt,
+        innertopmargin=5pt,
+        innerbottommargin=5pt,
+    ]%
+    \lstinputlisting[style=chiselStyle,#1]{#2}%
+    \end{mdframed}%
+}
+
+\DeclareRobustCommand{\includeverilogcode}[2][]{%
+    \begin{mdframed}[
+        backgroundcolor=gray!10,
+        linecolor=black,
+        skipabove=10pt,
+        skipbelow=10pt,
+        leftmargin=0pt,
+        rightmargin=0pt,
+        innerleftmargin=5pt,
+        innerrightmargin=5pt,
+        innertopmargin=5pt,
+        innerbottommargin=5pt,
+    ]%
+    \lstinputlisting[style=verilogStyle,#1]{#2}%
+    \end{mdframed}%
+}
+
+
+\DeclareRobustCommand{\includecode}[2]{%
+    \ifthenelse{\boolean{chiselversion}}{%
+        \includechiselcode[caption={#2 Code (Chisel)},label={lst:chisel_\string#2}]{#1/Chisel/src/#2.scala}%
+    }{}%
+    \ifthenelse{\boolean{verilogversion}}{%
+        \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/Verilog/src/#2.sv}%
+    }{}%
+}
+
 
 
 
@@ -478,5 +527,4 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \printindex
 
 \end{document}
-
 
