@@ -8,7 +8,7 @@ This Appendix is a very brief introduction to Chisel primarily for designers to 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Overview of Chisel}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Chisel is a domain-specific language (DSL) for hardware design, leveraging Scala's object-oriented and functional programming features \cite{chisel-doc}. It compiles to synthesizable Verilog, integrating seamlessly with traditional hardware development flows.
+Chisel is a domain-specific language (DSL) for hardware design, leveraging Scala's object-oriented and functional programming features \cite{chisel-doc}. It compiles to synthesizable Verilog, integrating with traditional hardware development flows.
 
 \subsection{Key Features}
 
@@ -36,10 +36,15 @@ Understanding basic Scala syntax is essential for Chisel programming \cite{oders
 
 Include necessary Chisel libraries at the beginning of your file:
 
-\begin{lstlisting}[language=Scala]
+
+%\begin{lstlisting}[language=Scala]
+{
+\begin{chiselcode}
 import chisel3._
-import chisel3.util._
-\end{lstlisting}
+import chisel3.util._    
+\end{chiselcode}
+}
+%\end{lstlisting}
 
 \section{Data Types}
 

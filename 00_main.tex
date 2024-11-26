@@ -106,10 +106,11 @@
     keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
     commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
     stringstyle=\color{stringcolor},     % Strings in red
-    frame=single,                        % Frame around the code
+    %frame=single,                        % Frame around the code
     captionpos=b,                        % Caption position below
     morekeywords={val, var, def, module, for, when, otherwise} % Extra keywords for Chisel
 }
+
 % Includecode command
 \newcommand{\includecode}[2]{%
     \ifthenelse{\boolean{chiselversion}}{%
@@ -127,6 +128,27 @@
         ]{#1/Verilog/src/#2.sv}
     }{}%
 }
+
+\usepackage{mdframed} % Replace 'framed' with 'mdframed'
+\lstnewenvironment{chiselcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,
+      linecolor=black,
+      skipabove=10pt,
+      skipbelow=10pt,
+      leftmargin=0pt,
+      rightmargin=0pt,
+      innerleftmargin=5pt,
+      innerrightmargin=5pt,
+      innertopmargin=5pt,
+      innerbottommargin=5pt,
+    ]
+    \lstset{style=chiselStyle,#1}
+}{
+    \endmdframed
+}
+
+
 
 \setlength{\textheight}{22cm} \setlength{\textwidth}{16cm}
 \topmargin 323mm \advance \topmargin -\textheight \divide
