@@ -34,5 +34,7 @@
 \drawcenteredtext{44.0}{32.0}{Distribute}
 \drawdashline{50.0}{16.0}{58.0}{16.0}
 \drawdashline{50.0}{28.0}{58.0}{28.0}
+\drawdashbox{44.0}{17.0}{76.0}{18.0}{}
+\drawcenteredtext{50.0}{22.0}{Map}
 \end{picture}
 }

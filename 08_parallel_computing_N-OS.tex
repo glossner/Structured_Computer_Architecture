@@ -65,6 +65,8 @@ $\diamond$
 
 \subsection{Controlled Cellular Automaton}
 
+\subsubsection{Structure}
+
 The theoretical model of the cellular automaton is not practically usable to perform computation efficiently. Real problems cannot be solved efficiently with a cellular automaton. It is necessary to move from the theoretical model to an abstract model of a parallel computing system. We will do this in several steps. The first is to define a cellular automaton in which the space required for computation can be balanced with the time required for computation. The space-time trade-off is usually achieved by a suitable sequencing of the computation steps.
 
 The theoretical model of a cellular automaton assumes a vector whose components are the states of the $N$ cells. In each cycle, all components of the vector are involved in the computation. Two difficulties arise in such a theoretical model of computation:
@@ -73,7 +75,7 @@ The theoretical model of a cellular automaton assumes a vector whose components 
     \item the size of the physical structure involved becomes inefficiently large.
 \end{itemize}
 
-\placedrawing[h]{figures/09_07_controlledCA.lp}{Controlled Cellular Automaton (CCA).}{controledCA}
+\placedrawing[h]{figures/09_07_controlled_CA.lp}{Controlled Cellular Automaton (CCA).}{controledCA}
 
 The solution that allows increasing the flexibility of the computing process and reducing the size of the hardware structure involves:
 \begin{itemize}
@@ -87,8 +89,36 @@ Results the system represented in Figure \ref{controledCA} where:
 
  \placedrawing[h]{figures/09_11_distribution_net.lp}{Distribution network for a circuit with $p = 16$.}{distribute}
     
-    \item $c_0, c_1, \ldots, c_{p-1}$ form a cellular automaton with a finite number of cells, each equipped with a RALU type execution unit
+    \item $c_0, c_1, \ldots, c_{p-1}$ form the cellular automaton, Map, with a finite number of cells, each equipped with a RALU type execution unit.
 \end{itemize}
+
+\subsubsection{Mapping}
+
+Mapping an operation involves applying a function to each element in a collection (e.g., a list, array). This can be achieved using constructs like the {\tt map(...)} function in many programming languages.
+\begin{exemplu}
+If you have a vector of numbers [1, 2, 3, 4] and want to double each number, the code in Python is:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      vectorDouble.py
+Description:    The operation: multiply by 2
+                The mapping: [1, 2, 3, 4] → [2, 4, 6, 8]    
+*************************************************************************/
+numbers = [1, 2, 3, 4]
+doubled = map(lambda x: x * 2, numbers)
+print(list(doubled))  # Output: [2, 4, 6, 8]
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+$\diamond$
+\end{exemplu}
+
+\subsubsection{Architecture}
+
 The command issued by SQ is organized in the form of an instruction that contains logical-arithmetic operations, addressing modes of local memory resources in each cell, addresses and constants. The cells are serially connected to the SQ for data transfer between the SQ's memory and the local memory resource distributed in the cells. If in a cellular automaton its global state is represented by an unlimited  vector, in a controlled cellular automaton the internal state is represented by the matrix:
 \[
 {\bf M_{mp}} = \begin{bmatrix}
@@ -98,12 +128,57 @@ The command issued by SQ is organized in the form of an instruction that contain
     s_{m-1 \; 0} & s_{m-1 \; 1} & \dots  & s_{m-1 \; p-1}
     \end{bmatrix}
 \]
-whose columns represent the local memory (register file) in each cell. SQ issues operations applied to the line of the matrix {\bf M} seen as a vector, 
-$$V_i = [s_{i0} \; s_{i1} \; \ldots \; s_{i(p-1)}]$$ for $i = 0, \ldots, m-1$ distributed along the cells, so that an operation of the form:
+whose columns represent the local memory (register file) in each cell. SQ issues operations applied to the line of the matrix {\bf M} seen as a vector distributed along cells
+$$V_i = [s_{i0} \; s_{i1} \; \ldots \; s_{i(p-1)}]$$ for $i = 0, \ldots, m-1$ so that an operation of the form:
 $$V_i \Leftarrow V_j + V_k$$
 which involves $p$ additions is executed in constant time, i.e, is executed in {\bf {\em parallel}}.
 
 If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
+
+The are the following subsets of operations performed, under the command of SQ, in the Map section. 
+
+\paragraph{Spatial selection}  operations are used to modify the Boolean vector 
+$B=\langle
+\begin{matrix}
+b_0 & b_1 & \ldots & b_{p-1}
+\end{matrix}
+\rangle$ which indicate the state of each cell: $if (b_i == 1)$ the cell is active, $else$ it is inactive. A minimal set used to control the vector $B$ is:
+\begin{description}
+    \item[{\tt ACTIVATE}:] activate all cells  
+    \\ $b_i \Leftarrow 1$ for $i = 0,  \ldots  p-1$
+    \item[{\tt WHERE(cond)}:] keep active only the cells where the condition $cond$ is fulfilled
+    \\ $b_i \Leftarrow (b_i \; \& \; cond) \; ? \; b_i \; : \; 0$, for $i = 0, \ldots  p-1$
+    \item[{\tt ENDWHERE}:]  the effect on $B$ of the active {\tt WHERE} is restored
+\end{description}
+
+\paragraph{Arithmetic \& Logic vector operations}  are performed on active components of vectors belonging to the active cells where $b_i=1$. Generic forms:
+\begin{description}
+    \item[{\tt BOP(Vl,Vr)}:] defines a binary operation {\bf {\em mapped}} on vectors distributed along the cells of the Map section   \\ 
+    $b_i \; ? \; bOp(s_{l i}, s_{r i})$, for $i = 0, \ldots, p-1$;\\
+    {\bf Example} of use: \\ {\tt V2 <= ADD(V0,V5)} : in each active cell, $b_i=1$, the components of the vectors V0 and V5 are summed end stored as corresponding components in vector V2;
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V0 = [2 3 1 4 3 5 2 0]
+        V5 = [3 5 4 1 2 2 6 8]
+        V2 = [9 8 9 8 9 8 9 8]
+    applying V2 <= ADD(V0,V5) results:
+        V2 = [5 8 5 8 9 7 9 8]
+    \end{verbatim}
+    \item[{\tt UOP(Vl)}:] defines a unary operation  \\ 
+    $b_i \; ? \; uOp(s_{l i})$, for $i = 0, \ldots, p-1$; 
+    \item[{\tt MAPOP(Va,Vb,Vc,...)}:] sequence of BOPs and UOPs on vectors {\tt Va,Vb,Vc,...} in Map section.
+\end{description}
+
+\paragraph{Global shift/rotate operations} performed on all components of vectors distributed along the cells in Map seection. For example:
+\begin{description}
+    \item[{\tt SHIFTRIGHT(Vl,leftIn)}:]:   \\
+    $ (i=0) \; ? \; leftIn : s_{l(i-1)}$, for $i = 0, \ldots, p-1$\\
+    {\bf Example} of use: {\tt V0 <= SHIFTRIGHT(Vl,23)} \\
+    
+    \item[{\tt ROTATERIGHT(l)}:]:  \\
+    $ (i=0) \; ? \; s_{p-1} : s_{l(i-1)}$, for $i = 0, \ldots, p-1$
+\end{description}
 
 \section{First Global Loop in CA}
 
@@ -118,22 +193,30 @@ The first global loop that we close is the {\bf {\em reduction}} type, which red
 \begin{itemize}
     \item MAP: a cellular automaton with $p$ components whose cells are execution units equipped, mainly, with an arithmetic-logic unit and a register file with $m$ locations
     \item SQ: a controller that issues commands to the Map network and can receive scalars from the Reduce network that closes the first global loop
-    \item Distribute: a pipelined $log$-depth network used to distribute the instruction issued by the controller SQ
-
-\placedrawing[h]{figures/09_12_reduce_net.lp}{Reduce network for $p=16$, with the size in $O(p)$ and the depth in $O(log \; p)$.}{reduceNet}
-    
+    \item Distribute: a pipelined $log$-depth network used to distribute the instruction issued by the controller SQ    
     \item Reduce: a pipelined $log$-depth network (see Figure \ref{reduceNet}  which reduce the vector received from Map to a scalar sent to SQ with a $log$ latency; it performs usually few functions, such as:
-        $$sumReduce(V_i) = \sum_{j=0}^{p-1} s_{ij}$$
-        $$minReduce(V_i) = MIN(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$$
-       $$maxReduce(V_i) = MAX(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$$
-       $$orReduce(V_i) =s_{i0} \; | \; s_{i1} \; | \; \ldots \; | \;s_{i \; p-1}$$
+    \begin{description}
+        \item[{\tt ADDRED(s)}:] reduction add \\
+        $sqAcc \Leftarrow \sum_{j=0}^{p-1} s_{ij}$
+        \item[{\tt MINRED(s)}:] reduction minimum \\
+        $sqAcc \Leftarrow MIN(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$
+        \item[{\tt MAXRED(s)}:] reduction maximum\\
+        $sqAcc \Leftarrow MAX(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$
+        \item[{\tt ORRED(s)}:] reduction or\\
+        $sqAcc  \Leftarrow s_{i0} \; | \; s_{i1} \; | \; \ldots \; | \;s_{i \; p-1}$
+    \end{description}
+    where $sqAcc$ is the accumulator register in SQ.
 \end{itemize}
+
+\placedrawing[h]{figures/09_12_reduce_net.lp}{Reduce network for $p=16$, with the size in $O(p)$ and the depth in $O(log \; p)$ exemplified for the add function.}{reduceNet}
 
 The hardware structure of the Reduce network is a binary tree, so it contains $p/2 + p/4 + \ldots + 1$ modules. For $p$ a power of 2, the usual case, the network contains $p-1$ modules. So the size of the MapReduce system is in $O(p)$.
 
 \begin{exemplu}
-To calculate the scalar product of two vectors in such a system, the following is performed, under the SQ command:
-$$V_i \cdot V_j = sumReduce(V_i \times V_j)$$
+To calculate the scalar product of two vectors, $V_i$ and $V_J$, in such a system, the following is performed, under the SQ command:
+\begin{verbatim} 
+                     sqAcc <= ADDRED(MULT(i,j))  
+\end{verbatim}
 where the vector product, $V_i \times V_j$, is performed in Map in constant time and is transmitted to the Reduce network which performs the sum in time $log_2 \; p$ and sends it to SQ. Thus, $2p-1$ operations -- $p$ multiplications and $p-1$ additions -- are performed in $1 + log_2 \; p$ clock cycles. 
 
 $\diamond$
@@ -180,7 +263,7 @@ The main application of the MapScanReduce structure is in heterogeneous computin
 
 \subsection{Complexity vs. intensity in computation}
 
-let's define the two types of computations. In this respect, we use the {\em algorithmic complexity} \cite{Chaitin} which helps us make the necessary distinction between size and complexity.
+let's define the two types of computations. In this respect, we use the {\em algorithmic complexity} \cite{Chaitin70} which helps us make the necessary distinction between size and complexity.
 
 \begin{definition}
 The algorithmic complexity of an entity is given by the length of its shortest description.
@@ -219,7 +302,7 @@ Concerning the programming of multicellular processors, which have seen a rapid 
 Mary pass when it switched from making microprocessors run faster to
 putting more of them on a chip—doing so without any clear notion of how
 such devices would in general be programmed. The hope is that someone
-will be able to figure out how to do that, but at the moment, the ball is still in the air."} \cite{Patterson}
+will be able to figure out how to do that, but at the moment, the ball is still in the air."} \cite{Patterson10}
 \end{quote}
 }
 
