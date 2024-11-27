@@ -10,7 +10,7 @@ Each new loop increases, as we have seen in the previous chapters, the complexit
 
 In Figure \ref{nos} a system of order N, N-OS is represented. The size of this system is in $O(N)$, while the complexity can also be in $O(N)$ or in $O(1)$. In the first case the system is complex, and in the second case the system is simple. The first case corresponds to the situation in which the cells $c_0, \ldots, c_1, \ldots$ are different, requiring, consequently, independent descriptions. The second case corresponds to the situation in which the cells are identical, in which case the description of the system involves the description of the cell and the regular way of interconnection of $n-1$ cells. Only the second case can be of interest. The first case involves a complexity that, for a large $N$, is impossible to control. And we are only interested in the case in which $N$ is as large as possible. 
 
-\subsection{Theoretical Cellular Automaton}
+%\subsection{Theoretical Cellular Automaton}
 
 Digital systems theory introduces, for the case we are interested in, the concept of {\bf {\em cellular automaton}}.
 
@@ -63,9 +63,9 @@ The size of the definition is constant, which means it does not depend by the nu
 $\diamond$
 \end{exemplu}
 
-\subsection{Controlled Cellular Automaton}
+\section{Controlled Cellular Automaton}
 
-\subsubsection{Structure}
+\subsection{Structure}
 
 The theoretical model of the cellular automaton is not practically usable to perform computation efficiently. Real problems cannot be solved efficiently with a cellular automaton. It is necessary to move from the theoretical model to an abstract model of a parallel computing system. We will do this in several steps. The first is to define a cellular automaton in which the space required for computation can be balanced with the time required for computation. The space-time trade-off is usually achieved by a suitable sequencing of the computation steps.
 
@@ -92,7 +92,7 @@ Results the system represented in Figure \ref{controledCA} where:
     \item $c_0, c_1, \ldots, c_{p-1}$ form the cellular automaton, Map, with a finite number of cells, each equipped with a RALU type execution unit.
 \end{itemize}
 
-\subsubsection{Mapping}
+\subsection{Mapping}
 
 Mapping an operation involves applying a function to each element in a collection (e.g., a list, array). This can be achieved using constructs like the {\tt map(...)} function in many programming languages.
 \begin{exemplu}
@@ -117,7 +117,7 @@ print(list(doubled))  # Output: [2, 4, 6, 8]
 $\diamond$
 \end{exemplu}
 
-\subsubsection{Architecture}
+\subsection{Architecture}
 
 The command issued by SQ is organized in the form of an instruction that contains logical-arithmetic operations, addressing modes of local memory resources in each cell, addresses and constants. The cells are serially connected to the SQ for data transfer between the SQ's memory and the local memory resource distributed in the cells. If in a cellular automaton its global state is represented by an unlimited  vector, in a controlled cellular automaton the internal state is represented by the matrix:
 \[
@@ -133,11 +133,13 @@ $$V_i = [s_{i0} \; s_{i1} \; \ldots \; s_{i(p-1)}]$$ for $i = 0, \ldots, m-1$ so
 $$V_i \Leftarrow V_j + V_k$$
 which involves $p$ additions is executed in constant time, i.e, is executed in {\bf {\em parallel}}.
 
-If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
+If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated  to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
 
 The are the following subsets of operations performed, under the command of SQ, in the Map section. 
 
-\paragraph{Spatial selection}  operations are used to modify the Boolean vector 
+\subsubsection{Spatial selection}  
+
+Instead of the conditional jump operations performed in a single-core processing structure, in the many-core structure represented by the Map array the conditional operations are performed by a selection of active cells according to a condition that is tested in each cell. The conditional selection allows for predicated execution by modifying the contents of the Boolean vector 
 $B=\langle
 \begin{matrix}
 b_0 & b_1 & \ldots & b_{p-1}
@@ -151,7 +153,9 @@ b_0 & b_1 & \ldots & b_{p-1}
     \item[{\tt ENDWHERE}:]  the effect on $B$ of the active {\tt WHERE} is restored
 \end{description}
 
-\paragraph{Arithmetic \& Logic vector operations}  are performed on active components of vectors belonging to the active cells where $b_i=1$. Generic forms:
+\subsubsection{Arithmetic \& Logic vector operations}  
+
+Arithmetic \& Logic vector operations are performed on active components of vectors belonging to the active cells where $b_i=1$. Generic forms:
 \begin{description}
     \item[{\tt BOP(Vl,Vr)}:] defines a binary operation {\bf {\em mapped}} on vectors distributed along the cells of the Map section   \\ 
     $b_i \; ? \; bOp(s_{l i}, s_{r i})$, for $i = 0, \ldots, p-1$;\\
@@ -166,21 +170,59 @@ b_0 & b_1 & \ldots & b_{p-1}
         V2 = [5 8 5 8 9 7 9 8]
     \end{verbatim}
     \item[{\tt UOP(Vl)}:] defines a unary operation  \\ 
-    $b_i \; ? \; uOp(s_{l i})$, for $i = 0, \ldots, p-1$; 
-    \item[{\tt MAPOP(Va,Vb,Vc,...)}:] sequence of BOPs and UOPs on vectors {\tt Va,Vb,Vc,...} in Map section.
+    $b_i \; ? \; uOp(s_{l i})$, for $i = 0, \ldots, p-1$; \\
+    {\bf Example} of use:  {\tt V0 <= INC(V1)} means increment in active cells the component of {\tt V1} and send the result in V0  \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+        V0 = [8 8 8 8 8 8 8 8]
+    applying {\tt V0 <= INC(V1)} results:
+        V0 = [3 4 2 8 8 6 8 8]
+    \end{verbatim}
+    \item[{\tt MAPOP(Va,Vb,Vc,...)}:] sequence of BOPs and UOPs on vectors {\tt Va,Vb,Vc,...} in Map section. \\
+    {\bf Example} of use:  {\tt V3 <= MAPOP(V0,V2,V5) = MULT(ADD(V2,V5),V0)} 
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V0 = [2 3 1 4 3 5 2 0]
+        V5 = [3 5 4 1 2 2 6 8]
+        V2 = [9 8 9 8 9 8 9 8]
+        V3 = [0 0 0 0 0 0 0 0]
+    applying V3 <= MAPOP(V0,V2,V5) results:
+        V3 = [24 39 13 0 0 50 0 0]
+    \end{verbatim}
 \end{description}
 
-\paragraph{Global shift/rotate operations} performed on all components of vectors distributed along the cells in Map seection. For example:
+\subsubsection{Global shift/rotate operations} 
+
+Global shift/rotate operations are performed on all components of vectors distributed along the cells in Map section ignoring the content of the Boolean vector B. For example:
 \begin{description}
     \item[{\tt SHIFTRIGHT(Vl,leftIn)}:]:   \\
     $ (i=0) \; ? \; leftIn : s_{l(i-1)}$, for $i = 0, \ldots, p-1$\\
     {\bf Example} of use: {\tt V0 <= SHIFTRIGHT(Vl,23)} \\
-    
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        V0 = [23 2 3 1 4 3 5 2]
+    \end{verbatim}
     \item[{\tt ROTATERIGHT(l)}:]:  \\
-    $ (i=0) \; ? \; s_{p-1} : s_{l(i-1)}$, for $i = 0, \ldots, p-1$
+    $ (i=0) \; ? \; s_{p-1} : s_{l(i-1)}$, for $i = 0, \ldots, p-1$\\
+    {\bf Example} of use: {\tt V0 <= ROTATERIGHT(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        V0 = [0 2 3 1 4 3 5 2]
+    \end{verbatim}
 \end{description}
 
 \section{First Global Loop in CA}
+
+\subsection{Structure}
 
 Just as we did in the case of the structural growth process, by successively closing reaction loops, until reaching the level required by mono-core computing, we will also do in the case of controlled cellular automation by successively closing global loops.
 
@@ -194,28 +236,63 @@ The first global loop that we close is the {\bf {\em reduction}} type, which red
     \item MAP: a cellular automaton with $p$ components whose cells are execution units equipped, mainly, with an arithmetic-logic unit and a register file with $m$ locations
     \item SQ: a controller that issues commands to the Map network and can receive scalars from the Reduce network that closes the first global loop
     \item Distribute: a pipelined $log$-depth network used to distribute the instruction issued by the controller SQ    
-    \item Reduce: a pipelined $log$-depth network (see Figure \ref{reduceNet}  which reduce the vector received from Map to a scalar sent to SQ with a $log$ latency; it performs usually few functions, such as:
-    \begin{description}
-        \item[{\tt ADDRED(s)}:] reduction add \\
-        $sqAcc \Leftarrow \sum_{j=0}^{p-1} s_{ij}$
-        \item[{\tt MINRED(s)}:] reduction minimum \\
-        $sqAcc \Leftarrow MIN(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$
-        \item[{\tt MAXRED(s)}:] reduction maximum\\
-        $sqAcc \Leftarrow MAX(s_{i0}, s_{i1}, \ldots, s_{i \; p-1})$
-        \item[{\tt ORRED(s)}:] reduction or\\
-        $sqAcc  \Leftarrow s_{i0} \; | \; s_{i1} \; | \; \ldots \; | \;s_{i \; p-1}$
-    \end{description}
-    where $sqAcc$ is the accumulator register in SQ.
+    \item Reduce: a pipelined $log$-depth network (see Figure \ref{reduceNet}  which reduce the vector received from Map to a scalar sent to the register accumulator in SQ, {\tt acc}, with a $log$ latency
 \end{itemize}
 
 \placedrawing[h]{figures/09_12_reduce_net.lp}{Reduce network for $p=16$, with the size in $O(p)$ and the depth in $O(log \; p)$ exemplified for the add function.}{reduceNet}
 
 The hardware structure of the Reduce network is a binary tree, so it contains $p/2 + p/4 + \ldots + 1$ modules. For $p$ a power of 2, the usual case, the network contains $p-1$ modules. So the size of the MapReduce system is in $O(p)$.
 
+\subsection{Architectural additions}
+
+The system architecture is completed by adding the first global loop, with the following specific functions:
+    \begin{description}
+        \item[{\tt ADDRED(Vi)}:] reduction add \\
+        $\sum_{j=0}^{p-1} (b_j ? s_{ij} : 0)$ \\
+         {\bf Example} of use: {\tt acc <= ADDRED(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        acc = 11
+    \end{verbatim}
+        \item[{\tt MINRED(s)}:] reduction minimum \\
+        $MIN_{j=0}^{p-1}  (b_j ? s_{ij} : \infty)$ \\
+        {\bf Example} of use: {\tt acc <= MINRED(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        acc = 1
+         \end{verbatim}
+        \item[{\tt MAXRED(s)}:] reduction maximum\\
+        $MAX_{j=0}^{p-1} (b_j ? s_{ij} : 0)$ \\
+         {\bf Example} of use: {\tt acc <= MAXRED(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        acc = 5
+         \end{verbatim}
+        \item[{\tt ORRED(s)}:] reduction or\\
+        $OR_{j=0}^{p-1} (b_j ? s_{ij} : 0)$ \\
+         {\bf Example} of use: {\tt acc <= ORRED(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 9 3 5 2 0]
+    results:
+        acc = 7
+         \end{verbatim}
+\end{description}
+
 \begin{exemplu}
-To calculate the scalar product of two vectors, $V_i$ and $V_J$, in such a system, the following is performed, under the SQ command:
+To calculate the scalar product of two vectors, {\tt Vi} and {\tt Vj}, in such a system, the following is performed, under the SQ command:
 \begin{verbatim} 
-                     sqAcc <= ADDRED(MULT(i,j))  
+                     acc <= ADDRED(MULT(Vi,Vj))  
 \end{verbatim}
 where the vector product, $V_i \times V_j$, is performed in Map in constant time and is transmitted to the Reduce network which performs the sum in time $log_2 \; p$ and sends it to SQ. Thus, $2p-1$ operations -- $p$ multiplications and $p-1$ additions -- are performed in $1 + log_2 \; p$ clock cycles. 
 
@@ -225,6 +302,8 @@ $\diamond$
 In the previous example, $2p-1$ computational results -- $p$ multipliers from Map and $p-1$ adders from Reduce -- are used in $1+log_2 \; p$ cycles to perform $2p-1$ operations. This results, for $p=1024$, in an average of 186 operations/cycle. So, we must be careful! We need algorithms that allow for the most intensive use of hardware resources.
 
 \section{Second Global Loop in CA}
+
+\subsection{Structure}
 
 The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{red}).
 
@@ -255,7 +334,30 @@ $\diamond$
 
 The size of the pipeline implemented Scan network is in $O(p \times log \; p$, and the depth is in $O(log \; p$. Therefore, the size of the MapScanReduce structure is in $O(p \times log \; p$.
 
+\subsection{Architectural additions}
 
+The system architecture is completed by adding the second global loop, with  specific functions exemplified as follows:
+\begin{description}
+    \item[{\tt ADDPX(Vi)}:] add prefix returns a vector whose components are:\\
+        $addPx_j \Leftarrow \sum_{j=0}^{j} (b_j ? s_{ij} : 0)$ for $j = 0, \ldots, p-1$ \\
+         {\bf Example} of use: {\tt V2 <= ADDPX(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [1 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        V2 = [2 5 6 6 6 11 11 11]
+    \end{verbatim}
+    \item[{\tt SPLIT(Vi)}:] return a vector with the selected components left aligned and the unselected component right aligned  \\
+     {\bf Example} of use: {\tt V2 <= SPLIT(1)} \\
+    \begin{verbatim}
+    For:
+        B  = [0 1 1 0 0 1 0 0]
+        V1 = [2 3 1 4 3 5 2 0]
+    results:
+        V2 = [3 1 5 2 4 3 2 0]
+    \end{verbatim}
+\end{description}
 
 \section{Heterogeneous Computing}
 
@@ -322,9 +424,65 @@ As a result, our heterogeneous approach imposes, for efficiency, a three level p
     \item HOST-level programming running  in a high-level programming language based on "highly optimized libraries tailored to specific machines".
 \end{enumerate}
 
+Let us consider the simplest, most intense computation of multiplying matrices.
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:     matrix_multiplication.py
+Description:       
+*************************************************************************/
+def matrix_multiplication(A, B):
+    # Get the number of rows and columns for matrices A and B
+    rows_A = len(A)
+    cols_A = len(A[0])
+    rows_B = len(B)
+    cols_B = len(B[0])
 
+    # Check if multiplication is possible
+    if cols_A != rows_B:
+        raise ValueError("Number of columns in A must equal of rows in B")
 
+    # Initialize the result matrix with zeros
+    result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]
 
+    # Perform the matrix multiplication
+    for i in range(rows_A):
+        for j in range(cols_B):
+            for k in range(cols_A):
+                result[i][j] += A[i][k] * B[k][j]
 
+    return result
+\end{lstlisting}
+\end{shaded*}
+}
 
+The execution time of this program on a mono-core processor is proportional with the number of clock cycles:
+$$range(cols\_B) \times range(cols\_B) \times range(cols\_A)$$
+which means, for example: if $range(cols\_B) = range(cols\_B) = range(cols\_A) = 1024$, the execution time is proportional with $1024^3 \simeq 10^9$.
 
+However, in high-level languages like Python there are function libraries for frequently used functions like matrix multiplication. In this case the program takes the simplified form below:
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:     matrix_multiplication.py
+Description:        
+*************************************************************************/
+# ...
+import numpy as np
+
+A = np.array(...)
+B = np.array(...)
+
+# Perform matrix multiplication
+result = np.dot(A, B)
+
+print("Resultant Matrix:")
+print(result)
+\end{lstlisting}
+\end{shaded*}
+}
+
+The line {\tt result = np.dot(A,B)} access, when the program runs on a mono-core processor, a highly optimized program (usually written in assembly language) for the matrix multiplication operation. In a heterogeneous system, instead of calling a program from library, is accessed a function performed hardware accelerated by the associated accelerator.

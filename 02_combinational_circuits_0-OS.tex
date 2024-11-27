@@ -10,21 +10,25 @@ Boolean algebra was introduced by George Boole in his seminal work, \emph{An Inv
 Shannon's master's thesis, \emph{A Symbolic Analysis of Relay and Switching Circuits}, linked Boolean algebra with electrical switches, showing how logical operations could be implemented using relay circuits. This work laid the foundation for digital circuit design and the development of modern computers \cite{shannon38}.
 
 %***********************
-\section{Basic Concepts}
+\subsection{Basic Concepts}
 %************************
 Boolean algebra operates on a binary set \( B = \{0, 1\} \), where:
-\begin{itemize}[noitemsep, topsep=0pt]
+\begin{itemize}
     \item \( 0 \) represents \textbf{false}.
     \item \( 1 \) represents \textbf{true}.
 \end{itemize}
 
-It is governed by a set of fundamental operations:
-\begin{itemize}[noitemsep, topsep=0pt]
-    \item AND (\( \land \)): A binary operation where \( A \land B = 1 \) if and only if both \( A = 1 \) and \( B = 1 \).
-    \item OR (\( \lor \)): A binary operation where \( A \lor B = 1 \) if at least one of \( A \) or \( B \) equals \( 1 \).
-    \item NOT (\( \neg \): A unary operation where \( \neg A = 1 \) if \( A = 0 \), and \( \neg A = 0 \) if \( A = 1 \).
-\end{itemize}
+%*******************
+\subsection{Operations}
+%*******************
+\paragraph{AND (\( \land \)).} A binary operation where \( A \land B = 1 \) if and only if both \( A = 1 \) and \( B = 1 \).
+\paragraph{ OR (\( \lor \)).}  A binary operation where \( A \lor B = 1 \) if at least one of \( A \) or \( B \) equals \( 1 \).
 
+\paragraph{NOT (\( \neg \)).} A unary operation where \( \neg A = 1 \) if \( A = 0 \), and \( \neg A = 0 \) if \( A = 1 \).
+
+%*****************
+\subsection{Laws}
+%*****************
 These operations obey the following basic laws:
 \paragraph{Commutative Law:} 
 \[
@@ -50,6 +54,42 @@ A \lor 0 = A, \quad A \land 1 = A
 \[
 A \lor \neg A = 1, \quad A \land \neg A = 0
 \]
+
+%***************************
+\subsection{DeMorgan's Laws}
+%***************************
+DeMorgan's Laws are fundamental principles in Boolean algebra, describing the relationships between logical conjunction (AND), disjunction (OR), and negation (NOT). They provide a way to express the complement of a compound expression in terms of the complements of its components. These laws are especially useful in digital logic design and simplification, as they allow for the transformation of logic expressions to equivalent forms using fewer gates or alternate gate configurations \citep{rosen2018, tanenbaum2013}.
+
+Mathematically, DeMorgan's Laws state:
+\[
+\neg (A \lor B) = (\neg A) \land (\neg B), \quad \neg (A \land B) = (\neg A) \lor (\neg B)
+\]
+
+These laws can be proven using truth tables or algebraic manipulation and hold for any Boolean variables \( A \) and \( B \). In words:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item The complement of a disjunction (\( A \lor B \)) is equivalent to the conjunction of the complements (\( \neg A \land \neg B \)).
+    \item The complement of a conjunction (\( A \land B \)) is equivalent to the disjunction of the complements (\( \neg A \lor \neg B \)).
+\end{itemize}
+
+\subsubsection{Applications of DeMorgan's Laws}
+
+DeMorgan’s Laws are widely applied in the simplification and design of digital circuits:
+\begin{enumerate}
+    \item Logic Gate Simplification: They are used to convert between AND-OR logic and NAND-NOR logic, enabling the use of universal gates (NAND and NOR) in circuit design.
+    \item Expression Simplification: These laws allow Boolean expressions to be rewritten for efficiency, reducing the number of gates required in hardware implementations.
+    \item Complement Operations: DeMorgan’s Laws are essential when deriving the complement of a logic function, particularly in implementing circuits such as multiplexers and decoders.
+\end{enumerate}
+
+For example, consider the simplification of the following expression:
+\[
+\neg (A \lor B \lor C)
+\]
+Using DeMorgan's Laws:
+\[
+\neg (A \lor B \lor C) = \neg A \land \neg B \land \neg C
+\]
+
+This transformation enables the implementation of the logic using AND gates and inverters rather than a more complex combination of gates \citep{rosen2018, karnaugh1953}.
 
 
 %******************************************
@@ -84,17 +124,8 @@ A & B & A \oplus B \\
 \end{array}
 \]
 
-\section{Conclusion}
 
-Boolean algebra is a cornerstone of modern computing and digital logic design. Its theoretical origins in logic and philosophy, combined with its practical applications in circuit design, make it an indispensable tool for understanding and developing computational systems. The work of pioneers like George Boole and Claude Shannon has ensured that Boolean algebra remains central to technological progress.
 
-\begin{thebibliography}{99}
-\bibitem{boole1854}
-Boole, George. \emph{An Investigation of the Laws of Thought}, Macmillan, London, 1854.
-
-\bibitem{shannon1938}
-Shannon, Claude E. \emph{A Symbolic Analysis of Relay and Switching Circuits}, Transactions of the American Institute of Electrical Engineers, vol. 57, 1938, pp. 713--723.
-\end{thebibliography}
 
 
 
