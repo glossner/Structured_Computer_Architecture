@@ -485,4 +485,81 @@ print(result)
 \end{shaded*}
 }
 
+
 The line {\tt result = np.dot(A,B)} access, when the program runs on a mono-core processor, a highly optimized program (usually written in assembly language) for the matrix multiplication operation. In a heterogeneous system, instead of calling a program from library, is accessed a function performed hardware accelerated by the associated accelerator.
+
+\begin{exemplu}
+Let see how looks the algorithm for multiplying two $n \times n$ matrices, {\tt A} and {\tt B}. The transposed matrix of B is {\tt T}. Each matrix is represented by vectors in a Map with $p\geq n$.
+
+{\small
+{\em 
+\begin{shaded*}
+\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:     matrix_multiplication
+Description:        
+*************************************************************************/
+    A = [V[0] V[1] ... V[n-1]]
+    T = [V[n] V[n+1] ... V[2n-1]]
+    
+    i, j    integers
+    
+    for(j=0; j<n; j=j+1)
+        for(i=0; i<n; n=n+1)
+            SHIFTRIGHT(V[2N+J],ADDRED(MULT(V[n+j],V[i]))
+    
+\end{lstlisting}
+\end{shaded*}
+}}
+Because the previous algorithm works with vectors, instead of the three embedded lops in the Python program {\tt matrix\_multiplication.py}, in the {\tt matrix\_multiplication} algorithm {\bf {\em there are only two embedded loops}}. Besides this good news, there is also a bad news: the operation repeated $n^2$ times is executed in time belonging to $O(log \; n)$ cycles. Because the line {\tt result[i][j] += A[i][k] * B[k][j]} in the Python program is executed in constant time, the acceleration provided by the MapScanReduce accelerator is only of $n/log_2 n$. (A well-designed algorithm can avoid this bad news, but this topic goes beyond the level at which we approach parallelism problems.)
+
+$\diamond$
+\end{exemplu}
+
+\section{Parallel Computing Patterns}
+
+Multiplying matrices is a promising example for the capacity to perform in parallel with MapScanReduce accelerator intense computation. It would be interesting to investigate the acceleration capacity of the MapScanReduce framework for a wider range of applications. A first idea could be formed by looking at the computational patterns that have been highlighted in applications designed and run in the last decades. A good start can be the study carried out in \cite{McCool12} from which we use Figure \ref{parallelPatt}.
+
+\placedrawing[h]{figures/09_14_parallelPatterns.lp}{Parallel patterns \cite{McCool12}.}{parallelPatt}
+
+\subsection{Patterns with Direct Correspondence}
+
+\subsubsection{Map Pattern}
+
+\subsubsection{Reduce Pattern}
+
+\subsubsection{Scan Pattern}
+
+\subsection{Patterns Executable on Map-Only}
+
+\subsubsection{Stencil  Pattern}
+
+\subsubsection{Geometric Decomposition  Pattern}
+
+\subsubsection{Partition  Pattern}
+
+\subsubsection{Speculative Execution Pattern}
+
+\subsubsection{Recurrence Pattern}
+
+\subsubsection{Pipeline  Pattern} 
+
+\subsection{Pattern Executable on MapReduce Only }
+
+\subsubsection{Fork-Join  Pattern}
+
+\subsection{Patterns Executable on MapScanReduce}
+
+\subsubsection{Category Reduction Pattern}
+
+\subsubsection{Pack Pattern}
+
+\subsubsection{Gather  Pattern}
+
+\subsubsection{Scatter  Pattern}
+
+\subsubsection{Split  Pattern}
+
+\subsubsection{Expand  Pattern}
+
+\subsection{Super-scalar Sequence Pattern}

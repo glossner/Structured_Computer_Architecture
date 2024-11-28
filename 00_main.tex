@@ -38,22 +38,62 @@
 
 \usepackage{fancyhdr}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table of Contents Formatting
+% - Code listings is fragile and complex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{tocloft}  % Code listings and ToC Control
+\usepackage{etoolbox}
 % The first argument (2em) is the indentation of \subsubsection entries in the ToC.
 %The second argument (3em) controls the width allotted for the section numbering.
 \cftsetindents{subsubsec}{9em}{3em} 
 \cftsetindents{paragraph}{12em}{3em} 
 
+% Table of Contents spacing for Table tag
+\setlength{\cftbeforeloftitleskip}{0pt}     % Default spacing before the title
+\setlength{\cftafterloftitleskip}{0pt}      % Default spacing after the title
+\setlength{\cftbeforeloftitleskip}{1em}   
 
+\renewcommand{\lstlistlistingname}{Code Listings}
+% Register List of Listings with tocloft and customize spacing
+\makeatletter
+% Define lengths for List of Listings title
+\newlength{\cftbeforelstlistlistingtitleskip}
+\newlength{\cftafterlstlistlistingtitleskip}
+\setlength{\cftbeforelstlistlistingtitleskip}{1em} % Space before title
+\setlength{\cftafterlstlistlistingtitleskip}{0.5em} % Space after title
 
+% Define lengths for List of Listings chapter entries
+\newlength{\cftbeforelstlistingchapterskip}
+\newlength{\cftafterlstlistingchapterskip}
+\setlength{\cftbeforelstlistingchapterskip}{1em} % Space before each chapter
+\setlength{\cftafterlstlistingchapterskip}{0.5em} % Space after each chapter
+
+% Patch \lstlistoflistings for title spacing
+\patchcmd{\lstlistoflistings}
+  {\@starttoc{lol}}
+  {\vspace{\cftbeforelstlistlistingtitleskip}\@starttoc{lol}\vspace{\cftafterlstlistlistingtitleskip}}
+  {}{}
+
+% Add spacing for chapters in List of Listings
+% This requires custom chapter formatting within the List of Listings
+\renewcommand{\l@chapter}[2]{%
+  \ifnum \c@tocdepth >-2\relax
+    \addvspace{\cftbeforelstlistingchapterskip}% Space before chapter
+    \@dottedtocline{0}{1.5em}{2.3em}{\bfseries #1}{#2}%
+    \addvspace{\cftafterlstlistingchapterskip}% Space after chapter
+  \fi}
+\makeatother
 
 
 \usepackage{tocbibind}
 \usepackage{shorttoc}
 \usepackage{minitoc}
-%\dominitoc % Initialize mini tables of contents
+\dominitoc % Initialize mini tables of contents
 
-                           
+%%%%%%%%%%%%%%%%%%%%%%
+% Citations
+%%%%%%%%%%%%%%%%%%%%%
 % Swap the behavior of \cite and \citep
 % \cite{} -> (Author, 2024)
  % \citep{}  -> Author (2024)
@@ -63,16 +103,14 @@
 \let\citep\citeold
 
 
-\newlistof{listoflistings}{lol}{List of Listings}
-\newcommand{\listlistingname}{Listing} % Title for individual listings
-\newcommand{\lstoflisting}[1]{\addcontentsline{lol}{section}{\protect\numberline{}#1}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Code Macros
+% - These macros insert Verilog and/or Chisel code into the document
+% - Set verilogversion and/or chiselversion to true to include them
+% - Captions are automatically created and an entry on Code Listings is generated
+% - Formatting of the code is also configured
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-
-%%%%%%%%%%%%%%%%%%%
-% Code Listings
-%%%%%%%%%%%%%%%%%%%
 % Define toggle variables for Chisel and Both Versions
 \usepackage{ifthen}
 \newboolean{verilogversion}
@@ -87,7 +125,6 @@
 \definecolor{commentcolor}{RGB}{0,128,0}
 \definecolor{stringcolor}{RGB}{163,21,21}
 
-\usepackage{etoolbox}
 \robustify{\lstinputlisting}
 
 % Define Verilog style
@@ -195,9 +232,9 @@
         \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/Verilog/src/#2.sv}%
     }{}%
 }
-
-
-
+%%%%%%%%%%%%%%%%%%
+% END Code Macros
+%%%%%%%%%%%%%%%%%%
 
 \setlength{\textheight}{22cm} \setlength{\textwidth}{16cm}
 \topmargin 323mm \advance \topmargin -\textheight \divide
@@ -253,12 +290,9 @@
     %after=\vspace{1em}\noindent
 }
 
-\dominitoc % initialize minitoc
-
+%%%%%%%%%%%
 \makeindex
-
-%\includeonly{01_preliminaries, 08_parallel_computing_N-OS}
-% 02_combinational_circuits_0-OS,             03_memory_circuits_1-OS, 04_automata_2-OS}
+%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 % DOCUMENT
@@ -391,7 +425,7 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \listoftables
 %\addcontentsline{toc}{chapter}{List of Tables}
 
-%\listoflistings
+\lstlistoflistings
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MAIN DOCUMENT
@@ -415,21 +449,19 @@ Most of the descriptions of the structures and the simulation of their behavior 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{NUMBER SYSTEMS AND REPRESENTATIONS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{A Brief History of Numbers and Representations}
-\minitoc
-\include{01_01_1_number_systems}
 
 %*************************
-% Chapter 2 Arithmetic
+% Chapter Arithmetic
 %*************************
 \chapter{Number Systems}\label{chapt:number_systems}
 \minitoc
+\include{01_01_1_number_systems}
 \include{01_01_2_decimal_arithmetic}
 \include{01_01_3_positional_notation}
 \include{01_01_4_binary_arithmetic}
 
 %*************************
-% Chapter 3 Formal Notation
+% Chapter Formal Notation
 %*************************
 \chapter{Numerical Sets}
 \minitoc
@@ -480,6 +512,9 @@ Most of the descriptions of the structures and the simulation of their behavior 
 %\include{09_open_problems}
 
 
+%%%%%%%%%%%%%
+% APPENDICES
+%%%%%%%%%%%%%
 \clearpage
 \addcontentsline{toc}{part}{APPENDIXES}
 \part*{APPENDIXES}
@@ -496,32 +531,26 @@ Most of the descriptions of the structures and the simulation of their behavior 
 
 
 \include{A01_implementations}
-\begin{comment}
 \include{A02_simulations}
 \include{A03_toyRISCimp}
 \include{A04_pipelinedToyRISCimp}
 \include{A05_pipeForwardToyRISCimp}
 \include{A06_verilogToyRISC}
 \include{A07_verilogFIFO}
-\end{comment}
 
 
-\clearpage
-%\addcontentsline{toc}{chapter}{Bibliography}
 
 
 %**********************
 % Bibliography
 %**********************
+\clearpage
 \bibliographystyle{apalike}
 %\bibliographystyle{plainnat}
 \bibliography{bibliography} 
-%\include{bibliography} % Bibliography
 
 
 \clearpage
-%\addcontentsline{toc}{chapter}{Index}
-
 \printindex
 
 \end{document}
