@@ -1,5 +1,8 @@
-\section{Boolean Algebra}
+In this chapter, we make a compromise and provide an introduction to the field of digital circuits that introduces only the necessary concepts to understand the principles on which the organization and architecture of computers are based. We generally present functional or behavioral designs in preference to highly optimized structural components.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Boolean Algebra}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 Boolean algebra is a branch of mathematics that deals with binary variables and logical operations. It serves as the foundation for modern digital logic and computer science, enabling the design and analysis of digital circuits and computational algorithms. Developed in the mid-19th century, Boolean algebra forms the basis of everything from simple electronic gates to complex processors.
 
 %*********************************
@@ -58,7 +61,7 @@ A \lor \neg A = 1, \quad A \land \neg A = 0
 %***************************
 \subsection{DeMorgan's Laws}
 %***************************
-DeMorgan's Laws are fundamental principles in Boolean algebra, describing the relationships between logical conjunction (AND), disjunction (OR), and negation (NOT). They provide a way to express the complement of a compound expression in terms of the complements of its components. These laws are especially useful in digital logic design and simplification, as they allow for the transformation of logic expressions to equivalent forms using fewer gates or alternate gate configurations \citep{rosen2018, tanenbaum2013}.
+DeMorgan's Laws are fundamental principles in Boolean algebra, describing the relationships between logical conjunction (AND), disjunction (OR), and negation (NOT). They provide a way to express the complement of a compound expression in terms of the complements of its components. These laws are especially useful in digital logic design and simplification, as they allow for the transformation of logic expressions to equivalent forms using fewer gates or alternate gate configurations \cite{rosen2018, tanenbaum2013}.
 
 Mathematically, DeMorgan's Laws state:
 \[
@@ -66,49 +69,37 @@ Mathematically, DeMorgan's Laws state:
 \]
 
 These laws can be proven using truth tables or algebraic manipulation and hold for any Boolean variables \( A \) and \( B \). In words:
-\begin{itemize}[noitemsep, topsep=0pt]
+\begin{itemize}
     \item The complement of a disjunction (\( A \lor B \)) is equivalent to the conjunction of the complements (\( \neg A \land \neg B \)).
     \item The complement of a conjunction (\( A \land B \)) is equivalent to the disjunction of the complements (\( \neg A \lor \neg B \)).
 \end{itemize}
 
+%**********************************************
 \subsubsection{Applications of DeMorgan's Laws}
-
-DeMorgan’s Laws are widely applied in the simplification and design of digital circuits:
-\begin{enumerate}
-    \item Logic Gate Simplification: They are used to convert between AND-OR logic and NAND-NOR logic, enabling the use of universal gates (NAND and NOR) in circuit design.
-    \item Expression Simplification: These laws allow Boolean expressions to be rewritten for efficiency, reducing the number of gates required in hardware implementations.
-    \item Complement Operations: DeMorgan’s Laws are essential when deriving the complement of a logic function, particularly in implementing circuits such as multiplexers and decoders.
-\end{enumerate}
-
-For example, consider the simplification of the following expression:
-\[
-\neg (A \lor B \lor C)
-\]
-Using DeMorgan's Laws:
+%**********************************************
+DeMorgan’s Laws are widely applied in the simplification and design of digital circuits. For example, consider the simplification of the following expression that enables the implementation of the logic using AND gates and inverters rather than a more complex combination of gates \cite{rosen2018, karnaugh1953}.
 \[
 \neg (A \lor B \lor C) = \neg A \land \neg B \land \neg C
 \]
-
-This transformation enables the implementation of the logic using AND gates and inverters rather than a more complex combination of gates \citep{rosen2018, karnaugh1953}.
-
 
 %******************************************
 \subsection{Applications in Digital Logic}
 %*****************************************
 Boolean algebra provides the mathematical framework for designing and analyzing digital circuits. Logical gates such as AND, OR, and NOT are implemented in hardware to perform the basic operations of Boolean algebra. More complex circuits, such as multiplexers, decoders, and arithmetic logic units (ALUs), are built using combinations of these gates.
+
 %*************************************************
 \subsubsection{Simplification of Logic Expressions}
 %*************************************************
 One of the uses of Boolean algebra in digital logic is the simplification of logic expressions to minimize the number of gates required in a circuit. Simplification methods include:
 
 \begin{itemize}
-    \item \textbf{Boolean identities}: Using the laws of Boolean algebra to rewrite expressions \cite{rosen2018}.
+    \item \textbf{Boolean identities}: Using the laws of Boolean algebra to rewrite expressions  to convert between AND-OR logic and NAND-NOR logic \cite{rosen2018}.
     \item \textbf{Karnaugh maps}: A graphical method for simplifying logic functions \cite{karnaugh1953}.
     \item \textbf{Quine-McCluskey algorithm}: A tabular approach to minimize logic expressions \cite{quine1952}.
 \end{itemize}
 
 %***************************
-\subsubsection{Truth Tables}
+\subsubsection{Truth Tables - MOVE SOMEWHERE}
 %***************************
 A truth table is a systematic way to list all possible combinations of input values and their corresponding output values for a given Boolean expression. For example, the truth table for the XOR operation (\( A \oplus B \)) is as follows:
 \[
@@ -124,14 +115,6 @@ A & B & A \oplus B \\
 \end{array}
 \]
 
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-In this first lesson, and in the next one, we make a compromise between a brief recapitulation and a quick introduction to the field of digital circuits in such a way as not to bore the already knowledgeable and not to stress the novices. We will introduce strictly those notions that are necessary to understand the principles on which the organization and architecture of computers are based. We will focus on concepts and less on optimizing the way of implementation. We will focus more on the competence of the described structures than on their performance. The functional approach will prevail over the structural one in the description of the components used to design a computer system. We will focus on some possible optimizations, in the last lessons, only at the level of organization and architecture of a computing system.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Digital Domain

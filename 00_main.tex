@@ -232,6 +232,42 @@
         \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/Verilog/src/#2.sv}%
     }{}%
 }
+
+% Define Bash style
+\lstdefinestyle{bashStyle}{
+    language=bash,                       % Bash syntax
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{blue}\bfseries,  % Keywords in bold and blue
+    commentstyle=\color{gray}\itshape,   % Comments in gray italic
+    stringstyle=\color{green},           % Strings in green
+    %frame=single,                       % Frame around the code
+    captionpos=b,                        % Caption position below
+    morekeywords={sudo, echo, apt, update, install, curl, mvn, sbt} % Extra keywords for Bash
+}
+
+\usepackage{mdframed} % Required for custom framed environments
+
+% Create Bash environment
+\lstnewenvironment{bashcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,           % Light gray background
+      linecolor=black,                   % Black frame color
+      skipabove=10pt,                    % Space above frame
+      skipbelow=10pt,                    % Space below frame
+      leftmargin=0pt,                    % No additional left margin
+      rightmargin=0pt,                   % No additional right margin
+      innerleftmargin=5pt,               % Inner left margin
+      innerrightmargin=5pt,              % Inner right margin
+      innertopmargin=5pt,                % Inner top margin
+      innerbottommargin=5pt              % Inner bottom margin
+    ]
+    \lstset{style=bashStyle,#1}
+}{
+    \endmdframed
+}
+
+
+
 %%%%%%%%%%%%%%%%%%
 % END Code Macros
 %%%%%%%%%%%%%%%%%%

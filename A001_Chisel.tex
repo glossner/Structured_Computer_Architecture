@@ -367,3 +367,49 @@ Be cautious when mixing Scala control structures (e.g., \texttt{if}, \texttt{for
 %*****************************************
 Designers must think in terms of hardware concurrency, even when writing code that resembles sequential software.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Installing Chisel on Ubuntu}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{enumerate}
+    \item \textbf{Install Java Development Kit (JDK):} \\
+    Chisel is built on Scala, which requires the Java Development Kit (JDK). You have two options to install and manage the JDK:
+    \begin{enumerate}
+        \item \textbf{Option 1: Install the Default JDK:} \\
+        Run the following commands to install the default JDK package:
+        \begin{bashcode}
+sudo apt update && sudo apt install default-jdk
+        \end{bashcode}
+
+        \item \textbf{Option 2: Use Maven to Manage JDK Versions:} \\
+        If you already use Maven, ensure you have a JDK installed and configured in your Maven settings. You can verify your JDK version with:
+        \begin{bashcode}
+mvn --version
+        \end{bashcode}
+        If a JDK is not configured, follow Maven's documentation to set up a compatible JDK.
+    \end{enumerate}
+
+    \item \textbf{Install Scala Build Tool (sbt):} \\
+    Chisel projects are typically managed using sbt. To install sbt, execute:
+    \begin{bashcode}
+echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | \
+sudo tee /etc/apt/sources.list.d/sbt.list && \
+curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99E82A75642AC823" | \
+sudo apt-key add && \
+sudo apt update && \
+sudo apt install sbt
+    \end{bashcode}
+
+    \item \textbf{Create a New Chisel Project:} \\
+    Use the Chisel template to set up a new project:
+    \begin{bashcode}
+sbt new chisel3/chisel3.g8
+    \end{bashcode}
+    Follow the prompts to configure your new Chisel project.
+
+    \item \textbf{Build and Run Your Chisel Project:} \\
+    Navigate to your project's directory and use sbt to compile and run it:
+    \begin{bashcode}
+cd your-chisel-project && sbt compile && sbt test
+    \end{bashcode}
+\end{enumerate}
