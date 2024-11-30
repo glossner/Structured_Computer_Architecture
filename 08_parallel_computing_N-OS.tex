@@ -135,9 +135,16 @@ which involves $p$ additions is executed in constant time, i.e, is executed in {
 
 If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated  to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
 
-The are the following subsets of operations performed, under the command of SQ, in the Map section. 
+There are the following subsets of operations performed, under the command of SQ, in the Map section. 
 
-\subsubsection{Spatial selection}  
+\subsubsection{Spatial selection}
+
+The selection of a subset of cells for predicated execution is supported by a constant vector containing the cell indices, as follows:
+$IX=\langle
+\begin{matrix}
+0 & 1 & \ldots & p-1
+\end{matrix}
+\rangle$
 
 Instead of the conditional jump operations performed in a single-core processing structure, in the many-core structure represented by the Map array the conditional operations are performed by a selection of active cells according to a condition that is tested in each cell. The conditional selection allows for predicated execution by modifying the contents of the Boolean vector 
 $B=\langle
@@ -424,6 +431,48 @@ As a result, our heterogeneous approach imposes, for efficiency, a three level p
     \item HOST-level programming running  in a high-level programming language based on "highly optimized libraries tailored to specific machines".
 \end{enumerate}
 
+\subsubsection{Accelerator-level programming}
+
+In Table \ref{ops} is listed partially the set of operations performed at the accelerator-level.
+
+
+\begin{table}[h]
+	\centering                       
+	\caption{Accelerator-level operations}           
+	\label{ops}       % Label
+
+	\begin{tabular}{|l|l|} \hline  % Your table
+		Operation & Description  \\ \hline \hline
+        ACTIVATE    & activate all cells: $b_i=1$ for $i = 0,1,\ldots ,p1-$ \\ \hline
+        WHERE(Vi=0) & where scalar in Vi is zero, cell remains active \\ \hline
+        ELSEWHERE & cells inactivated by the last WHERE become active \\ \hline
+        ENDWHERE & vector B takes the value before the most recent WHERE \\ \hline
+		ADD(Vi,Vj,Vk) & add vectors Vj and Vk in vector Vi    \\ \hline
+		MULT(Vi,Vj,Vk) & multiply vectors Vj and Vk in vector Vi  \\ \hline
+        MOVE(Vi,Vj) & Vi takes the value of Vj \\ \hline
+        VAL(VI,s) & all components of Vi take the value of scalar s \\ \hline
+	\end{tabular}
+
+\end{table}
+
+
+\subsubsection{Library of primitives}
+
+In Table \ref{prim}
+
+\begin{table}[h]
+	\centering                       
+	\caption{Library of primitives}           
+	\label{prim}       % Label
+
+	\begin{tabular}{|p{0.35\textwidth}|p{0.45\textwidth}|} \hline  % Your table
+		Function & Description  \\ \hline \hline
+		MATRIXVECTMULT(Vi,Vj,s,Vk) & multiply in Vi the s-vector matrix starting with Vj, with vector Vk    \\ \hline
+		INNERPRODUCT(Vi,Vj,s,Vk) & inner product in Vi between Vj and Vk  \\ \hline
+	\end{tabular}
+
+\end{table}
+
 Let us consider the simplest, most intense computation of multiplying matrices.
 {\small
 \begin{shaded*}
@@ -518,27 +567,67 @@ $\diamond$
 
 \section{Parallel Computing Patterns}
 
-Multiplying matrices is a promising example for the capacity to perform in parallel with MapScanReduce accelerator intense computation. It would be interesting to investigate the acceleration capacity of the MapScanReduce framework for a wider range of applications. A first idea could be formed by looking at the computational patterns that have been highlighted in applications designed and run in the last decades. A good start can be the study carried out in \cite{McCool12} from which we use Figure \ref{parallelPatt}.
+Multiplying matrices is a promising example for the capacity to perform in parallel with MapScanReduce accelerator intense computation. It would be interesting to investigate the acceleration capacity of the MapScanReduce framework for a wider range of applications. A good idea could be formed by looking at the computational patterns that have been highlighted in applications designed and run in the last decades. Let us start with the study carried out in \cite{McCool12} from which we use Figure \ref{parallelPatt} where 17 parallel computational patterns are presented. We will see that almost all of them can be performed using the accelerator MapScanReduce. We will not succeed in the case of those patterns that do not represent an intensive computation but a complex one.
 
 \placedrawing[h]{figures/09_14_parallelPatterns.lp}{Parallel patterns \cite{McCool12}.}{parallelPatt}
 
-
+We will analyze in turn how the 17 patterns revealed by McCool and his collaborators can be accelerated using the MapScanReduce structure.
 
 \subsection{Patterns with Direct Correspondence}
 
+A first subset of patterns is the one that is directly implementable with the MapScanReduce accelerator.
+
 \subsubsection{Map Pattern}
+
+From the list proposed by McCool \& Co., the Map pattern finds a direct counterpart in the accelerator we are evaluating. In Figure \ref{} the Map pattern is represented using green boxes, which represent data, and blue boxes, which represent hardware structure performing sequences of $bOp$s and $uOp$s. Overall the array of blue boxes represents a Map structure performing a {\tt MAPOP(Va,Vb,Vc,...)} on the vectors stored along the cells of the array. Thus, the Map pattern is has a direct correspondent in we can do with arithmetic \& logic vector operations. 
+
+\begin{exemplu}
+Let be an $8$-cell Map with 
+\begin{verbatim}
+    V12 = <2 4 7 1 8 4 5 2>
+    V15 = <4 2 2 8 5 1 3 6>
+\end{verbatim}
+and we have to generate in the even indexed cells of V10 the sum of  the even indexed cell from V12 and V15 and in odd cells of V10 the difference between the odd cells of V12 and V15. The sequence of operations is:
+\begin{verbatim}
+    ACTIVATE            | B = <1 1 1 1 1 1 1 1>: set all cells active
+    MOVE(V1,IX)         | V1 = <0 1 2 3 4 5 6 7>: load index vector in V1
+    VAL(V2,1)           | V2 = <1 1 1 1 1 1 1 1>: load 1 in all positions of V2
+    AND(V3,V1,V2)       | V3 = <0 1 0 ... 1>: bwAND between V1 and V2 in V3
+    WHERE(V3==0)        | B = < 1 0 1 ... 0>
+    ADD(V10,V12,V15)    | V10 = <6 - 9 - 13 - 8 ->
+    ELSEWHERE           | B = <0 1 0 ... 1> 
+    SUB(V10, V12,V15)   | V10 = <6 2 9 -7 13 3 8 -4>
+    ENDWHERE            | B = <1 1 1 1 1 1 1 1>
+\end{verbatim}
+The execution time of the previous sequence of operations does not depend on the number of cells, i.e., the execution time is in $O(1)$. The acceleration provided by this execution, compared with one performed by a mono-core engine, is in $O(p)$. The degree of parallelism si near 1, i.e., almost  in each clock cycle all cells are active. 
+
+$\diamond$
+\end{exemplu}
+
+There are real premises for the acceleration obtained by using a Map array to be in $O(p)$, but more than that there are many cases when the acceleration is  {\bf {\em superlinear}} compared to a single-core structure, due to the control that is performed by SQ, control that in a single-core implementation is also the responsibility of the processor.
 
 \subsubsection{Reduce Pattern}
 
+The reduce pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware.
+
 \subsubsection{Scan Pattern}
 
+ The scan pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware.
+ 
 \subsection{Patterns Executable on Map-Only}
 
+The 
 \subsubsection{Stencil  Pattern}
+
+The
 
 \subsubsection{Geometric Decomposition  Pattern}
 
+The 
+
 \subsubsection{Partition  Pattern}
+
+The
 
 \subsubsection{Speculative Execution Pattern}
 
