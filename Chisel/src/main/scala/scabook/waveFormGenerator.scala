@@ -1,5 +1,7 @@
+package scabook
+
 import chisel3._
-import chisel3.util._
+import circt.stage.ChiselStage
 
 class WaveFormGenerator extends Module {
   val io = IO(new Bundle {
@@ -10,9 +12,8 @@ class WaveFormGenerator extends Module {
   // Random wave pattern based on a sequence of values
   val randomWaveSeq = VecInit(false.B, true.B, false.B, true.B, false.B)
   val randomIndex = RegInit(0.U(3.W))
-
   io.randomWave := randomWaveSeq(randomIndex)
-  randomIndex := Mux(randomIndex === 4.U, 4.U, randomIndex + 1.U)
+  randomIndex := Mux(randomIndex === 4.U, 0.U, randomIndex + 1.U) 
 
   // Clock waveform toggles every 2 cycles
   val clockToggle = RegInit(false.B)
@@ -21,5 +22,9 @@ class WaveFormGenerator extends Module {
 }
 
 object WaveFormGenerator extends App {
-  chisel3.Driver.execute(args, () => new WaveFormGenerator)
+  ChiselStage.emitSystemVerilogFile(
+    new WaveFormGenerator,
+    Array("--target-dir", "generated")
+    //firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info"),
+  )
 }

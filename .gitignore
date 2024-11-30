@@ -1,5 +1,4 @@
 ### Project Specific stuff
-test_run_dir/*
 
 # sbt specific
 Chisel/.cache
@@ -10,10 +9,11 @@ Chisel/target/
 Chisel/lib_managed/
 Chisel/src_managed/
 Chisel/project/
-#Chisel/project/plugins/project/
 Chisel/plugins.sbt
 Chisel/build.properties
 Chisel/.bloop
+Chisel/verilog_testbench/obj_dir
+Chisel/verilog_testbench/*.vcd
 
 # Scala-IDE specific
 .scala_dependencies
