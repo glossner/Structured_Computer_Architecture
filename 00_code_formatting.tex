@@ -1,0 +1,224 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Code Macros
+% - These macros insert Verilog and/or Chisel code into the document
+% - Set verilogversion and/or chiselversion to true to include them
+% - Captions are automatically created and an entry on Code Listings is generated
+% - Formatting of the code is also configured
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Define toggle variables for Chisel and Both Versions
+\usepackage{ifthen}
+\newboolean{verilogversion}
+\newboolean{chiselversion}
+\setboolean{verilogversion}{true}  % Set to true to include Verilog listings
+\setboolean{chiselversion}{true}   % Set to true to include Chisel listings
+\newcommand{\ifverilog}[1]{\ifthenelse{\boolean{verilogversion}}{#1}{}}
+\newcommand{\ifchisel}[1]{\ifthenelse{\boolean{chiselversion}}{#1}{}}
+
+% Define a color scheme for code
+\definecolor{keywordcolor}{RGB}{0,0,255}
+\definecolor{commentcolor}{RGB}{0,128,0}
+\definecolor{stringcolor}{RGB}{163,21,21}
+
+\robustify{\lstinputlisting}
+
+% Define Verilog style
+\lstdefinestyle{verilogStyle}{
+    language=Verilog,
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
+    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
+    stringstyle=\color{stringcolor},     % Strings in red
+    %frame=single,                        % Frame around the code
+    captionpos=b,                        % Caption position below
+    breaklines=true,                     % Allow line wrapping
+    morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for} % Extra keywords
+}
+
+% Define Chisel style
+\lstdefinestyle{chiselStyle}{
+    language=Scala,                      % Chisel uses Scala syntax
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
+    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
+    stringstyle=\color{stringcolor},     % Strings in red
+    %frame=single,                        % Frame around the code
+    captionpos=b,                        % Caption position below
+    breaklines=true,                     % Allow line wrapping
+    morekeywords={val, var, def, module, for, when, otherwise} % Extra keywords for Chisel
+}
+
+% Define Bash style
+\lstdefinestyle{bashStyle}{
+    language=bash,                       % Bash syntax
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{keywordcolor}\bfseries, 
+    commentstyle=\color{commentcolor}\itshape,  
+    stringstyle=\color{stringcolor},     
+    %frame=single,                       % Frame around the code
+    captionpos=b,                        % Caption position below
+    breaklines=true,                     % Allow line wrapping
+    morekeywords={sudo, echo, apt, update, install, curl, mvn, sbt} % Extra keywords for Bash
+}
+
+% C++
+\lstdefinestyle{cppStyle}{
+    language=C++,
+    basicstyle=\ttfamily\small,          % Monospaced font for code
+    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
+    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
+    stringstyle=\color{stringcolor},     % Strings in red
+    %frame=single,                        % Frame around the code
+    captionpos=b,                        % Caption position below
+    breaklines=true,                     % Allow line wrapping
+    showstringspaces=false,              % Do not show spaces in strings
+    morekeywords={constexpr, nullptr, override, final, noexcept, auto, decltype} % Additional C++ keywords
+}
+
+\usepackage{mdframed} % Replace 'framed' with 'mdframed'
+
+% Define verilogcode environment
+\lstnewenvironment{verilogcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,
+      linecolor=black,
+      skipabove=10pt,
+      skipbelow=10pt,
+      leftmargin=0pt,
+      rightmargin=0pt,
+      innerleftmargin=5pt,
+      innerrightmargin=5pt,
+      innertopmargin=5pt,
+      innerbottommargin=5pt,
+    ]
+    \lstset{style=verilogStyle,#1}
+}{
+    \endmdframed
+}
+% Define chiselcode environment
+\lstnewenvironment{chiselcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,
+      linecolor=black,
+      skipabove=10pt,
+      skipbelow=10pt,
+      leftmargin=0pt,
+      rightmargin=0pt,
+      innerleftmargin=5pt,
+      innerrightmargin=5pt,
+      innertopmargin=5pt,
+      innerbottommargin=5pt,
+    ]
+    \lstset{style=chiselStyle,#1}
+}{
+    \endmdframed
+}
+
+\lstnewenvironment{cppcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,
+      linecolor=black,
+      skipabove=10pt,
+      skipbelow=10pt,
+      leftmargin=0pt,
+      rightmargin=0pt,
+      innerleftmargin=5pt,
+      innerrightmargin=5pt,
+      innertopmargin=5pt,
+      innerbottommargin=5pt,
+    ]
+    \lstset{style=cppStyle,#1}
+}{
+    \endmdframed
+}
+
+\DeclareRobustCommand{\includeverilogcode}[2][]{%
+    \begin{mdframed}[
+        backgroundcolor=gray!10,
+        linecolor=black,
+        skipabove=10pt,
+        skipbelow=10pt,
+        leftmargin=0pt,
+        rightmargin=0pt,
+        innerleftmargin=5pt,
+        innerrightmargin=5pt,
+        innertopmargin=5pt,
+        innerbottommargin=5pt,
+    ]%
+    \lstinputlisting[style=verilogStyle,#1]{#2}%
+    \end{mdframed}%
+}
+
+
+\DeclareRobustCommand{\includechiselcode}[2][]{%
+    \begin{mdframed}[
+        backgroundcolor=gray!10,
+        linecolor=black,
+        skipabove=10pt,
+        skipbelow=10pt,
+        leftmargin=0pt,
+        rightmargin=0pt,
+        innerleftmargin=5pt,
+        innerrightmargin=5pt,
+        innertopmargin=5pt,
+        innerbottommargin=5pt,
+    ]%
+    \lstinputlisting[style=chiselStyle,#1]{#2}%
+    \end{mdframed}%
+}
+
+\DeclareRobustCommand{\includecppcode}[2][]{%
+    \begin{mdframed}[
+        backgroundcolor=gray!10,
+        linecolor=black,
+        skipabove=10pt,
+        skipbelow=10pt,
+        leftmargin=0pt,
+        rightmargin=0pt,
+        innerleftmargin=5pt,
+        innerrightmargin=5pt,
+        innertopmargin=5pt,
+        innerbottommargin=5pt,
+    ]%
+    \lstinputlisting[style=cppStyle,#1]{#2}%
+    \end{mdframed}%
+}
+
+
+\DeclareRobustCommand{\includecode}[2]{%
+    \ifthenelse{\boolean{chiselversion}}{%
+        \includechiselcode[caption={#2 Code (Chisel)},label={lst:chisel_\string#2}]{#1/Chisel/src/main/scala/scabook/#2.scala}%
+    }{}%
+    \ifthenelse{\boolean{verilogversion}}{%
+        \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/Verilog/src/#2.sv}%
+    }{}%
+}
+
+
+
+\usepackage{mdframed} % Required for custom framed environments
+
+% Create Bash environment
+\lstnewenvironment{bashcode}[1][]{
+    \mdframed[
+      backgroundcolor=gray!10,           % Light gray background
+      linecolor=black,                   % Black frame color
+      skipabove=10pt,                    % Space above frame
+      skipbelow=10pt,                    % Space below frame
+      leftmargin=0pt,                    % No additional left margin
+      rightmargin=0pt,                   % No additional right margin
+      innerleftmargin=5pt,               % Inner left margin
+      innerrightmargin=5pt,              % Inner right margin
+      innertopmargin=5pt,                % Inner top margin
+      innerbottommargin=5pt              % Inner bottom margin
+    ]
+    \lstset{style=bashStyle,#1}
+}{
+    \endmdframed
+}
+
+
+
+%%%%%%%%%%%%%%%%%%
+% END Code Macros
+%%%%%%%%%%%%%%%%%%

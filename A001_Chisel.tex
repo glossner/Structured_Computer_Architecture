@@ -370,28 +370,75 @@ Designers must think in terms of hardware concurrency, even when writing code th
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Installing Chisel on Ubuntu}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%******************************************
+\subsection{Install a Java Development Kit}
+%*******************************************
+Chisel is built on Scala, which requires the Java Development Kit (JDK). You have two options to install and manage the JDK.
 
-\begin{enumerate}
-    \item \textbf{Install Java Development Kit (JDK):} \\
-    Chisel is built on Scala, which requires the Java Development Kit (JDK). You have two options to install and manage the JDK:
-    \begin{enumerate}
-        \item \textbf{Option 1: Install the Default JDK:} \\
-        Run the following commands to install the default JDK package:
-        \begin{bashcode}
+%**************************************
+\subsubsection{Install the Default JDK}
+%**************************************        
+\begin{bashcode}
 sudo apt update && sudo apt install default-jdk
-        \end{bashcode}
+\end{bashcode}
 
-        \item \textbf{Option 2: Use Maven to Manage JDK Versions:} \\
-        If you already use Maven, ensure you have a JDK installed and configured in your Maven settings. You can verify your JDK version with:
-        \begin{bashcode}
-mvn --version
-        \end{bashcode}
-        If a JDK is not configured, follow Maven's documentation to set up a compatible JDK.
-    \end{enumerate}
+%*********************
+\subsubsection{SDKMan}
+%*********************
 
-    \item \textbf{Install Scala Build Tool (sbt):} \\
-    Chisel projects are typically managed using sbt. To install sbt, execute:
-    \begin{bashcode}
+SDKMAN! is a tool for managing parallel versions of Software Development Kits (SDKs) such as Java, Groovy, Kotlin, and more. It simplifies the installation, update, and switching between SDK versions.
+
+\paragraph*{Installation}
+
+To install SDKMAN!, open a terminal and run the following command:
+\begin{bashcode}
+     curl -s "https://get.sdkman.io" | bash       
+\end{bashcode}
+
+Add the following line to your .bashrc configuration file:
+\begin{bashcode}
+export SDKMAN_DIR="$HOME/.sdkman"
+source "$SDKMAN_DIR/bin/sdkman-init.sh"
+source ~/.bashrc
+\end{bashcode}
+
+After installation, restart your terminal or run:
+\begin{bashcode}
+    source "\$HOME/.sdkman/bin/sdkman-init.sh"        
+\end{bashcode}
+
+Verify the installation by running:
+\begin{bashcode}
+ sdk version    
+\end{bashcode}       
+
+\paragraph*{Using SDKMAN!}
+Here are some common commands:
+
+List All Available Java Versions:
+\begin{bashcode}    
+sdk list java
+\end{bashcode}
+
+Install a Specific Version
+\begin{bashcode}
+sdk install java 23-oracle   
+\end{bashcode}
+
+Set a Default Version
+\begin{bashcode}
+sdk default java 23-oracle    
+\end{bashcode}
+
+Switch Java Versions:
+\begin{bashcode}
+sdk use java 23-oracle    
+\end{bashcode}
+
+%******************************************
+\subsection{Install Scala Build Tool (sbt)}
+%******************************************
+\begin{bashcode}
 echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | \
 sudo tee /etc/apt/sources.list.d/sbt.list && \
 curl -sL "https://keyserver.ubuntu.com/pks/lookup? \ 
@@ -399,17 +446,171 @@ op=get&search=0x99E82A75642AC823" | \
 sudo apt-key add && \
 sudo apt update && \
 sudo apt install sbt
-    \end{bashcode}
+\end{bashcode}
 
-    \item \textbf{Clone this book:} \\
-    Or use the template at 
-    \begin{bashcode}
+
+\paragraph{Clone this book}
+Or use the template at 
+\begin{bashcode}
 https://github.com/chipsalliance/chisel
-    \end{bashcode}
+\end{bashcode}
 
-    \item \textbf{Build and Run Your Chisel Project:} \\
-    Navigate to your project's directory and use sbt to compile and run it:
-    \begin{bashcode}
+\paragraph{Build and Run Your Chisel Project}
+Navigate to your project's directory and use sbt to compile and run it:
+\begin{bashcode}
 cd your-chisel-project && sbt test
-    \end{bashcode}
-\end{enumerate}
+\end{bashcode}
+
+%******************************
+\subsection{Install Verilator}
+%******************************
+\begin{bashcode}
+sudo apt-get install verilator
+\end{bashcode}
+
+For any operating system other than Ubuntu, see: https://verilator.org/guide/latest/install.html.
+
+%******************************
+\subsection{Install gtkwave}
+%******************************
+To view the waveforms created by verilator, instal gtkwave.
+\begin{bashcode}
+sudo apt-get install gtkwave
+\end{bashcode}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example Walkthrough}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Assuming you have cloned this book (Structured Computer Architecture), you will find the Chisel source files in the Chisel directory at the top level of the repository.
+
+%***************************
+\subsection{Key Directories}
+%***************************
+\begin{verbatim}
+    Chisel/src/main/scala/scabook:        Chisel source files
+    Chisel/test/scala/scabook:            Chisel test harness files
+    Chisel/generated_verilog_clean:       SystemVerilog generated by Chisel 
+    Chisel/generated_verlilog_annotated:  SystemVerilog with debug symbols
+    Chisel/verilog_testbench:             Verilator C++ testbench files
+\end{verbatim}
+
+%***************************
+\subsection{Run Chisel Test}
+%***************************
+The following very simple design generates a waveform
+\includechiselcode[caption={Waveform Generator Code (Chisel)}, label={lst:chisel_waveformgenerator}]{Chisel/src/main/scala/scabook/waveFormGenerator.scala}
+
+The testbench for the code is:
+\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:chisel_waveformgeneratortestbench}]{Chisel/src/test/scala/scabook/waveFormGeneratorSpec.scala}
+
+%*****************************
+\subsection{Run the Testbench}
+%*****************************
+If you have cloned the textbook, build.sbt will be in your Chisel/ directory.
+\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:build_sbt}]{Chisel/build.sbt}
+
+The following commands will run the test bench
+\begin{bashcode}
+cd Chisel/
+sbt test
+\end{bashcode}
+
+The IDE being used is Visual Studio Code with the Scala(Metals) extension installed. Your output should look something like:
+\begin{verbatim}
+(base) jglossner@jglossner-Alienware-Aurora-R7:~/GitRepos/ \
+          Structured_Computer_Architecture/Chisel$ sbt test
+downloading sbt launcher 1.10.6
+[info] welcome to sbt 1.10.5 (Oracle Corporation Java 23)
+[info] loading settings for project chisel-build-build from metals.sbt ...
+[info] loading project definition from /home/jglossner/GitRepos/ \
+         Structured_Computer_Architecture/Chisel/project/project
+[info] loading settings for project chisel-build from metals.sbt ...
+[info] loading project definition from /home/jglossner/GitRepos/ \
+         Structured_Computer_Architecture/Chisel/project
+[success] Generated .bloop/chisel-build.json
+[success] Total time: 1 s, completed Nov 30, 2024, 11:12:37 AM
+[info] loading settings for project root from build.sbt ...
+[info] set current project to %NAME% (in build file:/home/jglossner/ \ 
+         GitRepos/Structured_Computer_Architecture/Chisel/)
+[info] WaveFormGeneratorSpec:
+[info] - WaveFormGenerator should generate the correct waveforms
+[info] GCDSpec:
+[info] - Gcd should calculate proper greatest common denominator
+[info] Run completed in 8 seconds, 403 milliseconds.
+[info] Total number of tests run: 2
+[info] Suites: completed 2, aborted 0
+[info] Tests: succeeded 2, failed 0, canceled 0, ignored 0, pending 0
+[info] All tests passed.
+[success] Total time: 9 s, completed Nov 30, 2024, 11:12:46 AM
+\end{verbatim}
+
+%*****************************************
+\subsection{Generate Clean System Verilog}
+%*****************************************
+The only difference between the clean SystemVerilog and the annotated version is the commented out code.
+
+For clean SystemVerilog:
+\begin{chiselcode}
+object WaveFormGenerator extends App {
+  ChiselStage.emitSystemVerilogFile(
+    new WaveFormGenerator,
+    //Array("--target-dir", "generated")
+    firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info"),
+  )
+}
+\end{chiselcode}
+
+Run the SystemVerilog generator from the Chisel/ directory
+\begin{bashcode}
+sbt run
+\end{bashcode}
+
+This will produce
+\includeverilogcode[caption={Clean SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorcleanverilog}]{Chisel/generated_verilog_clean/WaveFormGenerator.sv}
+
+%***************************************************
+\subsection{Generate Annotated/Debug System Verilog}
+%***************************************************
+This code will put the SystemVerilog simulation code directly into a generated folder
+\begin{chiselcode}
+object WaveFormGenerator extends App {
+  ChiselStage.emitSystemVerilogFile(
+    new WaveFormGenerator,
+    Array("--target-dir", "generated")
+    //firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info"),
+  )
+}
+\end{chiselcode}
+
+The annotated/debug SystemVerilog generated code should look like:
+\includeverilogcode[caption={Annotated SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorannotatedverilog}]{Chisel/generated_verilog_annotated/WaveFormGenerator.sv}
+
+%***********************************************
+\subsection{Verilator C++ Test Driver}
+%***********************************************
+Create a Verilator C++ test driver. It is in Chisel/verilator\_testbench
+\includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{Chisel/verilator_testbench/WaveFormGenerator_testbench.cpp}
+
+From the Chisel/verilator\_testbench, execute:
+\begin{bashcode}
+ make -C obj_dir -f VWaveFormGenerator.mk VWaveFormGenerator   
+\end{bashcode}
+
+This will output the executable in Chisel/verilator\_testbench/obj\_dir
+
+Execute the WaveFormGenerator program create in the obj\_dir
+\begin{bashcode}
+obj_dir/VWaveFormGenerator
+\end{bashcode}
+
+This will create a vcd file that can be displayed with gtkwave
+\begin{bashcode}
+gtkwave waveform.vcd    
+\end{bashcode}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/verilator_waveformgenerator_screenshot.png} 
+    \caption{Waveforms generated for a Verilator SystemVerilog simulation}
+    \label{fig:verilator_wave}
+\end{figure}
