@@ -593,7 +593,8 @@ Create a Verilator C++ test driver. It is in Chisel/verilator\_testbench
 
 From the Chisel/verilator\_testbench, execute:
 \begin{bashcode}
- make -C obj_dir -f VWaveFormGenerator.mk VWaveFormGenerator   
+verilator --cc ../generated_verilog_annotated/WaveFormGenerator.sv --exe WaveFormGenerator_testbench.cpp --trace
+make -C obj_dir -f VWaveFormGenerator.mk VWaveFormGenerator   
 \end{bashcode}
 
 This will output the executable in Chisel/verilator\_testbench/obj\_dir
