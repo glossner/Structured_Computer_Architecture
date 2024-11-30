@@ -1,5 +1,30 @@
 ### Project Specific stuff
 test_run_dir/*
+
+# sbt specific
+Chisel/.cache
+Chisel/.history
+Chisel/.lib/
+Chisel/dist/*
+Chisel/target/
+Chisel/lib_managed/
+Chisel/src_managed/
+Chisel/project/
+#Chisel/project/plugins/project/
+Chisel/plugins.sbt
+Chisel/build.properties
+Chisel/.bloop
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+.metals
+
+settings.json
+
+### Java template
+*.class
+
 ### XilinxISE template
 # intermediate build files
 *.bgn
@@ -311,24 +336,7 @@ xcuserdata
 *.log
 /.bsp
 
-# sbt specific
-Chisel/.cache
-Chisel/.history
-Chisel/.lib/
-Chisel/dist/*
-Chisel/target/
-Chisel/lib_managed/
-Chisel/src_managed/
-Chisel/project/
-#Chisel/project/plugins/project/
-Chisel/plugins.sbt
-Chisel/build.properties
 
-# Scala-IDE specific
-.scala_dependencies
-.worksheet
-### Java template
-*.class
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
