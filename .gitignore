@@ -12,8 +12,8 @@ Chisel/project/
 Chisel/plugins.sbt
 Chisel/build.properties
 Chisel/.bloop
-Chisel/verilog_testbench/obj_dir
-Chisel/verilog_testbench/*.vcd
+Chisel/verilator_testbench/obj_dir
+Chisel/verilator_testbench/*.vcd
 
 # Scala-IDE specific
 .scala_dependencies

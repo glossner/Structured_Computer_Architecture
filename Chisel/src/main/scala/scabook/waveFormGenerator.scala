@@ -24,7 +24,7 @@ class WaveFormGenerator extends Module {
 object WaveFormGenerator extends App {
   ChiselStage.emitSystemVerilogFile(
     new WaveFormGenerator,
-    Array("--target-dir", "generated")
+    Array("--target-dir", "generated_verilog_annotated")
     //firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info"),
   )
 }
