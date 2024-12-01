@@ -217,9 +217,9 @@ Global shift/rotate operations are performed on all components of vectors distri
     results:
         V0 = [23 2 3 1 4 3 5 2]
     \end{verbatim}
-    \item[{\tt ROTATERIGHT(l)}:]:  \\
+    \item[{\tt ROTATERIGHT(Vl)}:]:  \\
     $ (i=0) \; ? \; s_{p-1} : s_{l(i-1)}$, for $i = 0, \ldots, p-1$\\
-    {\bf Example} of use: {\tt V0 <= ROTATERIGHT(1)} \\
+    {\bf Example} of use: {\tt V0 <= ROTATERIGHT(V1)} \\
     \begin{verbatim}
     For:
         B  = [1 1 1 0 0 1 0 0]
@@ -404,6 +404,25 @@ Heterogeneous computing takes into account the distinction between complex and i
 
 \placedrawing[h]{figures/09_10_heterogeneous_system.lp}{}{hetSyst}
 
+The two types of computation, complex and intensive, can be performed efficiently if we have adequate hardware for each. This is what we achieve with a heterogeneous system. The problem is the acceleration that we obtain for an application in which we have a mixture of intensive and complex computation. Evaluating the performance of the accelerator is not enough because what is important is the total performance that is obtained by taking into account the execution time associated with the complex computation, which cannot be accelerated in the host, and the execution time associated with the intensive computation subject to acceleration in the accelerator.
+
+Since the 1960s, with the advent of the first parallel computers, the problem of limited acceleration due to the weight of complex calculations has arisen. The limitation was expressed by Amdahl's Law.
+
+Amdahl's law, named after  Gene Amdahl,  was introduced  at a conference in 1967 \cite{amdahl1967}, and can be used in parallel computing to predict the limit of the theoretical speedup when using heterogeneous computation. It is formulated in the following way:
+$$A_{host+accelerator} = \frac{1}{(1-w_{intenseComp}) + \frac{w_{accelerator}}{A_{accelerator}}}$$
+where:
+\begin{description}
+    \item[$A_{host+accelerator}$:] represents the overall acceleration of the heterogeneous system running an application
+    \item[$A_{accelerator}$:] represents the acceleration obtained by the accelerator running the intense part of the application
+    \item[$w_{intenseComp}$:] the weight of the intense computation in the application expressed by a subunit number
+\end{description}
+We can highlight two limiting cases:
+\begin{enumerate}
+    \item computation is dominated by the complex computation: with $w_{intenseComp} = 0.05$ and $A_{accelerator} = 1000$ results $A_{host+accelerator} = 1.05$
+    \item computation is dominated by the intense computation: $w_{intenseComp} = 0.95$ and $A_{accelerator} = 1000$ results $A_{host+accelerator} = 19.62$
+\end{enumerate}
+In the limiting cases, for $w_{accelerator} = 1$ we have $A_{host+accelerator} = A_{accelerator}$, while for $w_{accelerator} = 0$ we have $A_{host+accelerator} = 1$.
+
 \subsection{Programming a heterogeneous system}
 
 Concerning the programming of multicellular processors, which have seen a rapid proliferation primarily driven by corporate considerations, the scientific community has yet to universally embrace effective solutions. The challenge arises from the prioritization of hardware criteria that promoted multi- and many-cell solutions without sufficient regard for their programmability. This is due to:
@@ -449,24 +468,24 @@ In Table \ref{ops} is listed partially the set of operations performed at the ac
         WHERE(Vi=0) & where scalar in Vi is zero, cell remains active \\ \hline
         ELSEWHERE & cells inactivated by the last WHERE become active \\ \hline
         ENDWHERE & vector B takes the value before the most recent WHERE \\ \hline
-		ADD(Vi,Vj,Vk) & add vectors Vj and Vk in vector Vi    \\ \hline
-		MULT(Vi,Vj,Vk) & multiply vectors Vj and Vk in vector Vi  \\ \hline
-        AND(Vi,Vj,Vk) & bitwise AND of vectors Vj and Vk in vector Vi  \\ \hline
-        OR(Vi,Vj,Vk) & bitwise OR of vectors Vj and Vk in vector Vi  \\ \hline
-        XOR(Vi,Vj,Vk) & bitwise XOR of vectors Vj and Vk in vector Vi  \\ \hline
-        MOVE(Vi,Vj) & Vi takes the value of Vj \\ \hline
-        VAL(Vi,s) & all components of Vi take the value of scalar s \\ \hline
+		ADD(Vj,Vk) & add vectors Vj and Vk in each active position   \\ \hline
+		MULT(Vj,Vk) & multiply vectors Vj and Vk in each active position   \\ \hline
+        AND(Vj,Vk) & bitwise AND of vectors Vj and Vk in each active position  \\ \hline
+        OR(Vj,Vk) & bitwise OR of vectors Vj and Vk in each active position  \\ \hline
+        XOR(Vj,Vk) & bitwise XOR of vectors Vj and Vk in each active position  \\ \hline
+        VAL(s) & generate a vector with value s in each active position \\ \hline
         ADDRED(Vi) & active components of Vi are submitted to reduction add \\ \hline
         MINRED(Vi) & active components of Vi are submitted to reduction minimum \\ \hline
         MAXRED(Vi) & active components of Vi are submitted to reduction maximum \\ \hline
         ORRED(Vi) & active components of Vi are submitted to reduction logic OR \\ \hline
         ADDPX(Vi) & active components of Vi are submitted to prefix add function \\ \hline
+        SHIFTRIGHT(Vi, leftIn) & shift right the component of Vi and insert leftIn \\ \hline
+        SHIFTLEFT(Vi, rightIn) & shift left the component of Vi and insert rightIn \\ \hline
+        ROTATERIGHT(Vi) & rotate right the component of Vi \\ \hline
+        ROTATELEFT(Vi) & shift left the component of Vi \\ \hline
 	\end{tabular}
 
 \end{table}
-
-
-
 
 Let us consider the simplest, most intense computation of multiplying matrices.
 {\small
@@ -597,19 +616,19 @@ From the list proposed by McCool \& Co., the Map pattern finds a direct counterp
 \begin{exemplu}
 Let be an $8$-cell Map with 
 \begin{verbatim}
+    V10 = <x x x x x x x x>
     V12 = <2 4 7 1 8 4 5 2>
     V15 = <4 2 2 8 5 1 3 6>
 \end{verbatim}
 and we have to generate in the even indexed cells of V10 the sum of  the even indexed cell from V12 and V15 and in odd cells of V10 the difference between the odd cells of V12 and V15. The sequence of operations is:
 \begin{verbatim}
     ACTIVATE            | B = <1 1 1 1 1 1 1 1>: set all cells active
-    MOVE(V1,IX)         | V1 = <0 1 2 3 4 5 6 7>: load index vector in V1
-    VAL(V2,1)           | V2 = <1 1 1 1 1 1 1 1>: load 1 in all positions of V2
-    AND(V3,V1,V2)       | V3 = <0 1 0 ... 1>: bwAND between V1 and V2 in V3
+    V2 <= VAL(1)        | V2 = <1 1 1 1 1 1 1 1>: load 1 in all positions of V2
+    V3 <= AND(IX,V2)    | V3 = <0 1 0 ... 1>: bwAND between IX and V2 
     WHERE(V3==0)        | B = < 1 0 1 ... 0>
-    ADD(V10,V12,V15)    | V10 = <6 - 9 - 13 - 8 ->
+    V10 <= ADD(V12,V15) | V10 = <6 x 9 x 13 x 8 x>
     ELSEWHERE           | B = <0 1 0 ... 1> 
-    SUB(V10, V12,V15)   | V10 = <6 2 9 -7 13 3 8 -4>
+    V10 <= SUB(V12,V15) | V10 = <6 2 9 -7 13 3 8 -4>
     ENDWHERE            | B = <1 1 1 1 1 1 1 1>
 \end{verbatim}
 The execution time of the previous sequence of operations does not depend on the number of cells, i.e., the execution time is in $O(1)$. The acceleration provided by this execution, compared with one performed by a mono-core engine, is in $O(p)$. The degree of parallelism si near 1, i.e., almost  in each clock cycle all cells are active. 
@@ -631,28 +650,32 @@ The reduction pattern is also performed directly by the proposed accelerator due
 
 Many of the patterns we consider are executed exclusively involving the Map section. For them to be executed, a sequence of Map operations is required each time.
 
-\subsubsection{Stencil  Pattern}
+\subsubsection{Stencil Pattern}
 
 The stencil pattern (depicted in  Figure \ref{parallelPatt}) is not directly implemented in the structure of the proposed accelerator, but can be efficiently programmed taking into account the fact that the input data structure is a matrix that can be loaded as part of the ${\bf M_{mp}}$ matrix. The finite neighborhood of each cell can be involved in the calculation of a new value in each cell very efficiently, because the values from the vertical vectors are in the same cell and a global shift operations allows access to the values from the horizontal vector. In fact, any finite neighborhood can be involved in updating  any value in ${\bf M_{mp}}$.
 
 For example, let us consider the matrix stored in vectors from $V_0$ to $V_{n-1}$. Let us  consider a stencil computation in each cell of vector $V_i$ using as operands values from a type of neighborhood emphasized in Figure \ref{stencil}: $s_{ij}$ as a central value, $s_{i(j-1)}, s_{i(j-2)}$ as values from the same vector positioned left, and $s_{i(j+1)}, s_{i(j+2)}$ positioned right, $s_{(i+1)j}, s_{(i+2)j}, s_{(i-1)j}, s_{(i-2)j}$ positioned in the same cell up two positions and down two positions.  The values to be used as operands are collected  in each cell and then submitted to a pure map sequence of operations which update the horizontal vector $V_i$ as follows:
-{\small
 \begin{verbatim}
------------------------------------------------
-        SHIFTRIGHT(n,i,0)
-        SHIFTRIGHT(n+1,n,0)
-        SHHIFTLEFT(n+2,i,0)
-        SHHIFTLEFT(n+3,n+2,0)
-        MAPOP(i,n,n+1,n+2,n+3,...)
------------------------------------------------
+    Vn     <= SHIFTRIGHT(Vi,0)
+    V(n+1) <= SHIFTRIGHT(Vn,0)
+    V(n+2) <= SHHIFTLEFT(Vi,0)
+    V(n+3) <= SHHIFTLEFT(V(n+2),0)
+    MAPOP(Vi,Vn,V(n+1),V(n+2),V(n+3),...)
 \end{verbatim}
-}
-
 Because the update computation is done in parallel  for all the components of the horizontal vector $V_i$, the acceleration of the computation is in $O(p)$.
 
 \subsubsection{Geometric Decomposition  Pattern}
 
-The 
+The geometric decomposition pattern works on configurable (overlapping) sub-collections  of data. In Figure \ref{parallelPatt}, four $4 \times 5$ scalars sub-collections are defined. If data is loaded in the accelerator's memory as a matrix of scalars, a sub-collection, $S(i,j,k,q)$, is a matrix loaded in ${\bf M_{mp}}$ between two horizontal vectors , $V_i$ and $V_j$, and two vertical vectors, $C_k$ and $C_q$. The values for $i$ and $j$ are controlled by the program executed on the sequencer SQ, while the values of $k$ and $q$ are used by the {\em spatial selection} mechanism in Map. If  $A \Leftarrow \langle i  \; i  \; \ldots  \; i \rangle$, then  the program can be written using  $BOP(d,l,r)$ or $UOP(d,l)$ for $d,l,r \in [1,j]$. The $IX$ vector is used to delimit the index  of the vertical vectors applying spatial selection functions:
+\begin{verbatim}
+    WHERE(IX>=k)
+    WHERE(IX<=q)
+    LOAD(A,i)   // A <= <i,i,...,i>
+    MAPOP(0,1,...,j-1,j)
+\end{verbatim}
+Thus, any sub-collection is delimited in the matrix ${\bf M_{mp}}$, if $i,j,k,q \leq m,p$, in constant time.
+
+If the sub-collections do not overlap, the computation can be done on all of them in parallel as, for example, for computing convolution  with a $f \times f$ components filter can be performed on $p/f$ $f \times f$ sub-collections in parallel, obtaining an acceleration in $O(p)$.
 
 \subsubsection{Partition  Pattern}
 
@@ -660,17 +683,31 @@ The
 
 \subsubsection{Speculative Execution Pattern}
 
+The
+
 \subsubsection{Recurrence Pattern}
+
+The
 
 \subsubsection{Pipeline  Pattern} 
 
+The
+
 \subsection{Pattern Executable on MapReduce Only }
+
+The
 
 \subsubsection{Fork-Join  Pattern}
 
+The
+
 \subsection{Patterns Executable on MapScanReduce}
 
+The
+
 \subsubsection{Category Reduction Pattern}
+
+The
 
 \subsubsection{Pack Pattern}
 

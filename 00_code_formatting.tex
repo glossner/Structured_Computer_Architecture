@@ -22,74 +22,72 @@
 
 \robustify{\lstinputlisting}
 
-% Define Verilog style
-\lstdefinestyle{verilogStyle}{
-    language=Verilog,
+% Define common base style
+\lstdefinestyle{baseStyle}{
     basicstyle=\ttfamily\small,          % Monospaced font for code
     keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
     commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
     stringstyle=\color{stringcolor},     % Strings in red
-    %frame=single,                        % Frame around the code
     captionpos=b,                        % Caption position below
-    breaklines=true,                     % Allow line wrapping
+    showstringspaces=false,              % Do not show spaces in strings
+    breaklines=true                      % Allow line wrapping
+}
+
+% Define Verilog style
+\lstdefinestyle{verilogStyle}{
+    style=baseStyle,                     % Use common base style
+    language=Verilog,
     morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for} % Extra keywords
 }
 
 % Define Chisel style
 \lstdefinestyle{chiselStyle}{
+    style=baseStyle,                     % Use common base style
     language=Scala,                      % Chisel uses Scala syntax
-    basicstyle=\ttfamily\small,          % Monospaced font for code
-    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
-    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
-    stringstyle=\color{stringcolor},     % Strings in red
-    %frame=single,                        % Frame around the code
-    captionpos=b,                        % Caption position below
-    breaklines=true,                     % Allow line wrapping
     morekeywords={val, var, def, module, for, when, otherwise} % Extra keywords for Chisel
 }
 
 % Define Bash style
 \lstdefinestyle{bashStyle}{
+    style=baseStyle,                     % Use common base style
     language=bash,                       % Bash syntax
-    basicstyle=\ttfamily\small,          % Monospaced font for code
-    keywordstyle=\color{keywordcolor}\bfseries, 
-    commentstyle=\color{commentcolor}\itshape,  
-    stringstyle=\color{stringcolor},     
-    %frame=single,                       % Frame around the code
-    captionpos=b,                        % Caption position below
-    breaklines=true,                     % Allow line wrapping
     morekeywords={sudo, echo, apt, update, install, curl, mvn, sbt} % Extra keywords for Bash
 }
 
-% C++
+% Define C++ style
 \lstdefinestyle{cppStyle}{
+    style=baseStyle,                     % Use common base style
     language=C++,
-    basicstyle=\ttfamily\small,          % Monospaced font for code
-    keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
-    commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
-    stringstyle=\color{stringcolor},     % Strings in red
-    %frame=single,                        % Frame around the code
-    captionpos=b,                        % Caption position below
-    breaklines=true,                     % Allow line wrapping
-    showstringspaces=false,              % Do not show spaces in strings
     morekeywords={constexpr, nullptr, override, final, noexcept, auto, decltype} % Additional C++ keywords
 }
 
 \usepackage{mdframed} % Replace 'framed' with 'mdframed'
 
+% Define variables for repeated properties
+\newcommand{\codeBackgroundColor}{gray!10}
+\newcommand{\codeLineColor}{black}
+\newcommand{\codeSkipAbove}{10pt}
+\newcommand{\codeSkipBelow}{10pt}
+\newcommand{\codeLeftMargin}{0pt}
+\newcommand{\codeRightMargin}{0pt}
+\newcommand{\codeInnerLeftMargin}{5pt}
+\newcommand{\codeInnerRightMargin}{5pt}
+\newcommand{\codeInnerTopMargin}{5pt}
+\newcommand{\codeInnerBottomMargin}{5pt}
+
 % Define verilogcode environment
 \lstnewenvironment{verilogcode}[1][]{
     \mdframed[
-      backgroundcolor=gray!10,
-      linecolor=black,
-      skipabove=10pt,
-      skipbelow=10pt,
-      leftmargin=0pt,
-      rightmargin=0pt,
-      innerleftmargin=5pt,
-      innerrightmargin=5pt,
-      innertopmargin=5pt,
-      innerbottommargin=5pt,
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
     ]
     \lstset{style=verilogStyle,#1}
 }{
@@ -98,16 +96,16 @@
 % Define chiselcode environment
 \lstnewenvironment{chiselcode}[1][]{
     \mdframed[
-      backgroundcolor=gray!10,
-      linecolor=black,
-      skipabove=10pt,
-      skipbelow=10pt,
-      leftmargin=0pt,
-      rightmargin=0pt,
-      innerleftmargin=5pt,
-      innerrightmargin=5pt,
-      innertopmargin=5pt,
-      innerbottommargin=5pt,
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
     ]
     \lstset{style=chiselStyle,#1}
 }{
@@ -116,16 +114,16 @@
 
 \lstnewenvironment{cppcode}[1][]{
     \mdframed[
-      backgroundcolor=gray!10,
-      linecolor=black,
-      skipabove=10pt,
-      skipbelow=10pt,
-      leftmargin=0pt,
-      rightmargin=0pt,
-      innerleftmargin=5pt,
-      innerrightmargin=5pt,
-      innertopmargin=5pt,
-      innerbottommargin=5pt,
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
     ]
     \lstset{style=cppStyle,#1}
 }{
@@ -134,16 +132,16 @@
 
 \DeclareRobustCommand{\includeverilogcode}[2][]{%
     \begin{mdframed}[
-        backgroundcolor=gray!10,
-        linecolor=black,
-        skipabove=10pt,
-        skipbelow=10pt,
-        leftmargin=0pt,
-        rightmargin=0pt,
-        innerleftmargin=5pt,
-        innerrightmargin=5pt,
-        innertopmargin=5pt,
-        innerbottommargin=5pt,
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
     ]%
     \lstinputlisting[style=verilogStyle,#1]{#2}%
     \end{mdframed}%
@@ -152,16 +150,16 @@
 
 \DeclareRobustCommand{\includechiselcode}[2][]{%
     \begin{mdframed}[
-        backgroundcolor=gray!10,
-        linecolor=black,
-        skipabove=10pt,
-        skipbelow=10pt,
-        leftmargin=0pt,
-        rightmargin=0pt,
-        innerleftmargin=5pt,
-        innerrightmargin=5pt,
-        innertopmargin=5pt,
-        innerbottommargin=5pt,
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
     ]%
     \lstinputlisting[style=chiselStyle,#1]{#2}%
     \end{mdframed}%
@@ -169,16 +167,16 @@
 
 \DeclareRobustCommand{\includecppcode}[2][]{%
     \begin{mdframed}[
-        backgroundcolor=gray!10,
-        linecolor=black,
-        skipabove=10pt,
-        skipbelow=10pt,
-        leftmargin=0pt,
-        rightmargin=0pt,
-        innerleftmargin=5pt,
-        innerrightmargin=5pt,
-        innertopmargin=5pt,
-        innerbottommargin=5pt,
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
     ]%
     \lstinputlisting[style=cppStyle,#1]{#2}%
     \end{mdframed}%
