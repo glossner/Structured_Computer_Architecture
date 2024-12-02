@@ -666,57 +666,178 @@ Because the update computation is done in parallel  for all the components of th
 
 \subsubsection{Geometric Decomposition  Pattern}
 
-The geometric decomposition pattern works on configurable (overlapping) sub-collections  of data. In Figure \ref{parallelPatt}, four $4 \times 5$ scalars sub-collections are defined. If data is loaded in the accelerator's memory as a matrix of scalars, a sub-collection, $S(i,j,k,q)$, is a matrix loaded in ${\bf M_{mp}}$ between two horizontal vectors , $V_i$ and $V_j$, and two vertical vectors, $C_k$ and $C_q$. The values for $i$ and $j$ are controlled by the program executed on the sequencer SQ, while the values of $k$ and $q$ are used by the {\em spatial selection} mechanism in Map. If  $A \Leftarrow \langle i  \; i  \; \ldots  \; i \rangle$, then  the program can be written using  $BOP(d,l,r)$ or $UOP(d,l)$ for $d,l,r \in [1,j]$. The $IX$ vector is used to delimit the index  of the vertical vectors applying spatial selection functions:
+The geometric decomposition pattern works on configurable (overlapping) sub-collections  of data. In Figure \ref{parallelPatt}, four $5 \times 5$ scalars sub-collections are defined. If data is loaded in the accelerator's memory as a matrix of scalars, a sub-collection, $S(i,j,k,q)$, is a matrix loaded in ${\bf M_{mp}}$ between two horizontal vectors , $V_i$ and $V_j$, and two columns (vertical vectors), $C_k = [s_{0k} \; s_{1k} \ldots s_{m-1 \; k}]$ and $C_q = [s_{0q} \; s_{1q} \ldots s_{m-1 \; q}]$. The values for $i$ and $j$ are controlled by the program executed on the sequencer SQ, while the values of $k$ and $q$ are used by the {\em spatial selection} mechanism in Map. The $IX$ vector is used to delimit the index  of the vertical vectors applying spatial selection functions:
 \begin{verbatim}
     WHERE(IX>=k)
     WHERE(IX<=q)
-    LOAD(A,i)   // A <= <i,i,...,i>
-    MAPOP(0,1,...,j-1,j)
+    MAPOP(Vi,V(i+1), ... V(j-1),V(j))
 \end{verbatim}
-Thus, any sub-collection is delimited in the matrix ${\bf M_{mp}}$, if $i,j,k,q \leq m,p$, in constant time.
-
-If the sub-collections do not overlap, the computation can be done on all of them in parallel as, for example, for computing convolution  with a $f \times f$ components filter can be performed on $p/f$ $f \times f$ sub-collections in parallel, obtaining an acceleration in $O(p)$.
+Thus, any sub-collection is delimited in the matrix ${\bf M_{mp}}$, if $i,j,k,q \leq m,p$, in constant time. The degree of parallelism depends on the size of the sub-collections.
 
 \subsubsection{Partition  Pattern}
 
-The
+The partition pattern corresponds to a geometric decomposition pattern without overlapping regions. See in Figure \ref{parallelPatt} a partition in four $4 \times 4$ scalars sub-collections. When dealing with sub-collections of varying sizes, it involves  {\em segmentation}. The same mechanisms for defining sections (sub-collections) used for geometric decomposition are considered for splitting, with the additional care to avoid overlap. We can take into account for the horizontal delimitations, in addition to those stated for the geometric decomposition, conditions imposed on the content of the horizontal vectors. The spatial selection functions, specific to the MAP structure, represent a particularly useful feature, specific to MapScanReduce architecture.
 
 \subsubsection{Speculative Execution Pattern}
 
-The
+Within a many-cell system, the speculative selection pattern is an optimization technique which  performs both computations and multiple-condition evaluations, in order to combine condition evaluation with processing. On our machine it is executed as a map pattern involving a {\tt MAPOP(...)} followed by various spatial selections.
+
+\begin{exemplu}
+Let there be a Boolean expression of $log_2 p$ binary variables and we are required to determine the binary configurations for which the expression takes the logical value 1. The binary form of the index of each cell in the Map represents the $p$ binary combinations for which the expression must be evaluated. The cells evaluate in parallel the same expression under the SQ command and finally using spatial selection the cell in which the evaluation result is 1 remains active.
+
+$\diamond$
+\end{exemplu}
+
+The acceleration obtained for this  pattern is in $O(p)$.
 
 \subsubsection{Recurrence Pattern}
 
-The
+The recurrence pattern represented in the expanded form  represented in  Figure \ref{recurrence}) is characterized by nested loops with data dependencies. These structures can be parallelized by obtaining a dependency graph and creating tasks that can be run in parallel for each layer of the graph (separating hyperplane).
+
+\placedrawing[h]{figures/09_15_recurrence_pattern.LP}{Recurrence pattern implementation  \cite{McCool12}.}{recurrence}
+
+Since the recurrence pattern appears in loops, where operations are repeated, these can be run on our machine as all cells will execute the same instructions. Moreover, the fixed and predetermined data access pattern further facilitates this process.
+
+Let us consider, as example the $p \times p$ recurrence pattern depicted in Figure \ref{recurrence} for $p=4$ (see in \cite{McCool12} at pag. 206). The computation consists of $p$ cycles. In each cycle, a scalar, {\tt si}, for $i = 0,1,...,p-1$ is inserted in a vector in  Map and the resulting vector is involved in a MAPOP processing. In each cycle the MAPOP sequence can be different. The sequence of operations for a certain computation is, in our MapScanReduce accelerator, the following:
+\begin{verbatim}
+    V1 <= SHIFTRIGHT(V1,s1)
+    MAPOP(V1,...)
+    V2 <= SHIFTRIGHT(V2,s2)
+    MAPOP(V2,...)
+    V3 <= SHIFTRIGHT(V3,s3)
+    MAPOP(V3,...)
+    V4 <= SHIFTRIGHT(V4,s4)
+    MAPOP(V4,...)
+    ...
+    Vp <= SHIFTRIGHT(Vp,s(p))
+    MAPOP(Vp,...)
+\end{verbatim}
+
+In time in $O(p)$ a number of operations in $O(p^2)$ are performed, thus obtaining an acceleration in $O(p)$.
+
 
 \subsubsection{Pipeline  Pattern} 
 
-The
+The pipeline pattern refers to having a sequence of stages that flow into one another sequentially. Parallel speedup is achieved by ensuring that all stages carry out their respective operations independently of each other. In a departure from the traditional approach, this architecture implements the Pipeline principle as all major components (SQ, cells in Map, Scan/Reduce network, Data transfer mechanism) work in parallel to one another with data flowing between them.
+
+The MapScanReduce architecture is suited for the pipeline pattern only when all computational cells must execute the same instructions, for situations where each pipeline stage executes the same operations, i.e., the pipeline of stages describes a simple, intense computation.
+
+A typical example is the FIR filter computation involving the vectors V1 (to insert the input data in), V2 (to store the result of multiplications), V3 (to accumulate the results of multiplications), 4 (to store tap constants).
+\begin{verbatim}
+    loop{   V1 <= SHIFTRIGHT(V1,in)
+            V2 <= MULT(V1,V4)
+            V3 <= ADD(V3,V2)
+            V3 <= SHIFTRIGHT(V3,0)  }
+\end{verbatim}
+
+The output of the computation is the right end of the vector V3.
+
+A possible improvement is to combine the pipeline pattern with the reduce pattern. The loop will be shorted because the multiplication and the addition will be done in parallel in Map section and Reduce section of the MapReduce accelerator. The acceleration provided is in $O(p)$.
 
 \subsection{Pattern Executable on MapReduce Only }
 
-The
+In the previous pattern, using the reduction network was optional. But there are applications where it is mandatory.
 
 \subsubsection{Fork-Join  Pattern}
 
-The
+Fork-join is a control pattern that divides (fork)  work and subsequently combines (join) the results (see Figure \ref{parallelPatt}). This pattern is among the more general and loosely defined ones, making a comprehensive discussion challenging. As a starting point, two approaches can be brought to attention:
+\begin{enumerate}
+    \item simple symmetric patterns, a case of {\em divide et impera})
+    \item complex, unpredictable, independent, thread spawning.
+\end{enumerate}
+Our accelerator can only be used  in the first case, which represents an intense, but simple computation.
+The acceleration that can be obtained is in $O(p/log \; p)$ due to the latencies imposed by distribution, involved in fork, and reduction used to join the results.
 
 \subsection{Patterns Executable on MapScanReduce}
 
-The
+There follow   patterns that assume the use of the entire structure of the accelerator MapScanReduce.
 
 \subsubsection{Category Reduction Pattern}
 
-The
+Category reduction pattern selects the set of elements that make up the string stored in a number of horizontal vectors,  is not directly implemented in the structure of the proposed accelerator, but it can be efficiently programmed. We consider that  the ${\bf M_{mp}}$ matrix distributed within the Map section has the capability to store the input stream $S$, which has the  of length $|S|$ in the form of  $N = \lceil |S|/p \rceil$ $p$-component vectors.
+
+Spatial selections are utilized to keep active only cells where the vector Vi, for $i = 1, 2, ...,N$, has no $x$s, a value not included in $S$.  The same operation allows the selection of all cells where the remained active calls contain $F$ the first value different from $X$ which is and substitute it with $X$. The result is the stream $R$ in D, initially empty. The sequence of operations is:
+\begin{verbatim}
+    R = <>
+    for(i=1; i=<N; i=i+1) {
+      do on Vi   WHERE(!== x)
+                 WHERE(first)
+                 v0 <= REDADD(Vi)
+                 R <= <R v0>
+                 for(j=i; j<N; j=J+1) {
+                    do on Vj    WHERE(v0)
+                                VAL(x)     
+                 }
+      until(Vi = <X,X,...,X>)              
+    }
+\end{verbatim}
+
+Because the mono-core execution of the pattern has the time in $O(|S| \times |D|)$, and the execution time in our accelerator is in $O(|S|/p \times |D| \times log \; p)$, the acceleration obtained for this pattern is in $O(p/log \; p)$. The  $log$ part in our evaluation appears due to the latencies of Scan to determine the first occurrence of a symbol different from $X$ in a vector $V_j$ (see line {\tt WHERE(first)}, and due to the latency of Reduce network to read in Controller the value of the first occurrence different from $x$ in the vector Vi) (see line {\tt v0 <= REDADD(Vi)}).
+
+Important note: the scan type network used for this pattern processes a Boolean vector, which is why we can approximate that the size of the system remains in $O(p)$.
 
 \subsubsection{Pack Pattern}
 
+The pack pattern is facilitated by the Scan section. The selection of the components to be packed is done using the Boolean vector $B$, which is managed by the spatial selection functions. The pattern is defined by  $B = \langle 0 \; 1\; 1\; 0\; 0\; 1\; 1\; 1 \rangle$. The positions in the destination vector of the components to be packed   are computed using the {\tt ADDPX(B)}. The algorithm is:
+\begin{verbatim}
+initially:  B  = <1 1 1 1 1 1 1 1>
+            V0 = <0 1 1 0 0 1 1 1>
+            V1 = <A B C D E F G H>
+
+    WHERE(V0==1)        | B  = <0 1 1 0 0 1 1 1>
+    V2 <= VAL(1)        | V2 = <x 1 1 x x 1 1 1>
+    V2 <= ADDPX(V2)     | V2 = <x 1 2 x x 3 4 5>
+    V2 <= ADD(V2,(-1))  | V2 = <x 0 1 x x 2 3 4>
+    V3 <= PERM(V1,2)    | V3 = <B C F G H x x x>
+    ENDWHERE
+\end{verbatim}
+
+The pack pattern is an operation accelerated in $O(p/log \; p)$ because of the latency introduced by the scan operations ({\tt ADDPX, PERM}).
+
 \subsubsection{Gather  Pattern}
+
+The gather pattern specifies in the source vector the source for each position in the destination vector (see Figure \ref{parallelPatt}). The gather pattern is a permutation defined using the order vector as its source and the index vector IX as its destination. We will denote by $(i)$ the content of the source or destination vector at position $i$.
+In Figure \ref{parallelPattr}, the gather operation is defined by the operation permute with the order vector {\tt <(1)(5)(0)(2)(2)(4)>}.
+Because the scalar C has two destinations, in the positions 2 and 3, the operation is performed in two steps using successively two order vectors: {\tt <(1)(5)(0)(2)(3)(4)>} and {\tt <(1)(5)(0)(2)(2)(4)>}.
+Only if each destination has its distinct source, the operation is performed using one permutation operation. The acceleration for this pattern is in $O(p / log \; p)$, if the permutation is known in advance and control bits are precomputed.
 
 \subsubsection{Scatter  Pattern}
 
+The scatter pattern specifies the destination for each position. The scatter pattern is a permutation defined using the index vector IX as its source and the order vector as its destination. In Fig. \ref{parallelPatt}:
+\begin{center}
+$ \langle  (0) \; (1) \; (2) \; (3) \; (4) \; (5) \rangle  \Rightarrow $
+$\langle (1) \;  (5) \; (0) \; ({\bf 2}) \; ({\bf 2}) \; (4) \rangle  $
+\end{center}
+is represented as a deficient scatter because a destination, 2, has two distinct sources, 3 and 4. It must be considered a sort of ``overflow" and the system must generate an error (exception).
+
+If the definition of scatter is not deficient, the scatter operation is a permute operation operated in the SCAN section of our accelerator with an acceleration in $O(p/log \; p)$, if the permutation is known in advance and control bits can be precomputed. 
+
 \subsubsection{Split  Pattern}
+
+The split pattern can be conceptualized as two sequential applications of the pack pattern. The first involves a standard pack with selected values going to the left, while the second necessitates computing the $NOT (B)$ vector such that previously unselected values are now selected and can then be packed to the right using {\tt COMPRIGHT(d,l,r)}. In {\tt sequence of operations} for pack pattern the vector {\tt v0} is complemented, instead {\tt VSUB(2,2,1)} is executed {\tt VADD(2,2,(p-REDMAX(V2)-1))} followed by {\tt COMPRIGHT(V2,V1,V2)}.
+
+As with pack, the split pattern is accelerated in $O(p/log \; p)$.
 
 \subsubsection{Expand  Pattern}
 
+For this pattern each cell stores a self-delimited vertical vector of size $0$ to $p$ (refer to  Figure \ref{parallelPatt}).
+
+The expand  pattern is implemented in three steps:
+\begin{enumerate}
+    \item the matrix ${\bf M_{mp}}$ is transposed (an efficient algorithm uses permutation)
+    \item the resulting empty lines are removed
+    \item the resulting self-delimited horizontal vectors are transferred serially to the sequencer's memory.
+\end{enumerate}
+
+Due to the serial transfer of data to the sequencer's memory, this pattern cannot be accelerated on this architecture. This time the complexity is given by the data structure, even if the algorithm is in the category of intense, simple ones.
+
 \subsection{Super-scalar Sequence Pattern}
+
+The super-scalar pattern describes a complex computation, which is why it requires a special discussion. The content of the square boxes in Figure \ref{parallelPatt} can be:
+\begin{enumerate}
+\item a simple instruction or a complex sequence of instructions
+\item a complex computation performed on a data structure with size in $O(f(N))$.
+\end{enumerate}
+In the first case, the solution is  instruction-level parallelism competence and the implementation is done with a super-scalar pipeline processor. In the second case, the solution can be provided by the recently introduced concept of accelerator-level parallelism (ALP) \cite{Hill}.
+
+A way of implementing ALP can be a MapScanReduce system with cells as MapScanReduce structures. Each cell accelerates an intense function that can be different from the others. We can say that a {\em super-tensorial} computation is ensured. We are dealing with a complex calculation that involves intensive calculations.

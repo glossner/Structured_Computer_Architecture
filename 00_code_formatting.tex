@@ -4,7 +4,53 @@
 % - Set verilogversion and/or chiselversion to true to include them
 % - Captions are automatically created and an entry on Code Listings is generated
 % - Formatting of the code is also configured
+%
+% USAGE when importing from files {path}{filename}
+%     \includecode{.}{waveFormGenerator}  both chisel and verilog
+%         Path: Chisel/src/main/scala/scabook/
+%               Verilog/src
+%
+% Single File includes
+%     \includechiselcode[caption={caption}, label={label}]{/path/filename}
+%     \includeverilogcode[caption={caption}, label={label}]{/path/filename}
+%     \includecppcode[caption={caption}, label={label}]{/path/filename}
+%
+% Code Environments
+%     \begin{chiselcode}
+%     \begin{verilogcode}
+%     \begin{cppcode}
+%     \begin{bashcode}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% CONFIGURE CODE OPTIONS
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Define a color scheme for code
+\definecolor{keywordcolor}{RGB}{0,0,255}
+\definecolor{commentcolor}{RGB}{0,128,0}
+\definecolor{stringcolor}{RGB}{163,21,21}
+\definecolor{numbercolor}{RGB}{64,64,64}
+
+% Code Style parameters (\lstdefinestyle)
+\newcommand{\mystylebasicstyle}{\ttfamily\small}          % Monospaced font for code
+\newcommand{\mystylecaptionpos}{b}                        % Caption position below
+\newcommand{\mystyleshowstringspaces}{false}              % Do not show spaces in strings
+\newcommand{\mystylenumbersep}{10pt}                      % Space between line numbers and code
+\newcommand{\mystylexleftmargin}{12pt}                    % Adjust left margin to align numbers within the frame
+\newcommand{\mystylexrightmargin}{0pt}                    % No additional right margin
+
+% Code Environment parameters (mdframed)
+\newcommand{\codeBackgroundColor}{gray!10}
+\newcommand{\codeLineColor}{black}
+\newcommand{\codeSkipAbove}{10pt}
+\newcommand{\codeSkipBelow}{10pt}
+\newcommand{\codeLeftMargin}{0pt}
+\newcommand{\codeRightMargin}{0pt}
+\newcommand{\codeInnerLeftMargin}{5pt}
+\newcommand{\codeInnerRightMargin}{5pt}
+\newcommand{\codeInnerTopMargin}{5pt}
+\newcommand{\codeInnerBottomMargin}{5pt}
+
 
 % Define toggle variables for Chisel and Both Versions
 \usepackage{ifthen}
@@ -15,23 +61,28 @@
 \newcommand{\ifverilog}[1]{\ifthenelse{\boolean{verilogversion}}{#1}{}}
 \newcommand{\ifchisel}[1]{\ifthenelse{\boolean{chiselversion}}{#1}{}}
 
-% Define a color scheme for code
-\definecolor{keywordcolor}{RGB}{0,0,255}
-\definecolor{commentcolor}{RGB}{0,128,0}
-\definecolor{stringcolor}{RGB}{163,21,21}
-
-\robustify{\lstinputlisting}
 
 % Define common base style
 \lstdefinestyle{baseStyle}{
-    basicstyle=\ttfamily\small,          % Monospaced font for code
+    basicstyle=\mystylebasicstyle,          
     keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
     commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
-    stringstyle=\color{stringcolor},     % Strings in red
-    captionpos=b,                        % Caption position below
-    showstringspaces=false,              % Do not show spaces in strings
+    stringstyle=\color{stringcolor},     
+    captionpos=\mystylecaptionpos,                       
+    showstringspaces=\mystyleshowstringspaces,             
+    numbers=left,                        % Line numbers on the left
+    numberstyle=\color{numbercolor}\tiny,     % Style of the line numbers
+    stepnumber=1,                        % Show line numbers for every line
+    numbersep=\mystylenumbersep,                      
+    xleftmargin=\mystylexleftmargin,                   
+    xrightmargin=\mystylexrightmargin,                    
     breaklines=true                      % Allow line wrapping
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% WARNING: YOU SHOULD NOT NEED TO CHANGE ANYTHING BELOW THIS LINE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\robustify{\lstinputlisting}
 
 % Define Verilog style
 \lstdefinestyle{verilogStyle}{
@@ -63,17 +114,6 @@
 
 \usepackage{mdframed} % Replace 'framed' with 'mdframed'
 
-% Define variables for repeated properties
-\newcommand{\codeBackgroundColor}{gray!10}
-\newcommand{\codeLineColor}{black}
-\newcommand{\codeSkipAbove}{10pt}
-\newcommand{\codeSkipBelow}{10pt}
-\newcommand{\codeLeftMargin}{0pt}
-\newcommand{\codeRightMargin}{0pt}
-\newcommand{\codeInnerLeftMargin}{5pt}
-\newcommand{\codeInnerRightMargin}{5pt}
-\newcommand{\codeInnerTopMargin}{5pt}
-\newcommand{\codeInnerBottomMargin}{5pt}
 
 % Define verilogcode environment
 \lstnewenvironment{verilogcode}[1][]{
@@ -148,6 +188,27 @@
 }
 
 
+% Create Bash environment
+\lstnewenvironment{bashcode}[1][]{
+    \mdframed[
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
+    ]
+    \lstset{style=bashStyle,#1}
+}{
+    \endmdframed
+}
+
+
+
 \DeclareRobustCommand{\includechiselcode}[2][]{%
     \begin{mdframed}[
       backgroundcolor=\codeBackgroundColor,
@@ -193,27 +254,6 @@
 }
 
 
-
-\usepackage{mdframed} % Required for custom framed environments
-
-% Create Bash environment
-\lstnewenvironment{bashcode}[1][]{
-    \mdframed[
-      backgroundcolor=gray!10,           % Light gray background
-      linecolor=black,                   % Black frame color
-      skipabove=10pt,                    % Space above frame
-      skipbelow=10pt,                    % Space below frame
-      leftmargin=0pt,                    % No additional left margin
-      rightmargin=0pt,                   % No additional right margin
-      innerleftmargin=5pt,               % Inner left margin
-      innerrightmargin=5pt,              % Inner right margin
-      innertopmargin=5pt,                % Inner top margin
-      innerbottommargin=5pt              % Inner bottom margin
-    ]
-    \lstset{style=bashStyle,#1}
-}{
-    \endmdframed
-}
 
 
 
