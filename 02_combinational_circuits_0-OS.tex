@@ -61,6 +61,12 @@ A \lor \neg A = 1, \quad A \land \neg A = 0
 %***************************
 \subsection{DeMorgan's Laws}
 %***************************
+Augustus De Morgan (1806–1871) was a British mathematician and logician whose work played an important role in the development of formal logic and algebra. Born in India and educated in England, De Morgan became the first professor of mathematics at University College London \cite{grattan1997}. 
+
+De Morgan's Laws were introduced in his 1847 book, \emph{Formal Logic: or, The Calculus of Inference, Necessary and Probable} \citep{deMorgan1847}. In this work, De Morgan formalized rules for distributing negations over logical operators, providing a foundation for algebraic reasoning in logic. While the concepts underlying these laws can be traced back to Aristotelian logic, De Morgan was the first to formalize them using algebraic symbols.
+
+His work paralleled that of George Boole, whose algebraic system, now known as Boolean algebra, was published in the same period. Together, De Morgan and Boole changed the field of logic, moving it from a purely philosophical discipline to a mathematical one \citep{grattan1997}.
+
 DeMorgan's Laws are fundamental principles in Boolean algebra, describing the relationships between logical conjunction (AND), disjunction (OR), and negation (NOT). They provide a way to express the complement of a compound expression in terms of the complements of its components. These laws are especially useful in digital logic design and simplification, as they allow for the transformation of logic expressions to equivalent forms using fewer gates or alternate gate configurations \cite{rosen2018, tanenbaum2013}.
 
 Mathematically, DeMorgan's Laws state:
@@ -98,22 +104,6 @@ One of the uses of Boolean algebra in digital logic is the simplification of log
     \item \textbf{Quine-McCluskey algorithm}: A tabular approach to minimize logic expressions \cite{quine1952}.
 \end{itemize}
 
-%***************************
-\subsubsection{Truth Tables - MOVE SOMEWHERE}
-%***************************
-A truth table is a systematic way to list all possible combinations of input values and their corresponding output values for a given Boolean expression. For example, the truth table for the XOR operation (\( A \oplus B \)) is as follows:
-\[
-\begin{array}{|c|c|c|}
-\hline
-A & B & A \oplus B \\
-\hline
-0 & 0 & 0 \\
-0 & 1 & 1 \\
-1 & 0 & 1 \\
-1 & 1 & 0 \\
-\hline
-\end{array}
-\]
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -149,9 +139,7 @@ The signals used in a digital system are of two types:
 Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs.
 In the following System Verilog module, two waveforms are generated, one "random" and one usable as a periodic signal.
 
-\begin{shaded}
 \includecode{.}{waveFormGenerator}
-\end{shaded}
 
 
 By simulating the {\tt waveFormGenerator.sv} module, the behavior represented in Figure \ref{wave} results.
