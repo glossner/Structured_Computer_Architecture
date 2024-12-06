@@ -246,10 +246,10 @@
 
 \DeclareRobustCommand{\includecode}[2]{%
     \ifthenelse{\boolean{chiselversion}}{%
-        \includechiselcode[caption={#2 Code (Chisel)},label={lst:chisel_\string#2}]{#1/Chisel/src/main/scala/scabook/#2.scala}%
+        \includechiselcode[caption={#2 Code (Chisel)},label={lst:chisel_\string#2}]{#1/RTL/Chisel/src/main/scala/scabook/#2.scala}%
     }{}%
     \ifthenelse{\boolean{verilogversion}}{%
-        \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/Verilog/src/#2.sv}%
+        \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/RTL/Verilog/src/#2.sv}%
     }{}%
 }
 

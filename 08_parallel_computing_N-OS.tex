@@ -1,14 +1,14 @@
 \chapter{Parallel Computation: N-Loop, N-Order systems (N-OS)}\label{lect6b}
 
-As we saw in the first chapters, we were able to achieve the requirements of a computing system by successively introducing feedback loops starting from combinational circuits, circuits without loops. Can we continue the process of closing new loops? Could we have an additional gain from these additional loops? We will try to answer these questions in the following.
+As we saw in the second part of this book, we were able to achieve the requirements of a computing system by successively introducing feedback loops starting from combinational circuits, circuits without loops. Can we continue the process of closing new loops? Could we have an additional gain from these additional loops? We will try to answer these questions in the following.
 
 \section{Cellular Automata (CA)}
 
-Each new loop increases, as we have seen in the previous chapters, the complexity of the system. When the number of loops is $N$, for any large N, we cannot keep the increase in complexity at a level that corresponds to the number of loops. For this, the loops must close over identical systems to keep the complexity independent of $N$. Thus, even once the size becomes proportional to $N$, the complexity (the size of the shortest description) remains independent of $N$ and we can afford to keep the complexity independent of size. Moore's law ensures exponential growth only for size, not for complexity. In other words, we can exponentially increase the size of the hardware only if it has a repetitive pattern that keeps the description at a controllable size.
+Each new loop increases, as we have seen in the previous chapters, the complexity and the autonomy of the system. When the number of loops is $N$, for any large $N$, we cannot keep the increase in complexity at a level that corresponds to the number of loops. For this, the loops must close over identical systems to keep the complexity independent of $N$. Thus, even once the size becomes proportional to $N$, the complexity (the size of the shortest description) remains independent of $N$ and we can afford to keep the complexity independent of size. Moore's law ensures exponential growth only for size, but not for complexity. In other words, we can exponentially increase the size of the hardware only if it has a repetitive pattern that keeps the description at a controllable size.
 
 \placedrawing[h]{figures/09_05_Nth_order_system.lp}{An example of cellular structure as a Nth order system, N-OS. In this example, each cell is a second order system, 2-OS.}{nos}
 
-In Figure \ref{nos} a system of order N, N-OS is represented. The size of this system is in $O(N)$, while the complexity can also be in $O(N)$ or in $O(1)$. In the first case the system is complex, and in the second case the system is simple. The first case corresponds to the situation in which the cells $c_0, \ldots, c_1, \ldots$ are different, requiring, consequently, independent descriptions. The second case corresponds to the situation in which the cells are identical, in which case the description of the system involves the description of the cell and the regular way of interconnection of $n-1$ cells. Only the second case can be of interest. The first case involves a complexity that, for a large $N$, is impossible to control. And we are only interested in the case in which $N$ is as large as possible. 
+In Figure \ref{nos} a system of order $N$, N-OS, is represented. The size of this system is in $O(N)$, while the complexity can also be in $O(N)$ or in $O(1)$. In the first case the system is complex, and in the second case the system is simple. The first case corresponds to the situation in which the cells $c_0, \ldots, c_1, \ldots$ are different, requiring, consequently, independent descriptions. The second case corresponds to the situation in which the cells are identical, in which case the description of the system involves the description of the cell and the regular way of interconnection of $n-1$ cells. Only the second case can be of interest. The first case involves a complexity that, for a large $N$, is impossible to control, and we are only interested in the case in which $N$ is as large as possible. 
 
 %\subsection{Theoretical Cellular Automaton}
 
@@ -16,7 +16,7 @@ Digital systems theory introduces, for the case we are interested in, the concep
 
 \placedrawing[h]{figures/09_06_cellular_automaton.lp}{One-dimensional cellular automaton.}{ca}
 
-The theoretical concept of a cellular automaton is represented in Figure \ref{ca}. It consists of an unlimited number of identical linearly connected cells. Each cell is a automaton. All cells switch synchronously according to their internal states and to the signals received from the left cell and the right cell.
+The theoretical concept of a cellular automaton is represented in Figure \ref{ca} in its simplest form. It consists of an unlimited number of {\bf {\em identical linearly connected cells}}. Each cell is a automaton. All cells switch synchronously according to their internal states and to the signals received from the left cell and the right cell.
 
 \begin{exemplu}
 Let us consider the simplest cellular automaton described by the following modules:
@@ -25,9 +25,10 @@ Let us consider the simplest cellular automaton described by the following modul
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= ,  morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
 /************************************************************************
-File name:      cellularAutomaton.sv
+File names:     cellAut.sv
 Circuit name:   One-bit cell cellular automaton
-Description:    
+Description:    The cell is a two-state, two one-bit inputs finite 
+                automaton 
 ************************************************************************/
 `define n 1024
 module cellAut 	
@@ -47,7 +48,23 @@ module cellAut
         end
     endgenerate
 endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
 
+{\em
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= ,  morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File names:     eCell.sv
+Circuit name:   One-bit cell for the cellular automaton cellAut.sv
+Description:    The cell of the cellular automatn cellAut.sv is a 
+                two-state, two one-bit inputs finite automaton defined 
+                in the most general form using a 8-bit word applied on 
+                the selected inputs of a multiplexor
+************************************************************************/
 module eCell(   output  logic       out ,
                 input   logic [7:0] func,
                 input   logic       init, in0, in1, rst, clk );
@@ -77,26 +94,26 @@ The theoretical model of a cellular automaton assumes a vector whose components 
 
 \placedrawing[h]{figures/09_07_controlled_CA.lp}{Controlled Cellular Automaton (CCA).}{controledCA}
 
-The solution that allows increasing the flexibility of the computing process and reducing the size of the hardware structure involves:
+The solution that allows the increasing of the flexibility of the computing process and the reducing of the size of the hardware structure involves:
 \begin{itemize}
     \item structuring the state space of the automaton in each cell by replacing the state register, $Q$, with a register file where the state has a structure of a Cartesian product $Q = \{Q_0 \times  Q_1 \times \ldots \times Q_{m-1}\}$ (see the RALU circuit in subsection \ref{rALU})
     \item adding a controller, SQ, that sequences the evolution of the internal state in each cell. 
 \end{itemize}
 Results the system represented in Figure \ref{controledCA} where:
 \begin{itemize}
-    \item SQ is a controller (processor + data memory + program memory) which issues in each clock cycle the same command for each cell
-    \item Distribute is a $log$-depth network (see Figure \ref{distribute}) used to send to each cell, with a $log$-latency, the command issued by SQ  
+    \item SQ is a controller (processor + data memory + program memory) which issues in each clock cycle a command which the same command for each cell
+    \item Distribute is a $log$-depth network (see Figure \ref{distribute}) used to send to each cell, with a $log$-latency, the command issued by SQ; it is necessary because o connection form SQ to {\bf many} cells distributed on a {\bf big} surface is electrically impossible at a high frequency of the clock signal, reasons why we use a distribution network that is loaded at each node with only two pipeline registers connected at a reasonably large distance.
 
  \placedrawing[h]{figures/09_11_distribution_net.lp}{Distribution network for a circuit with $p = 16$.}{distribute}
     
-    \item $c_0, c_1, \ldots, c_{p-1}$ form the cellular automaton, Map, with a finite number of cells, each equipped with a RALU type execution unit.
+    \item $c_0, c_1, \ldots, c_{p-1}$ which form a cellular automaton, Map, with a finite number of cells, each equipped with a RALU type execution unit.
 \end{itemize}
 
 \subsection{Mapping}
 
 Mapping an operation involves applying a function to each element in a collection (e.g., a list, array). This can be achieved using constructs like the {\tt map(...)} function in many programming languages.
 \begin{exemplu}
-If you have a vector of numbers [1, 2, 3, 4] and want to double each number, the code in Python is:
+If you have a vector of numbers {\tt [1, 2, 3, 4]} and want to double each number, the code in Python is:
 {\small
 {\em
 \begin{shaded*}
@@ -113,9 +130,11 @@ print(list(doubled))  # Output: [2, 4, 6, 8]
 \end{shaded*}
 }
 }
+The operation multiply, $*$, is mapped, in the previous Python program, to the vector {\tt [1, 2, 3, 4]}.
 
 $\diamond$
 \end{exemplu}
+Our CCA contains an array of cells which can be namer Map because allows applying the same  function to the elemnts of a vector distributed along the cells  it is made of.
 
 \subsection{Architecture}
 
@@ -135,31 +154,31 @@ which involves $p$ additions is executed in constant time, i.e, is executed in {
 
 If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated  to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
 
-The state of SQ is represented by an array of scalar values: {\tt MSQ = [v0 v1 ... ]}. 
+The state of SQ is represented by an array of scalar values: {\tt MSQ = [v0 v1 ... ]}, i.e., the data memory of the controller SQ. 
 
 There are the following subsets of operations performed, under the command of SQ, in the Map section. 
 
 \subsubsection{Spatial selection}
 
-The selection of a subset of cells for predicated execution is supported by a constant vector containing the cell indices, as follows:
+The selection of a subset of cells for predicate execution is facilitated, but not exclusively, by a constant vector containing cell indexes, as follows:
 $IX=\langle
 \begin{matrix}
 0 & 1 & \ldots & p-1
 \end{matrix}
 \rangle$
 
-Instead of the conditional jump operations performed in a single-core processing structure, in the many-core structure represented by the Map array the conditional operations are performed by a selection of active cells according to a condition that is tested in each cell. The conditional selection allows for predicated execution by modifying the contents of the Boolean vector 
+Instead of the conditional jump operations performed in a single-core processing structure, in the many-core structure represented by the Map array, the conditional operations are performed by a selection of active cells according to a condition that is tested in each cell. The conditional selection allows for predicated execution by modifying the contents of the Boolean vector 
 $B=\langle
 \begin{matrix}
 b_0 & b_1 & \ldots & b_{p-1}
 \end{matrix}
 \rangle$ which indicate the state of each cell: $if (b_i == 1)$ the cell is active, $else$ it is inactive. A minimal set used to control the vector $B$ is:
 \begin{description}
-    \item[{\tt ACTIVATE}:] activate all cells  
-    \\ $b_i \Leftarrow 1$ for $i = 0,  \ldots  p-1$
-    \item[{\tt WHERE(cond)}:] keep active only the cells where the condition $cond$ is fulfilled
-    \\ $b_i \Leftarrow (b_i \; \& \; cond) \; ? \; b_i \; : \; 0$, for $i = 0, \ldots  p-1$
-    \item[{\tt ENDWHERE}:]  the effect on $B$ of the active {\tt WHERE} is restored
+    \item[{\tt ACTIVATE}:] activate all cells  \\ 
+    $b_i \Leftarrow 1$ for $i = 0,  \ldots  p-1$
+    \item[{\tt WHERE(cond)}:] keep active only the active cells where the condition $cond$ is fulfilled \\ 
+    $b_i \Leftarrow (b_i \; \& \; cond) \; ? \; b_i \; : \; 0$, for $i = 0, \ldots  p-1$
+    \item[{\tt ENDWHERE}:]  the effect on $B$ of the acting {\tt WHERE} is restored
 \end{description}
 
 \subsubsection{Arithmetic \& Logic vector operations}  
@@ -308,7 +327,7 @@ where the vector product, $V_i \times V_j$, is performed in Map in constant time
 $\diamond$
 \end{exemplu}
 
-In the previous example, $2p-1$ computational results -- $p$ multipliers from Map and $p-1$ adders from Reduce -- are used in $1+log_2 \; p$ cycles to perform $2p-1$ operations. This results, for $p=1024$, in an average of 186 operations/cycle. So, we must be careful! We need algorithms that allow for the most intensive use of hardware resources.
+In the previous example, $2p-1$ computational results -- $p$ multipliers from Map and $p-1$ adders from Reduce -- are used in $1+log_2 \; p$ cycles to perform $2p-1$ operations. This results, for $p=1024$, in an average of 186 operations/cycle. So, we must be careful! We need algorithms that allow for the most intensive use of hardware resources \cite{antonescu23}.
 
 \section{Second Global Loop in CA}
 
@@ -318,7 +337,7 @@ The second global loop is a scan loop that takes a vector from Map, processes it
 
 \placedrawing[h]{figures/09_09_second_global_loop.lp}{MapScanReduce structure obtained  by closing the second global loop over a controlled cellular automaton.}{secondLoop}
 
-\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation.} {red}
+\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation \cite{antonescu20} \cite{antonescu24}.} {red}
 
 We use the term {\em scan} by extension, starting from the already established use for prefix-type networks.
 
@@ -377,22 +396,28 @@ The main application of the MapScanReduce structure is in heterogeneous computin
 let's define the two types of computations. In this respect, we use the {\em algorithmic complexity} \cite{Chaitin70} which helps us make the necessary distinction between size and complexity.
 
 \begin{definition}
-The algorithmic complexity of an entity is given by the length of its shortest description.
+The {\bf {\em algorithmic complexity}} of an entity is given by the length of its shortest description.
+
 $\diamond$
 \end{definition}
 
 \begin{definition}
 An entity is complex when its size is in the same magnitude order with its algorithmic complexity, and is simple when with a size in $O(f(N))$ its complexity remains in $O(1)$.
+
 $\diamond$
 \end{definition}
+
 Now, regarding computation the following two definitions can be accepted.
+
 \begin{definition}
 Complex computation is characterized by an execution time proportional to the number of lines of executable code by which it is described.
+
 $\diamond$
 \end{definition}
 
 \begin{definition}
 The intensive, simple computation is described by a constant number, in $O(1)$, of lines of executable code, independent of the execution time which is in $O(f(N))$, where $N$ is used to define the size of the precessed data.
+
 $\diamond$
 \end{definition}
 
@@ -487,6 +512,146 @@ In Table \ref{ops} is listed partially the set of operations performed at the ac
 
 \end{table}
 
+
+\subsubsection{Library of primitives: an example}
+
+One of the most used library of function contains linear algebra functions. In the following few of the most used linear algebra functions are described to exemplify the intense functions appropriate to implemented on a MapScanReduce architecture.
+
+\paragraph{Identity matrix} is a matrix working as the scalar 1 in the arithmetic multiplication and division; it has 1s on the main diagonal as follows:
+\[
+I = \begin{bmatrix}
+    1 & 0 & 0 & \ldots & 0 \\
+    0 & 1 & 0 & \ldots & 0 \\
+    \ldots & \ldots & \ldots & \ldots & 0               \\
+    0 & 0 & 0 & \dots  & 1
+    \end{bmatrix}
+\]
+
+
+\paragraph{Inner (dot or scalar) product} of two vector provides a scalar as the sum of matching members products.
+\begin{exemplu} Let be the vectors {\tt V1 = [1 2 3 4]} and {\tt V2 = [5 6 7 8]}. Their inner, dot or scalar product is: $$V1 \cdot V2 = 1 \times 5 + 2 \times 6 + 3 \times 7 + 4 \times 8 = 70$$
+
+$\diamond$
+\end{exemplu}
+
+\paragraph{Matrix-vector multiply} provide a vector of the dot products between the lines of the matrix and the vector.
+
+\begin{exemplu}
+Let be the matrix
+\[
+M = \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6\\
+    7 & 8 & 9
+    \end{bmatrix}
+\]
+and the vector 
+\[
+V = \begin{bmatrix}
+    10 \\
+    11 \\
+    12 
+    \end{bmatrix}
+\] 
+their product is:
+\[
+M \times V = \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6\\
+    7 & 8 & 9
+    \end{bmatrix}
+    \times
+    \begin{bmatrix}
+    10 \\
+    11 \\
+    12
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+    1 \times 10 + 2 \times 11 + 3 \times 12 \\
+    4 \times 10 + 5 \times 11 + 6 \times 12  \\
+    7 \times 10 + 8 \times 11 + 9 \times 12 
+    \end{bmatrix}
+    = 
+     \begin{bmatrix}
+    68 \\
+    167 \\
+    326
+    \end{bmatrix}
+\]
+
+$\diamond$
+\end{exemplu}
+
+\paragraph{Matrix multiplication} of two matrices {\tt M1} and {\tt M2} provides a matrix {\tt M} whose lines a contains the dot products of a column, starting with the first column, form {\tt M2}with each lines from {\tt M1} starting with the first line in {\tt M1}. The number of lines in {\tt M1} must be the same with the number of columns in {\tt M2}.
+
+\begin{exemplu}
+Let be two matrices:
+\[
+M1 = \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6
+    \end{bmatrix}
+\] 
+and
+\[
+M2 = \begin{bmatrix}
+    1 & 2  \\
+    3 & 4 \\
+    5 & 6 
+    \end{bmatrix}
+\]
+Their product is computed as follow:
+\[
+M = M1 \times M2 = 
+    \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6
+    \end{bmatrix}
+    \times
+    \begin{bmatrix}
+    1 & 2  \\
+    3 & 4 \\
+    5 & 6
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+    1 \times 1 + 2 \times 3 + 3 \times 5 & 1 \times 2 + 2 \times 4 + 3 \times 6  \\
+    4 \times 1 + 5 \times 3 + 6 \times 5 & 4 \times 2 + 5 \times 4 + 6 \times 6  
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    22 & 28  \\
+    49 & 64 
+    \end{bmatrix}
+\]
+
+$\diamond$
+\end{exemplu}
+
+\paragraph{Matrix transpose} applied to the matrix $M$ is $M^T$ with the lines equal with the columns of $M$.
+
+\begin{exemplu}
+Let be the matrix:
+\[
+M = \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6\\
+    7 & 8 & 9
+    \end{bmatrix}
+\]
+Its transpose is:
+\[
+M^T = \begin{bmatrix}
+    1 & 4 & 7 \\
+    3 & 5 & 8\\
+    3 & 6 & 9
+    \end{bmatrix}
+\]
+
+$\diamond$
+\end{exemplu}
+
 Let us consider the simplest, most intense computation of multiplying matrices.
 {\small
 \begin{shaded*}
@@ -579,7 +744,6 @@ Because the previous algorithm works with vectors, instead of the three embedded
 $\diamond$
 \end{exemplu}
 
-\subsubsection{Library of primitives}
 
 In Table \ref{prim}
 
@@ -636,7 +800,7 @@ The execution time of the previous sequence of operations does not depend on the
 $\diamond$
 \end{exemplu}
 
-There are real premises for the acceleration obtained by using a Map array to be in $O(p)$, but more than that there are many cases when the acceleration is  {\bf {\em superlinear}} compared to a single-core structure, due to the control that is performed by SQ, control that in a single-core implementation is also the responsibility of the processor.
+There are real premises for the acceleration obtained by using a Map array to be in $O(p)$, but more than that there are many cases when the acceleration is  {\bf {\em superlinear}} compared to a single-core structure, due to the control that is performed by SQ, control that in a single-core implementation is also the responsibility of the processor \cite{antonescu24a}.
 
 \subsubsection{Reduction Pattern}
 

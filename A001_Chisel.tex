@@ -498,16 +498,16 @@ Assuming you have cloned this book (Structured Computer Architecture), you will 
 \subsection{Run Chisel Test}
 %***************************
 The following very simple design generates a waveform
-\includechiselcode[caption={Waveform Generator Code (Chisel)}, label={lst:chisel_waveformgenerator}]{Chisel/src/main/scala/scabook/waveFormGenerator.scala}
+\includechiselcode[caption={Waveform Generator Code (Chisel)}, label={lst:chisel_waveformgenerator}]{RTL/Chisel/src/main/scala/scabook/waveFormGenerator.scala}
 
 The testbench for the code is:
-\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:chisel_waveformgeneratortestbench}]{Chisel/src/test/scala/scabook/waveFormGeneratorSpec.scala}
+\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:chisel_waveformgeneratortestbench}]{RTL/Chisel/src/test/scala/scabook/waveFormGeneratorSpec.scala}
 
 %*****************************
 \subsection{Run the Testbench}
 %*****************************
 If you have cloned the textbook, build.sbt will be in your Chisel/ directory.
-\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:build_sbt}]{Chisel/build.sbt}
+\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:build_sbt}]{RTL/Chisel/build.sbt}
 
 The following commands will run the test bench
 \begin{bashcode}
@@ -562,7 +562,7 @@ sbt run
 \end{bashcode}
 
 This will produce
-\includeverilogcode[caption={Clean SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorcleanverilog}]{Chisel/generated_verilog_clean/WaveFormGenerator.sv}
+\includeverilogcode[caption={Clean SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorcleanverilog}]{RTL/Chisel/generated_verilog_clean/WaveFormGenerator.sv}
 
 %***************************************************
 \subsection{Generate Annotated/Debug System Verilog}
@@ -579,13 +579,13 @@ object WaveFormGenerator extends App {
 \end{chiselcode}
 
 The annotated/debug SystemVerilog generated code should look like:
-\includeverilogcode[caption={Annotated SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorannotatedverilog}]{Chisel/generated_verilog_annotated/WaveFormGenerator.sv}
+\includeverilogcode[caption={Annotated SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorannotatedverilog}]{RTL/Chisel/generated_verilog_annotated/WaveFormGenerator.sv}
 
 %***********************************************
 \subsection{Verilator C++ Test Driver}
 %***********************************************
 Create a Verilator C++ test driver. It is in Chisel/verilator\_testbench
-\includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{Chisel/verilator_testbench/WaveFormGenerator_testbench.cpp}
+\includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{RTL/verilator_testbench/WaveFormGenerator_testbench.cpp}
 
 From the Chisel/verilator\_testbench, execute:
 \begin{bashcode}
@@ -611,3 +611,139 @@ gtkwave waveform.vcd
     \caption{Waveforms generated for a Verilator SystemVerilog simulation}
     \label{fig:verilator_wave}
 \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%0
+\section{Vivado Execution}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Vivado is a comprehensive FPGA design suite developed by Xilinx. It integrates various tools for hardware design, simulation, synthesis, implementation, and debugging. Vivado supports Verilog, SystemVerilog, and VHDL for both design and simulation.
+
+%**********************************
+\subsection{Steps to Use Vivado}
+%**********************************
+\begin{enumerate}
+    \item \textbf{Create a Project:}
+    \begin{itemize}
+        \item Open Vivado and create a new project.
+        \item Specify the project type (RTL or post-synthesis).
+        \item Add source files (e.g., Verilog, SystemVerilog, or VHDL).
+    \end{itemize}
+
+    \item \textbf{Write or Import a Testbench:}
+    \begin{itemize}
+        \item Add a testbench to simulate your design.
+        \item Set the testbench as the top module for simulation.
+    \end{itemize}
+
+    \item \textbf{Simulate the Design:}
+    \begin{itemize}
+        \item Use the Vivado simulator to run behavioral simulations.
+        \item Analyze the results in the waveform viewer.
+    \end{itemize}
+
+    \item \textbf{Synthesize and Implement:}
+    \begin{itemize}
+        \item Perform synthesis to generate a netlist.
+        \item Run implementation to map the design to the FPGA.
+    \end{itemize}
+
+    \item \textbf{Generate a Bitstream:}
+    \begin{itemize}
+        \item Create a bitstream file to program the FPGA.
+    \end{itemize}
+\end{enumerate}
+
+%************************************
+\subsection{Key Features of Vivado}
+%************************************
+\begin{itemize}
+    \item Supports advanced FPGA features such as high-speed transceivers and DSP blocks.
+    \item Built-in waveform viewer for debugging simulations.
+    \item Comprehensive support for Xilinx devices.
+\end{itemize}
+
+%********************************************
+\section{Comparison of Vivado and Verilator}
+%********************************************
+Vivado and Verilator are both widely used in hardware design, but they cater to different needs. Below is a detailed comparison:
+
+\begin{table}[htbp]
+\renewcommand{\arraystretch}{2} % Adjust the row height (1.5x default)
+\centering
+\begin{tabular}{@{}p{4cm}p{6cm}p{6cm}@{}}
+\toprule
+\textbf{Feature}              & \textbf{Vivado}                                & \textbf{Verilator}                              \\ \midrule
+\textbf{Purpose}              & Comprehensive FPGA design suite                & High-speed cycle-accurate simulation tool       \\
+\textbf{Languages Supported}  & Verilog, SystemVerilog, VHDL                   & Verilog, SystemVerilog                         \\
+\textbf{Test Driver Language} & HDL (Verilog/SystemVerilog/VHDL)               & C++ (or SystemC for advanced simulations)      \\
+\textbf{Simulation Speed}     & Moderate (event-driven simulator)              & Very high (compiled C++ simulation)            \\
+\textbf{Waveform Viewer}      & Built-in (integrated with simulation)          & Requires external tools like GTKWave (VCD)     \\
+\textbf{FPGA Synthesis}       & Yes                                           & No                                             \\
+\textbf{FPGA Targeting}       & Xilinx FPGAs                                   & Not applicable                                 \\
+\textbf{Debugging Features}   & Integrated debugging and timing analysis tools & Debugging through C++ or external tools        \\
+\textbf{Open Source}          & No (proprietary software)                      & Yes (GPL-licensed)                             \\ \bottomrule
+\end{tabular}
+\caption{Comparison of Vivado and Verilator}
+\label{tab:vivado_vs_verilator}
+\end{table}
+
+\section*{When to Use Vivado vs. Verilator}
+
+\begin{itemize}
+    \item \textbf{Use Vivado:}
+    \begin{itemize}
+        \item When designing and implementing FPGA designs targeting Xilinx devices.
+        \item If you require a complete toolchain for synthesis, implementation, and simulation.
+        \item For designs involving VHDL.
+    \end{itemize}
+    \item \textbf{Use Verilator:}
+    \begin{itemize}
+        \item For high-speed simulations of Verilog/SystemVerilog designs.
+        \item When testing large designs with long simulation runs.
+        \item For open-source or academic projects where licensing costs are a concern.
+    \end{itemize}
+\end{itemize}
+
+
+
+The following is the SystemVerilog module `waveFormGenerator`, which generates a random waveform and a clock signal:
+
+\includeverilogcode{RTL/Verilog/src/WaveFormGenerator.sv}
+
+
+\section*{SystemVerilog Testbench}
+
+The testbench for the `waveFormGenerator` module monitors its signals during simulation:
+
+\begin{verilogcode}[caption={SystemVerilog Testbench for waveFormGenerator}]
+`timescale 1ns/1ps
+
+module waveFormGenerator_tb;
+    logic randomWave;
+    logic clock;
+
+    // Instantiate the DUT (Device Under Test)
+    waveFormGenerator dut();
+
+    initial begin
+        $monitor("Time: %0t | randomWave: %b | clock: %b", $time, dut.randomWave, dut.clock);
+        #30 $finish; // End the simulation after 30 time units
+    end
+endmodule
+\end{verilogcode}
+
+\section*{Explanation}
+
+\subsection*{Module Details}
+The `waveFormGenerator` module generates:
+\begin{itemize}
+    \item A `randomWave` signal with values that change at specified time delays.
+    \item A `clock` signal that toggles every 2 time units.
+\end{itemize}
+
+\subsection*{Testbench Details}
+The testbench:
+\begin{itemize}
+    \item Instantiates the `waveFormGenerator` module.
+    \item Monitors the `randomWave` and `clock` signals using `\$monitor`.
+    \item Ends the simulation after 30 time units with `\$finish`.
+\end{itemize}

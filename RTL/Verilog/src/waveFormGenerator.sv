@@ -1,10 +1,9 @@
-/*************************************************************************
+/*******************************************************************
 File name: waveFormGenerator.sv
 Circuit name: no circuit, only wave formes
-Description: two waveforms are generated, a "random" one and a periodical
-             one: a clock signal
-Copyright: 
-*************************************************************************/
+Description: two waveforms are generated, a "random" one and 
+             a periodical one: a clock signal
+*******************************************************************/
 module waveFormGenerator();
     logic randomWave;
     logic clock     ;
