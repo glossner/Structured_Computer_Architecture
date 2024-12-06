@@ -22,6 +22,15 @@
 %     \begin{bashcode}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%
+% src repositories
+%%%%%%%%%%%%%%%%%%%
+\newcommand{\chiselSourceDir}{RTL/Chisel/src/main/scala/scabook}
+\newcommand{\chiselTestBenchSourceDir}{RTL/Chisel/src/test/scala/scabook}
+\newcommand{\verilogSourceDir}{RTL/Verilog/src}
+\newcommand{\verilatorSourceDir}{RTL/verilator_testbench}
+\newcommand{\vivadoSourceDir}{RTL/verilator_testbench}
+
 %%%%%%%%%%%%%%%%%%%%%%%%
 % CONFIGURE CODE OPTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,7 +80,7 @@
     numbers=left,                        % Line numbers on the left
     numberstyle=\color{numbercolor}\tiny,     % Style of the line numbers
     stepnumber=1,                        % Show line numbers for every line
-    numbersep=\mystylenumbersep,                      
+    numbersep=\mystylenumbersep,
     xleftmargin=\mystylexleftmargin,                   
     xrightmargin=\mystylexrightmargin,                    
     breaklines=true                      % Allow line wrapping
@@ -81,6 +90,7 @@
 % WARNING: YOU SHOULD NOT NEED TO CHANGE ANYTHING BELOW THIS LINE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \robustify{\lstinputlisting}
+\usepackage{xparse}
 
 % Define Verilog style
 \lstdefinestyle{verilogStyle}{
@@ -209,7 +219,7 @@
       innertopmargin=\codeInnerTopMargin,
       innerbottommargin=\codeInnerBottomMargin,
     ]%
-    \lstinputlisting[style=verilogStyle,#1]{#2}%
+        \lstinputlisting[style=verilogStyle, #1]{#2}%
     \end{mdframed}%
 }
 
@@ -227,11 +237,12 @@
       innertopmargin=\codeInnerTopMargin,
       innerbottommargin=\codeInnerBottomMargin,
     ]%
-    \lstinputlisting[style=chiselStyle,#1]{#2}%      
+        \lstinputlisting[style=chiselStyle, #1]{#2}%
     \end{mdframed}%
 }
 
 
+% Modified macro
 \DeclareRobustCommand{\includecppcode}[2][]{%
     \begin{mdframed}[
       backgroundcolor=\codeBackgroundColor,
@@ -245,9 +256,10 @@
       innertopmargin=\codeInnerTopMargin,
       innerbottommargin=\codeInnerBottomMargin,
     ]%
-    \lstinputlisting[style=cppStyle,#1]{#2}%
+        \lstinputlisting[style=cppStyle, #1]{#2}%
     \end{mdframed}%
 }
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
 
@@ -259,7 +271,7 @@
 %#6: Chisel last line
 %\includecode{myproject}{mycode}{10}{30}{40}{60}
 
-\usepackage{xparse}
+
 \NewDocumentCommand{\includecode}{m m O{1} O{99999} O{1} O{99999}}{%
   % #1 = project path
   % #2 = code name

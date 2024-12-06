@@ -498,10 +498,10 @@ Assuming you have cloned this book (Structured Computer Architecture), you will 
 \subsection{Run Chisel Test}
 %***************************
 The following very simple design generates a waveform
-\includechiselcode[caption={Waveform Generator Code (Chisel)}, label={lst:chisel_waveformgenerator}]{RTL/Chisel/src/main/scala/scabook/waveFormGenerator.scala}
+\includechiselcode[caption={Waveform Generator Code (Chisel)}, label={lst:chisel_waveformgenerator2}]{\chiselSourceDir/waveFormGenerator.scala}
 
 The testbench for the code is:
-\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:chisel_waveformgeneratortestbench}]{RTL/Chisel/src/test/scala/scabook/waveFormGeneratorSpec.scala}
+\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:chisel_waveformgeneratortestbench}]{\chiselTestBenchSourceDir/waveFormGeneratorSpec.scala}
 
 %*****************************
 \subsection{Run the Testbench}
@@ -585,7 +585,7 @@ The annotated/debug SystemVerilog generated code should look like:
 \subsection{Verilator C++ Test Driver}
 %***********************************************
 Create a Verilator C++ test driver. It is in Chisel/verilator\_testbench
-\includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{RTL/verilator_testbench/WaveFormGenerator_testbench.cpp}
+\includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{\verilatorSourceDir/WaveFormGenerator_testbench.cpp}
 
 From the Chisel/verilator\_testbench, execute:
 \begin{bashcode}
