@@ -1,19 +1,19 @@
 ### Project Specific stuff
 
 # sbt specific
-Chisel/.cache
-Chisel/.history
-Chisel/.lib/
-Chisel/dist/*
-Chisel/target/
-Chisel/lib_managed/
-Chisel/src_managed/
-Chisel/project/
-Chisel/plugins.sbt
-Chisel/build.properties
-Chisel/.bloop
-Chisel/verilator_testbench/obj_dir
-Chisel/verilator_testbench/*.vcd
+RTL/Chisel/.cache
+RTL/Chisel/.history
+RTL/Chisel/.lib/
+RTL/Chisel/dist/*
+RTL/Chisel/target/
+RTL/Chisel/lib_managed/
+RTL/Chisel/src_managed/
+RTL/Chisel/project/
+RTL/Chisel/plugins.sbt
+RTL/Chisel/build.properties
+RTL/Chisel/.bloop
+RTL/verilator_testbench/obj_dir
+RTL/verilator_testbench/*.vcd
 
 # Scala-IDE specific
 .scala_dependencies
