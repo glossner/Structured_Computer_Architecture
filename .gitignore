@@ -16,6 +16,7 @@ RTL/verilator_testbench/obj_dir
 RTL/verilator_testbench/*.vcd
 
 # Scala-IDE specific
+.scala-build
 .scala_dependencies
 .worksheet
 .metals
