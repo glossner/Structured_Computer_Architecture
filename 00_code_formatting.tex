@@ -33,8 +33,6 @@
 
 % Code Style parameters (\lstdefinestyle)
 \newcommand{\mystylebasicstyle}{\ttfamily\small}          % Monospaced font for code
-\newcommand{\mystylecaptionpos}{b}                        % Caption position below
-\newcommand{\mystyleshowstringspaces}{false}              % Do not show spaces in strings
 \newcommand{\mystylenumbersep}{10pt}                      % Space between line numbers and code
 \newcommand{\mystylexleftmargin}{12pt}                    % Adjust left margin to align numbers within the frame
 \newcommand{\mystylexrightmargin}{0pt}                    % No additional right margin
@@ -68,8 +66,8 @@
     keywordstyle=\color{keywordcolor}\bfseries, % Keywords in bold 
     commentstyle=\color{commentcolor}\itshape,  % Comments in italic 
     stringstyle=\color{stringcolor},     
-    captionpos=\mystylecaptionpos,                       
-    showstringspaces=\mystyleshowstringspaces,             
+    captionpos=b,                       
+    showstringspaces=false,             
     numbers=left,                        % Line numbers on the left
     numberstyle=\color{numbercolor}\tiny,     % Style of the line numbers
     stepnumber=1,                        % Show line numbers for every line
@@ -152,42 +150,6 @@
     \endmdframed
 }
 
-\lstnewenvironment{cppcode}[1][]{
-    \mdframed[
-      backgroundcolor=\codeBackgroundColor,
-      linecolor=\codeLineColor,
-      skipabove=\codeSkipAbove,
-      skipbelow=\codeSkipBelow,
-      leftmargin=\codeLeftMargin,
-      rightmargin=\codeRightMargin,
-      innerleftmargin=\codeInnerLeftMargin,
-      innerrightmargin=\codeInnerRightMargin,
-      innertopmargin=\codeInnerTopMargin,
-      innerbottommargin=\codeInnerBottomMargin,
-    ]
-    \lstset{style=cppStyle,#1}
-}{
-    \endmdframed
-}
-
-\DeclareRobustCommand{\includeverilogcode}[2][]{%
-    \begin{mdframed}[
-      backgroundcolor=\codeBackgroundColor,
-      linecolor=\codeLineColor,
-      skipabove=\codeSkipAbove,
-      skipbelow=\codeSkipBelow,
-      leftmargin=\codeLeftMargin,
-      rightmargin=\codeRightMargin,
-      innerleftmargin=\codeInnerLeftMargin,
-      innerrightmargin=\codeInnerRightMargin,
-      innertopmargin=\codeInnerTopMargin,
-      innerbottommargin=\codeInnerBottomMargin,
-    ]%
-    \lstinputlisting[style=verilogStyle,#1]{#2}%
-    \end{mdframed}%
-}
-
-
 % Create Bash environment
 \lstnewenvironment{bashcode}[1][]{
     \mdframed[
@@ -207,6 +169,49 @@
     \endmdframed
 }
 
+\lstnewenvironment{cppcode}[1][]{
+    \mdframed[
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
+    ]
+    \lstset{style=cppStyle,#1}
+}{
+    \endmdframed
+}
+
+%%%%%%%%%%%%%%%%%%%
+% FILE INCLUDES
+%%%%%%%%%%%%%%%%%%%
+
+    % #1 = optional LST settings (e.g. caption, label)
+    % #2 = first line
+    % #3 = last line
+    % #4 = filename
+
+\DeclareRobustCommand{\includeverilogcode}[2][]{%
+    \begin{mdframed}[
+      backgroundcolor=\codeBackgroundColor,
+      linecolor=\codeLineColor,
+      skipabove=\codeSkipAbove,
+      skipbelow=\codeSkipBelow,
+      leftmargin=\codeLeftMargin,
+      rightmargin=\codeRightMargin,
+      innerleftmargin=\codeInnerLeftMargin,
+      innerrightmargin=\codeInnerRightMargin,
+      innertopmargin=\codeInnerTopMargin,
+      innerbottommargin=\codeInnerBottomMargin,
+    ]%
+    \lstinputlisting[style=verilogStyle,#1]{#2}%
+    \end{mdframed}%
+}
 
 
 \DeclareRobustCommand{\includechiselcode}[2][]{%
@@ -222,9 +227,10 @@
       innertopmargin=\codeInnerTopMargin,
       innerbottommargin=\codeInnerBottomMargin,
     ]%
-    \lstinputlisting[style=chiselStyle,#1]{#2}%
+    \lstinputlisting[style=chiselStyle,#1]{#2}%      
     \end{mdframed}%
 }
+
 
 \DeclareRobustCommand{\includecppcode}[2][]{%
     \begin{mdframed}[
@@ -242,15 +248,33 @@
     \lstinputlisting[style=cppStyle,#1]{#2}%
     \end{mdframed}%
 }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
 
+%#1: Base path (e.g. myproject)
+%#2: Code name (e.g. mycode)
+%#3: Verilog first line
+%#4: Verilog last line
+%#5: Chisel first line
+%#6: Chisel last line
+%\includecode{myproject}{mycode}{10}{30}{40}{60}
 
-\DeclareRobustCommand{\includecode}[2]{%
-    \ifthenelse{\boolean{chiselversion}}{%
-        \includechiselcode[caption={#2 Code (Chisel)},label={lst:chisel_\string#2}]{#1/RTL/Chisel/src/main/scala/scabook/#2.scala}%
-    }{}%
-    \ifthenelse{\boolean{verilogversion}}{%
-        \includeverilogcode[caption={#2 Code (Verilog)},label={lst:verilog_\string#2}]{#1/RTL/Verilog/src/#2.sv}%
-    }{}%
+\usepackage{xparse}
+\NewDocumentCommand{\includecode}{m m O{1} O{99999} O{1} O{99999}}{%
+  % #1 = project path
+  % #2 = code name
+  % #3 = verilog first line (default 1)
+  % #4 = verilog last line (default 99999)
+  % #5 = chisel first line (default 1)
+  % #6 = chisel last line (default 99999)
+
+  \ifthenelse{\boolean{chiselversion}}{%
+    \includechiselcode[{caption={#2 Code (Chisel)},label={lst:chisel_\string#2}, firstline=#5, firstnumber=#5, lastline=#6}]{#1/RTL/Chisel/src/main/scala/scabook/#2.scala}%
+  }{}%
+
+  \ifthenelse{\boolean{verilogversion}}{%
+    \includeverilogcode[{firstline=#3, firstnumber=#3, lastline=#4, caption={#2 Code (Verilog)}, label={lst:verilog_\string#2}}]{#1/RTL/Verilog/src/#2.sv}%
+  }{}%
 }
 
 
