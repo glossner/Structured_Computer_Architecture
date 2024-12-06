@@ -137,9 +137,43 @@ The signals used in a digital system are of two types:
 \end{itemize}
 
 Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs.
+
 In the following System Verilog module, two waveforms are generated, one "random" and one usable as a periodic signal.
 
-\includecode{.}{waveFormGenerator}[7][20][6][22]
+%***************************************************
+% WaveformGenerator
+%***************************************************
+\ifthenelse{\boolean{chiselversion}}{
+    \includechiselcode[caption={Waveform Generator Code (Chisel)},     label={lst:chisel_waveformgenerator}, firstline=6, firstnumber=6, lastline=22]{\chiselSourceDir/waveFormGenerator.scala}
+
+Listing \ref{lst:chisel_waveformgenerator} shows
+
+}%ifthenelse
+
+
+The provided \texttt{waveFormGenerator} module generates two waveforms:
+\begin{enumerate}
+    \item \textbf{\texttt{randomWave}}:
+        \begin{itemize}
+            \item A custom waveform defined by specific delays.
+            \item Transitions occur at the following times:
+                \begin{enumerate}
+                    \item Start at 0.
+                    \item After 2 time units, it transitions to 1.
+                    \item After 6 more time units, it transitions back to 0.
+                    \item After 4 more time units, it transitions to 1.
+                    \item After 8 more time units, it transitions back to 0.
+                    \item The simulation stops 5 time units later.
+                \end{enumerate}
+        \end{itemize}
+    \item \textbf{\texttt{clock}}:
+        \begin{itemize}
+            \item A periodic clock signal toggling every 2 time units.
+            \item The clock signal has a period of 4 time units.
+        \end{itemize}
+\end{enumerate}
+
+
 
 
 By simulating the {\tt waveFormGenerator.sv} module, the behavior represented in Figure \ref{wave} results.
