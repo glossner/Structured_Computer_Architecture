@@ -1,3 +1,4 @@
+// Licensed under CERN-OHL-S v2. See https://cern.ch/cern-ohl for details.
 /*******************************************************************
 File name: waveFormGenerator.sv
 Circuit name: no circuit, only wave formes

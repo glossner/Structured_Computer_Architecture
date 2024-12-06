@@ -1,6 +1,3 @@
-The Chisel code is licensed under the BSD 3-Clause
-Copyright (C) 2024 John Glossner
-
 //------------------------------------------------------------------------------
 // This source code is licensed under the BSD 3-Clause License.
 // Redistribution and use in source and binary forms, with or without

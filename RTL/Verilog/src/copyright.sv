@@ -1,12 +1,15 @@
-The System Verilog code is licensed under CERN-OHL-S v2.
-Copyright (C) 2024 Gheorghe M. Stefan
-
 // This source describes Open Hardware and is licensed under the CERN-OHL-S v2.
-// You may redistribute and modify this documentation and design under the terms
-// of the CERN-OHL-S v2 (https://cern.ch/cern-ohl). This documentation is 
-// distributed WITHOUT ANY EXPRESS OR IMPLIED WARRANTY, INCLUDING OF 
-// MERCHANTABILITY, SATISFACTORY QUALITY AND FITNESS FOR A PARTICULAR PURPOSE.
-// Please see the CERN-OHL-S v2 for applicable conditions.
+// 
+// You may redistribute and modify this source under the terms of the
+// CERN-OHL-S v2 (Strongly Reciprocal) as published by CERN at
+// https://cern.ch/cern-ohl.
+// 
+// This source is distributed WITHOUT ANY EXPRESS OR IMPLIED WARRANTY, INCLUDING
+// BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, SATISFACTORY QUALITY, AND
+// FITNESS FOR A PARTICULAR PURPOSE. Please see the CERN-OHL-S v2 for applicable
+// conditions.
 //
-// You should have received a copy of the CERN-OHL-S along with this source.
-// If not, see https://cern.ch/cern-ohl.
+// As per CERN-OHL-S v2, you must retain this notice, and all modifications
+// must be documented in a prominent notice stating that you modified the source.
+//
+// Original author:  Gheorghe M. Stefan (C) 2024
