@@ -511,7 +511,7 @@ If you have cloned the textbook, build.sbt will be in your Chisel/ directory.
 
 The following commands will run the test bench
 \begin{bashcode}
-cd Chisel/
+cd RTL/Chisel/
 sbt test
 \end{bashcode}
 
@@ -582,7 +582,7 @@ The annotated/debug SystemVerilog generated code should look like:
 \includeverilogcode[caption={Annotated SystemVerilog Code Produced by Chisel}, label={lst:chisel_waveformgeneratorannotatedverilog}]{RTL/Chisel/generated_verilog_annotated/WaveFormGenerator.sv}
 
 %***********************************************
-\subsection{Verilator C++ Test Driver}
+\subsection{Verilator C++ Test Driver} \label{sub:verilator_test_driver}
 %***********************************************
 Create a Verilator C++ test driver. It is in Chisel/verilator\_testbench
 \includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{\verilatorSourceDir/WaveFormGenerator_testbench.cpp}
@@ -609,7 +609,7 @@ gtkwave waveform.vcd
     \centering
     \includegraphics[width=\textwidth]{Images/verilator_waveformgenerator_screenshot.png} 
     \caption{Waveforms generated for a Verilator SystemVerilog simulation}
-    \label{fig:verilator_wave}
+    \label{fig:verilator_wave2}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%0

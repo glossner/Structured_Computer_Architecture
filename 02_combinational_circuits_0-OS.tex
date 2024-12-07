@@ -104,18 +104,149 @@ One of the uses of Boolean algebra in digital logic is the simplification of log
     \item \textbf{Quine-McCluskey algorithm}: A tabular approach to minimize logic expressions \cite{quine1952}.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{Truth Tables}
+%%%%%%%%%%%%%%%%%%%%%%%
+Truth tables are a fundamental tool in Boolean algebra, logic, and digital circuit design. They provide a systematic way to represent and analyze the behavior of logical expressions and digital circuits by listing all possible input combinations and their corresponding output values \citep{rosen2018, tanenbaum2013}.
+
+%****************************************************
+\subsection{Definition and Structure of Truth Tables}
+%****************************************************
+A truth table is a tabular representation of a logical expression or circuit. It includes the following components:
+\begin{itemize}
+    \item Input Variables: Columns representing the logical variables (\( A, B, \ldots, N \)).
+    \item Output Values: Columns representing the result of applying a logical operation or expression to the input variables.
+    \item Rows: Each row corresponds to a unique combination of input variable values, covering all \( 2^n \) possible combinations for \( n \) variables.
+\end{itemize}
+
+For example, the truth table for a simple AND operation (\( A \land B \)) is as follows:
+\[
+\begin{array}{|c|c|c|}
+\hline
+A & B & A \land B \\
+\hline
+0 & 0 & 0 \\
+0 & 1 & 0 \\
+1 & 0 & 0 \\
+1 & 1 & 1 \\
+\hline
+\end{array}
+\]
+
+%****************************************************
+\subsection{Logical Operators and Their Truth Tables}
+%****************************************************
+Truth tables are used to describe the behavior of basic logical operators. The primary logical operations include:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item NOT (\( \neg \)): Negation inverts the value of a single variable.
+    \[
+    \begin{array}{|c|c|}
+    \hline
+    A & \neg A \\
+    \hline
+    0 & 1 \\
+    1 & 0 \\
+    \hline
+    \end{array}
+    \]
+    
+    \item AND (\( \land \)): Returns true if both inputs are true.
+    \[
+    \begin{array}{|c|c|c|}
+    \hline
+    A & B & A \land B \\
+    \hline
+    0 & 0 & 0 \\
+    0 & 1 & 0 \\
+    1 & 0 & 0 \\
+    1 & 1 & 1 \\
+    \hline
+    \end{array}
+    \]
+    
+    \item OR (\( \lor \)): Returns true if at least one input is true.
+    \[
+    \begin{array}{|c|c|c|}
+    \hline
+    A & B & A \lor B \\
+    \hline
+    0 & 0 & 0 \\
+    0 & 1 & 1 \\
+    1 & 0 & 1 \\
+    1 & 1 & 1 \\
+    \hline
+    \end{array}
+    \]
+
+    \item XOR (\( \oplus \)): Returns true if exactly one input is true.
+    \[
+    \begin{array}{|c|c|c|}
+    \hline
+    A & B & A \oplus B \\
+    \hline
+    0 & 0 & 0 \\
+    0 & 1 & 1 \\
+    1 & 0 & 1 \\
+    1 & 1 & 0 \\
+    \hline
+    \end{array}
+    \]
+\end{itemize}
+
+%****************************************
+\subsection{Applications of Truth Tables}
+%****************************************
+Truth tables are used in various domains of computer science, mathematics, and engineering:
+\begin{enumerate}
+    \item Expression Simplification: Truth tables help simplify logical expressions by identifying equivalent forms.
+    \item Circuit Design: In digital electronics, truth tables describe the behavior of combinational circuits such as multiplexers, decoders, and adders.
+    \item Validation and Verification: Logical correctness of algorithms and circuits can be validated using truth tables.
+    \item Set Theory and Predicate Logic: Truth tables are used to analyze logical relationships and implications in formal proofs.
+\end{enumerate}
+
+%*************************************************************
+\subsection{Constructing Truth Tables for Complex Expressions}
+%*************************************************************
+For complex expressions involving multiple variables and operators, truth tables are constructed by evaluating the expression step-by-step:
+\begin{enumerate}
+    \item List all possible input combinations (\( 2^n \) rows for \( n \) variables).
+    \item Break the expression into subexpressions and calculate their values row by row.
+    \item Combine subexpression results to compute the final output.
+\end{enumerate}
+
+For example, consider \( \neg (A \lor B) \land C \). The truth table is as follows:
+\[
+\begin{array}{|c|c|c|c|c|c|}
+\hline
+A & B & C & A \lor B & \neg (A \lor B) & \neg (A \lor B) \land C \\
+\hline
+0 & 0 & 0 & 0 & 1 & 0 \\
+0 & 0 & 1 & 0 & 1 & 1 \\
+0 & 1 & 0 & 1 & 0 & 0 \\
+0 & 1 & 1 & 1 & 0 & 0 \\
+1 & 0 & 0 & 1 & 0 & 0 \\
+1 & 0 & 1 & 1 & 0 & 0 \\
+1 & 1 & 0 & 1 & 0 & 0 \\
+1 & 1 & 1 & 1 & 0 & 0 \\
+\hline
+\end{array}
+\]
+
+%****************************************
+\subsection{Limitations of Truth Tables}
+%****************************************
+While truth tables are highly effective for small-scale problems, their size grows exponentially with the number of variables (\( 2^n \) rows for \( n \) variables). This makes them impractical for analyzing complex systems with a large number of inputs. In such cases, alternative methods such as Karnaugh maps, Quine-McCluskey algorithms, or software tools are employed \cite{karnaugh1953, rosen2018}.
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  Digital Domain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Digital Domain}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%******************************************
+\subsection{Signals in the Digital Domain}
+%******************************************
+In the electronic digital domain, we work with only two values (see Figure \ref{fig:logic_levels}):
 
-\subsection{Signals in Digital Domain}
-
-In the electronic digital domain we work with two values only (see Figure \ref{fig1}):
-
-\placedrawing[H]{figures/01_01_digital_0_and_1.lp}{The two levels of the signal in the digital domain. Low level (0 Volt) for {\tt 0} or {\tt false}, and high level ($V_{DD}$ Volt) for {\tt 1} or {\tt true}.}{fig1}
+\placedrawing[H]{figures/01_01_digital_0_and_1.lp}{The two levels of the signal in the digital domain. Low level (0 Volt) for {\tt 0} or {\tt false}, and high level ($V_{DD}$ Volt) for {\tt 1} or {\tt true}.}{fig:logic_levels}
 
 \begin{itemize}
 \item 0, represented by the electrical value 0 V, having two meanings:
@@ -136,495 +267,192 @@ The signals used in a digital system are of two types:
 \item periods, usually with a strictly alternating structure, used as clock signals by which the operation of a digital system is synchronized.
 \end{itemize}
 
-Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs.
-
-In the following System Verilog module, two waveforms are generated, one "random" and one usable as a periodic signal.
+Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs. We describe two generated waveforms: one "random" and one usable as a periodic signal.
 
 %***************************************************
 % WaveformGenerator
 %***************************************************
 \ifthenelse{\boolean{chiselversion}}{
-    \includechiselcode[caption={Waveform Generator Code (Chisel)},     label={lst:chisel_waveformgenerator}, firstline=6, firstnumber=6, lastline=22]{\chiselSourceDir/waveFormGenerator.scala}
+%*************************************************
+\subsubsection{Chisel Implementation of Waveforms}
+%*************************************************
+\includechiselcode[caption={Waveform Generator Code (Chisel)},     label={lst:chisel_waveformgenerator}, firstline=8, firstnumber=8, lastline=24]{\chiselSourceDir/waveFormGenerator.scala}
 
-Listing \ref{lst:chisel_waveformgenerator} shows
+Listing \ref{lst:chisel_waveformgenerator} shows a Chisel version of a \texttt{WaveFormGenerator} module with two distinct output waveforms: \texttt{randomWave} and \texttt{clockWave}. Both signals are driven by internal logic that determines their behavior over time.
 
-}%ifthenelse
+The \texttt{randomWave} signal is defined as a repeating sequence of Boolean values: \texttt{false}, \texttt{true}, \texttt{false}, \texttt{true}, and \texttt{false}. A register, \texttt{randomIndex}, is used to track the current position in this sequence. The module cycles through the sequence in order, and when the last value is reached, the index resets to zero, causing the pattern to loop indefinitely. 
 
+The \texttt{clockWave} signal generates a toggling clock with a period of two cycles. This is achieved using a register, \texttt{clockToggle}, which alternates between \texttt{true} and \texttt{false} on each clock cycle. The result is a square wave output that can be used as a clock signal for other hardware modules or for synchronization purposes.
 
-The provided \texttt{waveFormGenerator} module generates two waveforms:
-\begin{enumerate}
-    \item \textbf{\texttt{randomWave}}:
-        \begin{itemize}
-            \item A custom waveform defined by specific delays.
-            \item Transitions occur at the following times:
-                \begin{enumerate}
-                    \item Start at 0.
-                    \item After 2 time units, it transitions to 1.
-                    \item After 6 more time units, it transitions back to 0.
-                    \item After 4 more time units, it transitions to 1.
-                    \item After 8 more time units, it transitions back to 0.
-                    \item The simulation stops 5 time units later.
-                \end{enumerate}
-        \end{itemize}
-    \item \textbf{\texttt{clock}}:
-        \begin{itemize}
-            \item A periodic clock signal toggling every 2 time units.
-            \item The clock signal has a period of 4 time units.
-        \end{itemize}
-\end{enumerate}
+The \texttt{WaveFormGenerator} module demonstrates the generation of simple waveforms using high-level constructs in Chisel. By abstracting away low-level timing details, it provides a clean and maintainable implementation suitable for hardware design and simulation.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/verilator_waveformgenerator_screenshot.png} 
+    \caption{Waveforms for generated SystemVerilog Verilator simulation}
+    \label{fig:verilator_wave}
+\end{figure}
 
+\includechiselcode[caption={Waveform Generator Code with Emit SystemVerilog (Chisel)},     label={lst:chisel_waveformgenerator_emit_sv}, firstline=26, firstnumber=26, lastline=29]{\chiselSourceDir/waveFormGenerator.scala}
 
+Chisel has the capability to emit SystemVerilog, Verilog, Waveforms (vcd), and circuit diagrams (svg). Section \ref{sub:verilator_test_driver} shows the process for generating the waveform shown in Figure \ref{fig:verilator_wave}. It uses Verilator rather than internal Chisel output.
+}%end chisel
 
-By simulating the {\tt waveFormGenerator.sv} module, the behavior represented in Figure \ref{wave} results.
+\ifthenelse{\boolean{verilogversion}}{
+%*********************************************************
+\subsubsection{SystemVerilog Implementation of Waveforms}
+%*********************************************************    
+\includeverilogcode[caption={Waveform Generator Code (Hand Written Verilog)},     label={lst:verilog_waveformgenerator}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/waveFormGenerator.sv}
 
+Listing \ref{lst:verilog_waveformgenerator} shows the hand written SystemVerilog module, \texttt{waveFormGenerator}. It generates two output waveforms: a \texttt{randomWave} signal and a \texttt{clock} signal. The \texttt{randomWave} signal transitions between predefined states based on explicit delays specified using the \texttt{\#} operator. It begins at \texttt{0}, transitions to \texttt{1} after 2 time units, back to \texttt{0} after 6 more time units, to \texttt{1} after 4 additional time units, and finally to \texttt{0} after 8 time units. The simulation halts 5 time units later using the \texttt{\$stop} command. The \texttt{clock} signal is a periodic waveform toggling its state every 2 time units, implemented with a \texttt{forever} loop.
 
+\placedrawing[H]{figures/01_02_waveSim.lp}{Waveforms generated by Vivado for hand written SystemVerilog simulation}{fig:vivado_wave}
 
-\placedrawing[H]{figures/01_02_waveSim.lp}{Waveforms generated for a Vivado System Verilog simulation}{wave}
+Figure \ref{fig:vivado_wave} shows the results of simulating the {\tt waveFormGenerator.sv} module using Vivado.
 
+}%end verilog
 
-In a digital system we can distinguish two extreme types of circuits:
-\begin{itemize}
-\item purely logical circuits that operate on some binary signals with some symbolic meaning (example: the transcoder for displaying the numbers from 0 to 9 using 7 segments, represented in Figure \ref{fig2}a)
+\ifthenelse{\boolean{verilogversion} \and \boolean{chiselversion}}{   
+%*********************************************************************************
+\subsubsection{Comparison of Chisel and SystemVerilog Implementation of Waveforms}
+%**********************************************************************************
+In the Chisel implementation of the \texttt{waveFormGenerator}, the functionality is expressed using high-level abstractions. The \texttt{randomWave} is generated as a cyclic sequence of Boolean values, and its transitions are determined by a counter that increments on every clock cycle. Unlike the Verilog version, the Chisel implementation does not explicitly emulate timing delays but instead assumes uniform timing for each state in the sequence. 
 
-\item purely numerical circuits that operate on binary signals with numerical significance (example: a modulo 16 adder for two numbers represented by 4 bits each, represented in Figure \ref{fig2}b)
-\end{itemize}
-Obviously, an intermediate version is always possible (example: a circuit that compares two numbers, A and B, and indicates through three logical signals of one bit each: $A>B, \; A=B, \; A\leq B$)
+While both implementations generate a \texttt{randomWave} and a clock-like signal, they differ in their timing behavior and functionality. The Verilog version explicitly specifies time delays for signal transitions and provides a clear stop condition using \texttt{\$stop}. The Chisel version is higher-level, more abstract, and assumes regular timing intervals without emulating the exact delays. This makes the Chisel version more suitable for hardware synthesis, where timing is managed by the clock, while the Verilog version offers precise control for simulation purposes.
+}%end both true
 
-\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{One-Input Combinational Circuits}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Combinational circuits are a fundamental type of digital circuit where the outputs are determined solely by the current inputs, without any memory or feedback elements. They perform logical and arithmetic operations based on Boolean algebra. Examples of combinational circuits include logic gates (AND, OR, NOT), arithmetic circuits (adders, subtractors), and data routing components (multiplexers, encoders). These circuits are deterministic, meaning their outputs are uniquely determined by the given inputs \cite{mano2017}.
 
-
-
-\subsection{Behavioral vs. Structural Descriptions}
-
-The description of a digital circuit can be done in two ways:
-\begin{itemize}
-\item  by describing the functional behavior
-\item  by describing the internal structure of the circuit
-\end{itemize}
-We exemplify the two methods in the case of the addition function.
-
-
-\begin{exemplu}\label{adder}
-Let us use the {\em System Verilog} HDL to describe an adder for 4-bit
-numbers (see Figure \ref{first_ex}a). The description which
-follows is a {\bf behavioral} one, because we know {\bf what} we
-intend to design, but we do not know yet {\bf how} to design the
-internal structure of an adder.
-
-\placedrawing[h]{figures/01_04_4bit_adder.lp}{{\bf The first examples of  digital
-systems.} {\small {\bf a.} The two 4-bit numbers adder, called
-{\tt adder}. {\bf b.} The structure of an adder for 3 4-bit
-numbers, called {\tt threeAdder}.} }{first_ex}
-
-The Verilog code describing the module {\tt adder} is:
-{\small
-{\em
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      adder.sv
-Circuit name:   Adder
-Description:    The module 'adder' has 2 4-bit inputs and one 4-bit output
-                The circuit adds modulo 16; do not use or provide carry
-                signal
-*************************************************************************/
-module adder(   output logic [3:0] out ,    // 4-bit output
-                input  logic [3:0] in0 ,    // 4-bit input
-                input  logic [3:0] in1 );   // 4-bit input
-
-    assign out = in0 + in1;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-}
-
-The story just told by the previous Verilog module is: ``the 4-bit adder has two inputs, {\tt in0, in1}, one output, {\tt out}, and
-its output is continuously assigned to the value obtained by
-adding modulo 16 the two input numbers".
-
-  $\diamond$
-\end{exemplu}
-
-What we just learned from the previous first simple example is
-summarized in the following {\bf SystemVerilogSummary}.
-
-\begin{verisum}{\em :
-
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-\item[/*]: begin comment
-\item[*/]: end comment
-\item[module]: keyword which indicates the beginning of the
-description of a circuit as a module having the name which
-immediately follows (in our example, the name is: {\tt adder})
-
-\item[endmodule]: keyword which indicates the end of the module's
-description which started with the previous keyword {\bf module}
-
-\item[output]: keyword used to declare a terminal as an output (in
-our example the terminal {\tt out} is declared as output)
-
-\item[input]: keyword used to declare the terminal as an input (in
-our example the terminals {\tt in0} and {\tt in1} are declared as
-inputs)
-
-\item[logic]: a data type with 4-state bits: {\tt 0, 1, x, z} where 0 means low, 1 means high, x means unknown, and z means an undriven net.
-
-\item[initial]: a block which starts at the beginning of simulation
-
-\item[begin ... end]: block delimiters
-
-\item[\#]: indicate a raw value
-
-\item[forever]: indicate an unending operation
-
-\item[$\sim$]: negation operator
-
-\item[assign]: keyword called the {\em continuous assignment},
-used here to specify the function performed by the module (the
-output {\tt out} takes continuously the value computed by adding
-the two input numbers)
-
-\item[(...)]: delimiters used to delimit the list of terminals
-(external connections)
-
-\item[,]: delimiter to separate each terminal within a list of
-terminals
-
-\item[;]: delimiter for end of line
-
-\item[[ $ \dots$ ]]: delimiters which contains the definition of
-the bits associated with a connection, for example [3:0] define
-the number of bits for the three connections in the previous
-example
-
-\item[+]: the operator {\tt add}, the only one used in the
-previous example.
-\end{description}
-\rule[5mm]{16cm}{0.25mm}
-}
-\end{verisum}
-
-The description of a digital system is a {\bf hierarchical
-construct} starting from a top module populated by modules, which
-are similarly defined. The process continues until very simple
-module are directly described. Thus, the functions $f$ and $g$ are specified by HDL programs
-(in our case, in the previous example by a Verilog program).
-
-The main characteristic of the digital design is {\bf modularity}. A
-problem is decomposed in many simpler problems, which are solved
-similarly, and so on until very simple problems are identified.
-Modularity means also to define as many as possible identical
-modules in each design. This allow to replicate many times the
-same module, already designed and validated. {\em Many \& simple}
-modules! Is the main slogan of the digital designer. Let's take
-another example which uses as module the one just defined in the
-previous example.
-
-\begin{exemplu}
-The previously exemplified module ({\tt adder}) will be used to
-design a modulo 16 3-number adder, called {\tt threeAdder} (see Figure
-\ref{first_ex}b). It adds 3 4-bit numbers providing a 4-bit result
-(modulo 16 sum). Follows the {\bf structural} description:
-{\small
-{\em
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      threeAdder.sv
-Circuit name:   Three Input Adder
-Description:    The module 'threeAdder' has 3 4-bit inputs and one 4-bit
-                output. The circuit adds modulo 16 three numbers;
-                do not provide carry output
-*************************************************************************/
-module threeAdder( output   logic [3:0]  out,
-                   input    logic [3:0]  in0,
-                   input    logic [3:0]  in1,
-                   input    logic [3:0]  in2);
-
-    logic [3:0] sum ;
-
-    adder   inAdder(.out(sum),
-                    .in0(in1),
-                    .in1(in2)),
-            outAdder(.out(out),
-                     .in0(in0),
-                     .in1(sum));
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-}
-
-Two modules of {\tt adder} type (defined in the previous example)
-are instantiated as {\tt inAdder}, {\tt outAdder}, they are
-interconnected using the wire {\tt sum}, and are connected to the
-terminals of the {\tt threeAdder} module. The resulting structure
-computes the sum of three numbers. $\diamond$
-\end{exemplu}
-
-\begin{verisum}{\em :
-
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{itemize}
-\item How a previously defined module (in our example: {\tt
-adder}) is two times instantiated using two different names ({\tt
-inAdder} and {\tt outAdder} in our example)
-
-\item A ``safe" way to allocate the terminals for a module
-previously defined and instantiated inside the current module:
-each original terminal name is preceded by a dot, and followed by
-a parenthesis containing the name of the wire or of the terminal
-where it is connected (in our example, {\tt outAdder( ...
-.in1(sum))} means: the terminal {\tt in1} of the instance {\tt
-outAdder} is connected to the wire {\tt sum})
-
-\item The successive instantiations of the same module can be
-separated by a ``,".
-\end{itemize}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
-
-While the module {\tt adder} is a {\em behavioral} description,
-the module {\tt threeAdder} is a {\em structural} one. The first
-tells us {\em what} is the function of the module, and the second
-tells us {\em how} its functionality is performed by using a
-structure containing two instantiation of a previously defined
-subsystems, and an internal connection.
-
-
-
-\section{One-input combinational circuits}
-
+%******************************
 \subsection{Formal Description}
+%******************************
+A one-input combinational circuit is a digital logic circuit where the output depends solely on the value of a single binary input \( A \). Such circuits are governed by a Boolean function \( f(A) \), where \( f: \{0, 1\} \to \{0, 1\} \). The output is computed instantaneously based on the input value, with no memory or feedback elements involved. The behavior of the circuit can be described by a truth table, which enumerates the two possible input values (\( A = 0 \) and \( A = 1 \)) and their corresponding outputs (\( f(0) \) and \( f(1) \)). 
 
-{\small
 \begin{table}[H]
   \begin{center}
     \caption{One-input circuits.}
     \label{tab:one_input_circuits}
-    \begin{tabular}{|c||c|c|c|c|}
+    \begin{tabular}{|c||c|c|c|}
       \hline
-      A&  &  NOT&  BUFFER&      \\ \hline \hline
-      0&  0&   1&       0& 1    \\ \hline
-      1&  0&   0&       1& 1    \\ \hline
+      A&  &  NOT&  BUFFER      \\ \hline \hline
+      0&  &   1&       0    \\ \hline
+      1&  &   0&       1    \\ \hline
     \end{tabular}
   \end{center}
 \end{table}
-}
 
-\placedrawing[H]{figures/02_01_not.lp}{Graphic representation of the NOT and BUFFER circuits.}{fig10}
+\placedrawing[H]{figures/02_01_not.lp}{Graphic representation of the NOT and BUFFER circuits.}{fig:one_input_ckt}
 
-{\small
-\subsection{$^*$Physical Implementation of NOT Circuit}
+Table \ref{tab:one_input_circuits} shows the truth table for a NOT gate, which inverts the input (\( f(A) = \neg A \)), and BUFFER (constant) circuit, which outputs a fixed value regardless of the input (\( f(A) = 0 \) or \( f(A) = 1 \)). Figure \ref{fig:one_input_ckt} shows the logic circuit symbol of the NOT and BUFFER combinational circuits. This is also called a gate symbol.
 
-\subsubsection{CMOS switches}
+%***************************************************
+\subsection{Physical Implementation of NOT Circuit}
+%***************************************************
+The physical implementation of a NOT circuit, or inverter, bridges the abstract concept of Boolean algebra with real-world digital hardware. A NOT gate takes a single input and produces an output that is its logical complement. In practice, this is typically achieved using transistor-based designs, such as CMOS (Complementary Metal-Oxide-Semiconductor) technology. 
 
-A logic gates consists in a network of interconnected switches
-implemented using the two type of MOS transistors: p-MOS and
-n-MOS. How behaves the two type of transistors in specific
-configurations is presented in Figure \ref{0_switch}.
+The delay inherent in a NOT circuit, commonly referred to as the \emph{gate delay}, arises from the physical properties of the transistors and the interconnects. When the input changes state, the transistors must charge or discharge the capacitive load at the output. This charging and discharging process is influenced by factors such as the capacitance of the output node, the resistance of the transistors, and the speed of the power supply. As a result, the propagation delay, defined as the time taken for the output to reach a certain percentage of its final value after a change in input, becomes an important metric in digital circuit performance. 
 
-A switch connected to $V_{DD}$ is implemented using a p-MOS
-transistor. It is represented in Figure \ref{0_switch}a {\em off}
-(generating $z$, which means {\em Hi-Z}: no signal, neither 0, nor
-1) and in Figure \ref{0_switch}b it is represented {\em on}
-(generating 1 logic, or {\em truth}).
+Understanding where gate delays originate is important for designing circuits that meet timing requirements in high-speed applications. The interested reader can consult Appendix \ref{app:physical_implementations} for more information.
 
-A switch connected to {\em ground} is implemented using a n-MOS
-transistor. It is represented in Figure \ref{0_switch}c {\em off}
-(generating $z$, which means {\em Hi-Z}: no signal, neither 0, nor
-1) and in Figure \ref{0_switch}e it is represented {\em on}
-(generating 0 logic, or {\em false}).
-
-\placedrawing[h]{figures/02_02_transistors.lp}{{\bf Basic switches.} {\small {\bf a}.
-Open switch connected to $V_{DD}$. {\bf b}. Closed switch connected to
-$V_{DD}$. {\bf c}. Open switch connected to {\em ground}. {\bf d}.
-Closed switch connected to {\em ground}.}}{0_switch}
-
-A MOS transistor works very well as an {\em on-off} switch
-connecting its drain to a certain potential.  A p-MOS transistor
-can be used to connect its drain to a high potential when its
-gates is connected to ground, and an n-MOS transistor can connect
-its drain to ground if its gates is connected to a high potential.
-This complementary behavior is used to build the elementary logic
-circuits.
-
-In Figure \ref{src} is presented the {\em switch-resistor-capacitor
-model} (SRC). If $V_{GS} < V_{T}$ then the transistor is {\bf off}, if
-$V_{GS} \geq V_{T}$ then the transistor is {\bf on}. In both cases the
-input of the transistor behaves like a capacitor, the gate-source
-capacitor $C_{GS}$.
-
-When the transistor is on its drain-source resistance is:
-$$R_{ON} = R_{n}\frac{L}{W}$$
-where: $L$ is the channel length, $W$ is the channel width, and $R_{n}$
-is the resistance per square. The length $L$ is a constant
-characterizing a certain technology. For example, if $L = 0.13\mu m$
-this means it is about a $0.13\mu m$ process.
-
-The input capacitor has the value:
-$$C_{GS} = \frac{\epsilon_{OX} LW}{d}.$$
-The value:
-$$C_{OX} = \frac{\epsilon_{OX}}{d}$$
-where: $\epsilon_{OX} \approx 3.9 \epsilon_{0}$ is the permittivity of
-the silicon dioxide, is  the gate-to-channel capacitance per unit area
-of the MOSFET gate.
-
-In this conditions the gate input current is:
-$$i_{G} = C_{GS} \frac{dv_{GS}}{dt}$$
-
-\placedrawing[h]{figures/02_03_mosfet.lp}{{\bf The MOSFET switch.} {\small The {\em
-switch-resistor-capacitor} model consists in the two states: OF
-($V_{GS} < V_{T}$), and ON ($V_{GS} \geq V_{T}$). In both states the
-input is defined by the capacitor $C_{GS}$.}}{src}
-
-
-\begin{exemplu}
-For an AND gate with low strength, with $W = 1.8\mu m$, in $0.13
-\mu m$ technology, supposing $C_{OX} = 4fF/\mu m^{2}$, results the
-input capacitance: $$C_{GS} = 4 \times 0.13 \times 1.8 fF = 0.936
-fF$$ Assuming $R_{n} = 5K\Omega$, results for the same gate:
-$$R_{ON} = 5 \times \frac{0.13}{1.8} \; K\Omega = 361 \Omega$$
-
-$\diamond$
-\end{exemplu}
-
-\subsubsection{The Inverter}
-
-
-\paragraph{The static behavior.}
-The smallest and simplest logic circuit -- the invertor -- can be built
-using a pair of complementary transistors, connecting together the two
-gates as input and the two drains as output, while the n-MOS source is
-connected to ground (interpreted as logic 0) and the p-MOS source to
-$V_{DD}$ (interpreted as logic 1). Results the circuit represented in
-Figure \ref{0_inv}.
-
-\placedrawing[h]{figures/02_04_inverter.lp}{{\bf Building an invertor.} {\small {\bf
-a}. The invertor circuit. {\bf b}. The logic symbol for the invertor
-circuit.}}{0_inv}
-
-The behavior of the invertor consist in combining the behaviors of the
-two switches previously defined. For $in=0$ pMOS is $on$ and nMOS is
-$off$ the output generating $V_{DD}$ which means 1. For $in=1$ pMOS is
-$off$ and nMOS is $on$ the output generating 0.
-
-The static behavior of the inverter (or NOT) circuit can be easy
-explained starting from the switches described in Figure
-\ref{0_switch}. Connecting together a switch generating $z$ with a
-switch generating 1 or 0, the connection point will generate 0 or
-1.
-
-\paragraph{Dynamic behavior.}
-The propagation time of an inverter can be analyzed using the two
-serially connected invertors represented in Figure \ref{switch}. The
-delay of the first invertor is generated by its capacitive load,
-$C_{L}$, composed by:
-\begin{itemize}
-\item its parasitic drain/bulk capacitance, $C_{DB}$, is the intrinsic  output capacitance of the first invertor
-\item wiring capacitance, $C_{wire}$, which depends on the length of the wire (of width $W_w$ and of length $L_w$) connected between the two invertors: $$C_{wire} = C_{thickox} W_w L_w$$
-\item next stage input capacitance, $C_{G}$, approximated by summing the gate capacitance for pMOC and nMOS transistors: $$C_G = C_{Gp} + C_{Gn} = C_{ox}(W_p L_p + W_n L_n)$$
-\end{itemize}
-
-\placedrawing[h]{figures/02_05_propagation_time.lp}{{\bf The propagation time.} {\small
-}}{switch}
-
-The total load capacitance
-$$C_L = C_{DB} + C_{wire} + C_G$$
-is sometimes dominated by $C_{wire}$. For short connections $C_G$ dominates, while for big {\em fan-out}\index{fan-out: the number on input gates  connected to the output of a digital circuit} both, $C_{wire}$ and $C_G$ must be considered.
-
-The signal $V_A$ is used to measure the propagation time of the first NOT in Figure \ref{switch}a. It is generated by an ideal pulse generator with output impedance 0. Thus, the rising time and the falling time of this signal are considered 0 (the input capacitance of the NOT circuit is charged  or discharged in no time).
-
-The two delay times (see Figure \ref{switch}c) associated to an invertor
-(to a gate in the general case) are defined as follows:
-\begin{itemize}
-    \item $t_{pLH}$: the time interval between the moment the input
-    switches in 0 and the output reaches $V_{OH}/2$ coming from 0
-    \item $t_{pHL}$: the time interval between the moment the input
-    switches in 1 and the output reaches $V_{OH}/2$ coming from $V_{OH}$
-\end{itemize}
-
-Let us consider the transition of $V_A$ from 0 to $V_{OH}$ at $t_r$ (rise edge). Before transition, at $t_r^-$, $C_L$ is fully charged and $V_B = V_{OH}$. In Figure \ref{switch}b is represented the equivalent circuit at $t_r^+$, when pMOS is off and nMOS is on. In this moment starts the process of discharging  the capacitance $C_L$ at the constant current
-$$I_{Dn(sat)} = \frac{1}{2} \mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})^2$$
-In Figure \ref{switch1}, at $t_r^-$ the transistor is cut, $I_{Dn} = 0$. At $t_r^+$ the  nMOS transistor switch in saturation and becomes an ideal {\em constant current generator} which starts to discharge $C_L$ linearly at the constant current $I_{Dn(sat)}$. The process continue until $V_{OUT} = V_{OH}$, according to the definition of $t_{pHL}$.
-
-
-\placedrawing[h]{figures/02_06_nmos_output.lp}{{\bf The output characteristic of the nMOS transistor.} {\small
-}}{switch1}
-
-In order to compute $t_{pHL}$ we take into consideration the constant value of the discharging current which provide a linear variation of $v_{OUT}$.
-$$\frac{dv_{out}}{dt} = \frac{d}{dt}(\frac{q_L}{C_L}) = \frac{-I_{Dn(sat)}}{C_L}$$
-$$\frac{dv_{out}}{dt} = \frac{\frac{V_{OH}}{2} - V_{OH}}{t_{pHL}}$$
-We solve the equations for $t_{pHL}$:
-$$t_{pHL} = C_L \frac{1}{\mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})} \frac{V_{OH}}{V_{OH} - V_{Tn}}$$
-Because:
-$$R_{ONn} = \frac{1}{\mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})}$$
-results:
-$$t_{pHL} = C_L R_{ONn} \frac{1}{1 - \frac{V_{Tn}}{V_{OH}}} = k_n R_{ONn} C_L = k_n \tau_{nL} $$
-where:
-\begin{itemize}
-\item $\tau_{nL}$ is the {\em constant time} associated to the H-L transition
-\item $k_n$ is a constant associated to the technology we use; it goes down when $V_{OH}$ increases or $V_T$ decreases
-\end{itemize}
-
-The speed of a gate depends by its dimension and by the capacitive load
-it drives. For a big $W$ the value of $R_{ON}$ is small charging or
-discharging $C_{L}$ faster.
-
-For $t_{pLH}$ the approach is similar. Results: $t_{pLH} = k_p \tau_{pL}$.
-
-By definition the propagation time associated to a circuit is: $$t_p = (t_{pLH} + t_{pHL})/2$$
-its value being dominated by the value of $C_L$ and the size (width) of the two transistors, $W_n$ and $W_p$.
-}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Two-input gates}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Two-input gates depend on two binary inputs. Common two-input gates include AND, OR, XOR, NAND, and NOR. 
 
+%*******************************
 \subsection{Formal Description}
+%******************************
+Two-input gates are fundamental components in digital logic that perform Boolean operations on two binary variables, \( A \) and \( B \), to produce a single output \( f(A, B) \). Mathematically, these gates implement functions \( f: \{0, 1\} \times \{0, 1\} \to \{0, 1\} \), where the domain consists of all possible ordered pairs of binary inputs, and the range is restricted to binary outputs. 
 
-{\small
+Each type of two-input gate corresponds to a specific Boolean operation, such as AND (\( f(A, B) = A \land B \)). The behavior of these gates can be fully specified using truth tables, which enumerate all possible input combinations and their corresponding outputs.
+
 \begin{table}[H]
   \begin{center}
-    \caption{Two-input gates.}
+    \caption{Two-input Combinational Gates Truth Table.}
     \label{tab:two_input_gates}
-    \begin{tabular}{|c|c||c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \begin{tabular}{|c|c||c|c|c|c|c|c|}
       \hline
-      A& B& &  NOR&  & &  & & XOR& NAND& AND& NXOR&  &  &  &  & OR& \\ \hline \hline
-      0& 0& 0&   1& 0&     1& 0&     1&   0&    1&   0&    1& 0& 1& 0& 1&  0& 1\\ \hline
-      0& 1& 0&   0& 1&     1& 0&     0&   1&    1&   0&    0& 1& 1& 0& 0&  1& 1\\ \hline
-      1& 0& 0&   0& 0&     0& 1&     1&   1&    1&   0&    0& 0& 0& 1& 1&  1& 1\\ \hline
-      1& 1& 0&   0& 0&     0& 0&     0&   0&    0&   1&    1& 1& 1& 1& 1&  1& 1\\ \hline
+      $A$& $B$&   OR&        NOR&              AND&     NAND&              XOR&         XNOR \\ 
+       &  &  $A\lor B$ & $\neg (A \lor B)$& $A\land B$& $\neg (A \land B)$&  $A\oplus B$&   $\neg (A \oplus B)$                              \\ \hline \hline
+      0& 0&  0&         1&                 0&       1&                  0&           1\\ \hline
+      0& 1&  1&         0&                 0&       1&                  1&           0\\ \hline
+      1& 0&  1&         0&                 0&       1&                  1&           0\\ \hline
+      1& 1&  1&         0&                 1&       0&                  0&           1\\ \hline
     \end{tabular}
   \end{center}
 \end{table}
-}
 
-The currently used two-input gates are (see Tab. \ref{tab:two_input_gates}):
+Table \ref{tab:two_input_gates} shows the truth table for combinational 2-input gates and Table \ref{tab:logic_gates_summary} shows the summary of their interpretations.
+
 \begin{description}
-\item[AND]: A$\cdot$B = AB = 1 only if both A and B are 1, else AB = 0\\
-    Numerical interpretation: arithmetic product \\
-    Symbolic interpretation: {\bf gate} because A=1 opens the way for B
-\item[NAND]: (AB)' = 0 only if both A and B are 1, else AB = 1
-\item[OR]: A+B = only if at least one of A and B is 1, else A+B = 0
-\item[NOR]: (A+B) = 0 only if at least one of A and B is 1, else A+B = 1
-\item[XOR]: exclusive OR, because it is excluded the case A=B=1 in determining 1 on the output\\
-    A$\oplus$B = 1 when only one of the input, A or B, is one\\
-    Logic interpretation: conditioned inverter, i.e., {\em if} A = 0 {\bf then}  A$\oplus$B = B {\bf else}  A$\oplus$B = B'
-    Numerical interpretation: modulo-2 sum\\
-    Symbolic interpretation: anticoincidence
-\item[NXOR]: (A$\oplus$B')\\
-    Symbolic interpretation: coincidence
+\item[AND]: \( A \cdot B = AB \), where \( AB = 1 \) only if both \( A \) and \( B \) are 1, otherwise \( AB = 0 \). \\
+    Numerical interpretation: Arithmetic product. \\
+    Symbolic interpretation:  Gate, because \( A = 1 \) opens the way for \( B \). \\
+    Alternative names: Conjunction, multiply gate, all-or-nothing gate \cite{boole1854book, rosen2018}.
+
+\item[NAND]: \( \neg (A \cdot B) \), where the output is \( 0 \) only if both \( A \) and \( B \) are 1; otherwise, the output is \( 1 \). \\
+    Symbolic interpretation: Universal gate. \\
+    Alternative names: Sheffer stroke, negated AND gate \citep{sheffer1913, rosen2018}.
+
+\item[OR]: \( A + B \), where \( A + B = 1 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, \( A + B = 0 \). \\
+    Symbolic interpretation: Inclusive OR. \\
+    Alternative names: Disjunction, any-or-all gate \cite{rosen2018}.
+
+\item[NOR]: \( \neg (A + B) \), where the output is \( 0 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, the output is \( 1 \). \\
+    Symbolic interpretation: Universal gate. \\
+    Alternative names: Peirce arrow, negated OR gate \cite{peirce1885, rosen2018}.
+
+\item[XOR]: Exclusive OR, because it excludes the case \( A = B = 1 \) in determining \( 1 \) on the output. \\
+    \( A \oplus B = 1 \) when only one of the inputs \( A \) or \( B \) is \( 1 \). \\
+    Logic interpretation: Conditioned inverter, i.e., \( \text{if } A = 0 \text{ then } A \oplus B = B, \text{ else } A \oplus B = B' \). \\
+    Numerical interpretation: Modulo-2 sum. \\
+    Symbolic interpretation: Anticoincidence. \\
+    Alternative names: Either-or gate, modulo-2 adder \cite{shannon48, rosen2018}.
+
+\item[XNOR]: \( \neg (A \oplus B) \). \\
+    Symbolic interpretation: Coincidence. \\
+    Alternative names: Equality gate, NOT XOR \cite{mano2017, rosen2018}.
 \end{description}
 
-\placedrawing[H]{figures/02_07_two_input_gates.lp}{Graphical representation of the most used two-input gates.}{fig11}
-\placedrawing[H]{figures/02_08_non_inverting_gate_waveforms.lp}{Wave forms for the non-inverting gates.}{fig16}
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.5} % Adjust row height
+\setlength{\tabcolsep}{5pt} % Adjust column spacing
+\begin{tabular}{|>{\centering\arraybackslash}p{2cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{2cm}|>{\centering\arraybackslash}p{5cm}|}
+\hline
+\textbf{Logic Gate} & \textbf{Numerical} & \textbf{Symbolic} & \textbf{Alternative Names} \\ \hline
+
+OR  & Logical addition (no carry) \( A + B \) & \( A \lor B \) & Disjunction, Any-or-All Gate, Inclusive OR \\ \hline
+
+NOR  & Complement of OR: \( 1 - (A + B) \) & \( \neg (A \lor B) \) & Peirce Arrow, Negated OR Gate, Universal Gate \\ \hline
+
+AND & Logical multiplication \( A \cdot B \) & \( A \land B \) & Conjunction, Multiply Gate, All-or-Nothing Gate \\ \hline
+
+NAND  & Complement of AND: \( 1 - (A \cdot B) \) & \( \neg (A \land B) \) & Sheffer Stroke, Negated AND Gate, Universal Gate \\ \hline
+
+XOR  & Modulo-2 addition \( A \oplus B \) & \( A \oplus B \) & Exclusive OR, Modulo-2 Adder, Anticoincidence \\ \hline
+
+XNOR  & Complement of XOR: \( 1 - (A \oplus B) \) & \( \neg (A \oplus B) \) & Exclusive NOR, Equality Gate, Coincidence \\ \hline
+
+\end{tabular}
+\caption{Summary of Logical Gates and their Interpretations}
+\label{tab:logic_gates_summary}
+\end{table}
+
+Many of these historical names stem from different disciplines. Terms like conjunction, disjunction, and negation originate from symbolic logic. Coincidence and anticoincidence were used in early telecommunications signal processing contexts. Practical descriptions like multiply gate and modulo-2 adder reflect the role of these gates in arithmetic and data processing. Modern digital logic has largely standardized the terms AND, OR, XOR, etc., as defined by IEEE and other standard bodies \cite{ieee_std_91}.
+
+\placedrawing[H]{figures/02_07_two_input_gates.lp}{Graphical representation of the most used two-input gates.}{fig:graphical_gates}
+Figure \ref{fig:graphical_gates} shows the graphical representations of logic gates. These originated from the need to visually depict logical operations in a way that facilitated the design and analysis of digital systems. These representations were inspired by symbolic logic and Boolean algebra, where logic functions were expressed using abstract symbols. Early pioneers, such as Claude Shannon, formalized the connection between Boolean algebra and electronic circuits, enabling the translation of logical expressions into circuit designs \cite{shannon48}. Over time, distinct shapes were assigned to each gate for clarity—such as the triangular symbol for NOT gates and the curved line for OR gates. Standardization efforts by organizations like the IEEE and IEC later codified these symbols, ensuring universal recognition and consistency in circuit diagrams \cite{ieee_std_91}. 
 
 
-In Figure \ref{fig16} is represented the behavior of the main gates, AND, OR and XOR, driven by the signal A snd B represented in the first two wave forms. Besides the logic response to the inputs A and B there are represented the main time characteristics:
+\placedrawing[H]{figures/02_08_non_inverting_gate_waveforms.lp}{Wave forms for the non-inverting gates.}{fig:waveforms}
+Waveforms are tools used in digital logic for visualizing and analyzing the behavior of signals over time. They represent the changes in voltage levels for inputs, outputs, and intermediate nodes in a circuit, making it easier to understand timing relationships, transitions, and delays. The use of waveforms emerged alongside the development of oscilloscopes and other signal measurement tools in the early 20th century, as engineers needed a method to observe electrical signals in real-time. With the advent of digital systems, waveforms became a standard way to represent binary signals, where high and low voltage levels correspond to logical 1s and 0s, respectively. Waveforms allow engineers to verify the correct operation of logic circuits and diagnose timing-related issues such as glitches, race conditions, and setup/hold violations \cite{horowitz1993, ieee_waveform}. Their graphical nature complements schematic diagrams by providing temporal information that is not inherently visible in static circuit representations.
+
+
+Figure \ref{fig:waveforms} shows the behavior of AND, OR and XOR gates. They are driven by the signals $A$ and $B$ represented in the first two wave forms. Besides the logic response to the inputs, timing characteristics are also shown. 
 \begin{itemize}
     \item $t_+$: the positive transition time (the duration of the positive edge)
     \item $t_-$: the negative transition time (the duration of the negative edge)
@@ -632,29 +460,30 @@ In Figure \ref{fig16} is represented the behavior of the main gates, AND, OR and
     \item $t_{pHL}$: the propagation time  of the signal through the gate for the transition from High to Low
 \end{itemize}
 
+We leave the treatment of timing to a course on digital logic design. It is a critical component in building working systems but is abstracted away in this book.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Many-Input Gates}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Many-input gates are an essential extension of basic logic gates, allowing the combination of more than two inputs into a single logical operation. These gates operate based on the principles of Boolean algebra and are widely used in digital systems to manage complex logical expressions. For instance, an \( n \)-input AND gate outputs a logical \( 1 \) only when all \( n \) inputs are \( 1 \), while an \( n \)-input OR gate outputs \( 1 \) when at least one of the inputs is \( 1 \). As the number of inputs increases, the complexity of the gate's behavior grows exponentially, governed by the number of possible input configurations.
 
-All the previous times are different from positive and negative transition and from a type of gate to another. For our approach differences are small and unimportant.
+Mathematically, the total number of distinct \( n \)-input gates is \( N^{2^n} \), where \( N \) represents the number of possible output values (typically \( N = 2 \) for binary logic), and \( 2^n \) is the total number of unique input configurations for \( n \) inputs. This exponential growth means that even for relatively small \( n \), the number of possible logic gates becomes vast and impractical to enumerate. For example, with \( n = 3 \), there are \( 2^{2^3} = 256 \) possible gates. For \( n > 2 \), Boolean algebra rules are necessary for simplifying and managing these functions, enabling the design of practical circuits without explicitly listing all possible gates.
 
+In modern digital design, many-input gates are often implemented using a combination of smaller gates, as direct implementation can become physically and computationally impractical for large \( n \). For example, a 16-input AND gate might be constructed hierarchically by combining multiple 2-input AND gates. This modular approach leverages the fundamental properties of Boolean algebra to efficiently implement complex logical functions in hardware. 
 
-
-
-\section{Many-input gates}
-
-The number $N$ of $n$-input gates is: $N^{2^n}$, because the number of input binary configuration is $2^n$. Therefore, they cannot be listed. For $n>2$ the Boolean functions are managed using Boolean algebra rules.
 
 Let's consider some significant examples:
 
 \begin{itemize}
     \item (A')' = A
     \item AB + AB' = A(B + B') = A $\cdot$ 1 = A\\
-    {\em because, when B=1 the expression takes the value A, and when B=0 the expression still takes the value A, we conclude that the value of B does not matter and the expression takes the value A}.
+    When B=1 the expression takes the value A, and when B=0 the expression still takes the value A, we conclude that the value of B does not matter and the expression takes the value A.
     \item A + A'B = A + B\\
-    to prove it the method of truth table is used, as follow:
+    This can be proved by the truth table in Table \ref{tab:truth_table_proof}.
     \begin{table}[H]
   \begin{center}
-    \caption{Example of proof using the truth table.}
-    \label{tab:table1}
+    \caption{Truth table proof of A + A'B = A + B.}
+    \label{tab:truth_table_proof}
     \begin{tabular}{|c|c||c|c|c||c|}
       \hline
       A& B&  A'& A'B& A+A'B& A+B   \\ \hline \hline
@@ -666,20 +495,21 @@ Let's consider some significant examples:
   \end{center}
 \end{table}
     \item A $\oplus$ B = (A' $\oplus$ B)' = (A $\oplus$ B')' = A' $\oplus$ B'
-    \item de Morgan rule: A + B = (A'B')' \\
-    {\em A or B is 1 is equivalent to the fact that it is not true that A is 0 and B is 0}.
-    \item de Morgan rule: AB = (A' + B')'\\
-    {\em A and B are 1 is equivalent to the fact that it is not true that A is 0 or B is 0.}
-
+    \item A + B = (A'B')' \\
+    From de Morgan's rule, A or B is 1 is equivalent to the fact that it is not true that A is 0 and B is 0.
+    \item AB = (A' + B')'\\
+    From de Morgan rule, A and B are 1 is equivalent to the fact that it is not true that A is 0 or B is 0.
 \end{itemize}
 
-
-
-Fortunately for us, synthesis software tools (Hardware Description Languages (HDLs) such as Verilog or VHDL) "know" how to use Boolean algebra very efficiently, saving us the effort of minimizing combinational logic circuits.
-
+%*********************************
 \subsection{Seven-Segment Display}
+%*********************************
+A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled aa through gg, which can be illuminated to form numerical digits (0–9) and some alphabetic characters. The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
 
-A seven-segment display is driven by a trans-coder which receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{sevenSeg}.
+% FIXME: Get a 7-segment only drawing
+\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig:7_segment_display}
+
+Figure \ref{fig:7_segment_display} shows the transcoder for a 7-segment display. It receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{tab:sevenSeg}.
 
 The logic expression for the output {\tt a} is:
 \begin{center}
@@ -691,27 +521,30 @@ $a =   B'_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B'_3 \cdot B'_2 \cdot B_1\cdot B'
 or a simpler version by negatin the negated function:
 $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B'_0)' = (B'_3 \cdot B'_1 \cdot (B_2 \oplus B_0))' = B_3 + B_1 + (B_2 \oplus B_0)'$$
 
+
 \begin{table}[H]
   \begin{center}
-    \caption{Seven-segment display.}
-    \label{sevenSeg}
-    \begin{tabular}{|c|c|c|c||c|c|c|c|c|c|c|}
+    \caption{Seven-segment display truth table.}
+    \label{tab:sevenSeg}
+    \begin{tabular}{|c|c|c|c|c||c|c|c|c|c|c|c|}
       \hline
-     $B_3$ & $B_2$& $B_1$& $B_0$& a& b& c& d& e& f& g \\ \hline \hline
-      0& 0& 0& 0& 1& 1& 1& 1& 1& 1& 0 \\ \hline
-      0& 0& 0& 1& 0& 1& 1& 0& 0& 0& 0 \\ \hline
-      0& 0& 1& 0& 1& & & & & & \\ \hline
-      0& 0& 1& 1& 1& & & & & & \\ \hline
-      0& 1& 0& 0& 0& & & & & & \\ \hline
-      0& 1& 0& 1& 1& & & & & & \\ \hline
-      0& 1& 1& 0& 1& & & & & & \\ \hline
-      0& 1& 1& 1& 1& & & & & & \\ \hline
-      1& 0& 0& 0& 1& & & & & & \\ \hline
-      1& 0& 0& 1& 1& & & & & & \\ \hline
+     & $B_3$ & $B_2$ & $B_1$ & $B_0$ & a & b & c & d & e & f & g \\ \hline \hline
+     0& 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &   \\ \hline % 0
+     1& 0 & 0 & 0 & 1 &    & 1 & 1 &    &    &    &   \\ \hline % 1
+     2& 0 & 0 & 1 & 0 & 1 & 1 &    & 1 & 1 &    & 1 \\ \hline % 2
+     3& 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &    &    & 1 \\ \hline % 3
+     4& 0 & 1 & 0 & 0 &    & 1 & 1 &    &    & 1 & 1 \\ \hline % 4
+     5& 0 & 1 & 0 & 1 & 1 &    & 1 & 1 &    & 1 & 1 \\ \hline % 5
+     6& 0 & 1 & 1 & 0 & 1 &    & 1 & 1 & 1 & 1 & 1 \\ \hline % 6
+     7& 0 & 1 & 1 & 1 & 1 & 1 & 1 &    &    &    &   \\ \hline % 7
+     8& 1 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\ \hline % 8
+     9& 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 &    & 1 & 1 \\ \hline % 9
     \end{tabular}
-    %\label{sevenSeg}
   \end{center}
 \end{table}
+
+
+
 
 The System Verilog description of the circuit is sketched in the following:
 {\small

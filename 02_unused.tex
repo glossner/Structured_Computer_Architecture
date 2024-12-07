@@ -1,16 +1,380 @@
-%***************************
-\subsubsection{Truth Tables - MOVE SOMEWHERE}
-%***************************
-A truth table is a systematic way to list all possible combinations of input values and their corresponding output values for a given Boolean expression. For example, the truth table for the XOR operation (\( A \oplus B \)) is as follows:
-\[
-\begin{array}{|c|c|c|}
-\hline
-A & B & A \oplus B \\
-\hline
-0 & 0 & 0 \\
-0 & 1 & 1 \\
-1 & 0 & 1 \\
-1 & 1 & 0 \\
-\hline
-\end{array}
-\]
+%****************************************************
+\subsection{Behavioral vs. Structural Descriptions}
+%***************************************************
+%***************************************
+\subsubsection{Circuit Characterization}
+%***************************************
+
+In a digital system we can distinguish two extreme types of circuits:
+\begin{itemize}
+\item purely logical circuits that operate on some binary signals with some symbolic meaning (example: the transcoder for displaying the numbers from 0 to 9 using 7 segments, represented in Figure \ref{fig2}a)
+
+\item purely numerical circuits that operate on binary signals with numerical significance (example: a modulo 16 adder for two numbers represented by 4 bits each, represented in Figure \ref{fig2}b)
+\end{itemize}
+Obviously, an intermediate version is always possible (example: a circuit that compares two numbers, A and B, and indicates through three logical signals of one bit each: $A>B, \; A=B, \; A\leq B$)
+
+\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig2}
+
+
+The description of a digital circuit can be done in two ways:
+\begin{itemize}
+\item  by describing the functional behavior
+\item  by describing the internal structure of the circuit
+\end{itemize}
+We exemplify the two methods in the case of the addition function.
+
+
+\begin{exemplu}\label{adder}
+Let us use the {\em System Verilog} HDL to describe an adder for 4-bit
+numbers (see Figure \ref{first_ex}a). The description which
+follows is a {\bf behavioral} one, because we know {\bf what} we
+intend to design, but we do not know yet {\bf how} to design the
+internal structure of an adder.
+
+\placedrawing[h]{figures/01_04_4bit_adder.lp}{{\bf The first examples of  digital
+systems.} {\small {\bf a.} The two 4-bit numbers adder, called
+{\tt adder}. {\bf b.} The structure of an adder for 3 4-bit
+numbers, called {\tt threeAdder}.} }{first_ex}
+
+The Verilog code describing the module {\tt adder} is:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      adder.sv
+Circuit name:   Adder
+Description:    The module 'adder' has 2 4-bit inputs and one 4-bit output
+                The circuit adds modulo 16; do not use or provide carry
+                signal
+*************************************************************************/
+module adder(   output logic [3:0] out ,    // 4-bit output
+                input  logic [3:0] in0 ,    // 4-bit input
+                input  logic [3:0] in1 );   // 4-bit input
+
+    assign out = in0 + in1;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+The story just told by the previous Verilog module is: ``the 4-bit adder has two inputs, {\tt in0, in1}, one output, {\tt out}, and
+its output is continuously assigned to the value obtained by
+adding modulo 16 the two input numbers".
+
+  $\diamond$
+\end{exemplu}
+
+What we just learned from the previous first simple example is
+summarized in the following {\bf SystemVerilogSummary}.
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+\item[/*]: begin comment
+\item[*/]: end comment
+\item[module]: keyword which indicates the beginning of the
+description of a circuit as a module having the name which
+immediately follows (in our example, the name is: {\tt adder})
+
+\item[endmodule]: keyword which indicates the end of the module's
+description which started with the previous keyword {\bf module}
+
+\item[output]: keyword used to declare a terminal as an output (in
+our example the terminal {\tt out} is declared as output)
+
+\item[input]: keyword used to declare the terminal as an input (in
+our example the terminals {\tt in0} and {\tt in1} are declared as
+inputs)
+
+\item[logic]: a data type with 4-state bits: {\tt 0, 1, x, z} where 0 means low, 1 means high, x means unknown, and z means an undriven net.
+
+\item[initial]: a block which starts at the beginning of simulation
+
+\item[begin ... end]: block delimiters
+
+\item[\#]: indicate a raw value
+
+\item[forever]: indicate an unending operation
+
+\item[$\sim$]: negation operator
+
+\item[assign]: keyword called the {\em continuous assignment},
+used here to specify the function performed by the module (the
+output {\tt out} takes continuously the value computed by adding
+the two input numbers)
+
+\item[(...)]: delimiters used to delimit the list of terminals
+(external connections)
+
+\item[,]: delimiter to separate each terminal within a list of
+terminals
+
+\item[;]: delimiter for end of line
+
+\item[[ $ \dots$ ]]: delimiters which contains the definition of
+the bits associated with a connection, for example [3:0] define
+the number of bits for the three connections in the previous
+example
+
+\item[+]: the operator {\tt add}, the only one used in the
+previous example.
+\end{description}
+\rule[5mm]{16cm}{0.25mm}
+}
+\end{verisum}
+
+The description of a digital system is a {\bf hierarchical
+construct} starting from a top module populated by modules, which
+are similarly defined. The process continues until very simple
+module are directly described. Thus, the functions $f$ and $g$ are specified by HDL programs
+(in our case, in the previous example by a Verilog program).
+
+The main characteristic of the digital design is {\bf modularity}. A
+problem is decomposed in many simpler problems, which are solved
+similarly, and so on until very simple problems are identified.
+Modularity means also to define as many as possible identical
+modules in each design. This allow to replicate many times the
+same module, already designed and validated. {\em Many \& simple}
+modules! Is the main slogan of the digital designer. Let's take
+another example which uses as module the one just defined in the
+previous example.
+
+\begin{exemplu}
+The previously exemplified module ({\tt adder}) will be used to
+design a modulo 16 3-number adder, called {\tt threeAdder} (see Figure
+\ref{first_ex}b). It adds 3 4-bit numbers providing a 4-bit result
+(modulo 16 sum). Follows the {\bf structural} description:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      threeAdder.sv
+Circuit name:   Three Input Adder
+Description:    The module 'threeAdder' has 3 4-bit inputs and one 4-bit
+                output. The circuit adds modulo 16 three numbers;
+                do not provide carry output
+*************************************************************************/
+module threeAdder( output   logic [3:0]  out,
+                   input    logic [3:0]  in0,
+                   input    logic [3:0]  in1,
+                   input    logic [3:0]  in2);
+
+    logic [3:0] sum ;
+
+    adder   inAdder(.out(sum),
+                    .in0(in1),
+                    .in1(in2)),
+            outAdder(.out(out),
+                     .in0(in0),
+                     .in1(sum));
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+Two modules of {\tt adder} type (defined in the previous example)
+are instantiated as {\tt inAdder}, {\tt outAdder}, they are
+interconnected using the wire {\tt sum}, and are connected to the
+terminals of the {\tt threeAdder} module. The resulting structure
+computes the sum of three numbers. $\diamond$
+\end{exemplu}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{itemize}
+\item How a previously defined module (in our example: {\tt
+adder}) is two times instantiated using two different names ({\tt
+inAdder} and {\tt outAdder} in our example)
+
+\item A ``safe" way to allocate the terminals for a module
+previously defined and instantiated inside the current module:
+each original terminal name is preceded by a dot, and followed by
+a parenthesis containing the name of the wire or of the terminal
+where it is connected (in our example, {\tt outAdder( ...
+.in1(sum))} means: the terminal {\tt in1} of the instance {\tt
+outAdder} is connected to the wire {\tt sum})
+
+\item The successive instantiations of the same module can be
+separated by a ``,".
+\end{itemize}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+While the module {\tt adder} is a {\em behavioral} description,
+the module {\tt threeAdder} is a {\em structural} one. The first
+tells us {\em what} is the function of the module, and the second
+tells us {\em how} its functionality is performed by using a
+structure containing two instantiation of a previously defined
+subsystems, and an internal connection.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%******************************
+\subsubsection{CMOS switches}
+%******************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A logic gates consists in a network of interconnected switches
+implemented using the two type of MOS transistors: p-MOS and
+n-MOS. How behaves the two type of transistors in specific
+configurations is presented in Figure \ref{0_switch}.
+
+A switch connected to $V_{DD}$ is implemented using a p-MOS
+transistor. It is represented in Figure \ref{0_switch}a {\em off}
+(generating $z$, which means {\em Hi-Z}: no signal, neither 0, nor
+1) and in Figure \ref{0_switch}b it is represented {\em on}
+(generating 1 logic, or {\em truth}).
+
+A switch connected to {\em ground} is implemented using a n-MOS
+transistor. It is represented in Figure \ref{0_switch}c {\em off}
+(generating $z$, which means {\em Hi-Z}: no signal, neither 0, nor
+1) and in Figure \ref{0_switch}e it is represented {\em on}
+(generating 0 logic, or {\em false}).
+
+\placedrawing[h]{figures/02_02_transistors.lp}{{\bf Basic switches.} {\small {\bf a}.
+Open switch connected to $V_{DD}$. {\bf b}. Closed switch connected to
+$V_{DD}$. {\bf c}. Open switch connected to {\em ground}. {\bf d}.
+Closed switch connected to {\em ground}.}}{0_switch}
+
+A MOS transistor works very well as an {\em on-off} switch
+connecting its drain to a certain potential.  A p-MOS transistor
+can be used to connect its drain to a high potential when its
+gates is connected to ground, and an n-MOS transistor can connect
+its drain to ground if its gates is connected to a high potential.
+This complementary behavior is used to build the elementary logic
+circuits.
+
+In Figure \ref{src} is presented the {\em switch-resistor-capacitor
+model} (SRC). If $V_{GS} < V_{T}$ then the transistor is {\bf off}, if
+$V_{GS} \geq V_{T}$ then the transistor is {\bf on}. In both cases the
+input of the transistor behaves like a capacitor, the gate-source
+capacitor $C_{GS}$.
+
+When the transistor is on its drain-source resistance is:
+$$R_{ON} = R_{n}\frac{L}{W}$$
+where: $L$ is the channel length, $W$ is the channel width, and $R_{n}$
+is the resistance per square. The length $L$ is a constant
+characterizing a certain technology. For example, if $L = 0.13\mu m$
+this means it is about a $0.13\mu m$ process.
+
+The input capacitor has the value:
+$$C_{GS} = \frac{\epsilon_{OX} LW}{d}.$$
+The value:
+$$C_{OX} = \frac{\epsilon_{OX}}{d}$$
+where: $\epsilon_{OX} \approx 3.9 \epsilon_{0}$ is the permittivity of
+the silicon dioxide, is  the gate-to-channel capacitance per unit area
+of the MOSFET gate.
+
+In this conditions the gate input current is:
+$$i_{G} = C_{GS} \frac{dv_{GS}}{dt}$$
+
+\placedrawing[h]{figures/02_03_mosfet.lp}{{\bf The MOSFET switch.} {\small The {\em
+switch-resistor-capacitor} model consists in the two states: OF
+($V_{GS} < V_{T}$), and ON ($V_{GS} \geq V_{T}$). In both states the
+input is defined by the capacitor $C_{GS}$.}}{src}
+
+
+\begin{exemplu}
+For an AND gate with low strength, with $W = 1.8\mu m$, in $0.13
+\mu m$ technology, supposing $C_{OX} = 4fF/\mu m^{2}$, results the
+input capacitance: $$C_{GS} = 4 \times 0.13 \times 1.8 fF = 0.936
+fF$$ Assuming $R_{n} = 5K\Omega$, results for the same gate:
+$$R_{ON} = 5 \times \frac{0.13}{1.8} \; K\Omega = 361 \Omega$$
+
+$\diamond$
+\end{exemplu}
+
+\subsubsection{The Inverter}
+
+
+\paragraph{The static behavior.}
+The smallest and simplest logic circuit -- the invertor -- can be built
+using a pair of complementary transistors, connecting together the two
+gates as input and the two drains as output, while the n-MOS source is
+connected to ground (interpreted as logic 0) and the p-MOS source to
+$V_{DD}$ (interpreted as logic 1). Results the circuit represented in
+Figure \ref{0_inv}.
+
+\placedrawing[h]{figures/02_04_inverter.lp}{{\bf Building an invertor.} {\small {\bf
+a}. The invertor circuit. {\bf b}. The logic symbol for the invertor
+circuit.}}{0_inv}
+
+The behavior of the invertor consist in combining the behaviors of the
+two switches previously defined. For $in=0$ pMOS is $on$ and nMOS is
+$off$ the output generating $V_{DD}$ which means 1. For $in=1$ pMOS is
+$off$ and nMOS is $on$ the output generating 0.
+
+The static behavior of the inverter (or NOT) circuit can be easy
+explained starting from the switches described in Figure
+\ref{0_switch}. Connecting together a switch generating $z$ with a
+switch generating 1 or 0, the connection point will generate 0 or
+1.
+
+\paragraph{Dynamic behavior.}
+The propagation time of an inverter can be analyzed using the two
+serially connected invertors represented in Figure \ref{switch}. The
+delay of the first invertor is generated by its capacitive load,
+$C_{L}$, composed by:
+\begin{itemize}
+\item its parasitic drain/bulk capacitance, $C_{DB}$, is the intrinsic  output capacitance of the first invertor
+\item wiring capacitance, $C_{wire}$, which depends on the length of the wire (of width $W_w$ and of length $L_w$) connected between the two invertors: $$C_{wire} = C_{thickox} W_w L_w$$
+\item next stage input capacitance, $C_{G}$, approximated by summing the gate capacitance for pMOC and nMOS transistors: $$C_G = C_{Gp} + C_{Gn} = C_{ox}(W_p L_p + W_n L_n)$$
+\end{itemize}
+
+\placedrawing[h]{figures/02_05_propagation_time.lp}{{\bf The propagation time.} {\small
+}}{switch}
+
+The total load capacitance
+$$C_L = C_{DB} + C_{wire} + C_G$$
+is sometimes dominated by $C_{wire}$. For short connections $C_G$ dominates, while for big {\em fan-out}\index{fan-out: the number on input gates  connected to the output of a digital circuit} both, $C_{wire}$ and $C_G$ must be considered.
+
+The signal $V_A$ is used to measure the propagation time of the first NOT in Figure \ref{switch}a. It is generated by an ideal pulse generator with output impedance 0. Thus, the rising time and the falling time of this signal are considered 0 (the input capacitance of the NOT circuit is charged  or discharged in no time).
+
+The two delay times (see Figure \ref{switch}c) associated to an invertor
+(to a gate in the general case) are defined as follows:
+\begin{itemize}
+    \item $t_{pLH}$: the time interval between the moment the input
+    switches in 0 and the output reaches $V_{OH}/2$ coming from 0
+    \item $t_{pHL}$: the time interval between the moment the input
+    switches in 1 and the output reaches $V_{OH}/2$ coming from $V_{OH}$
+\end{itemize}
+
+Let us consider the transition of $V_A$ from 0 to $V_{OH}$ at $t_r$ (rise edge). Before transition, at $t_r^-$, $C_L$ is fully charged and $V_B = V_{OH}$. In Figure \ref{switch}b is represented the equivalent circuit at $t_r^+$, when pMOS is off and nMOS is on. In this moment starts the process of discharging  the capacitance $C_L$ at the constant current
+$$I_{Dn(sat)} = \frac{1}{2} \mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})^2$$
+In Figure \ref{switch1}, at $t_r^-$ the transistor is cut, $I_{Dn} = 0$. At $t_r^+$ the  nMOS transistor switch in saturation and becomes an ideal {\em constant current generator} which starts to discharge $C_L$ linearly at the constant current $I_{Dn(sat)}$. The process continue until $V_{OUT} = V_{OH}$, according to the definition of $t_{pHL}$.
+
+
+\placedrawing[h]{figures/02_06_nmos_output.lp}{{\bf The output characteristic of the nMOS transistor.} {\small
+}}{switch1}
+
+In order to compute $t_{pHL}$ we take into consideration the constant value of the discharging current which provide a linear variation of $v_{OUT}$.
+$$\frac{dv_{out}}{dt} = \frac{d}{dt}(\frac{q_L}{C_L}) = \frac{-I_{Dn(sat)}}{C_L}$$
+$$\frac{dv_{out}}{dt} = \frac{\frac{V_{OH}}{2} - V_{OH}}{t_{pHL}}$$
+We solve the equations for $t_{pHL}$:
+$$t_{pHL} = C_L \frac{1}{\mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})} \frac{V_{OH}}{V_{OH} - V_{Tn}}$$
+Because:
+$$R_{ONn} = \frac{1}{\mu_n C_{ox} \frac{W_n}{L_n} (V_{OH} - V_{Tn})}$$
+results:
+$$t_{pHL} = C_L R_{ONn} \frac{1}{1 - \frac{V_{Tn}}{V_{OH}}} = k_n R_{ONn} C_L = k_n \tau_{nL} $$
+where:
+\begin{itemize}
+\item $\tau_{nL}$ is the {\em constant time} associated to the H-L transition
+\item $k_n$ is a constant associated to the technology we use; it goes down when $V_{OH}$ increases or $V_T$ decreases
+\end{itemize}
+
+The speed of a gate depends by its dimension and by the capacitive load
+it drives. For a big $W$ the value of $R_{ON}$ is small charging or
+discharging $C_{L}$ faster.
+
+For $t_{pLH}$ the approach is similar. Results: $t_{pLH} = k_p \tau_{pL}$.
+
+By definition the propagation time associated to a circuit is: $$t_p = (t_{pLH} + t_{pHL})/2$$
+its value being dominated by the value of $C_L$ and the size (width) of the two transistors, $W_n$ and $W_p$.
+
