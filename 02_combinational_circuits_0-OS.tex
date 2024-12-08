@@ -269,9 +269,9 @@ The signals used in a digital system are of two types:
 
 Any simulation is based on the generation of waveforms with which the simulated circuit is stimulated on its inputs. We describe two generated waveforms: one "random" and one usable as a periodic signal.
 
-%***************************************************
+%###################
 % WaveformGenerator
-%***************************************************
+%###################
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
 \subsubsection{Chisel Implementation of Waveforms}
@@ -504,7 +504,7 @@ Let's consider some significant examples:
 %*********************************
 \subsection{Seven-Segment Display}
 %*********************************
-A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled aa through gg, which can be illuminated to form numerical digits (0–9) and some alphabetic characters. The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
+A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled a through g, which can be illuminated to form numerical digits (0–9). The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
 
 % FIXME: Get a 7-segment only drawing
 \placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig:7_segment_display}
@@ -526,7 +526,7 @@ $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_
   \begin{center}
     \caption{Seven-segment display truth table.}
     \label{tab:sevenSeg}
-    \begin{tabular}{|c|c|c|c|c||c|c|c|c|c|c|c|}
+    \begin{tabular}{|c||c|c|c|c||c|c|c|c|c|c|c|}
       \hline
      & $B_3$ & $B_2$ & $B_1$ & $B_0$ & a & b & c & d & e & f & g \\ \hline \hline
      0& 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &   \\ \hline % 0
@@ -543,38 +543,27 @@ $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_
   \end{center}
 \end{table}
 
+%***************************************************
+% 7 Segment Display Code
+%***************************************************
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Chisel Implementation of Seven Segment Display}
+%*************************************************
+\includechiselcode[caption={Seven Segment Display (Chisel)},     label={lst:chisel_sevensegmentdisplay}, firstline=9, firstnumber=9, lastline=28]{\chiselSourceDir/SevenSegmentDisplay.scala}
 
+Listing \ref{lst:chisel_sevensegmentdisplay} shows the \texttt{SevenSegmentDisplay} class is a Chisel module that decodes a 4-bit binary input (\texttt{binIn}) into a 7-bit output (\texttt{segOut}) representing the activation of segments on a seven-segment display. The input, \texttt{binIn}, can take values from 0 to 9, and the module determines which segments (labeled \texttt{a} through \texttt{g}) should be illuminated to form the corresponding numeric digit on the display.
 
-
-The System Verilog description of the circuit is sketched in the following:
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      sevenSegmDys.sv
-Circuit name:   Seven-Segment Display
-Description:
-*************************************************************************/
-module sevenSegmDys(output  logic [6:0] seg     ,
-                    input   logic [3:0] number  );
-
-    always_comb case(number)
-                    4'b0000: seg = 7'b1111110   ;
-                    4'b0001: seg = 7'b0110000   ;
-                    4'b0010: seg = 7'b  ;
-                    4'b0011: seg = 7'b  ;
-                    4'b0100: seg = 7'b  ;
-                    4'b0101: seg = 7'b  ;
-                    4'b0110: seg = 7'b  ;
-                    4'b0111: seg = 7'b  ;
-                    4'b1000: seg = 7'b  ;
-                    4'b1001: seg = 7'b  ;
-                    default: seg = 7'b  ;
-                endcase
-endmodule
-\end{lstlisting}
-\end{shaded*}
+The decoding logic is implemented using a series of \texttt{when} and \texttt{elsewhen} constructs. Each condition compares \texttt{binIn} with a specific value and assigns a 7-bit binary pattern to \texttt{segOut}. Each bit in the pattern corresponds to one of the seven segments, where a \texttt{1} turns the segment on, and a \texttt{0} turns it off. For example, when \texttt{binIn} is \texttt{0}, the output is \texttt{1111110}, which activates all segments except \texttt{g} to display the digit \texttt{0}. Similarly, for \texttt{binIn = 8}, all segments are activated (\texttt{1111111}). A default value of \texttt{0000000} is set for \texttt{segOut} to ensure all segments are off in case of invalid input.
+}%End Chisel
+\ifthenelse{\boolean{verilogversion}}{
+%*********************************************************
+\subsubsection{SystemVerilog Implementation of Seven Segment Display}
+%*********************************************************    
+\includeverilogcode[caption={Seven Segment Display (Hand Written Verilog)},     label={lst:verilog_sevensegmentdisplay}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/waveFormGenerator.sv}
 }
+
+
 
 \begin{verisum}{\em :
 
