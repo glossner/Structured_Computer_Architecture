@@ -10,9 +10,15 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.chipsalliance" %% "chisel" % chiselVersion,
       "org.scalatest" %% "scalatest" % "3.2.16" % Test,
+      //"ch.epfl.scala" % "sbt-bloop_2.12_1.0" % "2.0.5",  //bloop in VSC
       "org.slf4j" % "slf4j-api" % "2.0.9",          // SLF4J API
       "org.slf4j" % "slf4j-simple" % "2.0.9"        // Simple SLF4J backend
     ),
+
+    // It seems sbt-bloop is not compatible with scala 2.13 yet
+    // https://index.scala-lang.org/scalacenter/bloop/artifacts/sbt-bloop
+    //addSbtPlugin("ch.epfl.scala" % "sbt-bloop-core" % "1.4.1"),
+ 
     scalacOptions ++= Seq(
       "-language:reflectiveCalls",
       "-deprecation",
@@ -20,8 +26,9 @@ lazy val root = (project in file("."))
       "-Xcheckinit",
       "-Ymacro-annotations"
     ),
-    addCompilerPlugin("org.chipsalliance" % "chisel-plugin" % chiselVersion cross CrossVersion.full),
     
+    addCompilerPlugin("org.chipsalliance" % "chisel-plugin" % chiselVersion cross CrossVersion.full),
+
     // Enable SBT logging
     logLevel := Level.Debug, // Enable verbose logging
     
