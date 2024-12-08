@@ -12,35 +12,20 @@ class SevenSegmentDisplay extends Module {
     val segOut = Output(UInt(7.W)) // 7-bit output for seven-segment display
   })
 
-  io.segOut := Mux(io.binIn === 0.U, "b1111110".U(7.W),
-               Mux(io.binIn === 1.U, "b0110000".U(7.W),
-               Mux(io.binIn === 2.U, "b1101101".U(7.W),
-               Mux(io.binIn === 3.U, "b1111001".U(7.W),
-               Mux(io.binIn === 4.U, "b0110011".U(7.W),
-               Mux(io.binIn === 5.U, "b1011011".U(7.W),
-               Mux(io.binIn === 6.U, "b1011111".U(7.W),
-               Mux(io.binIn === 7.U, "b1110000".U(7.W),
-               Mux(io.binIn === 8.U, "b1111111".U(7.W),
-               Mux(io.binIn === 9.U, "b1111011".U(7.W),
-                   "b0000000".U(7.W) // Default (all segments off)
-               ))))))))))
+    io.segOut := "b0000000".U(7.W) // Default: All segments off
+
+    when(       io.binIn === 0.U) {io.segOut :=  "b1111110".U(7.W)  // 0: a, b, c, d, e, f
+    } .elsewhen(io.binIn === 1.U) { io.segOut := "b0110000".U(7.W)  // 1: b, c
+    } .elsewhen(io.binIn === 2.U) { io.segOut := "b1101101".U(7.W)  // 2: a, b, g, e, d
+    } .elsewhen(io.binIn === 3.U) { io.segOut := "b1111001".U(7.W)  // 3: a, b, g, c, d
+    } .elsewhen(io.binIn === 4.U) { io.segOut := "b0110011".U(7.W)  // 4: f, g, b, c
+    } .elsewhen(io.binIn === 5.U) { io.segOut := "b1011011".U(7.W)  // 5: a, f, g, c, d
+    } .elsewhen(io.binIn === 6.U) { io.segOut := "b1011111".U(7.W)  // 6: a, f, g, e, d, c
+    } .elsewhen(io.binIn === 7.U) { io.segOut := "b1110000".U(7.W)  // 7: a, b, c
+    } .elsewhen(io.binIn === 8.U) { io.segOut := "b1111111".U(7.W)  // 8: All segments on
+    } .elsewhen(io.binIn === 9.U) { io.segOut := "b1111011".U(7.W)  // 9: a, f, b, g, c, d
+    }
 }
-
-
-//   val in = binIn
-//   io.segOut := MuxLookup(in, 0.U(7.W), Seq(
-//     0.U -> 
-//     1.U -> 
-//     2.U -> "b1101101".U(7.W), // 2: a, b, g, e, d
-//     3.U -> "b1111001".U(7.W), // 3: a, b, g, c, d
-//     4.U -> "b0110011".U(7.W), // 4: f, g, b, c
-//     5.U -> "b1011011".U(7.W), // 5: a, f, g, c, d
-//     6.U -> "b1011111".U(7.W), // 6: a, f, g, e, d, c
-//     7.U -> "b1110000".U(7.W), // 7: a, b, c
-//     8.U -> "b1111111".U(7.W), // 8: All segments
-//     9.U -> "b1111011".U(7.W)  // 9: a, f, b, g, c, d
-//   ))
-// }
 
 object SevenSegmentDisplay extends App {
    ChiselStage.emitSystemVerilog(
