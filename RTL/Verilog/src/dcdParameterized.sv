@@ -1,6 +1,6 @@
 // Licensed under CERN-OHL-S v2. See https://cern.ch/cern-ohl for details.
 /*************************************************************************
-File name:      dcdParmeterized.sv
+File name:      dcdParameterized.sv
 Circuit name:   parameterized decoder
 Description:
 *************************************************************************/
