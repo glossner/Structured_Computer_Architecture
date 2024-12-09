@@ -548,7 +548,7 @@ $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_
 %#######################
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
-\subsubsection{Chisel Implementation of Seven Segment Display}
+\subsubsection{Seven Segment Display (Chisel)}
 %*************************************************
 \includechiselcode[caption={Seven Segment Display (Chisel)},     label={lst:chisel_sevensegmentdisplay}, firstline=9, firstnumber=9, lastline=28]{\chiselSourceDir/SevenSegmentDisplay.scala}
 
@@ -562,7 +562,7 @@ In Chisel 6.6, the use of the \texttt{switch} function is discouraged because it
 
 \ifthenelse{\boolean{verilogversion}}{
 %*********************************************************
-\subsubsection{SystemVerilog Implementation of Seven Segment Display}
+\subsubsection{Seven Segment Display (SystemVerilog)}
 %*********************************************************    
 \includeverilogcode[caption={Seven Segment Display (Hand Written Verilog)},     label={lst:verilog_sevensegmentdisplay}, firstline=7, firstnumber=7, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
 
@@ -579,7 +579,7 @@ The module includes a \texttt{default} case that sets all segments to off (\text
 
 \ifthenelse{\boolean{verilogversion} \and \boolean{chiselversion}}{   
 %*********************************************************************************
-\subsubsection{Comparison of Chisel and SystemVerilog Implementation of a Seven Segment Display}
+\subsubsection{Seven Segment Display Language Comparison}
 %**********************************************************************************
 The Chisel and SystemVerilog implementations both utilize conditional logic. Chisel uses \texttt{when} statements, while SystemVerilog uses a \texttt{case} statement within an \texttt{always\_comb} block. The primary difference are due to the design of the two languages. Chisel, being embedded in Scala, provides a high-level, functional programming approach, emphasizing abstraction and type safety. SystemVerilog is a traditional hardware description language explicitly designed for synthesizable digital circuits. Chisel initializes the \texttt{segOut} output to a default value, simplifying handling unspecified input cases, while SystemVerilog uses the \texttt{default} case explicitly within its \texttt{case} statement. 
 
@@ -590,15 +590,38 @@ Moreover, SystemVerilog's \texttt{always\_comb} guarantees that the logic produc
 % End Seven Segment Display Code
 %################################
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Generic combinational circuits}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %*******************
 \subsection{Decoder}
 %********************
-Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identify with a one bit signal each binary code applied to the input of the circuit. Therefor, a $n$-bit input code applied on the input of a decoder implies a number of $2^n$ outputs. Only one output is active at a time corresponding to the input code. Thus, for the decoder represented in Figure \ref{fig:decoderr}, if $\{x_{n-1}, \ldots, x_0\} = 00 \ldots 0101$, then $y_5=1$ and all the other outputs are 0.
+Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identify with a one bit signal each binary code applied to the input of the circuit. Therefore, a $n$-bit input code applied on the input of a decoder implies a number of $2^n$ outputs. Only one output is active at a time, corresponding to the input code. Thus, for the decoder represented in Figure \ref{fig:decoderr}, if $\{x_{n-1}, \ldots, x_0\} = 00 \ldots 0101$, then $y_5=1$ and all the other outputs are 0.
 
 \placedrawing[H]{figures/02_09_decoder.lp}{Decoder with $n$-bit input (DCDn).}{fig:decoder}
+
+%#######################
+% Decoder Code
+%#######################
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Decoder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Decoder (Chisel)}, label={lst:chisel_decoder}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Decoder.scala}
+
+
+}%End Chisel
+
+\ifthenelse{\boolean{verilogversion}}{
+%*********************************************************
+\subsubsection{Seven Segment Display (SystemVerilog)}
+%*********************************************************    
+\includeverilogcode[caption={Behavioral Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder}, firstline=6, firstnumber=6, lastline=999]{\verilogSourceDir/dcd.sv}
+
+}% End Verilog
+
+
+
 
 The System Verilog code for the decoder circuit follows. The description is behavioral.
 
@@ -612,22 +635,7 @@ The System Verilog code for the decoder circuit follows. The description is beha
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      dcd.sv
-Circuit name:   4-input decoder
-Description:
-*************************************************************************/
-module dcd( output  logic [15:0]    dcdOut  ,
-            input   logic [3:0]     dcdIn   );
 
-     assign dcdOut = 1 << dcdIn ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
 
 
 
