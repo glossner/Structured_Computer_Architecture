@@ -593,11 +593,12 @@ Moreover, SystemVerilog's \texttt{always\_comb} guarantees that the logic produc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Generic combinational circuits}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%*******************
 \subsection{Decoder}
+%********************
+Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identify with a one bit signal each binary code applied to the input of the circuit. Therefor, a $n$-bit input code applied on the input of a decoder implies a number of $2^n$ outputs. Only one output is active at a time corresponding to the input code. Thus, for the decoder represented in Figure \ref{fig:decoderr}, if $\{x_{n-1}, \ldots, x_0\} = 00 \ldots 0101$, then $y_5=1$ and all the other outputs are 0.
 
-Decoding means to identify with a one bit signal each binary code applied to the input of the circuit. Therefor, a $n$-bit input code applied on the input of a decoder implies a number of $2^n$ outputs. Only one output is active at a time corresponding to the input code. Thus, for the decoder represented in Figure \ref{fig14}, if $\{x_{n-1}, \ldots, x_0\} = 00 \ldots 0101$, then $y_5=1$ and all the other outputs are 0.
-
-\placedrawing[H]{figures/02_09_decoder.lp}{Decoder with $n$-bit input (DCDn).}{fig14}
+\placedrawing[H]{figures/02_09_decoder.lp}{Decoder with $n$-bit input (DCDn).}{fig:decoder}
 
 The System Verilog code for the decoder circuit follows. The description is behavioral.
 
