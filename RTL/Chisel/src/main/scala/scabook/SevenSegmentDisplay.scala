@@ -13,7 +13,7 @@ class SevenSegmentDisplay extends Module {
 
     io.segOut := "b0000000".U(7.W) // Default: All segments off
 
-    when(       io.binIn === 0.U) {io.segOut :=  "b1111110".U(7.W)
+    when(       io.binIn === 0.U) { io.segOut := "b1111110".U(7.W)
     } .elsewhen(io.binIn === 1.U) { io.segOut := "b0110000".U(7.W)
     } .elsewhen(io.binIn === 2.U) { io.segOut := "b1101101".U(7.W)
     } .elsewhen(io.binIn === 3.U) { io.segOut := "b1111001".U(7.W)
