@@ -4,7 +4,6 @@
 package scabook
 
 import chisel3._
-import circt.stage.ChiselStage
 
 class SevenSegmentDisplay extends Module {
   val io = IO(new Bundle {
@@ -25,10 +24,4 @@ class SevenSegmentDisplay extends Module {
     } .elsewhen(io.binIn === 8.U) { io.segOut := "b1111111".U(7.W)  // 8: All segments on
     } .elsewhen(io.binIn === 9.U) { io.segOut := "b1111011".U(7.W)  // 9: a, f, b, g, c, d
     }
-}
-
-object SevenSegmentDisplay extends App {
-   ChiselStage.emitSystemVerilog(
-    new SevenSegmentDisplay, 
-    Array("-disable-all-randomization", "-strip-debug-info"))
 }

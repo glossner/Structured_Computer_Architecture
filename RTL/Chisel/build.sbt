@@ -29,12 +29,18 @@ lazy val root = (project in file("."))
     
     addCompilerPlugin("org.chipsalliance" % "chisel-plugin" % chiselVersion cross CrossVersion.full),
 
+    // Add custom source directory for generators
+    Compile / unmanagedSourceDirectories += baseDirectory.value / "src" / "generators",
+
+
     // Enable SBT logging
     logLevel := Level.Debug, // Enable verbose logging
     
     // Enable logging by passing JVM properties to the application
     Compile / run / fork := true,
     Compile / run / javaOptions ++= Seq(
+      "-Xmx4G",
+      "-Dchisel.firtool=true", // Ensures CIRCT is the backend. https://github.com/llvm/circt 
       "-Dorg.slf4j.simpleLogger.defaultLogLevel=WARN", // Set log level to WARN
       "-Dorg.slf4j.simpleLogger.showDateTime=true",    // Optional: Show timestamps
       "-Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd HH:mm:ss" // Optional: Timestamp format
