@@ -614,9 +614,12 @@ Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identi
 
 \ifthenelse{\boolean{verilogversion}}{
 %*********************************************************
-\subsubsection{Seven Segment Display (SystemVerilog)}
+\subsubsection{Decoder (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={Behavioral Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder}, firstline=6, firstnumber=6, lastline=999]{\verilogSourceDir/dcd.sv}
+\includeverilogcode[caption={Parameterized Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcdParmeterized.sv}
+
+
+\includeverilogcode[caption={Behavioral Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcd.sv}
 
 }% End Verilog
 
