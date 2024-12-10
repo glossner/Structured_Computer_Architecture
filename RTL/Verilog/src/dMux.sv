@@ -1,0 +1,11 @@
+/*************************************************************************
+File name:      dMux.sv
+Circuit name:   4-input demultiplexer
+Description:    Demultiplexer is an enabled decoder
+*************************************************************************/
+module dMux(output  logic [15:0]    dMuxOut     ,
+            input   logic [3:0]     dMuxIn      ,
+            input   logic           dMuxEnable  );
+
+     assign dMuxOut = dMuxEnable << dMuxIn ;
+endmodule
