@@ -676,7 +676,7 @@ SystemVerilog, as an enhancement of Verilog, introduces parameterization capabil
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{multiplexer}
+\subsection{Multiplexer}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 A \textbf{multiplexer} (often abbreviated as \textit{mux}) is a combinational logic circuit that selects one of several input signals and forwards the selected input to a single output line. The input selection is controlled by a set of control signals or \textit{select lines}, which determine which input to pass to the output. A multiplexer with $n$ select lines can control $2^n$ inputs, making it a highly versatile and compact solution for signal routing in digital systems.
@@ -686,7 +686,7 @@ Multiplexers are widely used in digital design due to their ability to manage mu
 Multiplexers are used because they minimize the number of physical connections and wires required in a circuit. By reducing the need for separate connections for each input-output pair, a multiplexer allows for more efficient circuit designs. Additionally, they enhance the scalability of systems, because additional inputs can be accommodated by increasing the number of select lines. 
 
 %**********************************
-\subsection{Elementary multiplexer}
+\subsection{Elementary Multiplexer}
 %**********************************
 \placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexer (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
 
@@ -695,7 +695,7 @@ Any combinational circuit can be expressed using only NAND functions. But a more
 \begin{center} O = {\bf if} (S) {\bf then} I1 {\bf else} I0 \end{center}
 
 %**********************************
-\subsection{Many-input multiplexer}
+\subsection{Many-input Multiplexer}
 %**********************************
 
 Figure \ref{fig:gen_mux} shows a many-input multiplexer. It takes bits from $m=2^n$ inputs selected by a $n$-bit code.
@@ -707,70 +707,75 @@ Figure \ref{fig:gen_mux} shows a many-input multiplexer. It takes bits from $m=2
 %#######################
 \ifthenelse{\boolean{verilogversion}}{
 %*********************************************************
-\subsubsection{multiplexer (SystemVerilog)}
+\subsubsection{Multiplexer (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={4-to-1 multiplexer (SystemVerilog)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/mux.sv}
+\includeverilogcode[caption={16-to-1 single bit Multiplexer (SystemVerilog)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/mux.sv}
 
-Listing \ref{lst:verilog_mux4} implements a 16-to-1 multiplexer. The module takes three inputs: a 16-bit vector \texttt{muxIn}, a 4-bit selector \texttt{muxSel}, and produces a single output \texttt{muxOut}. The selector \texttt{muxSel} determines which bit of the 16-bit input vector is routed to the output. This is achieved through the indexing operation \texttt{muxIn[muxSel]}, which dynamically selects the bit of \texttt{muxIn} corresponding to the value of \texttt{muxSel}.
+Listing \ref{lst:verilog_mux4} implements a 16-to-1 single bit multiplexer. The module takes three inputs: a 16-bit vector \texttt{muxIn}, a 4-bit selector \texttt{muxSel}, and produces a single 1-bit output \texttt{muxOut}. The selector \texttt{muxSel} determines which bit of the 16-bit input vector is routed to the output. This is achieved through the indexing operation \texttt{muxIn[muxSel]}, which dynamically selects the bit of \texttt{muxIn} corresponding to the value of \texttt{muxSel}.
 
 This design is both compact and efficient, leveraging Verilog's built-in array indexing capabilities. It allows the multiplexer to be easily scaled by adjusting the widths of \texttt{muxIn} and \texttt{muxSel}. Such multiplexers are fundamental building blocks in digital systems, often used to select between multiple data sources or routes in logic circuits, enabling dynamic and efficient data flow management.
 }% End Verilog Code
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
-\subsubsection{Parameterized multiplexer (Chisel)}
+\subsubsection{Parameterized Multiplexer (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized multiplexer (Chisel)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/multiplexer.scala}
+\includechiselcode[caption={Parameterized Bus Multiplexer (Chisel)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Multiplexer.scala}
 
-Listing \ref{lst:chisel_muxT} shows a parameterized multiplexer in Chisel. It is implemented as a class named \texttt{class Multiplexer}. This class is parameterized by the data type of the inputs (\texttt{T}) and the number of inputs (\texttt{n}). The class ensures through \texttt{require} statements that the number of inputs is both greater than zero and a power of two. 
+Listing \ref{lst:chisel_muxT} shows a parameterized bus multiplexer in Chisel. A \textit{bus} in digital systems is a collection of parallel lines or pathways used to transfer data between components within a system. Each line in a bus corresponds to a bit in the data, allowing the bus to carry multi-bit data simultaneously. Buses are typically characterized by their width, which determines how many bits can be transmitted at once, and are used to connect various hardware components, such as processors, memory, and peripherals. For example, a 32-bit bus can carry 32 bits of data in parallel. The use of buses simplifies system design by providing a standardized method for interconnecting multiple components.
 
-The I/O bundle defines the interface for the multiplexer. It includes a vector of inputs, a selection signal, and the output. The size of the selection signal is calculated using \texttt{log2Ceil}, ensuring that it has enough bits to address all the inputs. The core logic of the multiplexer is implemented in a single line \texttt{io.output := io.inputs(io.select)}, where the output is assigned the value of the selected input. This is performed using Chisel’s vector indexing.
+The bus multiplexer is implemented as a class named \texttt{class Multiplexer}. This class is parameterized by the data type of the inputs (\texttt{T}) and the number of inputs (\texttt{n}). The class ensures through \texttt{require} statements that the number of inputs is both greater than zero and a power of two. 
+
+The I/O bundle defines the interface for the multiplexer. It includes a vector (bus) of inputs, a selection signal, and the output. The size of the selection signal is calculated using \texttt{log2Ceil}, ensuring that it has enough bits to address all the inputs. The core logic of the multiplexer is implemented in a single line \texttt{io.output := io.inputs(io.select)}, where the output is assigned the value of the selected input. This is performed using Chisel’s vector indexing.
 
 In Scala, a companion object is an object that shares the same name as a class and is defined in the same file. It acts as a singleton instance and provides a convenient way to group static-like methods and values associated with the class. Companion objects are particularly useful for factory methods, constants, or utility functions related to the class. Since they are in the same scope, companion objects and their corresponding classes can access each other's private members. This feature allows Scala developers to maintain clean and organized code, while still supporting the functional programming paradigm by avoiding the need for static members like in Java.
 
 The companion object \texttt{object Multiplexer} provides an \texttt{apply} method, making the multiplexer easy to instantiate and use. This method hides the details of creating the module and connecting its inputs, selection signal, and output. Instead, the user simply provides the inputs vector and the selection signal, and the multiplexer outputs the selected value.
 
-\includechiselcode[caption={4-to-1 multiplexer (Chisel)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
+The \texttt{Multiplexer} \textit{object} in Chisel provides a factory method for creating and connecting instances of a parameterized multiplexer. The method takes a \texttt{Vec[T]} of inputs, where \texttt{T} is a generic type extending \texttt{Data}, and a \texttt{UInt} that specifies the selection signal for the multiplexer.
+
+The \texttt{apply} method, defined with the same name as the object, simplifies the instantiation process for users. Within the \texttt{apply} method, an instance of the \texttt{Multiplexer} module is created using the \texttt{Module} construct. The \texttt{inputs(0).cloneType} is used to create a new instance of the type of the first input element. This is necessary because Chisel requires explicit cloning of hardware types to ensure correct behavior when instantiating modules. The \texttt{inputs.length} is passed as a parameter to the \texttt{Multiplexer} module to define the number of inputs for the multiplexer.
+
+After the module is instantiated, its I/O ports are connected. The \texttt{mux.io.inputs} port is connected to the \texttt{inputs} vector, and the \texttt{mux.io.select} port is connected to the \texttt{select} signal. Finally, the \texttt{apply} method returns the \texttt{mux.io.output}, providing the result of the multiplexer to the caller. 
+
+\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
 
 Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. The \texttt{select} signal determines which input is passed to the output. 
 
 }% End Chisel Code
 
-
-
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Demultiplexer}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A demultiplexer, often abbreviated as "demux," is a combinational circuit that takes a single input and channels it into one of several output lines based on the value of a selection signal. It is effectively the reverse operation of a multiplexer, consolidating multiple inputs into a single output. A demultiplexer is characterized by its ability to control the routing of the input data to the desired output line, ensuring that only one output is active at a time. The selection signal's binary value governs the active output selection.
 
-The demultiplexer transfers the input signal X to one of the $m=2^n$ outputs, $y_0, y_1, \ldots, y_{m-1}$, indicated by the $n$-bit selection input, $x_0, x_1, \ldots, x_{n-1}$. In Figure \ref{fig13} a demultiplexer is built using a decoder which open only one of the $m$ AND gate sending the $X$ input to the selected output.
+Demultiplexers are useful in digital systems for tasks requiring data distribution. For instance, they are employed in scenarios where a single source of information needs to be directed to one of many destinations. In data routing applications, demultiplexers help in reducing the complexity of data paths and enable efficient communication between components. Moreover, they are integral to memory addressing systems, where they are used to select specific memory locations for reading or writing operations.
 
-\placedrawing[H]{figures/02_13_demux.lp}{Demultiplexer as a DCD whose outputs are ANDed with the one bit signal to be distributed according to the $n$-bit input code. }{fig13}
+\placedrawing[H]{figures/02_13_demux.lp}{Demultiplexer as a DCD whose outputs are ANDed with the one bit signal to be distributed according to the $n$-bit input code. }{fig:demux}
 
+Figure \ref{fig:demux} shows the demultiplexer transfers the input signal X to one of the $m=2^n$ outputs, $y_0, y_1, \ldots, y_{m-1}$, indicated by the $n$-bit selection input, $x_0, x_1, \ldots, x_{n-1}$. In Figure \ref{fig13} a demultiplexer is built using a decoder which open only one of the $m$ AND gate sending the $X$ input to the selected output.
 
 For example: if $$\{x_{n-1} x_{n-2}, \ldots, x_1, x_0\} = 00 \ldots 011$$ then
 $$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
 
-The code describing behaviorally the circuit follows:
+%#######################
+% DeMltiplexer Code
+%#######################
+\ifthenelse{\boolean{verilogversion}}{
+%*********************************************************
+\subsubsection{DeMultiplexer (SystemVerilog)}
+%*********************************************************    
+\includeverilogcode[caption={1-to-16 DeMultiplexer (SystemVerilog)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      dMux.sv
-Circuit name:   4-input demultiplexer
-Description:    Demultiplexer is an enabled decoder
-*************************************************************************/
-module dMux(output  logic [15:0]    dMuxOut     ,
-            input   logic [3:0]     dMuxIn      ,
-            input   logic           dMuxEnable  );
+The given SystemVerilog code implements a simple demultiplexer module, named \texttt{dMux}. This demultiplexer takes a single input signal \texttt{dMuxEnable} and routes it to one of the 16 output lines, represented by the vector \texttt{dMuxOut}, based on the 4-bit selection signal \texttt{dMuxIn}. Now, instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned. The operation is performed using a left-shift operation, where the input signal \texttt{dMuxEnable} is shifted by the value of \texttt{dMuxIn}, effectively enabling only one bit in the 16-bit output vector.
 
-     assign dMuxOut = dMuxEnable << dMuxIn ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-Now, instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned.
+The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs are active when it is low. This implementation is efficient for applications where a single input signal needs to be distributed to one of multiple output lines based on a binary-encoded selection signal.
+
+
+}% End Verilog Code
+
+
+
 
 
 \section{Function oriented combinational circuits}
