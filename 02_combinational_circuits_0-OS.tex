@@ -593,12 +593,39 @@ Moreover, SystemVerilog's \texttt{always\_comb} guarantees that the logic produc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Generic combinational circuits}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\placedrawing[H]{figures/02_09_decoder.lp}{Decoder with $n$-bit input (DCDn).}{fig:decoder}
+
 %*******************
 \subsection{Decoder}
 %********************
-Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identify with a one bit signal each binary code applied to the input of the circuit. Therefore, a $n$-bit input code applied on the input of a decoder implies a number of $2^n$ outputs. Only one output is active at a time, corresponding to the input code. Thus, for the decoder represented in Figure \ref{fig:decoderr}, if $\{x_{n-1}, \ldots, x_0\} = 00 \ldots 0101$, then $y_5=1$ and all the other outputs are 0.
+Figure \ref{fig:decoder} shows a generic $n$-bit decoder. A decoder is a combinational logic circuit that translates a binary-encoded input signal into a unique one-hot output. The term "one-hot" refers to a representation in which only one bit is set to '1', while all other bits are '0'. For example, in a 4-bit 1-hot code, valid outputs include 0001, 0010, 0100, and 1000. This encoding is commonly used in digital systems in control logic. It eliminates the need for decoding multiple bits simultaneously. 
 
-\placedrawing[H]{figures/02_09_decoder.lp}{Decoder with $n$-bit input (DCDn).}{fig:decoder}
+\begin{figure}[h!]
+\centering
+\[
+\begin{array}{|c|c||c|c|c|c|}
+\hline
+\text{Input} & \text{Input} & \text{Output} & \text{Output} & \text{Output} & \text{Output} \\
+x_1 & x_0 &  y_3 &  y_2 & y_1 & y_0 \\
+\hline
+0 & 0 & 0 & 0 & 0 & 1 \\
+0 & 1 & 0 & 0 & 1 & 0 \\
+1 & 0 & 0 & 1 & 0 & 0 \\
+1 & 1 & 1 & 0 & 0 & 0 \\
+\hline
+\end{array}
+\]
+\caption{Truth table for a 2-to-4 decoder. Each input combination activates one unique output in a one-hot encoding scheme.}
+\label{fig:decoder_truth_table}
+\end{figure}
+
+A decoder takes an \(n\)-bit binary input and generates \(2^n\) output lines, with exactly one line active (logic high) for any given input combination. The structure of a decoder includes an array of logic gates that process the input bits and their complements to generate the appropriate output signals. For example, Figure \ref{fig:decoder_truth_table} shows the truth table for a 2-to-4 decoder. Figure \ref{fig:decoder_and_gates}a shows an elementary decode that output both $x_n$ and $\overline{x_n}$. Figure \ref{fig:decoder_and_gates}a shows the two input bits (\(x_1\) and \(x_0\)) and their negations (\(\overline{x_0}\) and \(\overline{x_1}\)) are used to drive four output signals (\(y_3, y_2, y_1, y_0\)). 
+
+\placedrawing[H]{figures/02_10_recursive_decoder.lp}{Recursively defined 3-input decoder (DCD). {\bf a.} Elementary decoder (eDCD). {\bf b.} Two-input decoder (DCD2). {\bf c.} Three-input DCD (DCD3).}{fig:decoder_and_gates}
+
+Decoders are widely used in digital systems for applications such as memory addressing, instruction decoding in processors, and enabling control signals in multiplexers. 
+
 
 %#######################
 % Decoder Code
@@ -609,6 +636,11 @@ Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identi
 %*************************************************
 \includechiselcode[caption={Parameterized Decoder (Chisel)}, label={lst:chisel_decoder}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Decoder.scala}
 
+Listing \ref{lst:chisel_decoder} shows a Chisel parameterized decoder that can generate decoder logic based on a specified width. The decoder accepts a parameter, \texttt{n} the output width. This is also used to determine the number of input bits using the function \texttt{log2Ceil(n)}. This parameter dynamically adjusts the size of the output vector to \texttt{1 << inputWidth} (i.e., $2^{\text{inputWidth}}$), allowing the decoder to handle a variable number of input combinations. The use of a shift operation, \texttt{1.U << io.in}, implements the decoding logic by setting a single output bit corresponding to the binary input value.
+
+\includechiselcode[caption={Verilog Generated for Chisel Decoder(2)}, label={lst:chisel_decoder_generated_verilog}, firstline=1, firstnumber=1, lastline=7]{\verilogGeneratedByChiselSourceDir/Decoder.sv}
+
+Chisel automatically generates hardware for parameterized modules, while guaranteeing combinational logic. Listing \ref{lst:chisel_decoder_generated_verilog} shows the generated verilog code for a 1-to-2 decoder \texttt{Decoder(2)}. It shows the negation identified in Figure \ref{fig:decoder_and_gates}a. 
 
 }%End Chisel
 
@@ -616,55 +648,91 @@ Figure \ref{fig:decoder} how to design a 3-bit decoder. Decoding means to identi
 %*********************************************************
 \subsubsection{Decoder (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={Parameterized Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcdParmeterized.sv}
+\includeverilogcode[caption={Parameterized Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder_parameterized}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcdParameterized.sv}
 
+Listing \ref{lst:verilog_decoder_parameterized} shows a parameterized decoder implemented in SystemVerilog provides a scalable solution for decoding binary inputs to a one-hot encoded output. The design uses the shift operation to map the binary input to a specific bit position in the output. By using the parameter \texttt{INPUT\_WIDTH}, the module can dynamically adjust the size of the binary input and its corresponding one-hot output, with the output width automatically calculated as \(2^{\texttt{INPUT\_WIDTH}}\). This ensures that the decoder is flexible and reusable across various designs.
 
-\includeverilogcode[caption={Behavioral Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcd.sv}
+The key operation in the decoder is the left shift, expressed as \texttt{out = 1'b1 << in}, where the binary input \texttt{in} determines how many positions the single high bit is shifted. This eliminates the need for case statements or nested conditional logic. The shift operation is synthesis-friendly, allowing hardware tools to directly map the logic to a simple decoder circuit. 
+
+\includeverilogcode[caption={4-to-16 Behavioral Decoder (Hand Written SystemVerilog)},     label={lst:verilog_decoder_4_to_16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcd.sv}
+
+Listing \ref{lst:verilog_decoder_4_to_16} shows a directly implemented 4-to-16 decoder.
 
 }% End Verilog
 
+\ifthenelse{\boolean{verilogversion} \and \boolean{chiselversion}}{   
+%*********************************************************************************
+\subsubsection{Decoder Language Comparison}
+%**********************************************************************************
+
+Chisel is a hardware construction language that generates hardware descriptions (e.g., Verilog) through the execution of Scala code. Its parameterized decoder uses functional programming paradigms to adjust the number of output bits based on the input width. The parameterized \texttt{Decoder} in Chisel is evaluated at \textbf{generation time}, which corresponds to the compile time of the Scala program, not the hardware synthesis. When the Chisel code is executed, the Scala runtime evaluates the parameterization and generates the corresponding Verilog/SystemVerilog code. This generated Verilog/SystemVerilog is then synthesized into hardware, meaning the parameterization is resolved before hardware runtime and does not exist dynamically in the final design.
+
+Verilog lacks native parameterization and higher-level constructs, making it less flexible for scalable designs. A typical Verilog decoder implementation relies on manual enumeration or explicit assignment of output bits using case statements or combinational logic. 
+
+SystemVerilog, as an enhancement of Verilog, introduces parameterization capabilities, which allow developers to create reusable and configurable hardware modules. A parameterized module in SystemVerilog uses \texttt{parameter} and \texttt{generate} constructs. Additionally, SystemVerilog supports advanced constructs like \texttt{logic} and \texttt{always\_comb}, which enforce combinational behavior. SystemVerilog parameterized designs are evaluated at \textbf{synthesis time}, when the hardware description is compiled and mapped into a physical implementation. These constructs allow for flexible and static parameterization, which the synthesis tool resolves before producing the final hardware netlist. 
+}% End Both
 
 
-
-The System Verilog code for the decoder circuit follows. The description is behavioral.
-
-\begin{verisum}{\em :
-
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-    \item[$<<$]: shift left logical, i.e., multiplication with 2 to the power of the number of binary shifts
-\end{description}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
-
-
-
-
-
-In Figure \ref{fig8}a, is represented the smallest decoder, the elementary DCD, eDCD. Using two eDCD and 4 ANDs, a two-input decoder, DCD2, is designed (see Figure \ref{fig8}b). The rule to increase the number of inputs becomes evident with the third example: DCD3 (see Figure \ref{fig8}c).
-
-
-\placedrawing[H]{figures/02_10_recursive_decoder.lp}{Recursively defined 3-input decoder (DCD). {\bf a.} Elementary decoder (eDCD). {\bf b.} Two-input decoder (DCD2). {\bf c.} Three-input DCD (DCD3).}{fig8}
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Multiplexor}
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
+A \textbf{multiplexer} (often abbreviated as \textit{mux}) is a combinational logic circuit that selects one of several input signals and forwards the selected input to a single output line. The selection of the input is controlled by a set of control signals or \textit{select lines}, which determine which input to pass to the output. A multiplexer with $n$ select lines can control $2^n$ inputs, making it a highly versatile and compact solution for signal routing in digital systems.
+
+Multiplexers are widely used in digital design due to their ability to manage multiple signals within a system efficiently. In arithmetic circuits, multiplexers are often used for operations like selecting between different data sources or routing data to various processing units. They are also important components in larger systems such as CPUs, where they help implement control logic, ALU operation selection, and pipeline data forwarding. For example, in a microprocessor, a multiplexer might be used to select between input operands for an arithmetic operation based on the current instruction.
+
+Multiplexers are used because they minimize the number of physical connections and wires required in a circuit. By reducing the need for separate connections for each input-output pair, a multiplexer allows for more efficient circuit designs. Additionally, they enhance the scalability of systems, because additional inputs can be accommodated by increasing the number of select lines. 
+
+%**********************************
 \subsection{Elementary multiplexor}
+%**********************************
+\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexor (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
 
-Any combinational circuit can be expressed using NAND function. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexor (eMUX) represented in Figure \ref{fig9},
-where:
-
-\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexor (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig9}
+Any combinational circuit can be expressed using only NAND functions. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexor (eMUX) represented in Figure \ref{fig:mux}, and shows:
 
 \begin{center} O = {\bf if} (S) {\bf then} I1 {\bf else} I0 \end{center}
 
+%**********************************
 \subsection{Many-input multiplexor}
+%**********************************
 
-The multiplexor grabs bits from $m=2^n$ inputs selected by a $n$-bit code.
+Figure \ref{fig:gen_mux} shows a many-input multiplexor. It takes bits from $m=2^n$ inputs selected by a $n$-bit code.
 
-\placedrawing[H]{figures/02_12_mux_generalized.lp}{The general definition of the multiplexor circuit (MUXn). {\bf a.} The structure of MUXn: a DCDn serially connected with a $m=2^n$ ANDs on the first level of an AND-OR structure. {\bf b.} The logic symbol for MUXn.}{fig12}
+\placedrawing[H]{figures/02_12_mux_generalized.lp}{The general definition of the multiplexor circuit (MUXn). {\bf a.} The structure of MUXn: a DCDn serially connected with a $m=2^n$ ANDs on the first level of an AND-OR structure. {\bf b.} The logic symbol for MUXn.}{fig:gen_mux}
 
+%#######################
+% Multiplexer Code
+%#######################
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Parameterized Multiplexor (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Multiplexor (Chisel)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Multiplexor.scala}
+
+Listing \ref{lst:chisel_muxT} shows a parameterized multiplexer in Chisel. It is implemented as a class named \texttt{class Multiplexer}. This class is parameterized by the data type of the inputs (\texttt{T}) and the number of inputs (\texttt{n}). The class ensures through \texttt{require} statements that the number of inputs is both greater than zero and a power of two. 
+
+The I/O bundle defines the interface for the multiplexer. It includes a vector of inputs, a selection signal, and the output. The size of the selection signal is calculated using \texttt{log2Ceil}, ensuring that it has enough bits to address all the inputs. The core logic of the multiplexer is implemented in a single line, where the output is assigned the value of the selected input. This is performed using Chisel’s vector indexing.
+
+The companion object \texttt{object Multiplexer} provides an \texttt{apply} method, making the multiplexer easy to instantiate and use. This method hides the details of creating the module and connecting its inputs, selection signal, and output. Instead, the user simply provides the inputs vector and the selection signal, and the multiplexer outputs the selected value.
+
+For example, a top-level module can use the multiplexer as follows:
+\begin{chisellisting}
+class TopLevel extends Module {
+  val io = IO(new Bundle {
+    val inputs = Input(Vec(4, UInt(8.W)))
+    val select = Input(UInt(2.W))
+    val output = Output(UInt(8.W))
+  })
+
+  io.output := Multiplexer(io.inputs, io.select)
+}
+\end{chisellisting}
+
+This example instantiates a multiplexer with four 8-bit inputs. The \texttt{select} signal determines which input is passed to the output. The parameterized nature of the design ensures that the multiplexer can be easily adapted to different data widths and numbers of inputs.
+
+
+
+}% End Chisel
 
 \begin{verisum}{\em :
 
