@@ -716,17 +716,7 @@ The I/O bundle defines the interface for the multiplexer. It includes a vector o
 The companion object \texttt{object Multiplexer} provides an \texttt{apply} method, making the multiplexer easy to instantiate and use. This method hides the details of creating the module and connecting its inputs, selection signal, and output. Instead, the user simply provides the inputs vector and the selection signal, and the multiplexer outputs the selected value.
 
 For example, a top-level module can use the multiplexer as follows:
-\begin{chisellisting}
-class TopLevel extends Module {
-  val io = IO(new Bundle {
-    val inputs = Input(Vec(4, UInt(8.W)))
-    val select = Input(UInt(2.W))
-    val output = Output(UInt(8.W))
-  })
 
-  io.output := Multiplexer(io.inputs, io.select)
-}
-\end{chisellisting}
 
 This example instantiates a multiplexer with four 8-bit inputs. The \texttt{select} signal determines which input is passed to the output. The parameterized nature of the design ensures that the multiplexer can be easily adapted to different data widths and numbers of inputs.
 
