@@ -13,10 +13,10 @@ class Multiplexer[T <: Data](gen: T, val n: Int) extends Module {
   val io = IO(new Bundle {
     val inputs = Input(Vec(n, gen))  // `n` inputs of type `T`
     val select = Input(UInt(log2Ceil(n).W)) // Select line
-    val output = Output(gen) // Selected output
+    val output = Output(gen) 
   })
 
-  io.output := io.inputs(io.select) // Route the selected input to the output
+  io.output := io.inputs(io.select) // Select which input
 }
 
 // Companion object to simplify instantiation
