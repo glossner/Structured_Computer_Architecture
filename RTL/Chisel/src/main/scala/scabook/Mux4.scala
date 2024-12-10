@@ -6,7 +6,7 @@ package scabook
 import chisel3._
 
 
-class Mux8 extends Module {
+class Mux4 extends Module {
   val io = IO(new Bundle {
     val inputs = Input(Vec(4, UInt(8.W)))
     val select = Input(UInt(2.W))
