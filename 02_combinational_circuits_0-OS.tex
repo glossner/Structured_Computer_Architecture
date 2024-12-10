@@ -719,9 +719,17 @@ The companion object \texttt{object Multiplexer} provides an \texttt{apply} meth
 
 Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. The \texttt{select} signal determines which input is passed to the output. 
 
+}% End Chisel Code
+
+\ifthenelse{\boolean{verilogversion}}{
+%*********************************************************
+\subsubsection{Multiplexor (SystemVerilog)}
+%*********************************************************    
+\includeverilogcode[caption={4-to-1 Multiplexor (SystemVerilog)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcdParameterized.sv}
 
 
-}% End Chisel
+
+}% End Verilog Code
 
 \begin{verisum}{\em :
 
@@ -733,23 +741,7 @@ Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      mux.sv
-Circuit name:   4-input multiplexor
-Description:
-*************************************************************************/
-module mux( output  logic           muxOut  ,
-            input   logic [15:0]    muxIn   ,
-            input   logic [3:0]     muxSel  );
 
-     assign muxOut = muxIn[muxSel] ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
 
 
 \subsection{Demultiplexor}
