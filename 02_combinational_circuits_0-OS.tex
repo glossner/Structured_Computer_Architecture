@@ -676,7 +676,7 @@ SystemVerilog, as an enhancement of Verilog, introduces parameterization capabil
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Multiplexor}
+\subsection{multiplexer}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 A \textbf{multiplexer} (often abbreviated as \textit{mux}) is a combinational logic circuit that selects one of several input signals and forwards the selected input to a single output line. The input selection is controlled by a set of control signals or \textit{select lines}, which determine which input to pass to the output. A multiplexer with $n$ select lines can control $2^n$ inputs, making it a highly versatile and compact solution for signal routing in digital systems.
@@ -686,30 +686,30 @@ Multiplexers are widely used in digital design due to their ability to manage mu
 Multiplexers are used because they minimize the number of physical connections and wires required in a circuit. By reducing the need for separate connections for each input-output pair, a multiplexer allows for more efficient circuit designs. Additionally, they enhance the scalability of systems, because additional inputs can be accommodated by increasing the number of select lines. 
 
 %**********************************
-\subsection{Elementary multiplexor}
+\subsection{Elementary multiplexer}
 %**********************************
-\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexor (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
+\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexer (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
 
-Any combinational circuit can be expressed using only NAND functions. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexor (eMUX) represented in Figure \ref{fig:mux}, and shows:
+Any combinational circuit can be expressed using only NAND functions. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexer (eMUX) represented in Figure \ref{fig:mux}, and shows:
 
 \begin{center} O = {\bf if} (S) {\bf then} I1 {\bf else} I0 \end{center}
 
 %**********************************
-\subsection{Many-input multiplexor}
+\subsection{Many-input multiplexer}
 %**********************************
 
-Figure \ref{fig:gen_mux} shows a many-input multiplexor. It takes bits from $m=2^n$ inputs selected by a $n$-bit code.
+Figure \ref{fig:gen_mux} shows a many-input multiplexer. It takes bits from $m=2^n$ inputs selected by a $n$-bit code.
 
-\placedrawing[H]{figures/02_12_mux_generalized.lp}{The general definition of the multiplexor circuit (MUXn). {\bf a.} The structure of MUXn: a DCDn serially connected with a $m=2^n$ ANDs on the first level of an AND-OR structure. {\bf b.} The logic symbol for MUXn.}{fig:gen_mux}
+\placedrawing[H]{figures/02_12_mux_generalized.lp}{The general definition of the multiplexer circuit (MUXn). {\bf a.} The structure of MUXn: a DCDn serially connected with a $m=2^n$ ANDs on the first level of an AND-OR structure. {\bf b.} The logic symbol for MUXn.}{fig:gen_mux}
 
 %#######################
 % Multiplexer Code
 %#######################
 \ifthenelse{\boolean{verilogversion}}{
 %*********************************************************
-\subsubsection{Multiplexor (SystemVerilog)}
+\subsubsection{multiplexer (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={4-to-1 Multiplexor (SystemVerilog)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/mux.sv}
+\includeverilogcode[caption={4-to-1 multiplexer (SystemVerilog)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/mux.sv}
 
 Listing \ref{lst:verilog_mux4} implements a 16-to-1 multiplexer. The module takes three inputs: a 16-bit vector \texttt{muxIn}, a 4-bit selector \texttt{muxSel}, and produces a single output \texttt{muxOut}. The selector \texttt{muxSel} determines which bit of the 16-bit input vector is routed to the output. This is achieved through the indexing operation \texttt{muxIn[muxSel]}, which dynamically selects the bit of \texttt{muxIn} corresponding to the value of \texttt{muxSel}.
 
@@ -718,9 +718,9 @@ This design is both compact and efficient, leveraging Verilog's built-in array i
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
-\subsubsection{Parameterized Multiplexor (Chisel)}
+\subsubsection{Parameterized multiplexer (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Multiplexor (Chisel)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Multiplexor.scala}
+\includechiselcode[caption={Parameterized multiplexer (Chisel)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/multiplexer.scala}
 
 Listing \ref{lst:chisel_muxT} shows a parameterized multiplexer in Chisel. It is implemented as a class named \texttt{class Multiplexer}. This class is parameterized by the data type of the inputs (\texttt{T}) and the number of inputs (\texttt{n}). The class ensures through \texttt{require} statements that the number of inputs is both greater than zero and a power of two. 
 
@@ -730,7 +730,7 @@ In Scala, a companion object is an object that shares the same name as a class a
 
 The companion object \texttt{object Multiplexer} provides an \texttt{apply} method, making the multiplexer easy to instantiate and use. This method hides the details of creating the module and connecting its inputs, selection signal, and output. Instead, the user simply provides the inputs vector and the selection signal, and the multiplexer outputs the selected value.
 
-\includechiselcode[caption={4-to-1 Multiplexor (Chisel)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
+\includechiselcode[caption={4-to-1 multiplexer (Chisel)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
 
 Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. The \texttt{select} signal determines which input is passed to the output. 
 
@@ -741,11 +741,11 @@ Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 
 
 
 
-\subsection{Demultiplexor}
+\subsection{Demultiplexer}
 
 The demultiplexer transfers the input signal X to one of the $m=2^n$ outputs, $y_0, y_1, \ldots, y_{m-1}$, indicated by the $n$-bit selection input, $x_0, x_1, \ldots, x_{n-1}$. In Figure \ref{fig13} a demultiplexer is built using a decoder which open only one of the $m$ AND gate sending the $X$ input to the selected output.
 
-\placedrawing[H]{figures/02_13_demux.lp}{Demultiplexor as a DCD whose outputs are ANDed with the one bit signal to be distributed according to the $n$-bit input code. }{fig13}
+\placedrawing[H]{figures/02_13_demux.lp}{Demultiplexer as a DCD whose outputs are ANDed with the one bit signal to be distributed according to the $n$-bit input code. }{fig13}
 
 
 For example: if $$\{x_{n-1} x_{n-2}, \ldots, x_1, x_0\} = 00 \ldots 011$$ then
@@ -758,8 +758,8 @@ The code describing behaviorally the circuit follows:
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
 /*************************************************************************
 File name:      dMux.sv
-Circuit name:   4-input demultiplexor
-Description:    Demultiplexor is an enabled decoder
+Circuit name:   4-input demultiplexer
+Description:    Demultiplexer is an enabled decoder
 *************************************************************************/
 module dMux(output  logic [15:0]    dMuxOut     ,
             input   logic [3:0]     dMuxIn      ,
@@ -827,7 +827,7 @@ Therefore, each $B_i$ is complemented and the increment with 1 is generated by i
 
 \subsection{{\bf {\em Arithmetic \& Logic Unit}}}\label{alu1}
 
-An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexor as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
+An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexer as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
 
 \placedrawing[H]{figures/02_18_alu.lp}{ALU.}{fig37}
 
@@ -1154,13 +1154,13 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Design in System Verilog a 4-input demultiplexor using DCD4 designed as solution for Problem \ref{dcdP}. Test its correct functioning.
+Design in System Verilog a 4-input demultiplexer using DCD4 designed as solution for Problem \ref{dcdP}. Test its correct functioning.
 
 $\diamond$
 \end{problem}
 
 \begin{problem}
-Design in System Verilog a 4-input multiplexor using DCD4 designed as solution for Problem \ref{dcdP}. Test its correct functioning
+Design in System Verilog a 4-input multiplexer using DCD4 designed as solution for Problem \ref{dcdP}. Test its correct functioning
 
 $\diamond$
 \end{problem}
