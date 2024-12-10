@@ -1,7 +1,7 @@
 // Licensed under CERN-OHL-S v2. See https://cern.ch/cern-ohl for details.
 /****************************************************************
 File name:      mux.sv
-Circuit name:   4-input multiplexor
+Circuit name:   4-input multiplexer
 Description:
 *****************************************************************/
 
