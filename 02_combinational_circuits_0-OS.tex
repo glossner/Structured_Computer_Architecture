@@ -774,9 +774,32 @@ The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs
 
 }% End Verilog Code
 
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Parameterized Demultiplexer (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Bus Demultiplexer (Chisel)}, label={lst:chisel_demuxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Demultiplexer.scala}
+
+The provided Chisel code defines a generic, parameterized demultiplexer (demux) that can handle arbitrary data types and numbers of outputs. The core of the implementation resides in the \texttt{Demultiplexer} class, which extends the \texttt{Module} trait to create a hardware module. The parameterization is achieved through the use of type parameters \texttt{T}, which must be a subclass of \texttt{Data}, and the \texttt{numOutputs} integer, which specifies the number of outputs. The module includes a requirement that the number of outputs must be a power of two, enforced by the \texttt{require} statement. This ensures compatibility with the binary-based selection mechanism.
+
+The \texttt{io} bundle defines the interface for the module, consisting of an input signal of type \texttt{T}, a selection signal of width \(\log_2(\texttt{numOutputs})\), and a vector of \texttt{numOutputs} output signals, each of the same type as the input. The implementation defaults all output signals to zero using \texttt{foreach}, ensuring that only the selected output is driven by the input signal. This is achieved by indexing the output vector with the \texttt{select} signal, which determines the active output line.
+
+The companion object provides a convenient factory method for instantiating the demultiplexer. By abstracting the creation process, it simplifies module usage in larger designs. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. This design exemplifies Chisel's flexibility in creating reusable and parameterized hardware components, making it well-suited for complex digital system designs.
 
 
+\paragraph{\texttt{gen} versus \texttt{dataType}}
+In Chisel, parameterizing modules with type parameters is a common practice to create reusable and modular designs. The choice between using \texttt{gen} and \texttt{dataType} depends on the context and the semantics of the module being designed. Each serves a slightly different purpose, and selecting the appropriate one improves readability and aligns with the intended hardware abstraction.
 
+The \texttt{gen} parameter is well-suited when the type represents a \textit{blueprint} for generating multiple hardware elements. This is particularly relevant in cases where the module processes or instantiates multiple instances of the same type, such as multiplexers or reusable modules like FIFO queues and bus interfaces. For example, in a multiplexer, \texttt{gen} is used to define the type of data inputs and outputs, emphasizing that multiple identical instances are being handled within the hardware structure. It provides clarity in designs where the module's behavior centers around selecting or manipulating one element from a collection.
+
+On the other hand, \texttt{dataType} is appropriate when the type parameter describes a single data type that is central to the module's operation. This is typically seen in modules that process or transform a single data stream or element, such as serializers, deserializers, or arithmetic units. Using \texttt{dataType} in these cases enhances readability by conveying that the parameter refers to the specific type of data being processed rather than a general blueprint for multiple instances. For instance, in a serializer module, \texttt{dataType} can define the input data type while the module transforms it into a specific serialized format.
+
+In summary, \texttt{gen} is ideal for scenarios where the type acts as a template for generating multiple instances, emphasizing modularity and reuse, while \texttt{dataType} is better suited for cases where the type describes a single data stream or element being processed. Understanding the context and semantics of the module helps in choosing the appropriate naming convention, ultimately improving code clarity and maintainability.
+
+\includechiselcode[caption={1-to-16 Bus Demultiplexer (Chisel)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
+
+
+}% End Chisel
 
 \section{Function oriented combinational circuits}
 
