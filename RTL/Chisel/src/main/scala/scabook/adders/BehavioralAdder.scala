@@ -5,6 +5,6 @@ package scabook.adders
 
 import chisel3._
 
-class BehavioralAdder(width: Int) extends Adder(width) {
+class BehavioralAdder[T <: Data](gen: T) extends Adder(gen) {
   io.sum := io.a + io.b
 }

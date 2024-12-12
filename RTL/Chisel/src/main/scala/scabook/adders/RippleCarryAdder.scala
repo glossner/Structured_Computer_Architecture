@@ -6,14 +6,16 @@ package scabook.adders
 import chisel3._
 import chisel3.util._
 
-class RippleCarryAdder(width: Int) extends Adder(width) {
-  val carry = Wire(Vec(width + 1, Bool()))
-  carry(0) := false.B
+class RippleCarryAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
+  val carries = Wire(Vec(width + 1, Bool()))
+  val sumBits = Wire(Vec(width, Bool()))
 
+  carries(0) := false.B
   for (i <- 0 until width) {
-    io.sum(i) := io.a(i) ^ io.b(i) ^ carry(i)
-    carry(i + 1) := (io.a(i) & io.b(i)) | (carry(i) & (io.a(i) ^ io.b(i)))
+    val sum = io.a(i) ^ io.b(i) ^ carries(i)
+    val carry = (io.a(i) & io.b(i)) | (io.a(i) & carries(i)) | (io.b(i) & carries(i))
+    sumBits(i) := sum
+    carries(i + 1) := carry
   }
-
-  io.carryOut := carry(width)
+  io.sum := sumBits.asUInt
 }

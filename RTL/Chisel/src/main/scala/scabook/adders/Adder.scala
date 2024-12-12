@@ -5,12 +5,18 @@ package scabook.adders
 
 import chisel3._
 
-abstract class Adder(width: Int) extends Module {
-  require(width > 0, "Width must be greater than 0") // Constraint for all adders
-
+abstract class Adder[T <: Data](gen: T) extends Module {
+    require(width > 0, "Width must be greater than 0")
   val io = IO(new Bundle {
-    val a = Input(UInt(width.W))
-    val b = Input(UInt(width.W))
-    val sum = Output(UInt(width.W))
+    val a = Input(gen.cloneType)
+    val b = Input(gen.cloneType)
+    val sum = Output(gen.cloneType)
   })
+}
+
+// Dynamic companion object
+object Adder {
+  def apply[T <: Data](gen: T, constructor: T => Adder[T]): Adder[T] = {
+    Module(constructor(gen))
+  }
 }
