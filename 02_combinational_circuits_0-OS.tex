@@ -291,7 +291,12 @@ Figure \ref{fig:vivado_wave} shows the results of simulating the {\tt waveFormGe
 %*************************************************
 \includechiselcode[caption={Waveform Generator Code (Chisel)},     label={lst:chisel_waveformgenerator}, firstline=8, firstnumber=8, lastline=24]{\chiselSourceDir/waveFormGenerator.scala}
 
-Listing \ref{lst:chisel_waveformgenerator} shows a Chisel version of a \texttt{WaveFormGenerator} module with two distinct output waveforms: \texttt{randomWave} and \texttt{clockWave}. Both signals are driven by internal logic that determines their behavior over time.
+Listing \ref{lst:chisel_waveformgenerator} shows a Chisel version of a \texttt{WaveFormGenerator} module. The \texttt{WaveFormGenerator} class \texttt{extends} the \texttt{Module} trait. In Chisel, a trait is a feature of Scala that allows for the composition of behavior and reusable code. Traits are similar to interfaces in Java but are more powerful because they can contain concrete methods and fields, as well as abstract ones. The \texttt{Module} trait is a base building block for defining hardware modules. It encapsulates the logic for defining a hardware component and managing its inputs, outputs, and internal connections.
+\addcontentsline{toc}{paragraph}{Trait - Scala} \index{Chisel!Traits}
+
+When the \texttt{WaveFormGenerator} class extends the \texttt{Module} trait, it inherits the functionality provided by the \texttt{Module}, such as the ability to define an \texttt{IO} bundle for interfacing with the module, encapsulate logic within the hardware design, and interact with other modules. The \texttt{Module} trait ensures that the \texttt{WaveFormGenerator} class behaves as a hardware component within the Chisel design hierarchy, supporting clean composition and integration into larger systems.
+
+The \texttt{WaveFormGenerator} class has two distinct output waveforms: \texttt{randomWave} and \texttt{clockWave}. Both signals are driven by internal logic that determines their behavior over time.
 
 The \texttt{randomWave} signal is defined as a repeating sequence of Boolean values: \texttt{false}, \texttt{true}, \texttt{false}, \texttt{true}, and \texttt{false}. A register, \texttt{randomIndex}, is used to track the current position in this sequence. The module cycles through the sequence in order, and when the last value is reached, the index resets to zero, causing the pattern to loop indefinitely. 
 
@@ -763,14 +768,13 @@ $$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
 %#######################
 \ifthenelse{\boolean{verilogversion}}{
 %*********************************************************
-\subsubsection{DeMultiplexer (SystemVerilog)}
+\subsubsection{Demultiplexer (SystemVerilog)}
 %*********************************************************    
 \includeverilogcode[caption={1-to-16 DeMultiplexer (SystemVerilog)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
 
-The given SystemVerilog code implements a simple demultiplexer module, named \texttt{dMux}. This demultiplexer takes a single input signal \texttt{dMuxEnable} and routes it to one of the 16 output lines, represented by the vector \texttt{dMuxOut}, based on the 4-bit selection signal \texttt{dMuxIn}. Now, instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned. The operation is performed using a left-shift operation, where the input signal \texttt{dMuxEnable} is shifted by the value of \texttt{dMuxIn}, effectively enabling only one bit in the 16-bit output vector.
+Listing \ref{lst:verilog_demux16} shows SystemVerilog code that implements a simple demultiplexer module, named \texttt{dMux}. This demultiplexer takes a input signal \texttt{dMuxEnable} and routes one-bit of it to one of the 16 output lines, represented by the vector \texttt{dMuxOut}, based on the 4-bit selection signal \texttt{dMuxIn}. Instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned. The operation is performed using a left-shift operation, where the input signal \texttt{dMuxEnable} is shifted by the value of \texttt{dMuxIn}, effectively enabling only one bit in the 16-bit output vector.
 
-The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs are active when it is low. This implementation is efficient for applications where a single input signal needs to be distributed to one of multiple output lines based on a binary-encoded selection signal.
-
+The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs are active when it is low. 
 
 }% End Verilog Code
 
@@ -780,66 +784,110 @@ The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs
 %*************************************************
 \includechiselcode[caption={Parameterized Bus Demultiplexer (Chisel)}, label={lst:chisel_demuxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Demultiplexer.scala}
 
-The provided Chisel code defines a generic, parameterized demultiplexer (demux) that can handle arbitrary data types and numbers of outputs. The core of the implementation resides in the \texttt{Demultiplexer} class, which extends the \texttt{Module} trait to create a hardware module. The parameterization is achieved through the use of type parameters \texttt{T}, which must be a subclass of \texttt{Data}, and the \texttt{numOutputs} integer, which specifies the number of outputs. The module includes a requirement that the number of outputs must be a power of two, enforced by the \texttt{require} statement. This ensures compatibility with the binary-based selection mechanism.
+Listing \ref{lst:chisel_demuxT} shows a generic, parameterized demultiplexer (demux) that can handle arbitrary data types and numbers of outputs. The \texttt{Demultiplexer} class extends the \texttt{Module} trait to create a hardware module. The parameterization is achieved through the use of type parameters \texttt{T}, which must be a subclass of \texttt{Data}, and the \texttt{numOutputs} integer, which specifies the number of outputs. The module includes a requirement that the number of outputs must be a power of two, enforced by the \texttt{require} statement. This ensures compatibility with the binary-based selection mechanism.
 
 The \texttt{io} bundle defines the interface for the module, consisting of an input signal of type \texttt{T}, a selection signal of width \(\log_2(\texttt{numOutputs})\), and a vector of \texttt{numOutputs} output signals, each of the same type as the input. The implementation defaults all output signals to zero using \texttt{foreach}, ensuring that only the selected output is driven by the input signal. This is achieved by indexing the output vector with the \texttt{select} signal, which determines the active output line.
 
-The companion object provides a convenient factory method for instantiating the demultiplexer. By abstracting the creation process, it simplifies module usage in larger designs. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. This design exemplifies Chisel's flexibility in creating reusable and parameterized hardware components, making it well-suited for complex digital system designs.
+The companion object provides a convenient factory method for instantiating the demultiplexer. By abstracting the creation process, it simplifies module usage in larger designs. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. 
 
-
+\addcontentsline{toc}{paragraph}{gen vs dataType - Chisel} \index{Chisel!gen} \index{Chisel!dataType}
 \paragraph{\texttt{gen} versus \texttt{dataType}}
-In Chisel, parameterizing modules with type parameters is a common practice to create reusable and modular designs. The choice between using \texttt{gen} and \texttt{dataType} depends on the context and the semantics of the module being designed. Each serves a slightly different purpose, and selecting the appropriate one improves readability and aligns with the intended hardware abstraction.
+In Chisel, parameterizing modules with type parameters is a common practice to create reusable and modular designs. The choice between using \texttt{gen} and \texttt{dataType} depends on the context and the semantics of the module being designed. Each serves a slightly different purpose depending upon the intended hardware abstraction.
 
-The \texttt{gen} parameter is well-suited when the type represents a \textit{blueprint} for generating multiple hardware elements. This is particularly relevant in cases where the module processes or instantiates multiple instances of the same type, such as multiplexers or reusable modules like FIFO queues and bus interfaces. For example, in a multiplexer, \texttt{gen} is used to define the type of data inputs and outputs, emphasizing that multiple identical instances are being handled within the hardware structure. It provides clarity in designs where the module's behavior centers around selecting or manipulating one element from a collection.
+The \texttt{gen} parameter is well-suited when the type represents a \textit{blueprint} for generating multiple hardware elements. This is particularly relevant in cases where the module processes or instantiates multiple instances of the same type, such as multiplexers or reusable modules like FIFO queues and bus interfaces. For example, in Listing \ref{lst:chisel_muxT}, a multiplexer uses \texttt{gen} to define the type of data inputs and outputs, emphasizing that multiple identical instances are being handled within the hardware structure. 
 
-On the other hand, \texttt{dataType} is appropriate when the type parameter describes a single data type that is central to the module's operation. This is typically seen in modules that process or transform a single data stream or element, such as serializers, deserializers, or arithmetic units. Using \texttt{dataType} in these cases enhances readability by conveying that the parameter refers to the specific type of data being processed rather than a general blueprint for multiple instances. For instance, in a serializer module, \texttt{dataType} can define the input data type while the module transforms it into a specific serialized format.
-
-In summary, \texttt{gen} is ideal for scenarios where the type acts as a template for generating multiple instances, emphasizing modularity and reuse, while \texttt{dataType} is better suited for cases where the type describes a single data stream or element being processed. Understanding the context and semantics of the module helps in choosing the appropriate naming convention, ultimately improving code clarity and maintainability.
+The Demultiplexer in Listing \ref{lst:chisel_demuxT} uses \texttt{dataType}. This is more appropriate when the type parameter describes a single data type. This is typically seen in modules that process or transform a single data stream or element, such as serializers, deserializers, or arithmetic units. Using \texttt{dataType} in these cases enhances readability by conveying that the parameter refers to the specific type of data being processed rather than a general blueprint for multiple instances. 
 
 \includechiselcode[caption={1-to-16 Bus Demultiplexer (Chisel)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
+
+Listing \ref{lst:chisel_demux16} shows a \texttt{DeMux16} class that defines a 1-to-16 demultiplexer that operates on 64-bit buses. This module is implemented as a subclass of \texttt{Module}, making it a Chisel hardware component. Its interface, specified by the \texttt{io} bundle, includes a 64-bit input bus (\texttt{io.input}), a 4-bit selection signal (\texttt{io.select}) to determine the active output, and a vector of 16 output buses (\texttt{io.outputs}), each 64 bits wide. The selection signal uses a 4-bit width because \(\log_2(16) = 4\), allowing indexing of the 16 outputs.
+
+The \texttt{DeMux16} class instantiates a parameterized demultiplexer from the \texttt{Demultiplexer} companion object. The input and selection signals (\texttt{io.input} and \texttt{io.select}) are passed as arguments to the \texttt{Demultiplexer} factory method, which returns a vector of 16 outputs. These outputs are directly assigned to \texttt{io.outputs}, ensuring that only the selected output is driven by the input signal, while the others remain zero.
+
+}% End Chisel
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adders}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Adders are fundamental components in digital computing systems. At the core of processors, adders enable basic addition and form the building blocks for more complex arithmetic units, such as subtractors, multipliers, and dividers. An adder's efficiency directly impacts a processor's overall performance, as addition is one of the most frequently executed operations in computing.
+
+%**********************
+\subsection{Half Adder}
+%**********************
+\placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig:half_adder}
+
+Figure \ref{fig:half_adder} whose the simplest adder - the \textit{half adder}. It adds two binary digits and produces a sum and a carry bit. To build a half adder we use an XOR circuit. The XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
+
+%**********************
+\subsection{Increment}
+%**********************
+\placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig:incrementer}
+
+Figure \ref{fig:incrementer} shows the schematic for a 4-bit incrementer that uses only half adders. Incrementing means adding 1 to a number. If {\tt inc = 1} the output $out_0 <= in'_0$  and {\tt cr} of $HA_0$ if it is activated command the increment for $HA_1$, and so on.
+
+If each 2-input AND from $HA_i$ has, for example,  a propagation time, $t_{pAND2} = 1ns = 10^{-9}sec$, and the 2-input XOR has the propagation time, $t_{pXOR2} = 1.5ns$, then the total execution time for the INC4 circuit is:
+$$t_{pINC4} = 3 \times t_{pAND2} + t_{pXOR2} = 4.5ns$$
+Thus, the size of the $n$-bit number increment circuit, $S_{INCn}$, is proportional with the input size. However, the execution time, i.e., depth, $D_{INCn}$, is in the same order of magnitude:
+$$S_{INCn} \in O(n)$$
+$$D_{INCn} \in O(n)$$
+
+The depth of the circuit can be reduced by increasing the size (but in the limits of the same magnitude order) using a prefix network such as a Kogge-Stone adder \cite{kogge1973parallel}.
+
+%******************************
+\subsection{Full Adder (FA)}
+%******************************
+Half adders cannot handle carry inputs, leading to the development of the \textit{full adder}, which incorporates a carry input along with two operand inputs. The Full Adder (FA) adds two one-bit numbers with the carry provided from the previous binary position. It generates the sum and the carry value for the next binary position. In Figure \ref{fig:full_adder}a, a FA is composed of two HAs and an OR circuit used to propagate the carry generated by the first HA or by the second HA. The first FA adds the two input bits, A and B, while the second FA adds the value of the carry, C, generated by the previous binary order.
+
+\placedrawing[H]{figures/02_16_adder_full.lp}{Adder. {\bf a.} Full Adder (FA). {\bf b.} 4-bit adder (ADD4).}{fig:full_adder}
+
+%*******************************
+\subsection{Ripple-Carry Adder}
+%******************************
+Figure \ref{fig:full_adder}b shows that combining multiple full adders results in a \textit{ripple carry adder} (RCA). An issue with this serial type of adder is the execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. In the general case, the time is proportional to $n$ (it is in $O(n)$).
+
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Parameterized Abstract Adder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Abstract Adder (Chisel)}, label={lst:chisel_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/Adder.scala}
+
+Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract class \texttt{Adder}, which provides a generic framework for creating parameterized adder modules in Chisel. The class is parameterized by a type \texttt{T} that extends \texttt{Data}, allowing it to operate on various data types such as \texttt{UInt} or \texttt{SInt}. The \texttt{Adder} class requires a width greater than zero to ensure valid hardware design, and this is enforced by the \texttt{require} statement. The input and output ports of the module are defined in the \texttt{io} object, where the inputs \texttt{a} and \texttt{b}, and the output \texttt{sum}, are all of type \texttt{T}. 
+
+The companion object \texttt{Adder} dynamically instantiates a specific adder type by accepting two arguments: the generic data type \texttt{gen} and a constructor function \texttt{constructor} that returns an instance of a subclass of \texttt{Adder}. This allows for flexible creation of adder instances without directly coupling the instantiation logic to the specific adder implementation. By using the \texttt{Module} wrapper within the companion object, the hardware description generated adheres to Chisel's module instantiation conventions, ensuring compatibility with the Chisel hardware generation flow. 
+
+%*************************************************
+\subsubsection{Parameterized Behavioral Adder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdder.scala}
+
+Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, generic adder in Chisel. The class is parameterized by a data type \texttt{T} that extends \texttt{Data}, allowing it to work with various numeric types such as \texttt{UInt} or \texttt{SInt}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
+
+Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
+
+%*************************************************
+\subsubsection{Parameterized Ripple-Carry Adder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}, label={lst:chisel_adder_ripple}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/adders/RippleCarryAdder.scala}
+
+Listing \ref{lst:chisel_adder_ripple} shows code that defines a \texttt{RippleCarryAdder} class in Chisel, which implements the ripple-carry adder (RCA) architecture for addition. The class extends the abstract \texttt{Adder} base class and is parameterized by a generic data type \texttt{T} and the adder's bit-width. 
+
+The use of \texttt{Wire(Vec)} is for defining intermediate signals such as \texttt{carries} and \texttt{sumBits}. Specifically, \texttt{Wire(Vec(width + 1, Bool()))} creates a vector of Boolean wires, each representing a single-bit signal. This construct is particularly useful in hardware designs where multiple related signals, such as carry bits or partial sums, need to be managed efficiently. In the ripple-carry adder, \texttt{carries} is used to store the carry-out of each bit stage, starting with an initial carry-in of \texttt{false.B} and propagating through all stages of the addition. Similarly, \texttt{sumBits} is a vector that stores the computed sum bit for each stage, which is later concatenated into the final sum output.
+
+The addition operation proceeds iteratively across all \texttt{width} bits. For each bit position, the sum \texttt{io.a(i) ^ io.b(i) ^ carries(i)} is computed as the XOR of the corresponding bits of the inputs \texttt{a} and \texttt{b}, along with the carry-in. The carry-out is calculated based on the logical OR of three conditions: both input bits being high, one input bit being high along with the carry-in, or the other input bit being high with the carry-in. The resulting sum bits are stored in \texttt{sumBits}, which is then converted to an \texttt{UInt} and assigned to \texttt{io.sum}. 
+
+
 
 
 }% End Chisel
 
-\section{Function oriented combinational circuits}
+%************************
+\subsection{Subtraction}
+%************************
+\placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Substractor}{fig:adder_subtracter}
 
-\subsection{Half Adder}
+Two's complement subtraction is performed by taking the 2's complement of the subtrahend performing addition. Figure \ref{fig:adder_subtracter} shows the addition of XOR gates to complement the subtrahend. Setting the initial carry to 1 provides the 2's complement of the subtrahend.
 
-As we have seen, the XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). Carry signal is activated when both inputs are 1. Therefore, besides the XOR gate we must add an AND gate as in Figure \ref{fig3}. We call the resulting circuit half adder because it does not take into account the carry signal provided by the previous binary order.
-
-\placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig3}
-
-
-\subsection{Increment}
-
-Incrementing means adding 1 to a number. The schematic for a 4-bit increment circuit, INC4, is represented in Figure \ref{fig4}, where if {\tt inc = 1} the output $out_0 <= in'_0$  and {\tt cr} of $HA_0$ if it is activated command the increment for $HA_1$, and so on.
-
-\placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig4}
-
-If each 2-input AND from $HA_i$ has, for example,  a propagation time, $t_{pAND2} = 1ns = 10^{-9}sec$, and the 2-input XOR has the propagation time, $t_{pXOR2} = 1.5ns$, then the total execution time for the INC4 circuit is:
-$$t_{pINC4} = 3 \times t_{pAND2} + t_{pXOR2} = 4.5ns$$
-Thus, when the good news that the size of the $n$-bit number increment circuit, $S_{INCn}$, is proportional with the input size, the bad news is that the execution time, i.e., depth, $D_{INCn}$, is in same magnitude order:
-$$S_{INCn} \in O(n)$$
-$$D_{INCn} \in O(n)$$
-(The depth of the circuit can be reduced by increasing the size (but in the limits of the same magnitude order) using a prefix network.)
-
-\subsection{Adder/subtractor}
-
-Full adder (FA) adds two one-bit numbers with the carry provided from the previous binary position and generate the sum and the carry value for the next binary position. In Figure \ref{fig5}a, a FA is composed from two HAs and an OR circuit used to grab the carry generated by the first HA or by the second HA. The first FA adds the two input bits, A and B, while the second FA adds the value of the carry, C, generated by the previous binary order.
-
-\placedrawing[H]{figures/02_16_adder_full.lp}{Adder. {\bf a.} Full Adder (FA). {\bf b.} 4-bit adder (ADD4).}{fig5}
-
-\placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Substractor}{fig6}
-
-
-The main problem to be solved, but not in this lecture, is the execution time, i.e., the maximum time interval from the moment when an input changes until the moment when all the outputs of the circuit reach the correct final value. This time interval is due to propagation through logic gates on the longest path. In our case, the longest path is the one from input C to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. In the general case, the time is proportional to $n$ (it is in $O(n)$).
-
-
-
-
-
-Subtract operation is performed by adding the 2s complement:
-
+For example:
 \begin{verbatim}
         +5 = 0_0101
         -5 = 1_1010 + 1 = 1_1011
@@ -850,10 +898,43 @@ Subtract operation is performed by adding the 2s complement:
                  1_1101 = -3, because 0_0010 + 1 = 0_0011 = 3
 \end{verbatim}
 
-Therefore, each $B_i$ is complemented and the increment with 1 is generated by inverting the carry input. All the inversions are performed under de command {\tt sub} applied to $5$ XORs.
+Each $B_i$ is complemented and the increment with 1 is generated by inverting the carry input. All the inversions are performed under the command {\tt sub} applied to $5$ XORs.
+
+%**********************************
+\subsection{Carry Lookahead Adder}
+%*********************************
+Carry Look-Ahead Adders (CLAs) are designed to overcome the performance bottlenecks of ripple-carry adders by reducing the dependency on sequential carry propagation. Instead of waiting for each bit's carry to be computed, the CLA computes carries in parallel using the generate (\texttt{G}) and propagate (\texttt{P}) signals for each bit. These signals allow the adder to determine whether a carry will be generated or propagated at each stage. Using these signals, the carry for each bit position can be calculated directly through a set of Boolean equations, significantly reducing the delay to logarithmic time relative to the adder's width. This design is particularly effective for high-speed arithmetic operations in processors and digital signal processing, where minimizing latency is important. However, the parallel computation and additional logic circuitry result in increased hardware complexity compared to simpler adders.
+
+%******************************
+\subsection{Carry Select Adder}
+%******************************
+Carry Select Adders (CSAs) improve upon the delay of ripple-carry adders by precomputing the sum and carry outputs for both possible carry-in values (0 and 1) in parallel. Each stage of the adder computes two possible results based on these assumptions, and a multiplexer is used to select the correct result once the carry-in is determined. This approach significantly reduces the propagation delay associated with sequential carry computation while maintaining a relatively straightforward design. Although CSAs require additional hardware resources for the parallel computations and multiplexers, they achieve a good trade-off between speed and area, making them well-suited for medium-sized arithmetic units where both latency and complexity are important considerations.
+
+%*****************************
+\subsection{Carry Save Adder}
+%*****************************
+Carry-save adders are specialized adders used primarily in multiplication. Unlike conventional adders, which propagate carries through the stages immediately, CSAs represent the result as two separate numbers: a partial sum and a carry vector. These two outputs are then combined in a subsequent addition step, often using a more efficient adder such as a carry-lookahead adder. By deferring the carry propagation, CSAs significantly reduce the delay for intermediate steps, making them highly efficient for scenarios where multiple additions must be performed simultaneously. Examples include the Wallace tree \cite{wallace1964} and Dadda tree \cite{dadda1965}. This efficiency is achieved at the cost of additional logic to manage the separate sum and carry outputs.
 
 
-\subsection{{\bf {\em Arithmetic \& Logic Unit}}}\label{alu1}
+
+
+
+
+%*****************************
+\subsection{Kogge-Stone Adder}
+%*****************************
+Parallel prefix adders are a class of high-performance adders designed to optimize the computation of carry signals in binary addition, significantly reducing delay compared to simpler adder designs like ripple-carry adders. They achieve this by dividing the addition process into three distinct stages: generating initial propagate and generate signals for each bit, computing intermediate carries through a tree-like prefix structure, and finally calculating the sum based on these carry signals. The tree structure allows the carry signals to be computed in parallel, with a logarithmic time complexity relative to the number of bits, making these adders highly efficient for large bit-width operations. These adders are widely used in modern high-speed computing systems and processors.
+
+The Kogge-Stone Adder is a parallel prefix adder known for its high performance and suitability for large bit-width arithmetic operations. It minimizes the propagation delay using a tree-like structure to compute carry signals in a logarithmic number of stages relative to the bit width. The design uses generate and propagate signals to recursively compute carries in parallel, ensuring that the carry for any given bit is available after just $\log_2(n)$ stages, where $n$ is the bit width. While this structure significantly enhances speed, it requires substantial wiring and additional resources, making it resource-intensive compared to simpler designs like ripple-carry adders. Due to its efficiency in reducing delay, the Kogge-Stone Adder is frequently employed in high-performance processors and digital systems requiring fast arithmetic computations  \cite{kogge1973parallel}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{{\bf {\em Multipliers}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{{\bf {\em Arithmetic \& Logic Unit}}}\label{alu1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexer as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
 
