@@ -6,17 +6,20 @@ package scabook.adders
 import chisel3._
 import chisel3.util._
 
-class CarryLookAheadAdder(width: Int) extends Adder(width) {
+class CarryLookAheadAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
+  require(width > 0, "Width must be greater than 0")
+
   // Propagate and Generate signals
   val propagate = Wire(Vec(width, Bool()))
   val generate = Wire(Vec(width, Bool()))
-  val carry = Wire(Vec(width + 1, Bool())) // Includes the carry out
+  val carry = Wire(Vec(width + 1, Bool())) // Includes the carry-out bit
 
   carry(0) := false.B // Initial carry-in is zero
 
+  // Compute propagate and generate signals
   for (i <- 0 until width) {
-    propagate(i) := io.a(i) ^ io.b(i)
-    generate(i) := io.a(i) & io.b(i)
+    propagate(i) := io.a.asUInt(i) ^ io.b.asUInt(i)
+    generate(i) := io.a.asUInt(i) & io.b.asUInt(i)
   }
 
   // Carry computation using Carry Look-Ahead logic
@@ -31,11 +34,6 @@ class CarryLookAheadAdder(width: Int) extends Adder(width) {
   }
 
   // Outputs
-  io.sum := sum.asUInt
+  io.sum := sum.asUInt.asTypeOf(gen)
   io.carryOut := carry(width)
-
-  // Define abstract method behavior
-  override def computeSum(): Unit = {
-    // The sum is already computed above as part of the CLA logic
-  }
 }

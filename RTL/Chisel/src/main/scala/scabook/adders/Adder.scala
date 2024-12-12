@@ -6,11 +6,13 @@ package scabook.adders
 import chisel3._
 
 abstract class Adder[T <: Data](gen: T) extends Module {
-    require(width > 0, "Width must be greater than 0")
-  val io = IO(new Bundle {
+  require(width > 0, "Width must be greater than 0")
+  
+    val io = IO(new Bundle {
     val a = Input(gen.cloneType)
     val b = Input(gen.cloneType)
     val sum = Output(gen.cloneType)
+    val carryOut = Output(Bool()) 
   })
 }
 

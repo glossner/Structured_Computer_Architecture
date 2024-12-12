@@ -10,12 +10,15 @@ class RippleCarryAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
   val carries = Wire(Vec(width + 1, Bool()))
   val sumBits = Wire(Vec(width, Bool()))
 
-  carries(0) := false.B
+  carries(0) := false.B // Initial carry-in is 0
+
   for (i <- 0 until width) {
-    val sum = io.a(i) ^ io.b(i) ^ carries(i)
-    val carry = (io.a(i) & io.b(i)) | (io.a(i) & carries(i)) | (io.b(i) & carries(i))
+    val sum = io.a(i) ^ io.b(i) ^ carries(i) // Sum bit
+    val carry = (io.a(i) & io.b(i)) | (io.a(i) & carries(i)) | (io.b(i) & carries(i)) // Carry bit
     sumBits(i) := sum
     carries(i + 1) := carry
   }
-  io.sum := sumBits.asUInt.asTypeOf(gen)  //Ensure output type == input type
+
+  io.sum := sumBits.asUInt.asTypeOf(gen) // Ensure output type matches input type
+  io.carryOut := carries(width)         // Final carry-out bit
 }

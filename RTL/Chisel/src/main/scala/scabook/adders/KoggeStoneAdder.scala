@@ -49,5 +49,6 @@ class KoggeStoneAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
     sumBits(i) := p(i) ^ c(i)
   }
 
-  io.sum := sumBits.asUInt.asTypeOf(gen)  //Ensure output type == input type
+  io.sum := sumBits.asUInt.asTypeOf(gen) // Ensure output type matches input type
+  io.carryOut := c(width)                // Assign carry-out from the last carry bit
 }
