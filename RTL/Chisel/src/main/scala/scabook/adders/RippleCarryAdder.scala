@@ -17,5 +17,5 @@ class RippleCarryAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
     sumBits(i) := sum
     carries(i + 1) := carry
   }
-  io.sum := sumBits.asUInt
+  io.sum := sumBits.asUInt.asTypeOf(gen)  //Ensure output type == input type
 }
