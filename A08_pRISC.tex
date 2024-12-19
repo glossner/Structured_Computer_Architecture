@@ -419,34 +419,41 @@ hstore  & \texttt{hDmem[rf[left]] <= rf[right]}                       & hSTORE(l
 
 An assembly program written for the host computer uses the hISA, and a first version of a  library of functions, LFA 0.1 (see Table \ref{tab:lfa01}), where each function is implemented by a program executed by the accelerator. Thus, the library used by host is a hardware implemented library unlike the usual software-designed libraries.
 
-%\begin{table}[H]
-{\small
-\begin{center}
-\begin{longtable}{ |l|l| }
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|l|l|}
 \caption{Host's Function Library Architecture (FLA).}
-\label{tab:lfa01}
-    \hline
-   assembly  & Commentaries  \\
-    \hline
-    \hline
-    hSTART          & start controller's cycle counter  \\ \hline
-    hSTOP           & stop controller's cycle counter  \\ \hline
-    hINTRQ          & interrupt request  \\ \hline
-    hVGENX(addr)     & {\tt V(addr) <= IX} \\ \hline
-    hVGENN(addr,val) & {\tt V(addr) <= [val val ... val]} \\ \hline
-    hSQGENX    & generate square matrix [V[0]=IX V[1]=IX+1 ... V[p-1]= IX+p-1]   \\ \hline
-    hSQGENN(val)    & generate matrix with {\tt V[i]= [val val ... val]}, for i=0 ,,, p-1   \\ \hline
-    hUNIT    & generate unit matrix starting with {\tt V[addr]}  \\ \hline
-    hMSEND(addr,size)    & send matrix of {\tt size} starting from {\tt V[addr]}  \\ \hline
-    hMGET(addr,size) & get matrix of {\tt size} an load from {\tt V[addr]}  \\ \hline
-    hSQMADD(d,l,r)    &  {\tt M[d d+p-1] <= M[l l+p-1] + M[r r+p-1]} \\ \hline
-    hSQMVMULT(d,l,r)    &   {\tt V[d] <= M[l l+p-1] * V[r]} \\ \hline
-    hSQMMULT(d,l,r)    &  {\tt M[d d+p-1] <= M[l l-p+1] * M[r r+p-1]} \\ \hline
-    hSQMMAC(d,l,r)    & {\tt M[d d+p-1] <=  M[d d+p-1] + (M[l l-p+1] * M[r r+p-1]}   \\ \hline
+\label{tab:lfa01} \\
+\hline
+\textbf{Assembly} & \textbf{Commentaries} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Assembly} & \textbf{Commentaries} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+hSTART           & Start controller's cycle counter \\ \hline
+hSTOP            & Stop controller's cycle counter \\ \hline
+hINTRQ           & Interrupt request \\ \hline
+hVGENX(addr)     & \texttt{V(addr) <= IX} \\ \hline
+hVGENN(addr,val) & \texttt{V(addr) <= [val val ... val]} \\ \hline
+hSQGENX          & Generate square matrix \texttt{[V[0]=IX V[1]=IX+1 ... V[p-1]=IX+p-1]} \\ \hline
+hSQGENN(val)     & Generate matrix with \texttt{V[i]= [val val ... val]}, for \(i = 0, ..., p-1\) \\ \hline
+hUNIT            & Generate unit matrix starting with \texttt{V[addr]} \\ \hline
+hMSEND(addr,size)& Send matrix of \texttt{size} starting from \texttt{V[addr]} \\ \hline
+hMGET(addr,size) & Get matrix of \texttt{size} and load from \texttt{V[addr]} \\ \hline
+hSQMADD(d,l,r)   & \texttt{M[d d+p-1] <= M[l l+p-1] + M[r r+p-1]} \\ \hline
+hSQMVMULT(d,l,r) & \texttt{V[d] <= M[l l+p-1] * V[r]} \\ \hline
+hSQMMULT(d,l,r)  & \texttt{M[d d+p-1] <= M[l l-p+1] * M[r r+p-1]} \\ \hline
+hSQMMAC(d,l,r)   & \texttt{M[d d+p-1] <= M[d d+p-1] + (M[l l-p+1] * M[r r+p-1])} \\ \hline
 \end{longtable}
-\end{center}
-}
-%\end{table}
+\end{table}
+
 
 \subsection{Accelerator's dual architecture}
 
@@ -455,95 +462,87 @@ An assembly program written for the host computer uses the hISA, and a first ver
 Each assembly-level instruction is made by concatenating the operation micro-code (indicated on the first column of the following tables) with the micro-code that selects the operation mode (indicated on the first line in the following table).
 
 
-{\small
-\begin{center}
-{\tt
-\begin{longtable}{ |l||l|l|l|l|l| }
-\caption{Instructions with operand from the controller's Instruction Set Architecture.}
-\label{tab:}
- \hline
-   cOpcode$\setminus$cMode  & imm & dir & rel & rei & cim \\
-  \hline
-   \hline
-  cadd  & cVADD(s) & cADD(s) & cRADD(s) & cRIADD(s) & CADD    \\
-  \hline
-  caddc   & cVADDC(s) &cADDC(s) & cRADDC(s) & cRIADDC(s) & CADDC   \\
- \hline
-  csub   &  cVSUB(s) & cSUB(s) & cRSUB(s) & cRISUB(s) & CSUB   \\
- \hline
- crsub   &   cVRSUB(s) & cRSUB(s) & cRRSUB(s) & cRIRSUB(s) & CRSUB   \\
- \hline
-  csubc   &  cVSUBC(s) & cSUBC(s) & cRSUBC(s) & cRISUBC(s) & CSUBC    \\
- \hline
- crsubc   &  cVRSUBC(s) & cRSUBC(s) & cRRSUBC(s) & cRIRSUBC(s) & CRSUBC   \\
- \hline
- cmult   &  cVMULT(s) & cMULT(s) & cRMULT(s) & cRIMULT(s) & CMULT  \\
- \hline
- cbwand   & cVAND(s) & cAND(s) & cRAND(s) & cRIAND(s) & CAND      \\
- \hline
- cbwor   &  cVOR(s) & cOR(s) & cROR(s) & cRIOR(s) & COR    \\
- \hline
- cbwxor   &  cVXOR(s) & cXOR(s) & cRXOR(s) & cRIXOR(s) & CXOR     \\
- \hline
- cload   &  cVLOAD(s) & cLOAD(s) & cRLOAD(s) &c RILOAD(s) & CLOAD    \\
- \hline
- cstore   &  & cSTORE(s) & cRSTORE(s) & cRISTORE(s) & cCSTORE   \\
-  \hline
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|l||l|l|l|l|l|}
+\caption{Instructions with operands from the controller's Instruction Set Architecture.}
+\label{tab:controller_isa} \\
+\hline
+\textbf{cOpcode $\setminus$ cMode} & \textbf{imm} & \textbf{dir} & \textbf{rel} & \textbf{rei} & \textbf{cim} \\
+\hline
+\endfirsthead
+\hline
+\textbf{cOpcode $\setminus$ cMode} & \textbf{imm} & \textbf{dir} & \textbf{rel} & \textbf{rei} & \textbf{cim} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+cadd      & cVADD(s)    & cADD(s)    & cRADD(s)    & cRIADD(s)    & CADD       \\ \hline
+caddc     & cVADDC(s)   & cADDC(s)   & cRADDC(s)   & cRIADDC(s)   & CADDC      \\ \hline
+csub      & cVSUB(s)    & cSUB(s)    & cRSUB(s)    & cRISUB(s)    & CSUB       \\ \hline
+crsub     & cVRSUB(s)   & cRSUB(s)   & cRRSUB(s)   & cRIRSUB(s)   & CRSUB      \\ \hline
+csubc     & cVSUBC(s)   & cSUBC(s)   & cRSUBC(s)   & cRISUBC(s)   & CSUBC      \\ \hline
+crsubc    & cVRSUBC(s)  & cRSUBC(s)  & cRRSUBC(s)  & cRIRSUBC(s)  & CRSUBC     \\ \hline
+cmult     & cVMULT(s)   & cMULT(s)   & cRMULT(s)   & cRIMULT(s)   & CMULT      \\ \hline
+cbwand    & cVAND(s)    & cAND(s)    & cRAND(s)    & cRIAND(s)    & CAND       \\ \hline
+cbwor     & cVOR(s)     & cOR(s)     & cROR(s)     & cRIOR(s)     & COR        \\ \hline
+cbwxor    & cVXOR(s)    & cXOR(s)    & cRXOR(s)    & cRIXOR(s)    & CXOR       \\ \hline
+cload     & cVLOAD(s)   & cLOAD(s)   & cRLOAD(s)   & cRILOAD(s)   & CLOAD      \\ \hline
+cstore    &             & cSTORE(s)  & cRSTORE(s)  & cRISTORE(s)  & CCSTORE    \\ \hline
 \end{longtable}
-}
-\end{center}
-}
+\end{table}
 
 
 
 
-{\small
-%\hspace{-1.5cm}
-\begin{center}
-    {\tt
-\begin{longtable}{ |l|l|l| }
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|l|l|l|}
 \caption{Sequencer's Instruction Set Architecture with no operand.}
-\label{tab:}
- \hline
-   \{cOpcode,value[2:0]\}  & Commentaries & assembly \\
- \hline
- \{cshift,4\}   &  shift right one bit position                 & cSHR  \\
- \{cshift,5\}   &  shift right arithmetic one bit position      & cASHR   \\
- \{cshift,6\}   &  shift right one bit position with carry      & cSHRC  \\
- \{cshift,1\}   &  shift left one bit position                  & cSHL  \\
- \{cshift,2\}   &  shift left one bit position with carry       & cSHLC \\
- \{cshift,7\}   &  rotate right  one bit position               & cROTR \\
- \{cshift,3\}   &  rotate left  one bit position                & cROTL \\
- \hline
- \{gshift,0\}    & 1-position global right shift         &  cGRSHIFT  \\
- \{gshift,1\}    & 1-position global left shift          &  cGLSHIFT  \\
- \{gshift,5\}    & reduction output insert right         &  cRREDINS 	\\
-\{gshift,4\}     & reduction output insert left          &  cLREDINS 	\\
- \{gshift,2\}    & 1-position global right rotate        &  cGRROTATE \\
- \{gshift,3\}    & 1-position global left rotate         &  cGLROTATE \\
-     \hline
- nop        &   no operation                            & cNOP          \\
- jmp        &   relative jump to label s                & cJMP(s)       \\
- ajmp       &   absolute jump to label s                & cAJMP(s)      \\
- brz        &   jump to label s if acc=0                & cBRZ(s)       \\
- brnz       &   jump to label s if acc!=0               & cBRNZ(s)      \\
- brzdec     &   jump to label s if acc=0; acc<=acc-1    & cBRZDEC(s)    \\
- brnzdec    &   jump to label s if acc!=0; acc<=acc-1   & cBRNZDEC(s)   \\
- halt       &   pc <= pc                                & cHALT         \\
- \hline
- cinsval     &  acc <= \{(acc << 8), value[7:0]\}  & cINSVAL    \\
-  \hline
-   crela  &  addr <= acc                        & cADDRLD    \\
-  \hline
- start & start cycle counter  & cSTART \\
-  \hline
-  stop  & stop cycle counter  & cSTOP\\
-  \hline
-  \end{longtable}
-  }
-  \end{center}
-}
-
+\label{tab:sequencer_isa} \\
+\hline
+\textbf{\{cOpcode, value[2:0]\}} & \textbf{Commentaries}                         & \textbf{Assembly}    \\
+\hline
+\endfirsthead
+\hline
+\textbf{\{cOpcode, value[2:0]\}} & \textbf{Commentaries}                         & \textbf{Assembly}    \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+\{cshift,4\}   & Shift right one bit position                  & cSHR         \\ \hline
+\{cshift,5\}   & Shift right arithmetic one bit position       & cASHR        \\ \hline
+\{cshift,6\}   & Shift right one bit position with carry       & cSHRC        \\ \hline
+\{cshift,1\}   & Shift left one bit position                   & cSHL         \\ \hline
+\{cshift,2\}   & Shift left one bit position with carry        & cSHLC        \\ \hline
+\{cshift,7\}   & Rotate right one bit position                 & cROTR        \\ \hline
+\{cshift,3\}   & Rotate left one bit position                  & cROTL        \\ \hline
+\{gshift,0\}   & 1-position global right shift                 & cGRSHIFT     \\ \hline
+\{gshift,1\}   & 1-position global left shift                  & cGLSHIFT     \\ \hline
+\{gshift,5\}   & Reduction output insert right                 & cRREDINS     \\ \hline
+\{gshift,4\}   & Reduction output insert left                  & cLREDINS     \\ \hline
+\{gshift,2\}   & 1-position global right rotate                & cGRROTATE    \\ \hline
+\{gshift,3\}   & 1-position global left rotate                 & cGLROTATE    \\ \hline
+nop            & No operation                                  & cNOP         \\ \hline
+jmp            & Relative jump to label \(s\)                 & cJMP(s)      \\ \hline
+ajmp           & Absolute jump to label \(s\)                 & cAJMP(s)     \\ \hline
+brz            & Jump to label \(s\) if \texttt{acc=0}         & cBRZ(s)      \\ \hline
+brnz           & Jump to label \(s\) if \texttt{acc!=0}        & cBRNZ(s)     \\ \hline
+brzdec         & Jump to label \(s\) if \texttt{acc=0}; \texttt{acc<=acc-1} & cBRZDEC(s)   \\ \hline
+brnzdec        & Jump to label \(s\) if \texttt{acc!=0}; \texttt{acc<=acc-1} & cBRNZDEC(s)  \\ \hline
+halt           & \texttt{pc <= pc}                            & cHALT        \\ \hline
+cinsval        & \texttt{acc <= \{(acc << 8), value[7:0]\}}    & cINSVAL      \\ \hline
+crela          & \texttt{addr <= acc}                         & cADDRLD      \\ \hline
+start          & Start cycle counter                          & cSTART       \\ \hline
+stop           & Stop cycle counter                           & cSTOP        \\ \hline
+\end{longtable}
+\end{table}
 
 
 
@@ -551,111 +550,102 @@ Each assembly-level instruction is made by concatenating the operation micro-cod
 
 Each assembly-level instruction is made by concatenating the operation micro-code (indicated on the first column of the following tables) with the micro-code that selects the operation mode (indicated on the first line in the following table).
 
-
-\begin{center}
-{\tt
-{\footnotesize
-\begin{longtable}{ |l||l|l|l|l|l|l|l|l| }
-\caption{Instructions with operand from the Instruction Set Architecture.}
-\label{table:}
- \hline
-   code$\setminus$mode & imm & dir & rel & rei & cim & cdr & crl & cri\\
-  \hline
-  \hline
-   add  & VADD(s) & ADD(s) & RADD(s) & RIADD(s) & CADD & CAADD & CRADD  & CRIADD \\
-  \hline
-  addc   & VADDC(s) & ADDC(s) & RADDC(s) & RIADDC(s) & CADDC & CAADDC & CRADDC & CRIADDC  \\
- \hline
-  sub   &  VSUB(s) & SUB(s) & RSUB(s) & RISUB(s) & CSUB & CASUB & CRSUB & CRISUB \\
- \hline
- rsub   &   VRSUB(s) & RSUB(s) & RRSUB(s) & RIRSUB(s) & CRSUB & CARSUB & CRRSUB  & CIRRSUB\\
- \hline
-  subc   &  VSUBC(s) & SUBC(s) & RSUBC(s) & RISUBC(s) & CSUBC & CASUBC & CRSUBC & CRISUBC  \\
- \hline
- rsubc   &  VRSUBC(s) & RSUBC(s) & RRSUBC(s) & RIRSUBC(s) & CRSUBC & CARSUBC & CRRSUBC  & CRIRSUBC \\
- \hline
- mult   &  VMULT(s) & MULT(s) & RMULT(s) & RIMULT(s) & CMULT & CAMULT & CRMULT & CRIMULT\\
- \hline
- bwand   & VAND(s) & AND(s) & RAND(s) & RIAND(s) & CAND & CAAND & CRAND  & CRIAND   \\
- \hline
- bwor   &  VOR(s) & OR(s) & ROR(s) & RIOR(s) & COR & CAOR & CROR  & CRIOR  \\
- \hline
- bwxor   &  VXOR(s) & XOR(s) & RXOR(s) & RIXOR(s) & CXOR & CAXOR & CRXOR  & CRIXOR  \\
- \hline
- load   &  VLOAD(s) & LOAD(s) & RLOAD(s) & RILOAD(s) & CLOAD & CALOAD & CRLOAD & CRILOAD  \\
- \hline
- store   &  & STORE(s) & RSTORE(s) & RISTORE(s) & CSTORE  & CASTORE  & CRSTORE  & CRISTORE\\
-  \hline
-getio & & GETIO(s) & & RIGETIO(s) & & & & \\ \hline
-sendio & & SENDIO(s) & & RISENDIO(s) & & & & \\ \hline
-    search   & VSEARCH(s) &  & & & SEARCH & & & \\
- \hline
-    csearch   & VCSEARCH(s) &  & & & CSEARCH & & & \\
- \hline
-    insert   & VINSERT(s) &  & & & INSERT & & &\\
- \hline
+\begin{table}[H]
+\footnotesize
+\centering
+\begin{longtable}{|l||l|l|l|l|l|l|l|l|}
+\caption{Instructions with operands from the Instruction Set Architecture.}
+\label{table:isa_instructions} \\
+\hline
+\textbf{Code $\setminus$ Mode} & \textbf{imm} & \textbf{dir} & \textbf{rel} & \textbf{rei} & \textbf{cim} & \textbf{cdr} & \textbf{crl} & \textbf{cri} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Code $\setminus$ Mode} & \textbf{imm} & \textbf{dir} & \textbf{rel} & \textbf{rei} & \textbf{cim} & \textbf{cdr} & \textbf{crl} & \textbf{cri} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+add       & VADD(s)    & ADD(s)    & RADD(s)    & RIADD(s)    & CADD    & CAADD    & CRADD    & CRIADD    \\ \hline
+addc      & VADDC(s)   & ADDC(s)   & RADDC(s)   & RIADDC(s)   & CADDC   & CAADDC   & CRADDC   & CRIADDC   \\ \hline
+sub       & VSUB(s)    & SUB(s)    & RSUB(s)    & RISUB(s)    & CSUB    & CASUB    & CRSUB    & CRISUB    \\ \hline
+rsub      & VRSUB(s)   & RSUB(s)   & RRSUB(s)   & RIRSUB(s)   & CRSUB   & CARSUB   & CRRSUB   & CIRRSUB   \\ \hline
+subc      & VSUBC(s)   & SUBC(s)   & RSUBC(s)   & RISUBC(s)   & CSUBC   & CASUBC   & CRSUBC   & CRISUBC   \\ \hline
+rsubc     & VRSUBC(s)  & RSUBC(s)  & RRSUBC(s)  & RIRSUBC(s)  & CRSUBC  & CARSUBC  & CRRSUBC  & CRIRSUBC  \\ \hline
+mult      & VMULT(s)   & MULT(s)   & RMULT(s)   & RIMULT(s)   & CMULT   & CAMULT   & CRMULT   & CRIMULT   \\ \hline
+bwand     & VAND(s)    & AND(s)    & RAND(s)    & RIAND(s)    & CAND    & CAAND    & CRAND    & CRIAND    \\ \hline
+bwor      & VOR(s)     & OR(s)     & ROR(s)     & RIOR(s)     & COR     & CAOR     & CROR     & CRIOR     \\ \hline
+bwxor     & VXOR(s)    & XOR(s)    & RXOR(s)    & RIXOR(s)    & CXOR    & CAXOR    & CRXOR    & CRIXOR    \\ \hline
+load      & VLOAD(s)   & LOAD(s)   & RLOAD(s)   & RILOAD(s)   & CLOAD   & CALOAD   & CRLOAD   & CRILOAD   \\ \hline
+store     &            & STORE(s)  & RSTORE(s)  & RISTORE(s)  & CSTORE  & CASTORE  & CRSTORE  & CRISTORE  \\ \hline
+getio     &            & GETIO(s)  &            & RIGETIO(s)  &         &          &          &           \\ \hline
+sendio    &            & SENDIO(s) &            & RISENDIO(s) &         &          &          &           \\ \hline
+search    & VSEARCH(s) &           &            &             & SEARCH  &          &          &           \\ \hline
+csearch   & VCSEARCH(s)&           &            &             & CSEARCH &          &          &           \\ \hline
+insert    & VINSERT(s) &           &            &             & INSERT  &          &          &           \\ \hline
 \end{longtable}
-}
-}
-\end{center}
-
+\end{table}
 
 
 %\begin{table}[H]
 
-\begin{center}
-\begin{longtable}{ |l|l|l| }
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|l|l|l|}
 \caption{Map's Instruction Set Architecture with no operand.}
-\label{tab:}
-{\small
- \hline
-   \{cOpcode,value[2:0]\}  & Commentaries & assembly \\
- \hline
- \{shift,4\}   &  shift right one bit position                 & SHR  \\
- \{shift,5\}   &  shift right arithmetic one bit position      & ASHR   \\
- \{shift,6\}   &  shift right one bit position with carry      & SHRC  \\
- \{shift,1\}   &  shift left one bit position                  & SHL  \\
- \{shift,2\}   &  shift left one bit position with carry       & SHLC \\
- \{shift,7\}   &  rotate right  one bit position               & ROTR \\
- \{shift,3\}   &  rotate left  one bit position                & ROTL \\
- \hline
- ixload  &  acc[i] <= i 	            & IXLOAD    \\  \hline
- getsr   &  acc[i] <= serialReg[i]   & GETSR    \\  \hline
- sendsr   &  serialReg[i] <= acc[i]   & SENDSR    \\  \hline
- \{where,0\}   & {\tt b[i] <= (b[i] \& acc[i]=0) ? 1 : 0}   & WHEREZERO         \\
- \{where,1\}   & {\tt b[i] <= (b[i] \& carry[i]) ? 1 : 0}  & WHERECARRY        \\
- \{where,2\}   & {\tt b[i] <= (b[i] \& acc[i][31]=1) ? 1 : 0}  & WHERENEGATIVE  \\
- \{where,3\}   & {\tt b[i] <= i=0 ? 0 : (b[i-1] ? 1 : 0}  & WHEREPREVACT      \\
- \{where,4\}   &  {\tt b[i] <= (b[i] \& first ? 1 : 0}  & WHEREFIRST        \\
-  \{where,5\}  &  {\tt b[i] <= (b[i] \& next ? 1 : 0}  & WHERENEXT         \\
- \{where,6\}   &  {\tt b[i] <= (b[i] \& !(first | next) ? 1 : 0}  & WHEREPREV    \\
- \{where,8\}   &  {\tt b[i] <= (b[i] \& !(acc[i]=0)) ? 1 : 0}  & WHERENZERO        \\
- \{where,9\}   &  {\tt b[i] <= (b[i] \& !carry[i]) ? 1 : 0} & WHERENCARRY       \\
- \{where,10\}   & {\tt b[i] <= (b[i] \& !(acc[i][31]=1)) ? 1 : 0}   & WHERENNEGATIVE    \\
- \{where,11\}   &  {\tt b[i] <= i=0 ? 1 : (b[i-1] ? 0 : 1}   & WHERENPREVACT     \\
- \{where,12\}   & {\tt b[i] <= (b[i] \& !first ? 1 : 0}  & WHERENFIRST       \\
- \{where,13\}   & {\tt b[i] <= (b[i] \& !next ? 1 : 0}    & WHERENNEXT        \\
- \{where,14\}  & {\tt b[i] <= (b[i] \& (first | next) ? 1 : 0}  & WHERENPREV        \\  \hline
- elsew   & reapply the last {\tt where} with the negated condition  & ELSEWHERE         \\  \hline
- back &  redo b[i] affected by the most recently active where & ENDWHERE         \\  \hline
- selsh   & {\tt b[i] <= i=0 ? 0 : b[i-1]}  & SELSHIFT          \\  \hline
-  allact  & b[i] <= 1  & ACTIVATE          \\
- \hline
-  \{setred,0\}  & set the reduction function on addition  & REDADD \\
-  \{setred,3\}  & set the reduction function on minimum  & REDMIN \\
-  \{setred,2\}  &  set the reduction function on maximum & REDMAX \\
-  \{setred,1\}  &  set the reduction function on logical OR & REDOR     \\
- \hline
-     delete   &   & DELETE \\
- \hline
- cinsval     &  acc[i] <= \{(acc[i] << 8), value[7:0]\}  & INSVAL    \\
-  \hline
-   crela  &  addr[i] <= acc[i]                        & ADDRLD    \\
-  \hline
-  }
+\label{tab:map_isa} \\
+\hline
+\textbf{\{cOpcode, value[2:0]\}} & \textbf{Commentaries} & \textbf{Assembly} \\
+\hline
+\endfirsthead
+\hline
+\textbf{\{cOpcode, value[2:0]\}} & \textbf{Commentaries} & \textbf{Assembly} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+\{shift,4\}   & Shift right one bit position                     & SHR            \\ \hline
+\{shift,5\}   & Shift right arithmetic one bit position          & ASHR           \\ \hline
+\{shift,6\}   & Shift right one bit position with carry          & SHRC           \\ \hline
+\{shift,1\}   & Shift left one bit position                      & SHL            \\ \hline
+\{shift,2\}   & Shift left one bit position with carry           & SHLC           \\ \hline
+\{shift,7\}   & Rotate right one bit position                    & ROTR           \\ \hline
+\{shift,3\}   & Rotate left one bit position                     & ROTL           \\ \hline
+ixload        & \texttt{acc[i] <= i}                             & IXLOAD         \\ \hline
+getsr         & \texttt{acc[i] <= serialReg[i]}                  & GETSR          \\ \hline
+sendsr        & \texttt{serialReg[i] <= acc[i]}                  & SENDSR         \\ \hline
+\{where,0\}   & \texttt{b[i] <= (b[i] \& acc[i]=0) ? 1 : 0}       & WHEREZERO      \\ \hline
+\{where,1\}   & \texttt{b[i] <= (b[i] \& carry[i]) ? 1 : 0}       & WHERECARRY     \\ \hline
+\{where,2\}   & \texttt{b[i] <= (b[i] \& acc[i][31]=1) ? 1 : 0}   & WHERENEGATIVE  \\ \hline
+\{where,3\}   & \texttt{b[i] <= i=0 ? 0 : (b[i-1] ? 1 : 0)}       & WHEREPREVACT   \\ \hline
+\{where,4\}   & \texttt{b[i] <= (b[i] \& first ? 1 : 0)}          & WHEREFIRST     \\ \hline
+\{where,5\}   & \texttt{b[i] <= (b[i] \& next ? 1 : 0)}           & WHERENEXT      \\ \hline
+\{where,6\}   & \texttt{b[i] <= (b[i] \& !(first | next)) ? 1 : 0} & WHEREPREV      \\ \hline
+\{where,8\}   & \texttt{b[i] <= (b[i] \& !(acc[i]=0)) ? 1 : 0}    & WHERENZERO     \\ \hline
+\{where,9\}   & \texttt{b[i] <= (b[i] \& !carry[i]) ? 1 : 0}      & WHERENCARRY    \\ \hline
+\{where,10\}  & \texttt{b[i] <= (b[i] \& !(acc[i][31]=1)) ? 1 : 0} & WHERENNEGATIVE \\ \hline
+\{where,11\}  & \texttt{b[i] <= i=0 ? 1 : (b[i-1] ? 0 : 1)}       & WHERENPREVACT  \\ \hline
+\{where,12\}  & \texttt{b[i] <= (b[i] \& !first) ? 1 : 0}         & WHERENFIRST    \\ \hline
+\{where,13\}  & \texttt{b[i] <= (b[i] \& !next) ? 1 : 0}          & WHERENNEXT     \\ \hline
+\{where,14\}  & \texttt{b[i] <= (b[i] \& (first | next)) ? 1 : 0} & WHERENPREV     \\ \hline
+elsew         & Reapply the last \texttt{where} with the negated condition & ELSEWHERE     \\ \hline
+back          & Redo \texttt{b[i]} affected by the most recently active where & ENDWHERE     \\ \hline
+selsh         & \texttt{b[i] <= i=0 ? 0 : b[i-1]}                 & SELSHIFT       \\ \hline
+allact        & \texttt{b[i] <= 1}                                & ACTIVATE       \\ \hline
+\{setred,0\}  & Set the reduction function on addition            & REDADD         \\ \hline
+\{setred,3\}  & Set the reduction function on minimum             & REDMIN         \\ \hline
+\{setred,2\}  & Set the reduction function on maximum             & REDMAX         \\ \hline
+\{setred,1\}  & Set the reduction function on logical OR          & REDOR          \\ \hline
+delete        &                                                  & DELETE         \\ \hline
+cinsval       & \texttt{acc[i] <= \{(acc[i] << 8), value[7:0]\}}  & INSVAL         \\ \hline
+crela         & \texttt{addr[i] <= acc[i]}                       & ADDRLD         \\ \hline
 \end{longtable}
-\end{center}
-
+\end{table}
 
 
 
@@ -907,26 +897,33 @@ The simulation provided, for $p=16$, the following:
 }
 The execution time is evaluated by the simulator at {\tt aCC = 772 clock cycles} for $p = 16$. In Table \ref{tab:mmPerformance} are displayed the number of clock cycles per dot product for $p \times p$ matrices. 
 
-{\em
-\begin{center}
-\begin{longtable}{ |r|r|c| }
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|r|r|c|}
 \caption{Multiplication evaluation depending on the size of the square matrices.}
-\label{tab:mmPerformance}
-{\small 
- \hline
- \# of lines & \# of cycles & \# cycles/dot product \\ \hline
- \hline
- \hline
- 16 & 772    & 3.01 \\ \hline
-32  & 2676   & 2.61 \\ \hline
-64  & 9300   & 2.27 \\ \hline
-128 & 34476  & 2.10 \\ \hline
-256 & 135956 & 2.07 \\ \hline
-512 & 536084 & 2.04 \\ \hline
-}
+\label{tab:mmPerformance} \\
+\hline
+\textbf{\# of Lines} & \textbf{\# of Cycles} & \textbf{\# Cycles/Dot Product} \\
+\hline
+\endfirsthead
+\hline
+\textbf{\# of Lines} & \textbf{\# of Cycles} & \textbf{\# Cycles/Dot Product} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+16  & 772     & 3.01 \\ \hline
+32  & 2676    & 2.61 \\ \hline
+64  & 9300    & 2.27 \\ \hline
+128 & 34476   & 2.10 \\ \hline
+256 & 135956  & 2.07 \\ \hline
+512 & 536084  & 2.04 \\ \hline
 \end{longtable}
-\end{center}
-}
+\end{table}
+
 As the matrix size increases, the number of clock cycles per dot product converges to 2, the size of the loop that calculates each element of the resulting matrix.
 
 $\diamond$
