@@ -1,0 +1,46 @@
+module interfaces(  input   logic           h2iPwrite   ,
+                    output  logic           i2hPfull    ,
+                    input   logic [63:0]    host2int,
+                    input   logic           h2iDwrite   ,
+                    output  logic           i2hDfull    ,
+                    output  logic [63:0]    int2hostData,
+                    input   logic           i2hDread    ,
+                    output  logic           i2hDempty   ,
+                    output  logic [63:0]    int2accProg ,
+                    input   logic           i2aPread    ,
+                    output  logic           i2aPempty   ,
+                    output  logic [63:0]    int2accData ,
+                    input   logic           i2aDread    ,
+                    output  logic           i2aDempty   ,
+                    input   logic [63:0]    acc2intData ,
+                    input   logic           a2iDwrite   ,
+                    output  logic           a2iDfull    ,
+                    input   logic           reset, clock);
+
+    fifo progFIFO(  host2int    ,
+                    h2iPwrite   ,
+                    i2hPfull    ,
+                    int2accProg ,
+                    i2aPread    ,
+                    i2aPempty   ,
+                    reset       ,
+                    clock       );
+
+    fifo inDataFIFO(.dataIn (host2int   ),
+                    .write  (h2iDwrite  ),
+                    .full   (i2hDfull   ),
+                    .dataOut(int2accData),
+                    .read   (i2aDread   ),
+                    .empty  (i2aDempty  ),
+                    .reset  (reset      ),
+                    .clock  (clock      ));
+
+    fifo outDataFIFO(   .dataIn (acc2intData    ),
+                        .write  (a2iDwrite      ),
+                        .full   (a2iDfull       ),
+                        .dataOut(int2hostData   ),
+                        .read   (i2hDread       ),
+                        .empty  (i2hDempty      ),
+                        .reset  (reset          ),
+                        .clock  (clock          ));
+endmodule

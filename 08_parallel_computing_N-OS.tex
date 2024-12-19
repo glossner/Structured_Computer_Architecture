@@ -423,7 +423,7 @@ $\diamond$
 
 The previous definitions follow the algorithmic complexity \cite{Chaitin70} definition stating  mainly that the complexity of a computation is given by the length of its shortest description. While for complex computation the Turing tax can be reduced using {\em instruction-level parallelism}, for simple, intense computation a promising solution is  {\em cellular parallelism}. A typical example for intense, simple computation is the multiplication of $N \times N$ matrices performed on a mono-core engine in $O(N^3)$ time. An accelerator with $p$ execution units (cells) is expected to reduce execution times by at least $O(p/log \; p)$ times. It runs a constant (independent of N) code size.
 
-\subsection{Heterogeneous system}
+\subsection{Heterogeneous system}\label{hetCompSystem}
 
 Heterogeneous computing takes into account the distinction between complex and intensive computing. This segregation is possible using a system in which a single-core computer, instantiated as a HOST, uses a library of functions implemented in hardware in a MapScanReduce structure to perform complex calculations. In Figure \ref{hetSyst}, such a heterogeneous computing system is represented.
 
