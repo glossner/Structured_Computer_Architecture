@@ -6,19 +6,23 @@ package scabook.adders
 import chisel3._
 import chisel3.util._
 
-class RippleCarryAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
+//  ripple-carry adders inherently operate on individual bits
+//  constrain T to types that support indexing
+class RippleCarryAdder[T <: Bits](gen: T, width: Int) extends Adder(gen) {
   val carries = Wire(Vec(width + 1, Bool()))
   val sumBits = Wire(Vec(width, Bool()))
 
-  carries(0) := false.B // Initial carry-in is 0
+  carries(0) := io.carryIn // Initial carry-in
 
   for (i <- 0 until width) {
-    val sum = io.a(i) ^ io.b(i) ^ carries(i) // Sum bit
-    val carry = (io.a(i) & io.b(i)) | (io.a(i) & carries(i)) | (io.b(i) & carries(i)) // Carry bit
+    val aBit = io.a(i) // Access individual bits of `a`
+    val bBit = io.b(i) // Access individual bits of `b`
+    val sum = aBit ^ bBit ^ carries(i) // Sum bit
+    val carry = (aBit & bBit) | (aBit & carries(i)) | (bBit & carries(i)) // Carry bit
     sumBits(i) := sum
     carries(i + 1) := carry
   }
 
-  io.sum := sumBits.asUInt.asTypeOf(gen) // Ensure output type matches input type
-  io.carryOut := carries(width)         // Final carry-out bit
+  io.sum := sumBits.asUInt.asTypeOf(gen) // Convert sum bits to UInt and then to `gen`
+  io.carryOut := carries(width)         // Final carry-out
 }
