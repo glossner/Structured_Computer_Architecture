@@ -858,7 +858,7 @@ The companion object \texttt{Adder} dynamically instantiates a specific adder ty
 %*************************************************
 \subsubsection{Parameterized Behavioral Adder (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdder.scala}
+\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdderUnsigned.scala}
 
 Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, generic adder in Chisel. The class is parameterized by a data type \texttt{T} that extends \texttt{Data}, allowing it to work with various numeric types such as \texttt{UInt} or \texttt{SInt}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
 
