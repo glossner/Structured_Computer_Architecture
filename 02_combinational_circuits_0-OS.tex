@@ -660,6 +660,7 @@ Listing \ref{lst:verilog_decoder_4_to_16} shows a directly implemented 4-to-16 d
 
 Listing \ref{lst:chisel_decoder} shows a Chisel parameterized decoder that can generate decoder logic based on a specified width. The decoder accepts a parameter, \texttt{n} the output width. This is also used to determine the number of input bits using the function \texttt{log2Ceil(n)}. This parameter dynamically adjusts the size of the output vector to \texttt{1 << inputWidth} (i.e., $2^{\text{inputWidth}}$), allowing the decoder to handle a variable number of input combinations. The use of a shift operation, \texttt{1.U << io.in}, implements the decoding logic by setting a single output bit corresponding to the binary input value.
 
+% FIXME
 \includechiselcode[caption={Verilog Generated for Chisel Decoder(2)}, label={lst:chisel_decoder_generated_verilog}, firstline=1, firstnumber=1, lastline=7]{\verilogGeneratedByChiselSourceDir/Decoder.sv}
 
 Chisel automatically generates hardware for parameterized modules, while guaranteeing combinational logic. Listing \ref{lst:chisel_decoder_generated_verilog} shows the generated verilog code for a 1-to-2 decoder \texttt{Decoder(2)}. It shows the negation identified in Figure \ref{fig:decoder_and_gates}a. 
