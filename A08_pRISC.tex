@@ -1,10 +1,10 @@
-\chapter{Using a Heterogeneous Computer: hRISC=toyRISC\&pRISC}\label{prisc}
+\chapter{Using the Heterogeneous System hRISC}\label{hrisc}
 
-\minitoc
+%\minitoc
 
-This appendix brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core toyRISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. First, the micro-architectures associated with the system components will be described. This will be followed by a description of the hardware structure used by the simulator. The architecture of the entire system is thenn defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
+This appendix brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core toyRISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. First, the micro-architectures associated with the system components will be described.  The architecture of the entire system is then defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
 
-The top module of the system is listed in Listing \ref{lst:heterogeneousSystem} while in Figures \ref{fig:hetSystem1} and \ref{fig:hetSystem2} the resulting structure is presented\footnote{The top module {\tt hetSys.sv} is divided into two images for reasons of visual clarity of representation.}. The listed module contains two modules -- HOST and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the two module in top are:
+The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}. The listed module contains two modules -- HOST and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the two module in top are:
 \begin{description}
     \item[from HOST to INTERFACES:] program \& data 64-bit path and the synchronizing signals:
         \begin{description}
@@ -37,22 +37,6 @@ The top module of the system is listed in Listing \ref{lst:heterogeneousSystem} 
                     {\verilogSourceDir/A08_hetSys.sv}
 
 The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
-
-\begin{comment}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{Images/A08_hetSys1.png}
-    \caption{Heterogeneous system.}
-    \label{fig:hetSystem1}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{Images/A08_hetSys2.png}
-    \caption{Heterogeneous system.}
-    \label{fig:hetSystem2}
-\end{figure}
-\end{comment}
 
 This introduction is followed by the description of the micro-architectures, the description of the hardware structure and examples of use in simulation of the designed system.
 
@@ -242,103 +226,6 @@ The previously defined three micro-architecture are assembled in a unique file, 
                     lastline=60]
                     {\verilogSourceDir/A08_DEFINES.vh}
 
-\begin{comment}
-\section{toyRISC Host Hardware}
-
-The
-
-%\placedrawing[h]{}{toyRISC host}{}
- 
-\section{Accelerator Hardware}
-
-\newpage
-
-\includeverilogcode[caption={Accelerator. File: 2\_accelerator.sv   (SystemVerilog)}, 
-                    label={lst:accelerator}, 
-                    firstline=1, 
-                    firstnumber=1, 
-                    lastline=49]
-                    {\verilogSourceDir/A08_accelerator.sv}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{Images/A08_accelerator.png}
-    \caption{Accelerator.}
-    \label{fig:accelerator}
-\end{figure}
-
-\subsection{Interfaces}
-
-\newpage
-
-\includeverilogcode[caption={Interfaces. File: 3\_interfaces.sv   (SystemVerilog)}, 
-                    label={lst:interfaces}, 
-                    firstline=1, 
-                    firstnumber=1, 
-                    lastline=49]
-                    {\verilogSourceDir/A08_interfaces.sv}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{Images/A08_interfaces.png}
-    \caption{Interfaces.}
-    \label{fig:interfaces}
-\end{figure}
-
-
-\subsection{parallelRISC (pRISC)}
-
-The
-
-%\placedrawing[h]{}{pRISC}{}
-
-\subsubsection{Sequencer}
-
-The
-
-%\placedrawing[h]{}{Sequencer}{}
-
-\subsubsection{MapScanReduce}
-
-The
-
-%\placedrawing[h]{}{MapScanReduce.}{}
-
-\paragraph{Nets}
-
-The
-
-%\placedrawing[h]{}{Nets.}{}
-
-\subparagraph{Distribute}
-
-The
-
-%\placedrawing[h]{}{Distribute.}{}
-
-\subparagraph{Loops}
-
-The
-
-%\placedrawing[h]{}{Loops.}{}
-
-%\placedrawing[h]{}{Reduce loop.}{}
-
-%\placedrawing[h]{}{Scan loop.}{}
-
-\paragraph{Map}
-
-The
-
-%\placedrawing[h]{}{Map.}{}
-
-\subparagraph{Cell}
-
-The
-
-%\placedrawing[h]{}{Cell.}{}
-
-\end{comment}
 
 \section{Heterogeneous architecture}
 
