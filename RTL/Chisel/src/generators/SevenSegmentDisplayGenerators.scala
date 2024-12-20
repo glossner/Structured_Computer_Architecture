@@ -1,85 +1,92 @@
-// package generators
-
-// import circt.stage.ChiselStage
-// //import firrtl.options.TargetDirAnnotation
-// //import sys.process._
-
-// import scabook.SevenSegmentDisplay
-
-// object SevenSegmentDisplayGenerator extends App {
-//    ChiselStage.emitSystemVerilog(
-//     new SevenSegmentDisplay, 
-//     Array("-disable-all-randomization", "-strip-debug-info"))
-// }
+// Licensed under the BSD 3-Clause License. 
+// See https://opensource.org/licenses/BSD-3-Clause for details.
 
 package generators
 
-import circt.stage.ChiselStage // CIRCT-only import
+import config.FirtoolConfig
+
+import circt.stage.ChiselStage // Correct import for Chisel 6.6.0
 import scabook.SevenSegmentDisplay
 
-object SevenSegmentDisplayGenerator extends App {
-  // Generate SystemVerilog directly with CIRCT
-  ChiselStage.emitSystemVerilog(
-    new scabook.SevenSegmentDisplay(), 
-    Array(
-      "-disable-all-randomization", // CIRCT-specific options
-      "-strip-debug-info"           // Option to strip debug metadata
+import sys.process._  // For process execution
+import java.io.File   // Import for File class
+import java.nio.file.{Files, StandardCopyOption} // For file operations
+
+object SevenSegmentDisplayGenerator extends App {  
+  //********************************************
+  //* Generate CIRCT/FIRRTL using ChiselStage
+  //*********************************************
+  (new ChiselStage).execute(
+    FirtoolConfig.firrtlArgs,
+    Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SevenSegmentDisplay)) 
+  )
+
+  //******************************************
+  //* Generate CLEAN SystemVerilog 
+  //*******************************************
+  ChiselStage.emitSystemVerilogFile(
+    new SevenSegmentDisplay, 
+    firtoolOpts = Array("-strip-debug-info") 
+  )
+
+  // Move the generated file
+  val sourceFile = new File("SevenSegmentDisplay.sv") // File in the root directory
+  val targetFile = new File(FirtoolConfig.generatedSystemVerilogCleanPath + "/SevenSegmentDisplay.sv") 
+
+  Files.move(
+    sourceFile.toPath,
+    targetFile.toPath,
+    StandardCopyOption.REPLACE_EXISTING // Overwrite if the file exists
+  )
+
+
+  //***************************************
+  //* Generate Annotated Verilog 
+  //***************************************
+  (new ChiselStage).execute(
+    FirtoolConfig.verilogAnnotatedArgs,
+    Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SevenSegmentDisplay)) 
+  )
+
+
+  //*********************************************
+  //* Generate CLEAN Verilog using system firtool
+  // ********************************************
+  if (FirtoolConfig.firtoolPath.nonEmpty) { 
+
+    val firrtlFile = new File(FirtoolConfig.generatedFirRTLPath + "/SevenSegmentDisplay.fir.mlir")
+    val verilogFile = new File(FirtoolConfig.generatedVerilogCleanPath + "/SevenSegmentDisplay.v")
+
+    val firtoolCleanVerilogCommand = Seq(
+      "firtool",
+      "-o", verilogFile.getAbsolutePath,
+      "--verilog", 
+      "--strip-debug-info", 
+      firrtlFile.getAbsolutePath, 
     )
+
+    val result = firtoolCleanVerilogCommand.!  // Execute the command
+
+    if (result != 0) {
+      println(s"Error: firtool execution failed with code $result")
+    } else {
+      println("Verilog generated successfully!")
+    }
+
+  }
+
+  //**************************
+  //* Generate Circuit Diagram
+  //**************************
+
+
+ //**********************************
+ //* Parameter HELP
+ //***********************************
+ (new ChiselStage).execute(
+    Array(
+      "--help" 
+    ),
+    Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new SevenSegmentDisplay))
   )
 }
-
-
-
-
-// object SevenSegmentDisplayGenerators {
-//   def main(args: Array[String]): Unit = {
-//     // Base target directory
-//     val targetDir = "target"
-
-//     // Subdirectories for specific outputs
-//     val firrtlDir = s"$targetDir/firrtl"
-//     val verilogDir = s"$targetDir/verilog"
-//     val diagramDir = s"$targetDir/diagrams"
-
-//     // Generate FIRRTL
-//     (new ChiselStage).execute(
-//       Array("-X", "firrtl"),
-//       Seq(
-//         ChiselGeneratorAnnotation(() => new scabook.SevenSegmentDisplay),
-//         TargetDirAnnotation(firrtlDir)
-//       )
-//     )
-
-//     // Generate SystemVerilog
-//     (new ChiselStage).execute(
-//       Array("-X", "verilog"),
-//       Seq(
-//         ChiselGeneratorAnnotation(() => new scabook.SevenSegmentDisplay),
-//         TargetDirAnnotation(verilogDir)
-//       )
-//     )
-
-//     // Use `firtool` to generate circuit diagrams from FIRRTL
-//     val firFile = s"$firrtlDir/SevenSegmentDisplay.fir"
-//     val diagramFile = s"$diagramDir/SevenSegmentDisplay.svg"
-
-//     // Ensure the diagrams directory exists
-//     new java.io.File(diagramDir).mkdirs()
-
-//     // Firtool command to generate the SVG diagram
-//     val firtoolCmd = s"firtool $firFile --output-file=$diagramFile --format=svg"
-
-//     try {
-//       println(s"Running: $firtoolCmd")
-//       val result = firtoolCmd.!
-//       if (result != 0) {
-//         throw new RuntimeException(s"firtool failed with exit code $result")
-//       } else {
-//         println(s"Diagram successfully generated: $diagramFile")
-//       }
-//     } catch {
-//       case e: Exception =>
-//         println(s"Error running firtool: ${e.getMessage}")
-//     }
-//   }
-// }

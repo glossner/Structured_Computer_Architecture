@@ -31,10 +31,9 @@ lazy val root = (project in file("."))
 
     // Add custom source directory for generators
     Compile / unmanagedSourceDirectories += baseDirectory.value / "src" / "generators",
-
-
+ 
     // Enable SBT logging
-    logLevel := Level.Debug, // Enable verbose logging
+    //logLevel := Level.Debug, // Enable verbose logging
     
     // Enable logging by passing JVM properties to the application
     Compile / run / fork := true,
@@ -44,5 +43,13 @@ lazy val root = (project in file("."))
       "-Dorg.slf4j.simpleLogger.defaultLogLevel=WARN", // Set log level to WARN
       "-Dorg.slf4j.simpleLogger.showDateTime=true",    // Optional: Show timestamps
       "-Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd HH:mm:ss" // Optional: Timestamp format
+    ),
+
+    Compile / runMain / javaOptions ++= Seq(
+      "-Xmx4G",
+      "-Dchisel.firtool=true",
+      "-Dorg.slf4j.simpleLogger.defaultLogLevel=WARN", 
+      "-Dorg.slf4j.simpleLogger.showDateTime=true",    
+      "-Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd HH:mm:ss" 
     )
   )
