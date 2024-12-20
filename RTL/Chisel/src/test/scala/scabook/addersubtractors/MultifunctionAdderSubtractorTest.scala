@@ -13,8 +13,8 @@ class MultifunctionAdderSubtractorTest extends AnyFlatSpec {
   "MultifunctionAdder" should "correctly compute addition and subtraction for all opcodes and handle overflow/underflow with truncation" in {
     simulate(new MultifunctionAdderSubtractor) { dut =>
       def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt, expectedCarry: Boolean): Unit = {
-        dut.io.a.poke(a.U)
-        dut.io.b.poke(b.U)
+        dut.io.a.poke(a.U(64.W))
+        dut.io.b.poke(b.U(64.W))
         dut.io.opcode.poke(opcode)
         dut.clock.step()
         val result = dut.io.result.peek().litValue
@@ -36,34 +36,39 @@ class MultifunctionAdderSubtractorTest extends AnyFlatSpec {
       )
 
       for ((opcode, signed, width) <- opcodes) {
-        val maxVal = (1 << (width - 1)) - 1
-        val minVal = if (signed) -(1 << (width - 1)) else 0
-        val truncMask = (1 << width) - 1
+ 
+        val isSub = opcode(3).litToBoolean        
+        val isAdd = !isSub
 
-        // Non-corner case: 4 + 3
-        val isSub = opcode(3).litToBoolean
-        val expected = if(isSub) {
-            1
-        } else {
-            7
-        }
+
+        // Non-corner case: 4 + 3 or 4 - 3
+        val expected = if (isSub) (4 - 3)  else (4 + 3)
         testOperation(4, 3, opcode, expected, false)
 
-        // FIXME: Need to distinguish between add and subtract
         // Test overflow
-        // if (signed) {
-        //   testOperation(maxVal, 1, opcode, ((maxVal + 1) & truncMask), true)
-        // } else {
-        //   testOperation(maxVal, 1, opcode, ((maxVal + 1) & truncMask), true)
-        // }
+        val minVal = if (signed) -(1 << (width - 1)) else 0
+        val maxVal = if (signed) {
+        (BigInt(1) << (width - 1)) - 1 // Signed maximum
+        } else {
+        (BigInt(1) << width) - 1       // Unsigned maximum
+        }
 
-        // Test underflow
-        // val underflowOpcode = if (signed) Opcode.SUB_S8 else Opcode.SUB_U8
-        // if (signed) {
-        //   testOperation(minVal, 1, underflowOpcode, ((minVal - 1) & truncMask), true)
-        // } else {
-        //   testOperation(0, 1, underflowOpcode, ((0 - 1) & truncMask), true)
-        // }
+        val truncMask = (BigInt(1) << width) - 1 
+
+        if (isAdd) {
+          val overflowExpected = if (signed) maxVal + 1 else BigInt(0)  //maxVal+1 because result is returned a UInt
+          val overflowCarry = !signed 
+            
+          println(s"Opcode: $opcode, Signed: $signed, Width: $width")
+          println(s"MaxVal: $maxVal, MinVal: $minVal")
+          println(s"OverflowExpected: $overflowExpected, OverflowCarry: $overflowCarry")
+
+          testOperation(maxVal, 1, opcode, overflowExpected, overflowCarry)
+        }
+
+ 
+        // FIXME: Test Underflow
+
       }
     }
   }

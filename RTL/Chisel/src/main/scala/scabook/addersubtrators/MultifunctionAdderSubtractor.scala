@@ -43,6 +43,7 @@ class MultifunctionAdderSubtractor extends Module {
 
   // Decode control signals
   val isSub = io.opcode(3) // MSB: 1 for Subtraction, 0 for Addition
+  val isAdd = !isSub
   val isSigned = io.opcode(2) // Bit 2: 1 for Signed, 0 for Unsigned
   val operandSize = io.opcode(1, 0) // Bits 1-0: 00 for 8-bit, 01 for 16-bit, 10 for 32-bit, 11 for 64-bit
 
@@ -56,8 +57,9 @@ class MultifunctionAdderSubtractor extends Module {
   }
 
   // Mask inputs to the appropriate width
-  val aEffective = io.a & ((1.U << width) - 1.U)
-  val bEffective = io.b & ((1.U << width) - 1.U)
+  val mask = ((1.U << width) - 1.U)
+  val aEffective = io.a & mask
+  val bEffective = io.b & mask
 
   // Compute effective b for subtraction
   val bAdjusted = Mux(isSub, ~bEffective + 1.U, bEffective)
@@ -65,18 +67,24 @@ class MultifunctionAdderSubtractor extends Module {
   // Perform addition or subtraction
   val fullResult = Mux(isSigned,
     (aEffective.asSInt +& bAdjusted.asSInt).asUInt, // Signed operation
-    (aEffective +& bAdjusted)                      // Unsigned operation
+    (aEffective +& bAdjusted)                       // Unsigned operation
   )
+
+  // Clip it to the datatype width
+  val truncatedResult = fullResult & mask
 
    // Extend the result to 64 bits
   val extendedResult = Mux(isSigned,
-    fullResult.asSInt.pad(64).asUInt, // Sign-extend for signed operations
-    fullResult.pad(64)                // Zero-extend for unsigned operations
+    truncatedResult.asSInt.pad(64).asUInt, // Sign-extend for signed operations
+    truncatedResult.pad(64)                // Zero-extend for unsigned operations
   )
 
   // Assign the extended result to output
-  io.result := extendedResult
+  io.result := truncatedResult
 
-   // Carry out is 0 for signed operations, else it checks the MSB beyond the effective width
-  io.carryOut := Mux(isSigned, false.B, isSub && aEffective < bEffective) // For unsigned subtraction, carryOut indicates borrow
+   // Carry out logic
+  // For unsigned operations: carryOut is set if there's an overflow (addition) or borrow (subtraction)
+  io.carryOut := Mux(isSigned, false.B, 
+    Mux(isAdd, fullResult > mask, aEffective < bEffective) // Overflow for addition, borrow for subtraction
+    )
 }
