@@ -24,7 +24,7 @@
 %\usepackage{epic,eepic}
 %\usepackage{pstricks}
 
-\usepackage{mathptmx, listings, framed, xcolor}
+\usepackage{mathptmx, framed, xcolor}
 
 \definecolor{shadecolor}{rgb}{0.97,0.97,0.97} % light gray code background
 %\definecolor{shadecolor}{rgb}{1.0,1.0,1.0} % white code background (saves ink)
@@ -46,56 +46,32 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Table of Contents Formatting
-% - Code listings is fragile and complex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage{tocloft}  % Code listings and ToC Control
-\usepackage{etoolbox}
-% The first argument (2em) is the indentation of \subsubsection entries in the ToC.
-%The second argument (3em) controls the width allotted for the section numbering.
-\cftsetindents{subsubsec}{9em}{3em} 
-\cftsetindents{paragraph}{12em}{3em} 
+\usepackage{listings}
+\usepackage{shorttoc}   % Creates a short TOC
+\usepackage{tocbibind}  % Adds Bibliography/Index to TOC
+\usepackage{tocloft}    % Custom TOC spacing
+\usepackage{etoc}       % Enhanced TOC management
+\usepackage{etoolbox}   % Utility package for patching commands
 
-% Table of Contents spacing for Table tag
-\setlength{\cftbeforeloftitleskip}{0pt}     % Default spacing before the title
-\setlength{\cftafterloftitleskip}{0pt}      % Default spacing after the title
-\setlength{\cftbeforeloftitleskip}{1em}   
+% Register List of Listings with tocloft
+\newcommand{\listoflistingsheading}{\section*{\lstlistlistingname}} % Optional heading
 
-\renewcommand{\lstlistlistingname}{Code Listings}
-% Register List of Listings with tocloft and customize spacing
-\makeatletter
-% Define lengths for List of Listings title
-\newlength{\cftbeforelstlistlistingtitleskip}
-\newlength{\cftafterlstlistlistingtitleskip}
-\setlength{\cftbeforelstlistlistingtitleskip}{1em} % Space before title
-\setlength{\cftafterlstlistlistingtitleskip}{0.5em} % Space after title
+% Define lengths for List of Listings title spacing
+\newlength{\cftbeforeloltitleskip}
+\newlength{\cftafterloltitleskip}
+\setlength{\cftbeforeloltitleskip}{1em}  % Space before title
+\setlength{\cftafterloltitleskip}{0.5em} % Space after title
 
-% Define lengths for List of Listings chapter entries
-\newlength{\cftbeforelstlistingchapterskip}
-\newlength{\cftafterlstlistingchapterskip}
-\setlength{\cftbeforelstlistingchapterskip}{1em} % Space before each chapter
-\setlength{\cftafterlstlistingchapterskip}{0.5em} % Space after each chapter
-
-% Patch \lstlistoflistings for title spacing
+% Patch \lstlistoflistings for spacing
 \patchcmd{\lstlistoflistings}
   {\@starttoc{lol}}
-  {\vspace{\cftbeforelstlistlistingtitleskip}\@starttoc{lol}\vspace{\cftafterlstlistlistingtitleskip}}
+  {\vspace{\cftbeforeloltitleskip}\@starttoc{lol}\vspace{\cftafterloltitleskip}}
   {}{}
 
-% Add spacing for chapters in List of Listings
-% This requires custom chapter formatting within the List of Listings
-\renewcommand{\l@chapter}[2]{%
-  \ifnum \c@tocdepth >-2\relax
-    \addvspace{\cftbeforelstlistingchapterskip}% Space before chapter
-    \@dottedtocline{0}{1.5em}{2.3em}{\bfseries #1}{#2}%
-    \addvspace{\cftafterlstlistingchapterskip}% Space after chapter
-  \fi}
 \makeatother
 
 
-\usepackage{tocbibind}
-\usepackage{shorttoc}
-\usepackage{minitoc}
-\dominitoc % Initialize mini tables of contents
 
 %%%%%%%%%%%%%%%%%%%%%%
 % Citations
@@ -312,13 +288,19 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \listoftables
 %\addcontentsline{toc}{chapter}{List of Tables}
 
+
 \lstlistoflistings
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MAIN DOCUMENT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \mainmatter
 \pagenumbering{arabic}
+
+\setcounter{tocdepth}{2}% local TOC displays only sections
+\etocsettocstyle{}{} % No title or end content in local table of contents
 
 %\renewcommand{\chaptername}{Section}
 
@@ -341,7 +323,7 @@ Most of the descriptions of the structures and the simulation of their behavior 
 % Chapter Arithmetic
 %*************************
 \chapter{Number Systems}\label{chapt:number_systems}
-\minitoc
+\localtableofcontents
 \include{01_01_1_number_systems}
 \include{01_01_2_decimal_arithmetic}
 \include{01_01_3_positional_notation}
@@ -351,51 +333,64 @@ Most of the descriptions of the structures and the simulation of their behavior 
 % Chapter Formal Notation
 %*************************
 \chapter{Numerical Sets}
-\minitoc
+\localtableofcontents
 \include{01_01_5_formal_notation}
 
 %*********************************
 % Number Representations
 %*********************************
 \chapter{Finite Unsigned Integer Binary Representations in $\mathbb{N}$}
-\minitoc
+\localtableofcontents
 \include{01_02_1_unsigned_integers}
 
 \chapter{Finite Signed Binary Integer Representations in $\mathbb{Z}$}
-\minitoc
+\localtableofcontents
 \include{01_02_2_signed_integers}
 
 \chapter{Finite Real Number Representations in $\mathbb{R}$}
-\minitoc
+\localtableofcontents
 \include{01_02_3_floating_point}
 
 \chapter{Character Representations}
-\minitoc
+\localtableofcontents
 \include{01_02_4_character_encodings}
 
 %*************************
 % Part 1 Summary
 %*************************
 \chapter{Summary of Number Systems and Representations}
-\minitoc
+\localtableofcontents
 \include{01_03_1_part1_summary}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{FROM GATES TO PROCESSORS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Combinational Circuits:  No-Loop, Zero-Order Systems (0-OS)}\label{lect1}
-\minitoc
+\localtableofcontents
+
 \include{02_combinational_circuits_0-OS}
+\localtableofcontents
+
 \include{03_memory_circuits_1-OS}
+\localtableofcontents
+
 \include{04_automata_2-OS}
+\localtableofcontents
+
 \include{05_processors_3-OS}
+\localtableofcontents
 \include{05b_ILP}
 
 
 \part{COMPUTING}
 \include{06_von_neumann_4-OS}
+\localtableofcontents
+
 \include{07_harvard_5-OS}
+\localtableofcontents
+
 \include{08_parallel_computing_N-OS}
+\localtableofcontents
 %\include{09_open_problems}
 
 
@@ -409,23 +404,39 @@ Most of the descriptions of the structures and the simulation of their behavior 
 
 \chapter{Introduction to Chisel}
 \include{A001_Chisel}
+\localtableofcontents
 
 \chapter{Introduction to System Verilog}
 \include{A002_System_Verilog}
+\localtableofcontents
 
 \chapter{Chisel Compared with System Verilog}
 \include{A003_Chisel_vs_System_Verilog}
-
+\localtableofcontents
 
 \include{A01_implementations}
-\include{A02_simulations}
-\include{A03_toyRISCimp}
-\include{A04_pipelinedToyRISCimp}
-\include{A05_pipeForwardToyRISCimp}
-\include{A06_verilogToyRISC}
-\include{A07_verilogFIFO}
-\include{A08_pRISC}
+\localtableofcontents
 
+\include{A02_simulations}
+\localtableofcontents
+
+\include{A03_toyRISCimp}
+\localtableofcontents
+
+\include{A04_pipelinedToyRISCimp}
+\localtableofcontents
+
+\include{A05_pipeForwardToyRISCimp}
+\localtableofcontents
+
+\include{A06_verilogToyRISC}
+\localtableofcontents
+
+\include{A07_verilogFIFO}
+\localtableofcontents
+
+\include{A08_pRISC}
+\localtableofcontents
 
 
 
