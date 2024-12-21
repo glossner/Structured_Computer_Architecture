@@ -153,7 +153,7 @@ object GenerateHardware extends App {
       val yosysBLIFcommand = Seq(
           "yosys",
           "-p",
-          s"read_verilog $systemVerilogFile; synth -top $moduleName; write_blif $blifFile"
+          s"read_verilog -sv $systemVerilogFile; synth -top $moduleName; write_blif $blifFile"
       )
       val blifResult = yosysBLIFcommand.!  
       if (blifResult != 0) {
@@ -166,7 +166,7 @@ object GenerateHardware extends App {
       val yosysJSONcommand = Seq(
           "yosys",
           "-p",
-          s"read_verilog $systemVerilogFile; synth -top $moduleName; write_json $jsonFile"
+          s"read_verilog -sv $systemVerilogFile; synth -top $moduleName; write_json $jsonFile"
         )
       val jsonResult = yosysJSONcommand.!  // Execute the command
       if (jsonResult != 0) {
