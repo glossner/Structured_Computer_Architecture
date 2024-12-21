@@ -30,7 +30,7 @@ lazy val root = (project in file("."))
     addCompilerPlugin("org.chipsalliance" % "chisel-plugin" % chiselVersion cross CrossVersion.full),
 
     // Add custom source directory for generators
-    Compile / unmanagedSourceDirectories += baseDirectory.value / "src" / "generators",
+    Compile / unmanagedSourceDirectories += baseDirectory.value / "generators",
  
     // Enable SBT logging
     //logLevel := Level.Debug, // Enable verbose logging
@@ -45,11 +45,11 @@ lazy val root = (project in file("."))
       "-Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd HH:mm:ss" // Optional: Timestamp format
     ),
 
-    Compile / runMain / javaOptions ++= Seq(
-      "-Xmx4G",
-      "-Dchisel.firtool=true",
-      "-Dorg.slf4j.simpleLogger.defaultLogLevel=WARN", 
-      "-Dorg.slf4j.simpleLogger.showDateTime=true",    
-      "-Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd HH:mm:ss" 
-    )
+    // Compile / runMain / javaOptions ++= Seq(
+    //   "-Xmx4G",
+    //   "-Dchisel.firtool=true",
+    //   "-Dorg.slf4j.simpleLogger.defaultLogLevel=WARN", 
+    //   "-Dorg.slf4j.simpleLogger.showDateTime=true",    
+    //   "-Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd HH:mm:ss" 
+    // )
   )

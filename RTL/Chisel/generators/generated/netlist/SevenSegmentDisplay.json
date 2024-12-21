@@ -4,7 +4,7 @@
     "SevenSegmentDisplay": {
       "attributes": {
         "top": "00000000000000000000000000000001",
-        "src": "generated_verilog_annotated/SevenSegmentDisplay.v:2.1-27.10"
+        "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:2.1-27.10"
       },
       "ports": {
         "clock": {
@@ -635,35 +635,35 @@
           "hide_name": 0,
           "bits": [ "0", "1", "1", "1", "1", "1", "1", "0", "0", "0", "0", "1", "1", "0", "1", "0", "1", "1", "0", "1", "1", "1", "0", "0", "1", "1", "1", "1", "1", "1", "0", "0", "1", "1", "0", "1", "1", "0", "1", "1", "0", "1", "1", "1", "1", "1", "1", "0", "1", "0", "0", "0", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "0", "1", "1", "1", "1", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ],
           "attributes": {
-            "src": "generated_verilog_annotated/SevenSegmentDisplay.v:9.20-9.24"
+            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:9.20-9.24"
           }
         },
         "clock": {
           "hide_name": 0,
           "bits": [ 2 ],
           "attributes": {
-            "src": "generated_verilog_annotated/SevenSegmentDisplay.v:3.16-3.21"
+            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:3.16-3.21"
           }
         },
         "io_binIn": {
           "hide_name": 0,
           "bits": [ 4, 5, 6, 7 ],
           "attributes": {
-            "src": "generated_verilog_annotated/SevenSegmentDisplay.v:5.16-5.24"
+            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:5.16-5.24"
           }
         },
         "io_segOut": {
           "hide_name": 0,
           "bits": [ 8, 9, 10, 11, 12, 13, 14 ],
           "attributes": {
-            "src": "generated_verilog_annotated/SevenSegmentDisplay.v:6.16-6.25"
+            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:6.16-6.25"
           }
         },
         "reset": {
           "hide_name": 0,
           "bits": [ 3 ],
           "attributes": {
-            "src": "generated_verilog_annotated/SevenSegmentDisplay.v:4.16-4.21"
+            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:4.16-4.21"
           }
         }
       }
