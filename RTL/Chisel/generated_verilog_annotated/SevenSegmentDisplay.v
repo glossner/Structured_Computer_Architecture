@@ -7,7 +7,7 @@ module SevenSegmentDisplay(	// src/main/scala/scabook/SevenSegmentDisplay.scala:
 );
 
   wire [15:0][6:0] _GEN =
-    '{7'h0,
+    {7'h0,
       7'h0,
       7'h0,
       7'h0,
