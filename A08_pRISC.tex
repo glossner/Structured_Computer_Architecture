@@ -4,27 +4,26 @@
 
 This appendix brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core toyRISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. First, the micro-architectures associated with the system components will be described.  The architecture of the entire system is then defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
 
-The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}. The listed module contains two modules -- HOST and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the two module in top are:
+The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}. The listed module contains three modules -- HOST, INTERFACES and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the three module in top are:
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1\textwidth]{A08_hetSys.png}
+\caption{Heterogeneous system.}
+\label{imm:hetsys}
+\end{figure}
+
 \begin{description}
-    \item[from HOST to INTERFACES:] program \& data 64-bit path and the synchronizing signals:
+    \item[from HOST to ACCELERATOR:] program \& data 64-bit path and the synchronizing signals:
         \begin{description}
             \item[commands:] write programs, initialize programs and write data or transfer parameters; each transfer is done on 64-bit words per clock cycle
-            \item[flags:] indicating that INTERFACES is not ready to accept the current transfer of program or data
+            \item[flags:] indicating that interfaces in ACCELERATOR are not ready to accept the current transfer of program or data
         \end{description}
-    \item[from INTERFACES to HOST:] 64-bit data path and the synchronizing signals:
+    \item[from ACCELERATOR to HOST:] 64-bit data path and the synchronizing signals:
         \begin{description}
-            \item[command:] read data back to HOST
-            \item[flags:] indicating that INTERFACES is not ready to deliver  data
-        \end{description}
-    \item[from INTERFACES to ACCELERATOR:] two data paths, one for programs, command and parameters, and another for data
-         \begin{description}
-            \item[commands:] read signal for program, command and parameters, and read signal for data
-            \item[flags:] indicating that INTERFACES is not ready to deliver program, command and parameters, and data
-        \end{description}
-    \item[from ACCELERATOR to INTERFACES:] 64-bit data path and the synchronizing signals:
-        \begin{description}
-            \item[command:] sends to INTERFACES data in 64-bit words
-            \item[flag:] indicating that INTERFACES is not ready to accept the current 64-bit data word 
+            \item[command:] sends to HOST data in 64-bit words
+            \item[flag:] indicating that the interface ACCELERATOR in is not ready to send a 64-bit data word 
         \end{description}
     \item[synchronizing signals:] used to signal to  HOST the end of a computation generating an {\bf {\em interrupt}} answered by HOST. 
 \end{description}
@@ -37,6 +36,8 @@ The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}.
                     {\verilogSourceDir/A08_hetSys.sv}
 
 The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
+
+
 
 This introduction is followed by the description of the micro-architectures, the description of the hardware structure and examples of use in simulation of the designed system.
 
@@ -720,7 +721,7 @@ The program multiplying two matrices written on host calls the components from t
 }
 
 {\em 
-\includeverilogcode[caption={The program which includes the kernel library FLA 0.1 used by host. File: 0\_aProgram6.sv  (SystemVerilog)}, 
+\includeverilogcode[caption={The program on accelerator which includes the kernel library FLA 0.1 used by host. File: 0\_aProgram6.sv  (SystemVerilog)}, 
                     label={lst:aProgram6}, 
                     firstline=1, 
                     firstnumber=1, 
