@@ -31,7 +31,8 @@ object GenerateHardware extends App {
 
   // Modules to Generate
   val modulesToGenerate = Seq(
-    (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay")
+    //(() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
+    (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
   )
 
 
