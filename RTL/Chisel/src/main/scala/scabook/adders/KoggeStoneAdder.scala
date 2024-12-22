@@ -6,49 +6,43 @@ package scabook.adders
 import chisel3._
 import chisel3.util._
 
-// Kogge-Stone Adder Implementation
-class KoggeStoneAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
+class CarryLookAheadAdderDualMode(width: Int) extends Module {
+  val io = IO(new Bundle {
+    val a = Input(UInt(width.W))       // Unsigned input A
+    val b = Input(UInt(width.W))       // Unsigned input B
+    val carryIn = Input(Bool())        // Carry-in
+    val isSigned = Input(Bool())       // Control signal: true for signed, false for unsigned
+    val sum = Output(UInt(width.W))    // Result (interpreted based on isSigned)
+    val carryOut = Output(Bool())      // Carry-out for unsigned addition
+    val overflow = Output(Bool())      // Overflow for signed addition
+  })
 
-  val a = io.a.asUInt
-  val b = io.b.asUInt
-  
-  val g = Wire(Vec(width, Bool())) // Generate signals
-  val p = Wire(Vec(width, Bool())) // Propagate signals
-  val c = Wire(Vec(width + 1, Bool())) // Carry signals
+  // Propagate and Generate signals
+  val propagate = Wire(Vec(width, Bool()))
+  val generate = Wire(Vec(width, Bool()))
+  val carry = Wire(Vec(width + 1, Bool())) // Includes the carry-out bit
 
-  // Initialize generate and propagate signals
+  carry(0) := io.carryIn // Initial carry-in
+
+  // Compute propagate and generate signals
   for (i <- 0 until width) {
-    g(i) := a(i) & b(i) // Generate: G = A & B
-    p(i) := a(i) ^ b(i) // Propagate: P = A ^ B
+    propagate(i) := io.a(i) ^ io.b(i)
+    generate(i) := io.a(i) & io.b(i)
   }
 
-  // Initialize carry-in
-  c(0) := false.B
-
-  // Kogge-Stone parallel prefix computation
-  for (stage <- 0 until log2Ceil(width)) {
-    for (i <- 0 until width) {
-      if (i >= (1 << stage)) {
-        val prevG = g(i - (1 << stage))
-        val prevP = p(i - (1 << stage))
-
-        g(i) := g(i) | (p(i) & prevG)
-        p(i) := p(i) & prevP
-      }
-    }
+  // Carry computation using Carry Look-Ahead logic
+  for (i <- 1 to width) {
+    carry(i) := generate(i - 1) | (propagate(i - 1) & carry(i - 1))
   }
 
-  // Compute carry-out for each bit
-  for (i <- 0 until width) {
-    c(i + 1) := g(i) | (p(i) & c(i))
-  }
-
-  // Compute sum
+  // Sum computation
   val sumBits = Wire(Vec(width, Bool()))
   for (i <- 0 until width) {
-    sumBits(i) := p(i) ^ c(i)
+    sumBits(i) := propagate(i) ^ carry(i)
   }
 
-  io.sum := sumBits.asUInt.asTypeOf(gen) // Ensure output type matches input type
-  io.carryOut := c(width)                // Assign carry-out from the last carry bit
+  // Outputs
+  io.sum := sumBits.asUInt
+  io.carryOut := carry(width) // Carry-out for unsigned addition
+  io.overflow := io.isSigned && (carry(width - 1) ^ carry(width)) // Overflow for signed addition
 }

@@ -1,14 +1,19 @@
-// Licensed under the BSD 3-Clause License. 
-// See https://opensource.org/licenses/BSD-3-Clause for details.
-
 package scabook.adders
 
 import chisel3._
 import chisel3.util._
 
-//  ripple-carry adders inherently operate on individual bits
-//  constrain T to types that support indexing
-class RippleCarryAdder[T <: Bits](gen: T, width: Int) extends Adder(gen) {
+class RippleCarryAdderDualMode(width: Int) extends Module {
+  val io = IO(new Bundle {
+    val a = Input(UInt(width.W))       // Input A
+    val b = Input(UInt(width.W))       // Input B
+    val carryIn = Input(Bool())        // Carry-in
+    val isSigned = Input(Bool())       // Control signal: true for signed, false for unsigned
+    val sum = Output(UInt(width.W))    // Sum output
+    val carryOut = Output(Bool())      // Carry-out for unsigned addition
+    val overflow = Output(Bool())      // Overflow for signed addition
+  })
+
   val carries = Wire(Vec(width + 1, Bool()))
   val sumBits = Wire(Vec(width, Bool()))
 
@@ -23,6 +28,7 @@ class RippleCarryAdder[T <: Bits](gen: T, width: Int) extends Adder(gen) {
     carries(i + 1) := carry
   }
 
-  io.sum := sumBits.asUInt.asTypeOf(gen) // Convert sum bits to UInt and then to `gen`
-  io.carryOut := carries(width)         // Final carry-out
+  io.sum := sumBits.asUInt          // Sum output
+  io.carryOut := carries(width)     // Carry-out for unsigned addition
+  io.overflow := io.isSigned && (carries(width - 1) ^ carries(width)) // Overflow for signed addition
 }

@@ -6,20 +6,28 @@ package scabook.adders
 import chisel3._
 import chisel3.util._
 
-class CarryLookAheadAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
-  require(width > 0, "Width must be greater than 0")
+class CarryLookAheadAdder(width: Int) extends Module {
+  val io = IO(new Bundle {
+    val a = Input(UInt(width.W))       // Unsigned input A
+    val b = Input(UInt(width.W))       // Unsigned input B
+    val carryIn = Input(Bool())        // Carry-in
+    val isSigned = Input(Bool())       // Control signal: true for signed, false for unsigned
+    val sum = Output(UInt(width.W))    // Result (interpreted based on isSigned)
+    val carryOut = Output(Bool())      // Carry-out for unsigned addition
+    val overflow = Output(Bool())      // Overflow for signed addition
+  })
 
   // Propagate and Generate signals
   val propagate = Wire(Vec(width, Bool()))
   val generate = Wire(Vec(width, Bool()))
   val carry = Wire(Vec(width + 1, Bool())) // Includes the carry-out bit
 
-  carry(0) := false.B // Initial carry-in is zero
+  carry(0) := io.carryIn // Initial carry-in
 
   // Compute propagate and generate signals
   for (i <- 0 until width) {
-    propagate(i) := io.a.asUInt(i) ^ io.b.asUInt(i)
-    generate(i) := io.a.asUInt(i) & io.b.asUInt(i)
+    propagate(i) := io.a(i) ^ io.b(i)
+    generate(i) := io.a(i) & io.b(i)
   }
 
   // Carry computation using Carry Look-Ahead logic
@@ -28,12 +36,13 @@ class CarryLookAheadAdder[T <: Data](gen: T, width: Int) extends Adder(gen) {
   }
 
   // Sum computation
-  val sum = Wire(Vec(width, Bool()))
+  val sumBits = Wire(Vec(width, Bool()))
   for (i <- 0 until width) {
-    sum(i) := propagate(i) ^ carry(i)
+    sumBits(i) := propagate(i) ^ carry(i)
   }
 
   // Outputs
-  io.sum := sum.asUInt.asTypeOf(gen)
-  io.carryOut := carry(width)
+  io.sum := sumBits.asUInt
+  io.carryOut := carry(width) // Carry-out for unsigned addition
+  io.overflow := io.isSigned && (carry(width - 1) ^ carry(width)) // Overflow for signed addition
 }

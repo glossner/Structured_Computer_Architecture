@@ -25,14 +25,20 @@ object GenerateHardware extends App {
   val generatedSystemVerilogAnnotatedPath = "generators/generated/systemverilog_annotated" 
   val generatedSystemVerilogCleanPath = "generators/generated/systemverilog_clean" 
 
+  val generatedVerilogCleanPath = "generators/generated/verilog_clean"
+
   val generatedNetlistPath = "generators/generated/netlist"
   val generatedDiagramsPath = "generators/generated/diagrams"
 
 
   // Modules to Generate
   val modulesToGenerate = Seq(
-    //(() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
-    (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
+    // (() => new scabook.DeMux16, "DeMux16"),
+    // (() => new scabook.Mux4, "Mux4"),
+    // (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
+    // (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
+    // (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
+    (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
 
 
@@ -42,16 +48,20 @@ object GenerateHardware extends App {
 
   modulesToGenerate.foreach { case (module, moduleName) => 
     try {
-      println(" ")
+      println("  ")
+      println("###########################################################################")
       println(s"Processing module ${moduleName}")
-        
+      println("###########################################################################")
+      println("  ")
+
       generateFIRRTL(module, moduleName)
 
       //firtools generates SystemVerilog when --verilog is used
       //  there is no way to change this behavior
 
       generateSystemVerilogAnnotated(module, moduleName)
-      //generateSystemVerilogClean(module, moduleName)
+      generateSystemVerilogClean(module, moduleName)
+      convertSystemVerilogToVerilog(module, moduleName)
       generateNetlist(module, moduleName)
       generateSVG(module, moduleName)
     
@@ -63,6 +73,7 @@ object GenerateHardware extends App {
   }
 
   def generateFIRRTL(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: generateFIRTL")
     val firrtlBaseArgs = Array("--target", "firrtl",
                                 "--target-dir", generatedFirRTLPath)
     if(isCmdInstalled("firtool")) {
@@ -88,6 +99,7 @@ object GenerateHardware extends App {
   }
 
   def generateSystemVerilogAnnotated(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: generateSystemVerilogAnnotated")
     if ( isCmdInstalled("firtool")) {      
       val firrtlFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir.mlir")
       val systemVerilogFile = new File( generatedSystemVerilogAnnotatedPath + "/" + moduleName + ".v")
@@ -119,6 +131,7 @@ object GenerateHardware extends App {
   }
 
   def generateSystemVerilogClean(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: generateSystemVerilogClean")
     if ( isCmdInstalled("firtool")) {      
       val firrtlFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir.mlir")
       val systemVerilogFile = new File( generatedSystemVerilogCleanPath + "/" + moduleName + ".v")
@@ -143,9 +156,32 @@ object GenerateHardware extends App {
     }    
   }
 
+  def convertSystemVerilogToVerilog(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: convertSystemVerilogToVerilog")
+    if ( isCmdInstalled("sv2v")) {      
+      val systemVerilogCleanFile = new File( generatedSystemVerilogCleanPath + "/" + moduleName + ".v")
+      val systemVerilogCleanFilePath = systemVerilogCleanFile.getAbsolutePath()
+
+      val verilogCleanFile = new File( generatedVerilogCleanPath + "/" + moduleName + ".v")
+      val verilogCleanFilePath = verilogCleanFile.getAbsolutePath()
+
+      val sv2vCommand = Seq("sv2v", systemVerilogCleanFilePath)
+      val result = (sv2vCommand #> new File(verilogCleanFilePath)).!
+
+      if (result != 0) {
+        println(s"Error: sv2v execution failed with code $result")
+      } else {
+        println("Clean Verilog generated successfully!")
+      }
+    } else {
+      println("sv2v not installed. See: https://github.com/zachjs/sv2v")
+    }    
+  }
+
   def generateNetlist(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: generateNetlist")
     if ( isCmdInstalled("yosys")) {      
-      val systemVerilogFile = new File( generatedSystemVerilogCleanPath + "/" + moduleName + ".v")
+      val systemVerilogFile = new File( generatedVerilogCleanPath + "/" + moduleName + ".v")
       val blifFile = new File( generatedNetlistPath + "/" + moduleName + ".blif")
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
 
@@ -181,7 +217,7 @@ object GenerateHardware extends App {
   }
 
   def generateSVG(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
-    // FIXME: netlistsvg doesn't have a --version so this throws an error but continues processing
+    println(s"${moduleName}: generateSVG")
     if ( isCmdInstalled("netlistsvg")) {      
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
       val jsonFileFullPath = jsonFile.getAbsolutePath()

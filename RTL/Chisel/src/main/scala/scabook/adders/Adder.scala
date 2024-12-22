@@ -5,23 +5,12 @@ package scabook.adders
 
 import chisel3._
 
-abstract class Adder[T <: Data](gen: T) extends Module {
+abstract class Adder(width: Int) extends Module {
+  require(width > 0, "Width must be greater than 0")
+
   val io = IO(new Bundle {
-    val a = Input(gen.cloneType)
-    val b = Input(gen.cloneType)
-    val sum = Output(gen.cloneType)
-    val carryIn = Input(Bool())
-    val carryOut = Output(Bool())
+    val a = Input(UInt(width.W))    // Input A
+    val b = Input(UInt(width.W))    // Input B
+    val sum = Output(UInt(width.W)) // Output sum
   })
-
-  // Signed and FixedPoint don't typically use carries
-  io.carryIn := DontCare
-  io.carryOut := DontCare
-
-  // Default companion object for Adder
-  object Adder {
-    def apply[T <: Data](gen: T, constructor: T => Adder[T]): Adder[T] = {
-      Module(constructor(gen))
-    }
-  }
 }

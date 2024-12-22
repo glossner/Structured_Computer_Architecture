@@ -7,37 +7,37 @@
 .names $true
 1
 .names $undef
-.names randomIndex[0] $auto$alumacc.cc:485:replace_alu$19.X[0]
+.names randomIndex[0] $auto$alumacc.cc:485:replace_alu$20.X[0]
 0 1
-.names randomIndex[1] randomIndex[0] $abc$208$new_n13
+.names randomIndex[1] randomIndex[0] $abc$209$new_n13
 1- 1
 -1 1
-.names randomIndex[2] $abc$208$new_n13 $abc$208$new_n14
+.names randomIndex[2] $abc$209$new_n13 $abc$209$new_n14
 10 1
-.names $abc$208$new_n14 reset $abc$208$auto$opt_dff.cc:253:combine_resets$17
+.names $abc$209$new_n14 reset $abc$209$auto$opt_dff.cc:253:combine_resets$18
 1- 1
 -1 1
 .names randomIndex[0] randomIndex[2] io_randomWave
 10 1
-.names clockToggle $abc$208$not$generators/generated/systemverilog_clean/WaveFormGenerator.v:63$5_Y
+.names clockToggle $abc$209$not$generators/generated/verilog_clean/WaveFormGenerator.v:21$5_Y
 0 1
-.names randomIndex[1] randomIndex[0] $auto$alumacc.cc:485:replace_alu$19.Y[1]
+.names randomIndex[1] randomIndex[0] $auto$alumacc.cc:485:replace_alu$20.Y[1]
 10 1
 01 1
-.names randomIndex[1] randomIndex[0] $abc$208$new_n19
+.names randomIndex[1] randomIndex[0] $abc$209$new_n19
 11 1
-.names $abc$208$new_n19 randomIndex[2] $auto$alumacc.cc:485:replace_alu$19.Y[2]
+.names $abc$209$new_n19 randomIndex[2] $auto$alumacc.cc:485:replace_alu$20.Y[2]
 10 1
 01 1
-.subckt $_SDFF_PP0_ C=clock D=$abc$208$not$generators/generated/systemverilog_clean/WaveFormGenerator.v:63$5_Y Q=clockToggle R=reset
-.subckt $_SDFF_PP0_ C=clock D=$auto$alumacc.cc:485:replace_alu$19.X[0] Q=randomIndex[0] R=$abc$208$auto$opt_dff.cc:253:combine_resets$17
-.subckt $_SDFF_PP0_ C=clock D=$auto$alumacc.cc:485:replace_alu$19.Y[1] Q=randomIndex[1] R=$abc$208$auto$opt_dff.cc:253:combine_resets$17
-.subckt $_SDFF_PP0_ C=clock D=$auto$alumacc.cc:485:replace_alu$19.Y[2] Q=randomIndex[2] R=$abc$208$auto$opt_dff.cc:253:combine_resets$17
-.names $auto$alumacc.cc:485:replace_alu$19.X[0] $auto$alumacc.cc:485:replace_alu$19.Y[0]
+.subckt $_SDFF_PP0_ C=clock D=$abc$209$not$generators/generated/verilog_clean/WaveFormGenerator.v:21$5_Y Q=clockToggle R=reset
+.subckt $_SDFF_PP0_ C=clock D=$auto$alumacc.cc:485:replace_alu$20.X[0] Q=randomIndex[0] R=$abc$209$auto$opt_dff.cc:253:combine_resets$18
+.subckt $_SDFF_PP0_ C=clock D=$auto$alumacc.cc:485:replace_alu$20.Y[1] Q=randomIndex[1] R=$abc$209$auto$opt_dff.cc:253:combine_resets$18
+.subckt $_SDFF_PP0_ C=clock D=$auto$alumacc.cc:485:replace_alu$20.Y[2] Q=randomIndex[2] R=$abc$209$auto$opt_dff.cc:253:combine_resets$18
+.names $auto$alumacc.cc:485:replace_alu$20.X[0] $auto$alumacc.cc:485:replace_alu$20.Y[0]
 1 1
-.names randomIndex[1] $auto$alumacc.cc:485:replace_alu$19.X[1]
+.names randomIndex[1] $auto$alumacc.cc:485:replace_alu$20.X[1]
 1 1
-.names randomIndex[2] $auto$alumacc.cc:485:replace_alu$19.X[2]
+.names randomIndex[2] $auto$alumacc.cc:485:replace_alu$20.X[2]
 1 1
 .names $false _GEN[0]
 1 1

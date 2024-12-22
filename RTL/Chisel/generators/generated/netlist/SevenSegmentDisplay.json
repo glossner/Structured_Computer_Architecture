@@ -4,7 +4,7 @@
     "SevenSegmentDisplay": {
       "attributes": {
         "top": "00000000000000000000000000000001",
-        "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:2.1-27.10"
+        "src": "generators/generated/verilog_clean/SevenSegmentDisplay.v:1.1-13.10"
       },
       "ports": {
         "clock": {
@@ -25,7 +25,7 @@
         }
       },
       "cells": {
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1151": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1152": {
           "hide_name": 1,
           "type": "$_NOT_",
           "parameters": {
@@ -41,7 +41,7 @@
             "Y": [ 15 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1152": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1153": {
           "hide_name": 1,
           "type": "$_NAND_",
           "parameters": {
@@ -59,7 +59,7 @@
             "Y": [ 16 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1153": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1154": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -79,7 +79,7 @@
             "Y": [ 17 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1154": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1155": {
           "hide_name": 1,
           "type": "$_NOR_",
           "parameters": {
@@ -97,7 +97,7 @@
             "Y": [ 18 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1155": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1156": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -117,7 +117,7 @@
             "Y": [ 8 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1156": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1157": {
           "hide_name": 1,
           "type": "$_NOR_",
           "parameters": {
@@ -135,7 +135,7 @@
             "Y": [ 19 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1157": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1158": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -155,7 +155,7 @@
             "Y": [ 20 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1158": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1159": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -175,7 +175,7 @@
             "Y": [ 9 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1159": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1160": {
           "hide_name": 1,
           "type": "$_ANDNOT_",
           "parameters": {
@@ -193,7 +193,7 @@
             "Y": [ 21 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1160": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1161": {
           "hide_name": 1,
           "type": "$_ANDNOT_",
           "parameters": {
@@ -211,7 +211,7 @@
             "Y": [ 22 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1161": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1162": {
           "hide_name": 1,
           "type": "$_OR_",
           "parameters": {
@@ -229,7 +229,7 @@
             "Y": [ 23 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1162": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1163": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -249,7 +249,7 @@
             "Y": [ 24 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1163": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1164": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -269,7 +269,7 @@
             "Y": [ 10 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1164": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1165": {
           "hide_name": 1,
           "type": "$_ORNOT_",
           "parameters": {
@@ -287,7 +287,7 @@
             "Y": [ 25 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1165": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1166": {
           "hide_name": 1,
           "type": "$_XOR_",
           "parameters": {
@@ -305,7 +305,7 @@
             "Y": [ 26 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1166": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1167": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -325,7 +325,7 @@
             "Y": [ 27 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1167": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1168": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -345,7 +345,7 @@
             "Y": [ 11 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1168": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1169": {
           "hide_name": 1,
           "type": "$_ORNOT_",
           "parameters": {
@@ -363,7 +363,7 @@
             "Y": [ 28 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1169": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1170": {
           "hide_name": 1,
           "type": "$_OR_",
           "parameters": {
@@ -381,7 +381,7 @@
             "Y": [ 29 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1170": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1171": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -401,7 +401,7 @@
             "Y": [ 12 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1171": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1172": {
           "hide_name": 1,
           "type": "$_XNOR_",
           "parameters": {
@@ -419,7 +419,7 @@
             "Y": [ 30 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1172": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1173": {
           "hide_name": 1,
           "type": "$_OR_",
           "parameters": {
@@ -437,7 +437,7 @@
             "Y": [ 31 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1173": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1174": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -457,7 +457,7 @@
             "Y": [ 13 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1174": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1175": {
           "hide_name": 1,
           "type": "$_OR_",
           "parameters": {
@@ -475,7 +475,7 @@
             "Y": [ 32 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1175": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1176": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -495,7 +495,7 @@
             "Y": [ 33 ]
           }
         },
-        "$abc$1150$auto$blifparse.cc:396:parse_blif$1176": {
+        "$abc$1151$auto$blifparse.cc:396:parse_blif$1177": {
           "hide_name": 1,
           "type": "$_MUX_",
           "parameters": {
@@ -517,115 +517,115 @@
         }
       },
       "netnames": {
-        "$abc$1150$new_n12": {
+        "$abc$1151$new_n12": {
           "hide_name": 1,
           "bits": [ 15 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n13": {
+        "$abc$1151$new_n13": {
           "hide_name": 1,
           "bits": [ 16 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n14": {
+        "$abc$1151$new_n14": {
           "hide_name": 1,
           "bits": [ 17 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n15": {
+        "$abc$1151$new_n15": {
           "hide_name": 1,
           "bits": [ 18 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n17": {
+        "$abc$1151$new_n17": {
           "hide_name": 1,
           "bits": [ 19 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n18": {
+        "$abc$1151$new_n18": {
           "hide_name": 1,
           "bits": [ 20 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n20": {
+        "$abc$1151$new_n20": {
           "hide_name": 1,
           "bits": [ 21 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n21": {
+        "$abc$1151$new_n21": {
           "hide_name": 1,
           "bits": [ 22 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n22": {
+        "$abc$1151$new_n22": {
           "hide_name": 1,
           "bits": [ 23 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n23": {
+        "$abc$1151$new_n23": {
           "hide_name": 1,
           "bits": [ 24 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n25": {
+        "$abc$1151$new_n25": {
           "hide_name": 1,
           "bits": [ 25 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n26": {
+        "$abc$1151$new_n26": {
           "hide_name": 1,
           "bits": [ 26 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n27": {
+        "$abc$1151$new_n27": {
           "hide_name": 1,
           "bits": [ 27 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n29": {
+        "$abc$1151$new_n29": {
           "hide_name": 1,
           "bits": [ 28 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n30": {
+        "$abc$1151$new_n30": {
           "hide_name": 1,
           "bits": [ 29 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n32": {
+        "$abc$1151$new_n32": {
           "hide_name": 1,
           "bits": [ 30 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n33": {
+        "$abc$1151$new_n33": {
           "hide_name": 1,
           "bits": [ 31 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n35": {
+        "$abc$1151$new_n35": {
           "hide_name": 1,
           "bits": [ 32 ],
           "attributes": {
           }
         },
-        "$abc$1150$new_n36": {
+        "$abc$1151$new_n36": {
           "hide_name": 1,
           "bits": [ 33 ],
           "attributes": {
@@ -635,35 +635,35 @@
           "hide_name": 0,
           "bits": [ "0", "1", "1", "1", "1", "1", "1", "0", "0", "0", "0", "1", "1", "0", "1", "0", "1", "1", "0", "1", "1", "1", "0", "0", "1", "1", "1", "1", "1", "1", "0", "0", "1", "1", "0", "1", "1", "0", "1", "1", "0", "1", "1", "1", "1", "1", "1", "0", "1", "0", "0", "0", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "0", "1", "1", "1", "1", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ],
           "attributes": {
-            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:9.20-9.24"
+            "src": "generators/generated/verilog_clean/SevenSegmentDisplay.v:11.15-11.19"
           }
         },
         "clock": {
           "hide_name": 0,
           "bits": [ 2 ],
           "attributes": {
-            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:3.16-3.21"
+            "src": "generators/generated/verilog_clean/SevenSegmentDisplay.v:7.8-7.13"
           }
         },
         "io_binIn": {
           "hide_name": 0,
           "bits": [ 4, 5, 6, 7 ],
           "attributes": {
-            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:5.16-5.24"
+            "src": "generators/generated/verilog_clean/SevenSegmentDisplay.v:9.14-9.22"
           }
         },
         "io_segOut": {
           "hide_name": 0,
           "bits": [ 8, 9, 10, 11, 12, 13, 14 ],
           "attributes": {
-            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:6.16-6.25"
+            "src": "generators/generated/verilog_clean/SevenSegmentDisplay.v:10.20-10.29"
           }
         },
         "reset": {
           "hide_name": 0,
           "bits": [ 3 ],
           "attributes": {
-            "src": "generators/generated/systemverilog_clean/SevenSegmentDisplay.v:4.16-4.21"
+            "src": "generators/generated/verilog_clean/SevenSegmentDisplay.v:8.8-8.13"
           }
         }
       }

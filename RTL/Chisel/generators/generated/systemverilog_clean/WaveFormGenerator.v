@@ -50,7 +50,7 @@ module WaveFormGenerator(
          io_clockWave
 );
 
-  wire [7:0] _GEN = {1'h0, 1'h0, 1'h0, 1'h0, 1'h1, 1'h0, 1'h1, 1'h0};
+  wire [7:0] _GEN = '{1'h0, 1'h0, 1'h0, 1'h0, 1'h1, 1'h0, 1'h1, 1'h0};
   reg  [2:0] randomIndex;
   reg        clockToggle;
   always @(posedge clock) begin

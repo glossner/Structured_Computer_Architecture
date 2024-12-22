@@ -5,13 +5,13 @@ package scabook.addersubtractors
 
 import chisel3._
 
-abstract class AdderSubtractor[T <: Data](gen: T) extends Module {
+abstract class AdderSubtractor(width: Int) extends Module {
+  require(width > 0, "Width must be greater than 0")
+
   val io = IO(new Bundle {
-    val a = Input(gen.cloneType)
-    val b = Input(gen.cloneType)
-    val result = Output(gen.cloneType)
-    val carryIn = Input(Bool())
-    val carryOut = Output(Bool())
-    val subtract = Input(Bool()) // Control signal for addition/subtraction
+    val a = Input(UInt(width.W))       // Input A
+    val b = Input(UInt(width.W))       // Input B
+    val subtract = Input(UInt(1.W))    // Control signal: 1 for subtraction, 0 for addition
+    val result = Output(UInt(width.W)) // Result of the operation
   })
 }
