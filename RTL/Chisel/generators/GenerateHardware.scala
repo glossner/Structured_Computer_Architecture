@@ -65,6 +65,7 @@ object GenerateHardware extends App {
       convertSystemVerilogToVerilog(module, moduleName)
       generateNetlist(module, moduleName)
       generateSVG(module, moduleName)
+      convertSVGtoPNG(module, moduleName)
     
     } catch {
       case e: Exception =>
@@ -242,6 +243,30 @@ object GenerateHardware extends App {
   }
 
   
+  def convertSVGtoPNG(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: convertSVGtoPNG")
+    if ( isCmdInstalled("rsvg-convert")) {      
+      val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
+      val pngFile = new File(generatedDiagramsPath + "/" + moduleName + ".png")
+      
+
+      val convertSVGcommand = s"rsvg-convert -f png -d 300 -p 300 -o $pngFile $svgFile"
+
+      println(s"convertSVGcommand= $convertSVGcommand")
+
+      val convertSVGresult = convertSVGcommand.!  
+      if (convertSVGresult != 0) {
+        println(s"Error: convertSVGtoPNG execution failed with code $convertSVGresult")
+      } else {
+        println("PNG file generated successfully!")
+      }
+ 
+    } else {
+      println("rsvg-convert not installed. try: sudo apt install librsvg2-bin")
+    }    
+  }
+
+
   
   // Helper function to see if a command is installed (firtool, yosys, etc.)
   def isCmdInstalled(command: String): Boolean = {
