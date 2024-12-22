@@ -401,7 +401,7 @@ Table \ref{tab:two_input_gates} shows the truth table for combinational 2-input 
 
 \item[NAND]: \( \neg (A \cdot B) \), where the output is \( 0 \) only if both \( A \) and \( B \) are 1; otherwise, the output is \( 1 \). \\
     Symbolic interpretation: Universal gate. \\
-    Alternative names: Sheffer stroke, negated AND gate \citep{sheffer1913, rosen2018}.
+    Alternative names: Sheffer stroke, negated AND gate \cite{sheffer1913, rosen2018}.
 
 \item[OR]: \( A + B \), where \( A + B = 1 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, \( A + B = 0 \). \\
     Symbolic interpretation: Inclusive OR. \\
@@ -471,14 +471,13 @@ We leave the treatment of timing to a course on digital logic design. It is a cr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Many-Input Gates}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-Many-input gates are an essential extension of basic logic gates, allowing the combination of more than two inputs into a single logical operation. These gates operate based on the principles of Boolean algebra and are widely used in digital systems to manage complex logical expressions. For instance, an \( n \)-input AND gate outputs a logical \( 1 \) only when all \( n \) inputs are \( 1 \), while an \( n \)-input OR gate outputs \( 1 \) when at least one of the inputs is \( 1 \). As the number of inputs increases, the complexity of the gate's behavior grows exponentially, governed by the number of possible input configurations.
+Many-input gates are a generalization of 2-input gates, allowing the combination of more than two inputs into a single logical operation. For instance, an \( n \)-input AND gate outputs a logical \( 1 \) only when all \( n \) inputs are \( 1 \), while an \( n \)-input OR gate outputs \( 1 \) when at least one of the inputs is \( 1 \). As the number of inputs increases, the complexity of the gate's behavior grows exponentially, based on the number of possible input configurations.
 
 Mathematically, the total number of distinct \( n \)-input gates is \( N^{2^n} \), where \( N \) represents the number of possible output values (typically \( N = 2 \) for binary logic), and \( 2^n \) is the total number of unique input configurations for \( n \) inputs. This exponential growth means that even for relatively small \( n \), the number of possible logic gates becomes vast and impractical to enumerate. For example, with \( n = 3 \), there are \( 2^{2^3} = 256 \) possible gates. For \( n > 2 \), Boolean algebra rules are necessary for simplifying and managing these functions, enabling the design of practical circuits without explicitly listing all possible gates.
 
-In modern digital design, many-input gates are often implemented using a combination of smaller gates, as direct implementation can become physically and computationally impractical for large \( n \). For example, a 16-input AND gate might be constructed hierarchically by combining multiple 2-input AND gates. This modular approach leverages the fundamental properties of Boolean algebra to efficiently implement complex logical functions in hardware. 
+In modern digital design, many-input gates are often implemented using a combination of smaller gates, as direct implementation can become physically and computationally impractical for large \( n \). For example, a 16-input AND gate might be constructed hierarchically by combining multiple 2-input AND gates. 
 
-
-Let's consider some significant examples:
+Let's consider some significant examples using verilog's ' (tick) symbol to denote negation:
 
 \begin{itemize}
     \item (A')' = A
@@ -507,94 +506,6 @@ Let's consider some significant examples:
     From de Morgan rule, A and B are 1 is equivalent to the fact that it is not true that A is 0 or B is 0.
 \end{itemize}
 
-%*********************************
-\subsection{Seven-Segment Display}
-%*********************************
-A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled a through g, which can be illuminated to form numerical digits (0–9). The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
-
-% FIXME: Get a 7-segment only drawing
-\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig:7_segment_display}
-
-Figure \ref{fig:7_segment_display} shows the transcoder for a 7-segment display. It receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{tab:sevenSeg}.
-
-The logic expression for the output {\tt a} is:
-\begin{center}
-$a =   B'_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B'_3 \cdot B'_2 \cdot B_1\cdot B'_0  +
-        B'_3 \cdot B'_2 \cdot B_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B_0  + $ \\
-        $B'_3 \cdot B_2 \cdot B_1\cdot B'_0  + B'_3 \cdot B_2 \cdot B_1\cdot B_0  +
-        B_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B_3 \cdot B'_2 \cdot B'_1\cdot B_0  $
-\end{center}
-or a simpler version by negatin the negated function:
-$$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B'_0)' = (B'_3 \cdot B'_1 \cdot (B_2 \oplus B_0))' = B_3 + B_1 + (B_2 \oplus B_0)'$$
-
-
-\begin{table}[H]
-  \begin{center}
-    \caption{Seven-segment display truth table.}
-    \label{tab:sevenSeg}
-    \begin{tabular}{|c||c|c|c|c||c|c|c|c|c|c|c|}
-      \hline
-     & $B_3$ & $B_2$ & $B_1$ & $B_0$ & a & b & c & d & e & f & g \\ \hline \hline
-     0& 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &   \\ \hline % 0
-     1& 0 & 0 & 0 & 1 &    & 1 & 1 &    &    &    &   \\ \hline % 1
-     2& 0 & 0 & 1 & 0 & 1 & 1 &    & 1 & 1 &    & 1 \\ \hline % 2
-     3& 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &    &    & 1 \\ \hline % 3
-     4& 0 & 1 & 0 & 0 &    & 1 & 1 &    &    & 1 & 1 \\ \hline % 4
-     5& 0 & 1 & 0 & 1 & 1 &    & 1 & 1 &    & 1 & 1 \\ \hline % 5
-     6& 0 & 1 & 1 & 0 & 1 &    & 1 & 1 & 1 & 1 & 1 \\ \hline % 6
-     7& 0 & 1 & 1 & 1 & 1 & 1 & 1 &    &    &    &   \\ \hline % 7
-     8& 1 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\ \hline % 8
-     9& 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 &    & 1 & 1 \\ \hline % 9
-    \end{tabular}
-  \end{center}
-\end{table}
-
-%#######################
-% 7 Segment Display Code
-%#######################
-\ifthenelse{\boolean{verilogversion}}{
-%*********************************************************
-\subsubsection{Seven Segment Display (SystemVerilog)}
-%*********************************************************    
-\includeverilogcode[caption={Seven Segment Display (SystemVerilog)},     label={lst:verilog_sevensegmentdisplay}, firstline=7, firstnumber=7, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
-
-Listing \ref{lst:verilog_sevensegmentdisplay} shows SystemVerilog code that implements a seven-segment display decoder. The module, named \texttt{sevenSegmDys}, has a 4-bit binary input, \texttt{number}, and a 7-bit output, \texttt{seg}, which controls the state of the seven segments (labeled a through g) of the display. 
-
-The \texttt{always\_comb} block defines a combinational block that describes the behavior of the output of the circuit as a combination based on the value of the input variables. The blocking assignment, {\tt =}, is used to assure the combinational behavior.
-
-The \texttt{case} statement maps each possible input value (0 through 9) to a corresponding 7-bit output pattern that activates the appropriate segments to display the digit. For example, the binary input \texttt{4'b0000} (decimal 0) results in the output \texttt{7'b1111110}, which lights up all segments except \texttt{g}, forming the number 0 on the display.
-
-The module includes a \texttt{default} case that sets all segments to off (\texttt{7'b0000000}) for invalid inputs outside the range 0–9. By mapping each input to a fixed segment configuration, this module can be integrated into larger digital systems that require visual representation of numeric values, such as timers, calculators, or embedded control systems.
-}%End SystemVerilog
-
-\ifthenelse{\boolean{chiselversion}}{
-%*************************************************
-\subsubsection{Seven Segment Display (Chisel)}
-%*************************************************
-\includechiselcode[caption={Seven Segment Display (Chisel)},     label={lst:chisel_sevensegmentdisplay}, firstline=9, firstnumber=9, lastline=28]{\chiselSourceDir/SevenSegmentDisplay.scala}
-
-Listing \ref{lst:chisel_sevensegmentdisplay} shows the \texttt{SevenSegmentDisplay} class is a Chisel module that decodes a 4-bit binary input (\texttt{binIn}) into a 7-bit output (\texttt{segOut}) representing the activation of segments on a seven-segment display. The input, \texttt{binIn}, can take values from 0 to 9, and the module determines which segments (labeled \texttt{a} through \texttt{g}) should be illuminated to form the corresponding numeric digit on the display.
-
-The decoding logic is implemented using a series of \texttt{when} and \texttt{elsewhen} constructs. Each condition compares \texttt{binIn} with a specific value and assigns a 7-bit binary pattern to \texttt{segOut}. Each bit in the pattern corresponds to one of the seven segments, where a \texttt{1} turns the segment on, and a \texttt{0} turns it off. For example, when \texttt{binIn} is \texttt{0}, the output is \texttt{1111110}, which activates all segments except \texttt{g} to display the digit \texttt{0}. Similarly, for \texttt{binIn = 8}, all segments are activated (\texttt{1111111}). A default value of \texttt{0000000} is set for \texttt{segOut} to ensure all segments are off in case of invalid input.
-
-In Chisel 6.6, the use of the \texttt{switch} function is discouraged because it often leads to less modular and harder-to-read code, especially in large designs. The \texttt{switch} function can introduce an implicit and tightly coupled relationship between the control signal and the cases, reducing flexibility and increasing the risk of errors during refactoring. Instead, Chisel promotes the use of more functional constructs like pattern matching or chained \texttt{when} statements which makes the design less prone to subtle bugs.
-
-}%End Chisel
-
-
-
-\ifthenelse{\boolean{verilogversion} \and \boolean{chiselversion}}{   
-%*********************************************************************************
-\subsubsection{Seven Segment Display Language Comparison}
-%**********************************************************************************
-The Chisel and SystemVerilog implementations both utilize conditional logic. Chisel uses \texttt{when} statements, while SystemVerilog uses a \texttt{case} statement within an \texttt{always\_comb} block. The primary difference are due to the design of the two languages. Chisel, being embedded in Scala, provides a high-level, functional programming approach, emphasizing abstraction and type safety. SystemVerilog is a traditional hardware description language explicitly designed for synthesizable digital circuits. Chisel initializes the \texttt{segOut} output to a default value, simplifying handling unspecified input cases, while SystemVerilog uses the \texttt{default} case explicitly within its \texttt{case} statement. 
-
-Moreover, SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is purely combinational, making the designer's intent explicit. In contrast, Chisel does not inherently enforce combinational logic; it depends on how constructs like \texttt{when} are used. For instance, \texttt{when} can describe sequential behavior if used with registers, but in the given example, the direct use of \texttt{:=} ensures combinational behavior.
-
-}
-%################################
-% End Seven Segment Display Code
-%################################
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Generic combinational circuits}
@@ -807,6 +718,96 @@ The \texttt{DeMux16} class instantiates a parameterized demultiplexer from the \
 
 }% End Chisel
 
+%*********************************
+\subsection{Seven-Segment Display}
+%*********************************
+A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled a through g, which can be illuminated to form numerical digits (0–9). The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
+
+% FIXME: Get a 7-segment only drawing
+\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig:7_segment_display}
+
+Figure \ref{fig:7_segment_display} shows the transcoder for a 7-segment display. It receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{tab:sevenSeg}.
+
+The logic expression for the output {\tt a} is:
+\begin{center}
+$a =   B'_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B'_3 \cdot B'_2 \cdot B_1\cdot B'_0  +
+        B'_3 \cdot B'_2 \cdot B_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B_0  + $ \\
+        $B'_3 \cdot B_2 \cdot B_1\cdot B'_0  + B'_3 \cdot B_2 \cdot B_1\cdot B_0  +
+        B_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B_3 \cdot B'_2 \cdot B'_1\cdot B_0  $
+\end{center}
+or a simpler version by negatin the negated function:
+$$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B'_0)' = (B'_3 \cdot B'_1 \cdot (B_2 \oplus B_0))' = B_3 + B_1 + (B_2 \oplus B_0)'$$
+
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Seven-segment display truth table.}
+    \label{tab:sevenSeg}
+    \begin{tabular}{|c||c|c|c|c||c|c|c|c|c|c|c|}
+      \hline
+     & $B_3$ & $B_2$ & $B_1$ & $B_0$ & a & b & c & d & e & f & g \\ \hline \hline
+     0& 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &   \\ \hline % 0
+     1& 0 & 0 & 0 & 1 &    & 1 & 1 &    &    &    &   \\ \hline % 1
+     2& 0 & 0 & 1 & 0 & 1 & 1 &    & 1 & 1 &    & 1 \\ \hline % 2
+     3& 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 &    &    & 1 \\ \hline % 3
+     4& 0 & 1 & 0 & 0 &    & 1 & 1 &    &    & 1 & 1 \\ \hline % 4
+     5& 0 & 1 & 0 & 1 & 1 &    & 1 & 1 &    & 1 & 1 \\ \hline % 5
+     6& 0 & 1 & 1 & 0 & 1 &    & 1 & 1 & 1 & 1 & 1 \\ \hline % 6
+     7& 0 & 1 & 1 & 1 & 1 & 1 & 1 &    &    &    &   \\ \hline % 7
+     8& 1 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\ \hline % 8
+     9& 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 &    & 1 & 1 \\ \hline % 9
+    \end{tabular}
+  \end{center}
+\end{table}
+
+%#######################
+% 7 Segment Display Code
+%#######################
+\ifthenelse{\boolean{verilogversion}}{
+%*********************************************************
+\subsubsection{Seven Segment Display (SystemVerilog)}
+%*********************************************************    
+\includeverilogcode[caption={Seven Segment Display (SystemVerilog)},     label={lst:verilog_sevensegmentdisplay}, firstline=7, firstnumber=7, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
+
+Listing \ref{lst:verilog_sevensegmentdisplay} shows SystemVerilog code that implements a seven-segment display decoder. The module, named \texttt{sevenSegmDys}, has a 4-bit binary input, \texttt{number}, and a 7-bit output, \texttt{seg}, which controls the state of the seven segments (labeled a through g) of the display. 
+
+The \texttt{always\_comb} block defines a combinational block that describes the behavior of the output of the circuit as a combination based on the value of the input variables. The blocking assignment, {\tt =}, is used to assure the combinational behavior.
+
+The \texttt{case} statement maps each possible input value (0 through 9) to a corresponding 7-bit output pattern that activates the appropriate segments to display the digit. For example, the binary input \texttt{4'b0000} (decimal 0) results in the output \texttt{7'b1111110}, which lights up all segments except \texttt{g}, forming the number 0 on the display.
+
+The module includes a \texttt{default} case that sets all segments to off (\texttt{7'b0000000}) for invalid inputs outside the range 0–9. By mapping each input to a fixed segment configuration, this module can be integrated into larger digital systems that require visual representation of numeric values, such as timers, calculators, or embedded control systems.
+}%End SystemVerilog
+
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Seven Segment Display (Chisel)}
+%*************************************************
+\includechiselcode[caption={Seven Segment Display (Chisel)},     label={lst:chisel_sevensegmentdisplay}, firstline=9, firstnumber=9, lastline=28]{\chiselSourceDir/SevenSegmentDisplay.scala}
+
+Listing \ref{lst:chisel_sevensegmentdisplay} shows the \texttt{SevenSegmentDisplay} class is a Chisel module that decodes a 4-bit binary input (\texttt{binIn}) into a 7-bit output (\texttt{segOut}) representing the activation of segments on a seven-segment display. The input, \texttt{binIn}, can take values from 0 to 9, and the module determines which segments (labeled \texttt{a} through \texttt{g}) should be illuminated to form the corresponding numeric digit on the display.
+
+The decoding logic is implemented using a series of \texttt{when} and \texttt{elsewhen} constructs. Each condition compares \texttt{binIn} with a specific value and assigns a 7-bit binary pattern to \texttt{segOut}. Each bit in the pattern corresponds to one of the seven segments, where a \texttt{1} turns the segment on, and a \texttt{0} turns it off. For example, when \texttt{binIn} is \texttt{0}, the output is \texttt{1111110}, which activates all segments except \texttt{g} to display the digit \texttt{0}. Similarly, for \texttt{binIn = 8}, all segments are activated (\texttt{1111111}). A default value of \texttt{0000000} is set for \texttt{segOut} to ensure all segments are off in case of invalid input.
+
+In Chisel 6.6, the use of the \texttt{switch} function is discouraged because it often leads to less modular and harder-to-read code, especially in large designs. The \texttt{switch} function can introduce an implicit and tightly coupled relationship between the control signal and the cases, reducing flexibility and increasing the risk of errors during refactoring. Instead, Chisel promotes the use of more functional constructs like pattern matching or chained \texttt{when} statements which makes the design less prone to subtle bugs.
+
+}%End Chisel
+
+
+
+\ifthenelse{\boolean{verilogversion} \and \boolean{chiselversion}}{   
+%*********************************************************************************
+\subsubsection{Seven Segment Display Language Comparison}
+%**********************************************************************************
+The Chisel and SystemVerilog implementations both utilize conditional logic. Chisel uses \texttt{when} statements, while SystemVerilog uses a \texttt{case} statement within an \texttt{always\_comb} block. The primary difference are due to the design of the two languages. Chisel, being embedded in Scala, provides a high-level, functional programming approach, emphasizing abstraction and type safety. SystemVerilog is a traditional hardware description language explicitly designed for synthesizable digital circuits. Chisel initializes the \texttt{segOut} output to a default value, simplifying handling unspecified input cases, while SystemVerilog uses the \texttt{default} case explicitly within its \texttt{case} statement. 
+
+Moreover, SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is purely combinational, making the designer's intent explicit. In contrast, Chisel does not inherently enforce combinational logic; it depends on how constructs like \texttt{when} are used. For instance, \texttt{when} can describe sequential behavior if used with registers, but in the given example, the direct use of \texttt{:=} ensures combinational behavior.
+
+}
+%################################
+% End Seven Segment Display Code
+%################################
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Adders}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -859,7 +860,7 @@ The companion object \texttt{Adder} dynamically instantiates a specific adder ty
 %*************************************************
 \subsubsection{Parameterized Behavioral Adder (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdderUnsigned.scala}
+%\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdderUnsigned.scala}
 
 Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, generic adder in Chisel. The class is parameterized by a data type \texttt{T} that extends \texttt{Data}, allowing it to work with various numeric types such as \texttt{UInt} or \texttt{SInt}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
 
@@ -901,37 +902,9 @@ For example:
 
 Each $B_i$ is complemented and the increment with 1 is generated by inverting the carry input. All the inversions are performed under the command {\tt sub} applied to $5$ XORs.
 
-%**********************************
-\subsection{Carry Lookahead Adder}
-%*********************************
-Carry Look-Ahead Adders (CLAs) are designed to overcome the performance bottlenecks of ripple-carry adders by reducing the dependency on sequential carry propagation. Instead of waiting for each bit's carry to be computed, the CLA computes carries in parallel using the generate (\texttt{G}) and propagate (\texttt{P}) signals for each bit. These signals allow the adder to determine whether a carry will be generated or propagated at each stage. Using these signals, the carry for each bit position can be calculated directly through a set of Boolean equations, significantly reducing the delay to logarithmic time relative to the adder's width. This design is particularly effective for high-speed arithmetic operations in processors and digital signal processing, where minimizing latency is important. However, the parallel computation and additional logic circuitry result in increased hardware complexity compared to simpler adders.
-
-%******************************
-\subsection{Carry Select Adder}
-%******************************
-Carry Select Adders (CSAs) improve upon the delay of ripple-carry adders by precomputing the sum and carry outputs for both possible carry-in values (0 and 1) in parallel. Each stage of the adder computes two possible results based on these assumptions, and a multiplexer is used to select the correct result once the carry-in is determined. This approach significantly reduces the propagation delay associated with sequential carry computation while maintaining a relatively straightforward design. Although CSAs require additional hardware resources for the parallel computations and multiplexers, they achieve a good trade-off between speed and area, making them well-suited for medium-sized arithmetic units where both latency and complexity are important considerations.
-
-%*****************************
-\subsection{Carry Save Adder}
-%*****************************
-Carry-save adders are specialized adders used primarily in multiplication. Unlike conventional adders, which propagate carries through the stages immediately, CSAs represent the result as two separate numbers: a partial sum and a carry vector. These two outputs are then combined in a subsequent addition step, often using a more efficient adder such as a carry-lookahead adder. By deferring the carry propagation, CSAs significantly reduce the delay for intermediate steps, making them highly efficient for scenarios where multiple additions must be performed simultaneously. Examples include the Wallace tree \cite{wallace1964} and Dadda tree \cite{dadda1965}. This efficiency is achieved at the cost of additional logic to manage the separate sum and carry outputs.
 
 
 
-
-
-
-%*****************************
-\subsection{Kogge-Stone Adder}
-%*****************************
-Parallel prefix adders are a class of high-performance adders designed to optimize the computation of carry signals in binary addition, significantly reducing delay compared to simpler adder designs like ripple-carry adders. They achieve this by dividing the addition process into three distinct stages: generating initial propagate and generate signals for each bit, computing intermediate carries through a tree-like prefix structure, and finally calculating the sum based on these carry signals. The tree structure allows the carry signals to be computed in parallel, with a logarithmic time complexity relative to the number of bits, making these adders highly efficient for large bit-width operations. These adders are widely used in modern high-speed computing systems and processors.
-
-The Kogge-Stone Adder is a parallel prefix adder known for its high performance and suitability for large bit-width arithmetic operations. It minimizes the propagation delay using a tree-like structure to compute carry signals in a logarithmic number of stages relative to the bit width. The design uses generate and propagate signals to recursively compute carries in parallel, ensuring that the carry for any given bit is available after just $\log_2(n)$ stages, where $n$ is the bit width. While this structure significantly enhances speed, it requires substantial wiring and additional resources, making it resource-intensive compared to simpler designs like ripple-carry adders. Due to its efficiency in reducing delay, the Kogge-Stone Adder is frequently employed in high-performance processors and digital systems requiring fast arithmetic computations  \cite{kogge1973parallel}.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{{\bf {\em Multipliers}}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{{\bf {\em Arithmetic \& Logic Unit}}}\label{alu1}

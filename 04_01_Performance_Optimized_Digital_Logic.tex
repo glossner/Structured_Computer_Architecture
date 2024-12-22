@@ -1,0 +1,32 @@
+\chapter{Performance Optimized Digital Logic}\label{chapt:perf_digital_logic}
+
+%**********************************
+\section{Carry Lookahead Adder}
+%*********************************
+Carry Look-Ahead Adders (CLAs) are designed to overcome the performance bottlenecks of ripple-carry adders by reducing the dependency on sequential carry propagation. Instead of waiting for each bit's carry to be computed, the CLA computes carries in parallel using the generate (\texttt{G}) and propagate (\texttt{P}) signals for each bit. These signals allow the adder to determine whether a carry will be generated or propagated at each stage. Using these signals, the carry for each bit position can be calculated directly through a set of Boolean equations, significantly reducing the delay to logarithmic time relative to the adder's width. This design is particularly effective for high-speed arithmetic operations in processors and digital signal processing, where minimizing latency is important. However, the parallel computation and additional logic circuitry result in increased hardware complexity compared to simpler adders.
+
+%******************************
+\section{Carry Select Adder}
+%******************************
+Carry Select Adders (CSAs) improve upon the delay of ripple-carry adders by precomputing the sum and carry outputs for both possible carry-in values (0 and 1) in parallel. Each stage of the adder computes two possible results based on these assumptions, and a multiplexer is used to select the correct result once the carry-in is determined. This approach significantly reduces the propagation delay associated with sequential carry computation while maintaining a relatively straightforward design. Although CSAs require additional hardware resources for the parallel computations and multiplexers, they achieve a good trade-off between speed and area, making them well-suited for medium-sized arithmetic units where both latency and complexity are important considerations.
+
+%*****************************
+\section{Carry Save Adder}
+%*****************************
+Carry-save adders are specialized adders used primarily in multiplication. Unlike conventional adders, which propagate carries through the stages immediately, CSAs represent the result as two separate numbers: a partial sum and a carry vector. These two outputs are then combined in a subsequent addition step, often using a more efficient adder such as a carry-lookahead adder. By deferring the carry propagation, CSAs significantly reduce the delay for intermediate steps, making them highly efficient for scenarios where multiple additions must be performed simultaneously. Examples include the Wallace tree \cite{wallace1964} and Dadda tree \cite{dadda1965}. This efficiency is achieved at the cost of additional logic to manage the separate sum and carry outputs.
+
+
+
+
+
+
+%*****************************
+\section{Kogge-Stone Adder}
+%*****************************
+Parallel prefix adders are a class of high-performance adders designed to optimize the computation of carry signals in binary addition, significantly reducing delay compared to simpler adder designs like ripple-carry adders. They achieve this by dividing the addition process into three distinct stages: generating initial propagate and generate signals for each bit, computing intermediate carries through a tree-like prefix structure, and finally calculating the sum based on these carry signals. The tree structure allows the carry signals to be computed in parallel, with a logarithmic time complexity relative to the number of bits, making these adders highly efficient for large bit-width operations. These adders are widely used in modern high-speed computing systems and processors.
+
+The Kogge-Stone Adder is a parallel prefix adder known for its high performance and suitability for large bit-width arithmetic operations. It minimizes the propagation delay using a tree-like structure to compute carry signals in a logarithmic number of stages relative to the bit width. The design uses generate and propagate signals to recursively compute carries in parallel, ensuring that the carry for any given bit is available after just $\log_2(n)$ stages, where $n$ is the bit width. While this structure significantly enhances speed, it requires substantial wiring and additional resources, making it resource-intensive compared to simpler designs like ripple-carry adders. Due to its efficiency in reducing delay, the Kogge-Stone Adder is frequently employed in high-performance processors and digital systems requiring fast arithmetic computations  \cite{kogge1973parallel}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{{\bf {\em Multipliers}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
