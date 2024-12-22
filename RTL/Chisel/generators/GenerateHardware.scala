@@ -33,12 +33,13 @@ object GenerateHardware extends App {
 
   // Modules to Generate
   val modulesToGenerate = Seq(
+     (() => new scabook.Decoder2to4, "Decoder2to4"),
     // (() => new scabook.DeMux16, "DeMux16"),
     // (() => new scabook.Mux4, "Mux4"),
     // (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
     // (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
-    // (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
-    (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
+    //  (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
+    //(() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
 
 
@@ -202,7 +203,7 @@ object GenerateHardware extends App {
       val yosysJSONcommand = Seq(
           "yosys",
           "-p",
-          s"read_verilog -sv $systemVerilogFile; synth -top $moduleName; write_json $jsonFile"
+          s"read_verilog -sv $systemVerilogFile; synth -top $moduleName; flatten; write_json $jsonFile"
         )
       val jsonResult = yosysJSONcommand.!  // Execute the command
       if (jsonResult != 0) {

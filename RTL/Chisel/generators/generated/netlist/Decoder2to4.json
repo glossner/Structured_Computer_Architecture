@@ -1,0 +1,133 @@
+{
+  "creator": "Yosys 0.48+5 (git sha1 7a362f1f7, clang++ 18.1.8 -fPIC -O3)",
+  "modules": {
+    "Decoder2to4": {
+      "attributes": {
+        "top": "00000000000000000000000000000001",
+        "src": "generators/generated/verilog_clean/Decoder2to4.v:1.1-12.10"
+      },
+      "ports": {
+        "clock": {
+          "direction": "input",
+          "bits": [ 2 ]
+        },
+        "reset": {
+          "direction": "input",
+          "bits": [ 3 ]
+        },
+        "io_input": {
+          "direction": "input",
+          "bits": [ 4, 5 ]
+        },
+        "io_output": {
+          "direction": "output",
+          "bits": [ 6, 7, 8, 9 ]
+        }
+      },
+      "cells": {
+        "$abc$110$auto$blifparse.cc:396:parse_blif$111": {
+          "hide_name": 1,
+          "type": "$_NOR_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 4 ],
+            "Y": [ 6 ]
+          }
+        },
+        "$abc$110$auto$blifparse.cc:396:parse_blif$112": {
+          "hide_name": 1,
+          "type": "$_ANDNOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 4 ],
+            "B": [ 5 ],
+            "Y": [ 7 ]
+          }
+        },
+        "$abc$110$auto$blifparse.cc:396:parse_blif$113": {
+          "hide_name": 1,
+          "type": "$_ANDNOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 4 ],
+            "Y": [ 8 ]
+          }
+        },
+        "$abc$110$auto$blifparse.cc:396:parse_blif$114": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 4 ],
+            "Y": [ 9 ]
+          }
+        }
+      },
+      "netnames": {
+        "clock": {
+          "hide_name": 0,
+          "bits": [ 2 ],
+          "attributes": {
+            "src": "generators/generated/verilog_clean/Decoder2to4.v:7.8-7.13"
+          }
+        },
+        "io_input": {
+          "hide_name": 0,
+          "bits": [ 4, 5 ],
+          "attributes": {
+            "src": "generators/generated/verilog_clean/Decoder2to4.v:9.14-9.22"
+          }
+        },
+        "io_output": {
+          "hide_name": 0,
+          "bits": [ 6, 7, 8, 9 ],
+          "attributes": {
+            "src": "generators/generated/verilog_clean/Decoder2to4.v:10.20-10.29"
+          }
+        },
+        "reset": {
+          "hide_name": 0,
+          "bits": [ 3 ],
+          "attributes": {
+            "src": "generators/generated/verilog_clean/Decoder2to4.v:8.8-8.13"
+          }
+        }
+      }
+    }
+  }
+}
