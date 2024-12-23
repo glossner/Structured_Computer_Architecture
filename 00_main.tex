@@ -60,10 +60,14 @@
 % Define lengths for List of Listings title spacing
 \newlength{\cftbeforeloltitleskip}
 \newlength{\cftafterloltitleskip}
+\newlength{\cftchapterskip}
+
 \setlength{\cftbeforeloltitleskip}{1em}  % Space before title
 \setlength{\cftafterloltitleskip}{0.5em} % Space after title
+\setlength{\cftbeforepartskip}{2em} % Space before part entries
 
 % Patch \lstlistoflistings for spacing
+\makeatletter
 \patchcmd{\lstlistoflistings}
   {\@starttoc{lol}}
   {\vspace{\cftbeforeloltitleskip}\@starttoc{lol}\vspace{\cftafterloltitleskip}}
@@ -74,6 +78,8 @@
     \localtableofcontents % Call the existing \localtableofcontents command
     \newpage              % Add a page break
 }
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -223,13 +229,27 @@ This document was prepared with \LaTeX $\, 2_{\epsilon}$
 \sloppy
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dedication
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Dedication}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Epigraph
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Epigraph}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Forward
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Placeholder if we find someone to write one
+%\chapter*{Forward}
+%\addcontentsline{toc}{chapter}{Forward}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preface
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{Preface}
 \addcontentsline{toc}{chapter}{Preface}
-
-\section*{Forward}
-\addcontentsline{toc}{section}{Forward}
 
 This textbook arose from an introductory course on Computer Architecture taught at Rivier University in the Fall of 2024. It draws on Gheorghe M. \c{S}tefan's years of teaching Computer Architecture at the University of Bucharest.
 
@@ -268,21 +288,27 @@ nth-Order & N loops. Multi-processor systems. & SCAN and REDUCE & TBD \\ \hline
 Part I of this book is intended for undergraduate study. No specific background is required other than high school mathematics. Part II of this book is designed for senior-level undergraduate students or first-year graduate students.
 
 The Theory of Computing is demonstrated with practical examples. 
-Most of the descriptions of the structures and the simulation of their behavior are written in the System Verilog HDL. Students may install the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}} (\url{}) or use online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}} or jdoodle \footnote{\url{https://www.jdoodle.com}}.
+Most of the descriptions of the structures and the simulation of their behavior are written in both System Verilog and Chisel HDL. Students may install the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}} (\url{}) or use online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}} or jdoodle \footnote{\url{https://www.jdoodle.com}}.
 
+This book's code is executable and should not contain any syntax errors. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Acknowledgments
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\chapter*{Acknowledgments}
+%\addcontentsline{toc}{chapter}{Acknowledgments}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Short Table of Contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{tocdepth}{2}
 \shorttoc{Contents}{1} % Only sections
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Table of Contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \renewcommand*\contentsname{Contents (detailed)}
+\setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{4}
-
 \tableofcontents
 
 \listoffigures
@@ -302,7 +328,6 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \pagenumbering{arabic}
 
 \setcounter{tocdepth}{3}% local TOC displays only sections
-
 \etocsettocstyle{}{} % No title or end content in local table of contents
 
 %\renewcommand{\chaptername}{Section}
