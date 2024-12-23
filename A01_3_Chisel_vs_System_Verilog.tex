@@ -1,11 +1,14 @@
+\section{Chisel Compared with System Verilog}
+
+
 %%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+\subsection{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%
 
 
 SystemVerilog and Chisel are both powerful languages used for hardware design and verification. SystemVerilog is an extension of Verilog, widely used in the industry for designing and verifying digital systems \cite{ieee1800-2017}. Chisel, on the other hand, is a hardware description language embedded in Scala, offering advanced features like parameterization and functional programming paradigms \cite{bachrach2012chisel}. This chapter provides a comparative analysis of SystemVerilog and Chisel, highlighting directly mapped constructs, unique features of each language, and guidance for implementing designs when transitioning between the two languages.
 
-\section{Overview of SystemVerilog and Chisel}
+\subsection{Overview of SystemVerilog and Chisel}
 
 \subsection{SystemVerilog}
 
@@ -15,7 +18,7 @@ SystemVerilog enhances Verilog by incorporating advanced modeling features, obje
 
 Chisel is a domain-specific language for hardware design embedded in Scala, enabling hardware designers to use modern programming paradigms \cite{chisel-doc}. It provides powerful abstractions for parameterization and reuse, and it generates synthesizable Verilog code, integrating with traditional hardware development flows.
 
-\section{Directly Mapped Constructs}
+\subsection{Directly Mapped Constructs}
 
 Despite differences in syntax and paradigms, many hardware constructs have direct equivalents in both SystemVerilog and Chisel. This section presents a comparison of these constructs.
 
@@ -112,7 +115,7 @@ Structure & \texttt{struct \{...\}} & \texttt{class ... extends Bundle \{...\}} 
         \end{itemize}
 \end{itemize}
 
-\section{Features Unique to Chisel}
+\subsection{Features Unique to Chisel}
 
 Chisel offers several features not available in SystemVerilog.
 
@@ -152,7 +155,7 @@ Chisel allows hardware generation using Scala code.
 
 Chisel provides a testing framework integrated with ScalaTest, enabling sophisticated testing methodologies.
 
-\section{Features Unique to SystemVerilog}
+\subsection{Features Unique to SystemVerilog}
 
 SystemVerilog includes features not present in Chisel, particularly in verification.
 
@@ -182,7 +185,7 @@ SystemVerilog allows precise control over simulation time and events.
 
 SystemVerilog provides constructs like \texttt{\#delay}, \texttt{@(posedge clk)}, which are not directly available in Chisel.
 
-\section{Implementing Designs: A Cross-Language Guide}
+\subsection{Implementing Designs: A Cross-Language Guide}
 
 This section provides guidance for designers transitioning between SystemVerilog and Chisel.
 

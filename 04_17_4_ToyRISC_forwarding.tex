@@ -1,8 +1,6 @@
-\chapter{Pipelined toyRISC}
+\section{Forwarding toyRISC}
 
-%\minitoc
-
-\section{Structure}
+\subsection{Structure}
 
 {\small
 \begin{shaded*}
@@ -49,8 +47,6 @@ endmodule
 \end{shaded*}
 }
 
-
-
 {\small
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
@@ -84,18 +80,21 @@ endmodule
 \end{shaded*}
 }
 
-
 {\small
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
 /************************************************************************
-File name: toyRISC.sv
+File name: .sv
 Circuit name:
 Description:
 ************************************************************************/
+/*************************************************************************
+File name: toyRISC.sv
+                        toyRISC
+*************************************************************************/
 `include "0_DEFINES.vh"
 module toyRISC( input   logic [31:0]  instruction   ,
-                output  logic [9:0]   PC            ,
+                output  logic [9:0]   pc            ,
                 input   logic         intIn         ,
                 output  logic         inta          ,
                 input   logic [31:0]  dataIn        ,
@@ -106,85 +105,101 @@ module toyRISC( input   logic [31:0]  instruction   ,
                 input   logic         reset         ,
                 input   logic         clk           );
     logic [31:0]    instruction1;
-    logic [9:0]     PC1         ;
+    logic [31:0]    instruction2;
+    logic [31:0]    instruction3;
+    logic [31:0]    instruction4;
+    logic [9:0]     pc1         ;
     logic [31:0]    leftOp      ;
     logic [1:0]     nextPCsel   ;
-    logic [31:0]    results     ;
-    logic [5:0]     opCode1     ;
+    logic           we4         ;
+    logic [31:0]    result4     ;
+    logic [3:0]     opSel       ;
+    logic [3:0]     opSel2      ;
+    logic           zero        ;
     logic [31:0]    leftOp2     ;
     logic [31:0]    rightOp2    ;
-    logic [31:0]    value2      ;
-    logic [5:0]     opCode2     ;
-    logic [4:0]     destAddr2   ;
-    logic           we3         ;
-    logic [4:0]     destAddr3   ;
+    logic [31:0]    leftOp3     ;
+    logic [31:0]    rightOp3    ;
     logic [31:0]    result3     ;
-    logic [5:0]     decode      ;
     logic           we          ;
-    logic [1:0]     opSel       ;
-    logic [1:0]     opSel2      ;
-    logic           zero        ;
-    logic [5:0]     opCode3     ;
+    logic           memSel      ;
 
-    DECODE dcd( .opCode1    (instruction1[31:26]),
-                .zero       (zero               ),
-                .opCode2    (opCode2            ),
-                .intIn      (intIn              ),
-                .inta       (inta               ),
-                .nextPCsel  (nextPCsel          ),
-                .opSel      (opSel              ),
-                .we         (we                 ),
-                .dataRead   (dataRead           ),
-                .dataWrite  (dataWrite          ),
-                .reset      (reset              ),
-                .clk        (clk                ));
+    DECODE dcd( .instruction1   (instruction1   ),
+                .instruction2   (instruction2   ),
+                .instruction3   (instruction3   ),
+                .zero           (zero           ),
+                .intIn          (intIn          ),
+
+                .inta           (inta           ),
+                .nextPCsel      (nextPCsel      ),
+                .opSel          (opSel          ),
+                .memSel         (memSel         ),
+                .we             (we             ),
+                .dataRead       (dataRead       ),
+                .dataWrite      (dataWrite      ),
+
+                .reset          (reset          ),
+                .clk            (clk            ));
 
     INSTRFETCH progCount(   instruction ,
-                            PC          ,
-                            instruction1,
-                            PC1         ,
                             leftOp      ,
                             nextPCsel   ,
+
+                            pc          ,
+                            instruction1,
+                            pc1         ,
+
                             reset       ,
                             clk         );
 
     OPSFETCH regFile(   instruction1,
-                        PC1         ,
+                        instruction4,
+                        pc1         ,
                         inta        ,
-                        we3         ,
-                        destAddr3   ,
-                        result3     ,
+                        we4         ,
+                        result4     ,
                         opSel       ,
-                        opSel2      ,
+
                         zero        ,
                         leftOp      ,
                         leftOp2     ,
                         rightOp2    ,
-                        value2      ,
-                        opCode2     ,
-                        destAddr2   ,
+                        opSel2      ,
+                        instruction2,
+
                         clk         );
 
     EXECUTE execute(leftOp2     ,
                     rightOp2    ,
-                    value2      ,
-                    opCode2     ,
-                    destAddr2   ,
-                    dataIn      ,
-                    we          ,
                     opSel2      ,
-                    dataAddr    ,
-                    dataOut     ,
-                    we3         ,
-                    destAddr3   ,
+                    instruction2,
+                    result4     ,
+
+                    leftOp3     ,
                     result3     ,
-                    opCode3     ,
+                    rightOp3    ,
+                    instruction3,
+
                     clk         );
+
+    DATAMEM datamem(result3     ,
+                    instruction3,
+                    we          ,
+                    memSel      ,
+                    dataIn      ,
+
+                    result4     ,
+                    instruction4,
+                    we4         ,
+
+                    clk         );
+
+    assign dataAddr = leftOp3   ;
+    assign dataOut  = rightOp3  ;
 endmodule // Synthesis results: #LUT=335, #FF=204, #DSP=3
 \end{lstlisting}
 \end{shaded*}
 }
-
 
 {\small
 \begin{shaded*}
@@ -195,77 +210,118 @@ Circuit name:
 Description:
 ************************************************************************/
 `include "0_DEFINES.vh"
-module DECODE(  input   logic [5:0] opCode1     ,
-                input   logic       zero        ,
-                input   logic [5:0] opCode2     ,
-                input   logic       intIn       ,
-                output  logic       inta        ,
-                output  logic [1:0] nextPCsel   ,
-                output  logic [1:0] opSel       ,
-                output  logic       we          ,
-                output  logic       dataRead    ,
-                output  logic       dataWrite   ,
-                input   logic       reset       ,
-                input   logic       clk         );
-    logic [2:0] intState    ;
+module DECODE(  input   logic [31:0]    instruction1,
+                input   logic [31:0]    instruction2,
+                input   logic [31:0]    instruction3,
+                input   logic           zero        ,
+                input   logic           intIn       ,
 
+                output  logic           inta        ,
+                output  logic [1:0]     nextPCsel   ,
+                output  logic [3:0]     opSel       ,
+                output  logic           memSel      ,
+                output  logic           we          ,
+                output  logic           dataRead    ,
+                output  logic           dataWrite   ,
+
+                input   logic           reset       ,
+                input   logic           clk         );
+
+    logic [5:0] opCode1     ;
+    logic [4:0] destAddr1   ;
+    logic [4:0] leftAddr1   ;
+    logic [4:0] rightAddr1  ;
+    logic [4:0] destAddr2   ;
+    logic [5:0] opCode3     ;
+    logic [4:0] destAddr3   ;
+    logic       leftFwd     ;
+    logic       rightFwd    ;
+
+    assign opCode1      = instruction1[31:26]   ;
+    assign leftAddr1    = instruction1[20:16]   ;
+    assign rightAddr1   = instruction1[15:11]   ;
+    assign destAddr2    = instruction2[25:21]   ;
+    assign destAddr3    = instruction3[25:21]   ;
+    assign opCode3      = instruction3[31:26]   ;
+
+
+// Interrupt automaton
+    logic [2:0] intState    ;
 /*
     intState = 000: intDisable
     intState = 001: intEnable
     intState = 010: intExec1
     intState = 011: intExec2
     intState = 100: intExec3
+    intState = 101: intExec4
 */
-// Interrupt automaton
     always_ff @(posedge clk)
-     if (reset)                                 intState <= 3'b000  ;
-      else  begin
+        if (reset)                              intState <= 3'b000  ;
+         else
+            begin
             if (opCode1 == `eint)               intState <= 3'b001  ;
             if (opCode1 == `dint)               intState <= 3'b000  ;
             if (intIn && (intState == 3'b001))  intState <= 3'b010  ;
             if (intState == 3'b010)             intState <= 3'b011  ;
             if (intState == 3'b011)             intState <= 3'b100  ;
-            if (intState == 3'b100)             intState <= 3'b000  ;
-        end
-    //assign intr = intState == 2'b10   ;
-    assign inta = intState == 3'b010    ;
+            if (intState == 3'b100)             intState <= 3'b101  ;
+            if (intState == 3'b101)             intState <= 3'b000  ;
+            end
+    assign inta = intState == 3'b011    ;
+// end Interrupt automaton
 
+// Program control
     logic [5:0] jmpSel  ;
 
-    assign jmpSel = (intState > 3'b001) ? `halt : opCode1   ;
+    assign jmpSel = (intState > 3'b011) ? `nop : opCode1    ;
 
+    always_comb if (inta)         nextPCsel = 2'b11                 ;
+                 else
+                    case(jmpSel)
+                        `halt   : nextPCsel = 2'b00                 ;
+                        `rjmp   : nextPCsel = 2'b10                 ;
+                        `zbr    : nextPCsel = zero ? 2'b10 : 2'b01  ;
+                        `nzbr   : nextPCsel = zero ? 2'b01 : 2'b10  ;
+                        `ret    : nextPCsel = 2'b11                 ;
+                        default : nextPCsel = 2'b01                 ;
+                    endcase
+// end prorgram control
+
+// Forwarding section
+    assign leftFwdY  =
+        (leftAddr1  == destAddr2) && (opCode1[5] == 1'b1);
+    assign rightFwdY =
+        (rightAddr1 == destAddr2) && (opCode1[5] == 1'b1);
+    assign leftFwdO  =
+        (leftAddr1  == destAddr3) && (opCode1[5] == 1'b1);
+    assign rightFwdO =
+        (rightAddr1 == destAddr3) && (opCode1[5] == 1'b1);
     always_comb
-        if (inta)             nextPCsel = 2'b11                 ;
-         else   case(jmpSel)
-                    `halt   : nextPCsel = 2'b00                 ;
-                    `rjmp   : nextPCsel = 2'b10                 ;
-                    `zbr    : nextPCsel = zero ? 2'b10 : 2'b01  ;
-                    `nzbr   : nextPCsel = zero ? 2'b01 : 2'b10  ;
-                    `ret    : nextPCsel = 2'b11                 ;
-                    default : nextPCsel = 2'b01                 ;
-                endcase
+        case(opCode1)
+            `addv   :   opSel[1:0] = 2'b11  ;
+            `multv  :   opSel[1:0] = 2'b11  ;
+            `addvc  :   opSel[1:0] = 2'b11  ;
+            `val    :   opSel[1:0] = 2'b11  ;
+            default :   if (rightFwdY)          opSel[1:0] = 2'b01  ;
+                         else if (rightFwdO)    opSel[1:0] = 2'b10  ;
+                               else             opSel[1:0] = 2'b00  ;
+        endcase
+    always_comb
+        if (leftFwdY)       opSel[3:2] = 2'b01  ;
+         else if (leftFwdO) opSel[3:2] = 2'b10  ;
+               else         opSel[3:2] = 2'b00  ;
+// end forwarding section
 
-    always_comb case(opCode1)
-                    `load   : opSel = 2'b10 ;
-                    `addv   : opSel = 2'b01 ;
-                    `multv  : opSel = 2'b01 ;
-                    `addvc  : opSel = 2'b01 ;
-                    `val    : opSel = 2'b01 ;
-                    default : opSel = 2'b00 ;
-                endcase
-
-
-    assign dataWrite    = opCode2 == `store                         ;
-    assign dataRead     = opCode2 == `read                          ;
-    assign we           = ((opCode2[5:4] == 2'b11)  |
-                          (opCode2 == `load)        |
-                          (opCode2 == `val)) & !(intState > 3'b001) ;
+    assign dataWrite    = opCode3 == `store                         ;
+    assign dataRead     = opCode3 == `read                          ;
+    assign memSel       = opCode3 == `read                          ;
+    assign we           = ((opCode3[5:4] == 2'b11)  |
+                           (opCode3 == `val)        |
+                           (opCode3 == `read)) & !(intState > 3'b001);
 endmodule
 \end{lstlisting}
 \end{shaded*}
 }
-
-
 
 {\small
 \begin{shaded*}
@@ -275,38 +331,36 @@ File name: INSTRFETCH.sv
 Circuit name:
 Description:
 ************************************************************************/
-module INSTRFETCH(  input   logic [31:0]    instruction ,
-                    output  logic [9:0]     PC          ,
-                    output  logic [31:0]    instruction1,
-                    output  logic [9:0]     PC1         ,
-                    input   logic [31:0]    leftOut     ,
+module INSTRFETCH ( input   logic [31:0]    instruction ,
+                    input   logic [31:0]    leftOp      ,
                     input   logic [1:0]     nextPCsel   ,
+
+                    output  logic [9:0]     pc          ,
+                    output  logic [31:0]    instruction1,
+                    output  logic [9:0]     pc1         ,
+
                     input   logic           reset       ,
                     input   logic           clk         );
 
     // PipeReg0
-    always @(posedge clk)
-        if (reset)  begin           PC <= -1                        ;
-                                    instruction1 <= 0               ;
-                                    //PC1        <= 0               ;
+    always_ff @(posedge clk)
+        if (reset)  begin       pc <= -1                        ;
+                                instruction1 <= 0               ;
                     end
-        else    begin   case(nextPCsel)
-                            2'b00:  PC <= PC                        ;
-                            2'b01:  PC <= PC + 1                    ;
-                            2'b10:  PC <= instruction1[9:0] + PC1   ;
-                            2'b11:  PC <= leftOut                   ;
-                        endcase
+         else begin case(nextPCsel)
+                        2'b00:  pc <= pc                        ;
+                        2'b01:  pc <= pc + 1                    ;
+                        2'b10:  pc <= instruction1[9:0] + pc1   ;
+                        2'b11:  pc <= leftOp                    ;
+                    endcase
     // PipeReg1
                         instruction1 <= instruction ;
-                        PC1          <= PC          ;
+                        pc1          <= pc          ;
                 end
 endmodule
 \end{lstlisting}
 \end{shaded*}
 }
-
-
-
 
 {\small
 \begin{shaded*}
@@ -316,22 +370,23 @@ File name: OPSFETCH.sv
 Circuit name:
 Description:
 ************************************************************************/
-module OPSFETCH(input   logic [31:0]    instruction1,
-                input   logic [9:0]     PC1         ,
-                input   logic           inta        ,
-                input   logic           we3         ,
-                input   logic [4:0]     destAddr3   ,
-                input   logic [31:0]    result3     ,
-                input   logic [1:0]     opSel       ,
-                output  logic [1:0]     opSel2      ,
-                output  logic           zero        ,
-                output  logic [31:0]    leftOp      ,
-                output  logic [31:0]    leftOp2     ,
-                output  logic [31:0]    rightOp2    ,
-                output  logic [31:0]    value2      ,
-                output  logic [5:0]     opCode2     ,
-                output  logic [4:0]     destAddr2   ,
-                input   logic           clk         );
+module OPSFETCH(    input   logic [31:0]    instruction1,
+                    input   logic [31:0]    instruction4,
+                    input   logic [9:0]     pc1         ,
+                    input   logic           inta        ,
+                    input   logic           we4         ,
+                    input   logic [31:0]    result4     ,
+                    input   logic [3:0]     opSel       ,
+
+                    output  logic           zero        ,
+                    output  logic [31:0]    leftOp      ,
+                    output  logic [31:0]    leftOp2     ,
+                    output  logic [31:0]    rightOp2    ,
+                    output  logic [3:0]     opSel2      ,
+                    output  logic [31:0]    instruction2,
+
+                    input   logic           clk         );
+
     logic   [31:0]  rf[0:31]    ;
     logic   [31:0]  rightOp     ;
     logic           we          ;
@@ -343,29 +398,32 @@ module OPSFETCH(input   logic [31:0]    instruction1,
 
     always_ff @(posedge clk) if (we) rf[destAddr] <= result ;
 
-    assign leftOp       = rf[leftAddr]          ;
-    assign rightOp      = rf[rightAddr]         ;
+    assign leftOp       =
+        ((destAddr == leftAddr) && we) ? result : rf[leftAddr]    ;
+    assign rightOp      =
+        ((destAddr == rightAddr) && we) ? result : rf[rightAddr]  ;
     assign zero         = leftOp == 0           ;
     assign rightAddr    = instruction1[15:11]   ;
-// PipeReg2:
-    always_ff @(posedge clk) begin
-        leftOp2     <=  leftOp                                      ;
-        rightOp2    <=  rightOp                                     ;
-        value2      <=  {{16{instruction1[15]}}, instruction1[15:0]};
-        opSel2      <=  opSel                                       ;
-        opCode2     <=  instruction1[31:26]                         ;
-        destAddr2   <=  instruction1[25:21]                         ;
-    end
+
+    // PipeReg2:
+    always_ff @(posedge clk)
+        begin
+            leftOp2         <=  leftOp          ;
+            rightOp2        <=  rightOp         ;
+            opSel2          <=  opSel           ;
+            instruction2    <=  instruction1    ;
+        end
 
     intUnit intunit(.we         (we                     ),
                     .destAddr   (destAddr               ),
                     .result     (result                 ),
                     .leftAddr   (leftAddr               ),
-                    .we3        (we3                    ),
-                    .destAddr3  (destAddr3              ),
-                    .result3    (result3                ),
+
+                    .we4        (we4                    ),
+                    .destAddr4  (instruction4[25:21]    ),
+                    .result4    (result4                ),
                     .leftAddr1  (instruction1[20:16]    ),
-                    .PC1        (PC1                    ),
+                    .pc1        (pc1                    ),
                     .inta       (inta                   ));
 endmodule
 \end{lstlisting}
@@ -383,46 +441,79 @@ Description:
 `include "0_DEFINES.vh"
 module EXECUTE( input   logic [31:0]    leftOp2     ,
                 input   logic [31:0]    rightOp2    ,
-                input   logic [31:0]    value2      ,
-                input   logic [5:0]     opCode2     ,
-                input   logic [4:0]     destAddr2   ,
-                input   logic [31:0]    dataIn      ,
-                input   logic           we          ,
-                input   logic [1:0]     opSel2      ,
-                output  logic [9:0]     dataAddr    ,
-                output  logic [31:0]    dataOut     ,
-                output  logic           we3         ,
-                output  logic [4:0]     destAddr3   ,
+                input   logic [3:0]     opSel2      ,
+                input   logic [31:0]    instruction2,
+                input   logic [31:0]    result4     ,
+
+                output  logic [31:0]    leftOp3     ,
                 output  logic [31:0]    result3     ,
-                output  logic [5:0]     opCode3     ,
-                input   logic           clk         );
+                output  logic [31:0]    rightOp3    ,
+                output  logic [31:0]    instruction3,
+
+                input                   clk         );
 
     logic [31:0]    rightIn ;
+    logic [31:0]    leftIn  ;
     logic [31:0]    out     ;
-    logic [31:0]    dataIn3 ;
+    logic [31:0]    value   ;
 
-    assign dataAddr = leftOp2[9:0]  ;
-    assign dataOut  = rightOp2      ;
+    assign value = {{16{instruction2[15]}}, instruction2[15:0]} ;
 
-    always_comb case(opSel2)
+    always_comb case(opSel2[1:0])
                     2'b00: rightIn = rightOp2   ;
-                    2'b01: rightIn = value2     ;
-                    2'b10: rightIn = dataIn3    ;
-                    2'b11: rightIn = 31'b0      ;
+                    2'b01: rightIn = result3    ;
+                    2'b10: rightIn = result4    ;
+                    2'b11: rightIn = value      ;
+                endcase
+    always_comb case(opSel2[3:2])
+                    2'b00: leftIn = leftOp2;
+                    2'b01: leftIn = result3;
+                    2'b10: leftIn = result4;
+                    2'b11: leftIn = 31'b0   ;
                 endcase
 
-    ALU alu(.out    (out    ),
-            .leftIn (leftOp2),
-            .rightIn(rightIn),
-            .opCode (opCode2));
+    ALU alu(.out    (out                ),
+            .leftIn (leftIn             ),
+            .rightIn(rightIn            ),
+            .opCode (instruction2[31:26]));
 
     // PipeReg3
-    always_ff @(posedge clk)    begin   we3         <= we       ;
-                                        destAddr3   <= destAddr2;
-                                        result3     <= out      ;
-                                        opCode3     <= opCode2  ;
-                                        dataIn3     <= dataIn   ;
-                                end
+    always_ff @(posedge clk)
+        begin   leftOp3         <= leftIn       ;
+                result3         <= out          ;
+                rightOp3        <= rightIn      ;
+                instruction3    <= instruction2 ;
+        end
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+
+{\small
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
+/************************************************************************
+File name: DATAMEM.sv
+Circuit name:
+Description:
+************************************************************************/
+module DATAMEM( input   logic [31:0]    result3     ,
+                input   logic [31:0]    instruction3,
+                input   logic           we          ,
+                input   logic           memSel      ,
+                input   logic [31:0]    dataIn      ,
+
+                output  logic [31:0]    result4     ,
+                output  logic [31:0]    instruction4,
+                output  logic           we4         ,
+
+                input   logic           clk         );
+
+    always_ff @(posedge clk)
+        begin   result4         <= memSel ? dataIn : result3;
+                instruction4    <= instruction3             ;
+                we4             <= we                       ;
+        end
 endmodule
 \end{lstlisting}
 \end{shaded*}
@@ -466,7 +557,7 @@ module ALU( output  logic   [31:0]  out     ,
                     `bwand  : out = leftIn & rightIn                ;
                     `bwor   : out = leftIn | rightIn                ;
                     `bwxor  : out = leftIn ^ rightIn                ;
-                    `load   : out = rightIn                         ;
+                    //`load : out = rightIn                         ;
                     `val    : out = rightIn                         ;
                     default : out = leftIn                          ;
                 endcase
@@ -474,8 +565,6 @@ endmodule
 \end{lstlisting}
 \end{shaded*}
 }
-
-
 
 {\small
 \begin{shaded*}
@@ -489,23 +578,25 @@ module intUnit( output  logic           we          ,
                 output  logic   [4:0]   destAddr    ,
                 output  logic   [31:0]  result      ,
                 output  logic   [4:0]   leftAddr    ,
-                input   logic           we3         ,
-                input   logic   [4:0]   destAddr3   ,
-                input   logic   [31:0]  result3     ,
+
+                input   logic           we4         ,
+                input   logic   [4:0]   destAddr4   ,
+                input   logic   [31:0]  result4     ,
                 input   logic   [4:0]   leftAddr1   ,
-                input   logic   [9:0]   PC1         ,
+                input   logic   [9:0]   pc1         ,
                 input   logic           inta        );
 
-    assign we       = inta ? 1'b1           : we3       ;
-    assign destAddr = inta ? 5'b11110       : destAddr3 ;
-    assign result   = inta ? {21'b0, PC1}   : result3   ;
+    assign we       = inta ? 1'b1           : we4       ;
+    assign destAddr = inta ? 5'b11110       : destAddr4 ;
+    assign result   = inta ? {21'b0, pc1}   : result4   ;
     assign leftAddr = inta ? 5'b11111       : leftAddr1 ;
 endmodule
 \end{lstlisting}
 \end{shaded*}
 }
 
-\section{Code generator}
+\subsection{Code generator}
+
 
 {\small
 \begin{shaded*}
@@ -831,22 +922,12 @@ Description:
 
 // DATA TRANSFER INSTRUCTIONS
     task READ; // data read
+        input   [4:0]   dest    ;
         input   [4:0]   left    ;
 
         begin   opCode  = `read ;
-                d       = 5'b0  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task LOAD; // data load
-        input   [4:0]   dest    ;
-
-        begin   opCode  = `load ;
                 d       = dest  ;
-                l       = 5'b0  ;
+                l       = left  ;
                 v       = 16'b0 ;
                 endLine         ;
         end
@@ -886,7 +967,8 @@ Description:
 \end{shaded*}
 }
 
-\section{Simulator}
+
+\subsection{Simulator}
 
 {\small
 \begin{shaded*}
@@ -930,9 +1012,9 @@ module testRISC;
     // MONITOR FOR PROGRAM LAOD & CONTROLLER
     initial begin
      $monitor("t=%0d pc=%d  RF=[%0d, %0d, %0d, %0d, %0d, %0d, %0d, %0d]
-            leftOp2=%0d rightOp2=%0d result3=%0d   intState=%b inta=%b",
+              dataWrite=%0b DM=[%0d, %0d, %0d, %0d] intState=%b inta=%b",
                 $time,
-                dut.processor.PC,
+                dut.processor.pc,
                 dut.processor.regFile.rf[0],
                 dut.processor.regFile.rf[1],
                 dut.processor.regFile.rf[2],
@@ -941,9 +1023,11 @@ module testRISC;
                 dut.processor.regFile.rf[5],
                 dut.processor.regFile.rf[30],
                 dut.processor.regFile.rf[31],
-                dut.processor.leftOp2,
-                dut.processor.rightOp2,
-                dut.processor.result3,
+                dut.processor.dataWrite,
+                dut.memSys.dataMemory[0],
+                dut.memSys.dataMemory[1],
+                dut.memSys.dataMemory[2],
+                dut.memSys.dataMemory[3],
                 dut.processor.dcd.intState,
                 dut.processor.dcd.inta);
     end
@@ -953,7 +1037,8 @@ endmodule
 }
 
 
-\section{Testing}
+
+\subsection{Testing}
 
 {\small
 \begin{shaded*}
@@ -970,8 +1055,9 @@ Description:
             VAL(2,3)    ;
             VAL(3,4)    ;
             VAL(4,5)    ;
-            NOP         ;
-            NOP         ;
+            //NOP           ;
+            //NOP           ;
+            //NOP           ;
             ADD(5,4,3)  ;
             HALT        ;
             HALT        ;
@@ -982,38 +1068,40 @@ Description:
             VAL(0,2)    ;
             VAL(1,4)    ;
             VAL(2,8)    ;
-            NOP         ;
             MULT(3,1,2) ;
+            ADDV(0,0,5) ;
             NOP         ;
             HALT        ;
+            HALT        ;
 //*/
-//*
+/*
             VAL(31,13)  ;
             VAL(2,23)   ;
-            VAL(0,13)   ;
+            VAL(0,24)   ;
             VAL(1,13)   ;
             EI          ;
-            ADDV(0,0,1) ;
+            ADDV(2,31,1);
             VAL(1,1)    ;
             VAL(2,222)  ;
             NOP         ;
-            ADDV(0,0,4) ;
+            ADD(0,1,2)  ;
             HALT        ;
             HALT        ;
             NOP         ;
         // subroutine triggered by interrupt
-            ADDV(30,30,-1)  ;
+            ADDV(30,30,-2)  ;
+            VAL(3,44)       ;
             NOP             ;
             NOP             ;
             NOP             ;
             RET(30)         ;
+            NOP             ;
 //*/
-/*
+//*
             NOP         ;
-            VAL(0,-3)   ;
+            VAL(0,5)    ;
+    LB(1);  ADDV(0,0,-1);
             NOP         ;
-            NOP         ;
-    LB(1);  ADDV(0,0,1);
             NOP         ;
             BRNZ(0,1)   ;
             NOP         ;
@@ -1021,16 +1109,27 @@ Description:
             HALT        ;
 //*/
 /*
-            VAL(0,1)    ;
             VAL(1,55)   ;
+            VAL(0,1)    ;
             STORE(0,1)  ;
-            READ(0)     ;
-            LOAD(2)     ;
+            NOP         ;
+            NOP         ;
+            READ(2,0)   ;
+            HALT        ;
             HALT        ;
 //*/
+
+
+
+
+
+
+
+
+
+
+
 \end{lstlisting}
 \end{shaded*}
 }
-
-
 

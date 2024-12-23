@@ -68,9 +68,12 @@
   {\@starttoc{lol}}
   {\vspace{\cftbeforeloltitleskip}\@starttoc{lol}\vspace{\cftafterloltitleskip}}
   {}{}
-
 \makeatother
 
+\newcommand{\localtoc}{%
+    \localtableofcontents % Call the existing \localtableofcontents command
+    \newpage              % Add a page break
+}
 
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -271,7 +274,7 @@ Most of the descriptions of the structures and the simulation of their behavior 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Short Table of Contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{tocdepth}{3}
+\setcounter{tocdepth}{2}
 \shorttoc{Contents}{1} % Only sections
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -288,7 +291,6 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \listoftables
 %\addcontentsline{toc}{chapter}{List of Tables}
 
-
 \lstlistoflistings
 
 
@@ -299,7 +301,8 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \mainmatter
 \pagenumbering{arabic}
 
-\setcounter{tocdepth}{2}% local TOC displays only sections
+\setcounter{tocdepth}{3}% local TOC displays only sections
+
 \etocsettocstyle{}{} % No title or end content in local table of contents
 
 %\renewcommand{\chaptername}{Section}
@@ -318,90 +321,41 @@ Most of the descriptions of the structures and the simulation of their behavior 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{NUMBER SYSTEMS AND REPRESENTATIONS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%*************************
-% Chapter Arithmetic
-%*************************
-\chapter{Number Systems}\label{chapt:number_systems}
-\localtableofcontents
-\include{01_01_1_number_systems}
-\include{01_01_2_decimal_arithmetic}
-\include{01_01_3_positional_notation}
-\include{01_01_4_binary_arithmetic}
-
-%*************************
-% Chapter Formal Notation
-%*************************
-\chapter{Numerical Sets}
-\localtableofcontents
-\include{01_01_5_formal_notation}
-
-%*********************************
-% Number Representations
-%*********************************
-\chapter{Finite Unsigned Integer Binary Representations in $\mathbb{N}$}
-\localtableofcontents
-\include{01_02_1_unsigned_integers}
-
-\chapter{Finite Signed Binary Integer Representations in $\mathbb{Z}$}
-\localtableofcontents
-\include{01_02_2_signed_integers}
-
-\chapter{Finite Real Number Representations in $\mathbb{R}$}
-\localtableofcontents
-\include{01_02_3_floating_point}
-
-\chapter{Character Representations}
-\localtableofcontents
-\include{01_02_4_character_encodings}
-
-%*************************
-% Part 1 Summary
-%*************************
-\chapter{Summary of Number Systems and Representations}
-\localtableofcontents
-\include{01_03_1_part1_summary}
+\include{01_01_number_systems}
+\include{01_02_formal_notation}
+\include{01_03_unsigned_integers}
+\include{01_04_signed_integers}
+\include{01_05_floating_point}
+\include{01_06_character_encodings}
+\include{01_07_part1_summary}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{FROM GATES TO PROCESSORS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Combinational Circuits:  No-Loop, Zero-Order Systems (0-OS)}\label{lect1}
-\localtableofcontents
-
-\include{02_combinational_circuits_0-OS}
-\localtableofcontents
-
-\include{03_memory_circuits_1-OS}
-\localtableofcontents
-
-\include{04_automata_2-OS}
-\localtableofcontents
-
-\include{05_processors_3-OS}
-\localtableofcontents
-
+\include{02_08_combinational_circuits_0-OS}
+\include{02_09_memory_circuits_1-OS}
+\include{02_10_automata_2-OS}
+\include{02_11_processors_3-OS}
 
 %################
 \part{COMPUTING}
 %################
-\include{06_von_neumann_4-OS}
-\localtableofcontents
-
-\include{07_harvard_5-OS}
-\localtableofcontents
-
+\include{03_12_von_neumann_4-OS}
+\include{03_13_harvard_5-OS}
 \include{08_parallel_computing_N-OS}
-\localtableofcontents
-%\include{09_open_problems}
 
 %######################
 \part{PRACTICAL DESIGNS}
 %######################
-\include{04_01_Performance_Optimized_Digital_Logic}
-\localtableofcontents
+\include{04_15_Performance_Optimized_Digital_Logic}
+\include{04_16_ILP}
+\include{04_17_0_ToyRISC}
+\include{04_18_RISCV}
+\include{04_19_RISCV_multithreaded}
+\include{04_20_pRISC_heterogeneous}
 
-\include{05b_ILP}
-\localtableofcontents
+
+%\include{09_open_problems}
 
 %%%%%%%%%%%%%
 % APPENDICES
@@ -411,41 +365,11 @@ Most of the descriptions of the structures and the simulation of their behavior 
 \part*{APPENDIXES}
 \appendix
 
-\chapter{Introduction to Chisel}
-\include{A001_Chisel}
-\localtableofcontents
+\include{A01_0_Hardware_Description_Language}
+\include{A02_physical_gates}
+\include{Axx_simulations}
+\include{Axy_verilogFIFO}
 
-\chapter{Introduction to System Verilog}
-\include{A002_System_Verilog}
-\localtableofcontents
-
-\chapter{Chisel Compared with System Verilog}
-\include{A003_Chisel_vs_System_Verilog}
-\localtableofcontents
-
-\include{A01_implementations}
-\localtableofcontents
-
-\include{A02_simulations}
-\localtableofcontents
-
-\include{A03_toyRISCimp}
-\localtableofcontents
-
-\include{A04_pipelinedToyRISCimp}
-\localtableofcontents
-
-\include{A05_pipeForwardToyRISCimp}
-\localtableofcontents
-
-\include{A06_verilogToyRISC}
-\localtableofcontents
-
-\include{A07_verilogFIFO}
-\localtableofcontents
-
-\include{A08_pRISC}
-\localtableofcontents
 
 
 

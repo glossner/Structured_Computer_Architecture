@@ -1,0 +1,709 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Number Systems
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Number Systems}\label{chapt:number_systems}
+\localtoc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{A Brief History of Number Systems}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Early Development}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Early humans used tally marks to record quantities, such as notches on bones or stones, dating back to approximately 30,000 BCE \cite{ifrah2000universal}. More structured systems emerged with the Babylonians, who developed a base-60 system around 2000 BCE, and the Egyptians, who used hieroglyphic numerals around 3000 BCE \cite{ore1990number}. The base-12 system, or duodecimal system, emerged due to its practicality in trade, measurement, and division of goods. Its divisibility by 2, 3, 4, and 6 made it ideal for splitting quantities evenly \cite{wells2010number}. These systems laid the foundation for positional notation and arithmetic, with remnants of base-60 and base-12 still evident today in the division of time into 60 minutes and 60 seconds, the 12 months of a year, the 12 inches in a foot, and the grouping of items into dozens in commerce.
+
+The Hindu-Arabic numeral system, developed between 500–1200 CE, introduced the concept of zero and a fully positional decimal system. This innovation transformed arithmetic and facilitated the development of more advanced mathematical concepts, forming the basis of the modern number system \cite{kline1990mathematics}.
+
+The binary number system, foundational to digital computing, was first described by the Indian mathematician Pingala in the 2nd century BCE. Later, in the 17th century, Gottfried Wilhelm Leibniz formalized binary arithmetic, recognizing its potential for simplifying calculations \cite{kline1990mathematics}. This system’s alignment with the on-off states of electrical circuits made it the natural choice for modern computers.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Evolution of Mathematical Sets}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The evolution of mathematical sets reflects humanity's growing understanding of quantity, ratios, and continuity.
+
+\paragraph{Integers (\( \mathbb{Z} \)).}
+The Babylonians and Egyptians used whole numbers for trade and astronomy. However, the concept of negative numbers was not widely accepted until Indian mathematician Brahmagupta introduced them in the 7th century CE to represent debts \cite{burton2010-number}. 
+
+\paragraph{Rational Numbers (\( \mathbb{Q} \)).}
+Rational numbers were extensively studied by the Greeks, particularly in their exploration of ratios in geometry. The discovery of irrational numbers, such as \( \sqrt{2} \), challenged their worldview, leading to the distinction between rational and irrational quantities \cite{maor2007}.
+
+\paragraph{Real Numbers (\( \mathbb{R} \)).}
+Real numbers evolved from the need to describe continuous quantities. Euclid's work on incommensurable lengths hinted at irrational numbers, but rigorous definitions came in the 19th century through the works of Dedekind (via Dedekind cuts) and Cantor (via set theory) \cite{rosen2018}.
+
+\paragraph{Complex Numbers (\( \mathbb{C} \)).}
+Complex numbers arose in the 16th century as mathematicians like Cardano and Bombelli sought solutions to polynomial equations, particularly cubic and quartic equations \cite{boyer1991history}. Initially dismissed as "imaginary," they were formalized in the 18th and 19th centuries by mathematicians such as Euler, Argand, and Gauss. Euler introduced the formula \( e^{i\theta} = \cos\theta + i\sin\theta \), Argand developed the geometric interpretation of complex numbers on the complex plane, and Gauss expanded their application to number theory and algebra \cite{kline1990mathematics, stewart2015-foundations}. Today, complex numbers are essential in fields like quantum mechanics, engineering, and signal processing \cite{maor2007}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Pre-Computer Number Representations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The representation of numbers has evolved alongside advances in mathematics, science, and technology. While early systems like the Babylonian base-60 and Hindu-Arabic decimal notation provided the foundation for positional number systems, more specialized representations emerged to address the computational challenges of different eras. From manual calculations to the computer age, each system reflects the requirements and constraints of its time.
+
+Before the advent of digital computers, numerical representations were primarily designed for manual or mechanical computation. These early methods focused on simplifying arithmetic while addressing the limitations of the tools available.
+
+\paragraph{Decimal Positional Systems.}
+The Hindu-Arabic numeral system, which became dominant during the medieval period, introduced positional notation and the concept of zero. This innovation enabled efficient manual computation and set the stage for future representations in mechanical and digital systems \cite{ifrah2000, burton2010-history}.
+
+\paragraph{10's Complement for Subtraction.}
+The concept of complements, such as 10's complement, predates the computer era and was used in mechanical calculators like the 19th-century Arithmometer. By representing negative numbers as the difference between a base (e.g., \( 10^n \)) and a positive value, subtraction could be performed as addition with a small adjustment. This method inspired later binary complement systems used in digital computers \cite{randell1982origins}.
+
+\paragraph{Logarithmic Representations.}
+In the early 17th century, John Napier introduced logarithms, enabling the multiplication of large numbers by adding their logarithms. Logarithmic tables and slide rules became essential tools for computation, representing a precursor to modern computational methods \cite{stewart2008-taming}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Number Representations in Computing}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The transition from mechanical to digital systems necessitated new numerical representations tailored to the constraints and capabilities of electronic computers.
+
+\paragraph{Binary and Two's Complement.}
+With the advent of binary systems, representing numbers using only two states (0 and 1) became standard in computing. Negative numbers posed a challenge, initially addressed with signed magnitude representation. However, this method proved inefficient for arithmetic operations, leading to the adoption of two's complement \cite{kline1990mathematics}. In two's complement, the negative of a number is represented as its binary complement plus one, simplifying subtraction and enabling efficient hardware implementation.
+
+\paragraph{Excess-\( k \) Representations.}
+First used in analog computing systems, excess-\( k \) representations became a cornerstone of digital computing with the IEEE 754 floating-point standard. By biasing the representation of numbers, excess-\( k \) allows for simplified comparisons and normalization, making it ideal for scientific computations \cite{goldberg1991}.
+
+\paragraph{Fixed-Point Arithmetic.}
+Fixed-point representation emerged as a practical solution for embedded systems and early computers with limited hardware capabilities. By dedicating a fixed number of bits to the fractional and integer parts of a number, fixed-point arithmetic provided a simpler alternative to floating-point for real-time applications \cite{smith1997science}.
+
+\paragraph{Floating-Point Systems.}
+The need for a dynamic range in numerical representation led to the development of floating-point systems. Introduced formally in the mid-20th century and standardized with IEEE 754 in 1985, floating-point representation encodes numbers as a sign, exponent, and mantissa. This system balances precision, range, and computational efficiency, making it indispensable for modern scientific computing \cite{goldberg1991}.
+
+\paragraph{Binary Coded Decimal (BCD).}
+BCD, introduced in the early computer era, represents decimal digits directly in binary form. This representation avoids rounding errors associated with binary floating-point arithmetic, making it ideal for financial and accounting systems \cite{randell1982origins}. Despite its storage inefficiency, BCD remains in use for applications requiring exact decimal precision.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Modern Trends and Challenges}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Arbitrary precision and energy-efficient representations are current areas of continued research and development.
+
+\begin{itemize}
+    \item Arbitrary Precision Arithmetic: Modern software libraries support representations that exceed hardware constraints, enabling computations with arbitrarily high precision for cryptography and scientific research \cite{smith1997science}.
+    \item Energy-Efficient Representations: In the era of low-power devices and AI accelerators, representations like fixed-point and logarithmic encoding are experiencing a resurgence due to their energy efficiency.
+    \item Approximate Computing: To reduce power consumption and improve efficiency, approximate computing techniques trade precision for energy savings in tasks like image processing, machine learning, and data analytics. These methods employ representations that prioritize computational simplicity over exactness, reflecting the growing importance of resource-constrained systems \cite{han2013approximate}.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Decimal Arithmetic}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%****************************
+\subsection{Decimal Addition}
+%****************************
+In the decimal system, addition is performed by aligning numbers according to their place values (units, tens, hundreds, etc.), adding each column from right to left. If the sum in a column exceeds 9, the digit in the "tens" place of the sum becomes a "carry," which is added to the next column on the left.
+\vspace{\baselineskip}\par
+For example, let's add \( 456 \) and \( 378 \) step-by-step:
+\vspace{\baselineskip}\par
+Initial Setup:
+  \begin{itemize}
+       \item  Start by arranging the numbers vertically by place value.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1: Add the Units Column:
+   \begin{itemize}
+       \item Add the units column: \( 6 + 8 = 14 \), which is greater than 9.
+       \item Write down 4 in the units place and carry over 1 to the tens column.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & & 1 & \\ % Carry row shifted left by one column
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+    & & & 4 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 2: Add the Tens Column:
+  \begin{itemize}
+       \item Now, move to the tens column.
+       \item Add \( 5 + 7 = 12 \), and add the carry of 1, which gives \( 12 + 1 = 13 \).
+       \item Write down 3 in the tens place and carry over 1 to the hundreds column.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 1 & 1 & \\ % Carry row shifted left
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+    & & 3 & 4 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 3: Add the Hundreds Column:
+  \begin{itemize}
+       \item Finally, add the hundreds column.
+       \item Add \( 4 + 3 = 7 \), then add the carry of 1, which gives \( 7 + 1 = 8 \).
+       \item Write down 8 in the hundreds place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 1 & 1 & \\ % Carry row remains the same
+    & 4 & 5 & 6 \\
+  + & 3 & 7 & 8 \\
+  \hline
+    & 8 & 3 & 4 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Final Result:
+  \begin{itemize}
+       \item The sum of \( 456 + 378 \) is \( 834 \).
+   \end{itemize}
+
+
+
+%**********************************
+\subsection{Decimal Multiplication}
+%**********************************
+Decimal multiplication involves breaking down the operation into several smaller multiplications and then adding the results. Here’s a step-by-step example multiplying \( 23 \) by \( 45 \):
+
+\vspace{\baselineskip}\par
+Set Up the Multiplication:
+  \begin{itemize}
+    \item Arrange \( 23 \) and \( 45 \) in a vertical multiplication layout.
+   \end{itemize}
+\[
+\begin{array}{rcccc}
+    & & 2 & 3 \\ % First number (23)
+  \times & & 4 & 5 \\ % Second number (45)
+  \hline
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1: Multiply by the Units Digit (5):
+  \begin{itemize}
+   \item Multiply each digit in \( 23 \) by \( 5 \), starting from the rightmost digit (units).
+    \begin{itemize}
+      \item Units Column: \( 3 \times 5 = 15 \). Write down 5 and carry over 1.
+   \item Tens Column: \( 2 \times 5 = 10 \), plus the carry of 1 gives 11. Write down 1 and carry over 1 to the next column.
+   \end{itemize}
+   \item Result after multiplying \( 23 \) by \( 5 \): \( 115 \).
+
+\end{itemize}
+\[
+\begin{array}{rccccc}
+   & 1 & 1 &  &  \\ % Carry row shifted left by one column
+   & & 2 & 3 \\ % Number 23
+  \times & & & 5 \\ % Multiplier 5
+  \hline
+  & 1 & 1 & 5 &  \\ % Result of 23 * 5
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 2: Multiply by the Tens Digit (4):
+  \begin{itemize}
+  \item Write a 0 in the units place
+   \item Multiply each digit in \( 23 \) by \( 4 \)
+   \item Tens column: \( 3 \times 4 = 12 \). Write down 2 and carry over 1.
+   \item Hundres column: \( 2 \times 4 = 8 \), plus the carry of 1 gives 9. Write down 9.
+  \end{itemize}
+
+\[
+\begin{array}{rcccccc}
+         &  & 1 &   &   & & \\ % Carry row
+         &  & 2 & 3 &   & &\\ 
+  \times &  &   & 4 &   & &\\ 
+  \hline
+        &   & 1 & 1 & 5 & & \\ 
+        &   & 9 & 2 & 0 &
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 3: Add the Results:
+  \begin{itemize}
+  \item \(5 + 0 = 0 \). Write a 5 in the units place
+   \item \(1 + 2 = 3\). Write a 3 in the tens place
+   \item \(9 + 1 = 10\). Write a 0 in the hundreds place. Carry the 1.
+   \item \(1 + 0 = 1\). Write a 1 in the thousands place.
+  \end{itemize}
+\[
+\begin{array}{rcccccc}
+        & 1 &  &    &  &  & \\
+        &   & 1 & 1 & 5 & & \\ 
+        &   & 9 & 2 & 0 &   \\
+        \hline
+        & 1 & 0  & 3  & 5  &  
+\end{array}
+\]
+
+Thus, \( 23 \times 45 = 1035 \).
+
+
+
+%*******************************
+\subsection{Decimal Subtraction}
+%*******************************
+The concepts of carrying (in addition) and borrowing (in subtraction) are important in basic arithmetic:
+
+\begin{itemize}
+    \item Carrying occurs in addition when a sum exceeds the base value (10 in decimal). The extra value is "carried" to the next column.
+    \item Borrowing occurs in subtraction when the top digit in a column is smaller than the bottom digit. We "borrow" 1 from the next column to the left.
+\end{itemize}
+
+For example, let’s subtract \( 456 \) from \( 812 \):
+
+\vspace{\baselineskip}\par
+Initial Setup:
+  \begin{itemize}
+     \item Write the numbers vertically, aligning them by place value.
+     \end{itemize}
+\[
+\begin{array}{cccc}
+    & 8 & 1 & 2 \\
+  - & 4 & 5 & 6 \\
+  \hline
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1. Right Column (Units Place):
+  \begin{itemize}
+   \item Start with the units column. \( 2 - 6 \) is not possible because 2 is less than 6, so we need to borrow.
+   \item  Borrow 1 from the tens column. This turns the 2 into 12 and reduces the tens place from 1 to 0.
+   \item Now, \( 12 - 6 = 6 \), so we write down 6 in the units place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 8 & 0 & 12 \\ % Show the borrow
+  - & 4 & 5 & 6 \\
+  \hline
+    & & & 6 \\
+\end{array}
+\]
+   
+
+\vspace{\baselineskip}\par
+Step 2. Middle Column (Tens Place):
+ \begin{itemize}
+   \item Move to the tens column, where we now have \( 0 - 5 \).
+   \item Since 0 is less than 5, we need to borrow again.
+   \item Borrow 1 from the hundreds column, turning the 0 into 10 and reducing the hundreds column from 8 to 7.
+   \item Now, \( 10 - 5 = 5 \), so we write down 5 in the tens place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 7 & 10 & 12 \\ % Show the second borrow
+  - & 4 & 5 & 6 \\
+  \hline
+    & & 5 & 6 \\
+\end{array}
+\]
+   
+
+\vspace{\baselineskip}\par
+Step 3. Left Column (Hundreds Place):
+ \begin{itemize}
+   \item Finally, move to the hundreds column.
+   \item \( 7 - 4 = 3 \), so we write down 3 in the hundreds place.
+   \end{itemize}
+\[
+\begin{array}{cccc}
+    & 7 & 10 & 12 \\ % Carry rows remain for context
+  - & 4 & 5 & 6 \\
+  \hline
+    & 3 & 5 & 6 \\
+\end{array}
+\]
+
+This yields \( 812 - 456 = 356 \).
+
+
+
+%****************************
+\subsection{Decimal Division}
+%****************************
+Long division is a method for dividing two numbers to find how many times one number fits into another. We’ll illustrate this by dividing \( 853 \) by \( 4 \), showing each step in detail.
+
+\vspace{\baselineskip}\par
+Set Up the Division Problem:
+ \begin{itemize}
+    \item We write \( 853 \) as the dividend (the number being divided) and \( 4 \) as the divisor (the number we’re dividing by).
+    \end{itemize}
+
+\[
+\begin{array}{r@{\hskip\arraycolsep}c@{\hskip\arraycolsep}l}
+&  & \\
+4 &\big)& \overline{853} \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 1. Divide the Hundreds Place:
+ \begin{itemize}
+    \item First, see how many times \( 4 \) fits into the hundreds digit of \( 853 \), which is \( 8 \).
+    \item \( 4 \) fits into \( 8 \) exactly \( 2 \) times. Write \( 2 \) above the \( 8 \) in the quotient position.
+    \item Multiply \( 2 \times 4 = 8 \) and subtract from \( 8 \), leaving \( 0 \).
+    \end{itemize}
+\[
+\begin{array}{rrrr}
+       & 2 &   &  \\
+       \cline{2-4}
+    4) & 8 & 5 & 3 \\
+       & -8 &  &    \\
+\hline
+    & 0 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 2. Bring Down the Next Digit (Tens Place):
+ \begin{itemize}
+    \item Bring down the next digit in \( 853 \), which is \( 5 \).
+    \item Now, determine how many times \( 4 \) fits into \( 5 \). It fits \( 1 \) time. Write \( 1 \) above the \( 5 \) in the quotient.
+    \item Multiply \( 1 \times 4 = 4 \) and subtract from \( 5 \), leaving \( 1 \).
+\end{itemize}
+\[
+\begin{array}{rrrr}
+       & 2 & 1  &  \\
+       \cline{2-4}
+    4) & 8 & 5 & 3 \\
+       &  & -4  &    \\
+\hline
+    & & 1 &\\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Step 3. Bring Down the Last Digit (Units Place):
+ \begin{itemize}
+    \item Bring down the last digit in \( 853 \), which is \( 3 \).
+    \item Determine how many times \( 4 \) fits into \( 13 \). It fits \( 3 \) times. Write \( 3 \) in the quotient.
+    \item Multiply \( 3 \times 4 = 12 \) and subtract from \( 13 \), leaving \( 1 \).
+  \end{itemize}
+\[
+\begin{array}{rrrr}
+       & 2 & 1 & 3 \\
+       \cline{2-4}
+    4) & 8 & 5 & 13 \\
+       &  &   & -12   \\
+\hline
+    & &  & 1 \\
+\end{array}
+\]
+
+\vspace{\baselineskip}\par
+Final Quotient:
+Since there are no more digits to bring down and the remainder is \( 1 \), the division is complete. The result of \( 853 \div 4 \) is \( 213 \) with a remainder of \( 1 \).
+\[
+853 \div 4 = 213 \text{ with a remainder of } 1
+\]
+
+
+
+%*****************************************************
+\subsection{Alternative Decimal Arithmetic Algorithms}
+%*****************************************************
+Alternative algorithms for addition and subtraction provide efficient strategies that are often different from standard grade-school methods. For example, left-to-right addition, also known as column-wise addition, allows numbers to be added starting from the leftmost digit, making it easier to track partial sums and perform mental calculations \cite{maharaj2010}. Another technique, the breaking apart method, or partial sums addition, involves adding corresponding place values individually before summing them together, which is particularly effective for simplifying multi-digit addition \cite{ashlock1998}. The compensation method, widely used in mental arithmetic, adjusts one number to a nearby round number, simplifying the addition or subtraction process and then compensating for the change afterward \cite{bobis2004}. 
+
+Subtraction techniques also include counting up, where the user counts up from the subtrahend to the minuend, eliminating the need for borrowing \cite{neill1993}. The equal additions method, often called European subtraction, adds the same amount to both numbers to avoid borrowing entirely, making subtraction easier \cite{martin1992}. Swedish subtraction, or direct subtraction, allows for direct subtraction of digits without borrowing, even if intermediate negative values occur; these values are later adjusted with a single borrowing step \cite{nelson2002}. Finally, the complements method for subtraction, often used in digital systems, involves converting the subtrahend to its 10’s complement and adding it to the minuend, simplifying the subtraction process in certain contexts \cite{niven1991}. 
+
+Alternative algorithms for multiplication and division offer different approaches that can often be more intuitive or efficient than standard methods. The Russian Peasant Multiplication algorithm, also known as the doubling and halving method, involves doubling one factor and halving the other, discarding rows where the halved value is even, and summing the remaining doubled values to reach the final product \cite{ifrah2000}. Lattice multiplication, or the grid method, simplifies multi-digit multiplication by arranging the partial products within a lattice and summing along diagonals, providing a highly visual way to handle carrying and alignment \cite{smith2009}. Egyptian multiplication, similar to the Russian method, involves doubling but skips halving, using only sums of doubles that match the multiplicand to achieve the product \cite{koch1970}. 
+
+For division, the chunking or partial quotients method involves repeated subtraction of multiples of the divisor from the dividend, allowing for a flexible approach that does not require exact division at each step \cite{reys1995}. Another approach is cross multiplication for division, which leverages factors to simplify division tasks through a series of multiplications and subtractions \cite{parker2014}. Finally, Vedic mathematics techniques, such as vertically and crosswise multiplication, enable complex multiplications and divisions through specific rules that streamline steps by focusing on place values and relationships between numbers \cite{tirthaji1992}. Each of these methods provides unique strategies for simplifying multiplication and division, and they are especially helpful for mental calculations or visual learners.
+
+%******************************
+\subsection{10's Complement} \label{sub:10s_complement}
+%******************************
+Because 2's complement is used in nearly all modern computers, we show an example of 10's complement to illustrate the technique.
+The 10’s complement is a method for simplifying subtraction by converting it into addition. 
+
+\vspace{\baselineskip}\par
+For any \( n \)-digit number:
+ \begin{itemize}
+    \item The 10's complement of a number is obtained by subtracting each digit from 9 and then adding 1 to the least significant digit of the result.
+    \item If the result of the addition results in a leading carry (a "1" at the beginning of the number), it can be dropped, which effectively gives the correct result for the subtraction.
+  \end{itemize}
+
+\vspace{\baselineskip}\par
+In essence:
+\[
+\text{10's complement of a number } x = (10^n - x)
+\]
+where \( n \) is the number of digits in the number.
+
+\vspace{\baselineskip}\par
+To subtract a number \( B \) from \( A \) using 10’s complement:
+ \begin{itemize}
+    \item Find the 10’s complement of \( B \).
+    \item Add this complement to \( A \).
+    \item Drop the leading 1 if there’s an overflow (carry) in the result, which finalizes the subtraction.
+    \end{itemize}
+  
+\vspace{\baselineskip}\par
+Example: Subtract \( 275 \) from \( 500 \) using 10’s complement
+\vspace{\baselineskip}\par
+Step 1. Find the 10’s Complement of 275:
+  \begin{itemize}
+    \item Subtract each digit of 275 from 9
+  \end{itemize}  
+     \[
+     999 - 275 = 724
+     \]
+  \begin{itemize}
+    \item Add 1 to the result:
+  \end{itemize}
+     \[
+     724 + 1 = 725
+     \]
+   So, the 10’s complement of 275 is 725.
+
+\vspace{\baselineskip}\par
+Step 2. Add the 10’s Complement of 275 to 500:
+   \[
+   500 + 725 = 1225
+   \]
+
+Step 3. Drop the Leading 1:
+   - Since 1225 has a leading 1, we drop it to get the final result:
+   \[
+   1225 \rightarrow 225
+   \]
+
+Thus, \( 500 - 275 = 225 \).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Positional Notation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Positional notation is a method for representing numbers in which the position of each digit in a number determines its value. This is a foundational concept in arithmetic and computer science, as it enables efficient representation and manipulation of numbers. In positional notation, each position is associated with a power of a given base (or radix), allowing numbers to be represented compactly and with minimal symbols \cite{ross2008}.
+
+%******************************************
+\subsection{Positional Notation in Base 10}
+%******************************************
+
+In the decimal system, which is base 10, each digit in a number corresponds to a specific power of 10, depending on its position. For any integer \( N \) composed of \( n \) digits \( d_n, d_{n-1}, \ldots, d_1, d_0 \), we can write \( N \) as:
+\[
+N = d_n \cdot 10^n + d_{n-1} \cdot 10^{n-1} + \ldots + d_1 \cdot 10^1 + d_0 \cdot 10^0
+\]
+where each \( d_i \) is a digit contained in the set \(d \in D = \{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\}
+ \). 
+ \vspace{\baselineskip}\par
+ \( 10^n \) represents the highest place value, where \( d_n \) is the coefficient.
+Each subsequent term decreases the power of 10 by one, moving from left to right in the number.
+
+%*****************************************************
+\subsection{Example of Positional Notation in Base 10}
+%*****************************************************
+
+To illustrate, let’s examine the number \( 357 \). We can expand this number based on its positional values as follows:
+\[
+357 = 3 \cdot 10^2 + 5 \cdot 10^1 + 7 \cdot 10^0
+\]
+Breaking down each part:
+\begin{itemize}
+    \item The leftmost digit, \( 3 \), is in the hundreds place. Its positional value is \( 3 \cdot 10^2 = 300 \).
+    \item The middle digit, \( 5 \), is in the tens place, contributing \( 5 \cdot 10^1 = 50 \).
+    \item The rightmost digit, \( 7 \), is in the units place, contributing \( 7 \cdot 10^0 = 7 \).
+\end{itemize}
+Adding these values gives:
+\[
+357 = 300 + 50 + 7
+\]
+which confirms that the positional notation accurately represents the number \( 357 \).
+
+%*********************************************
+\subsection{Importance of Positional Notation}
+%*********************************************
+The power of positional notation lies in its ability to represent large numbers compactly. Unlike systems that use tally marks or other non-positional symbols, positional notation can handle any magnitude of numbers with a finite set of symbols, scaling efficiently as numbers grow. For instance, to represent a number like \( 357 \), only three digits are required in base 10. In contrast, a tally mark system would require writing out 357 individual tally marks, which could be grouped for readability but remains far less efficient than positional notation.
+
+%**********************************************************
+\subsection{Positional Notation for Arithmetic Operations}
+%**********************************************************
+Positional notation also enables straightforward arithmetic operations such as addition, subtraction, multiplication, and division by aligning numbers by their place values. For example, adding two numbers in positional notation involves summing each pair of digits in the same place value and carrying over if the sum exceeds 9. This place-based structure makes arithmetic systematic and algorithmic, lending itself well to both manual and computational methods of calculation \cite{burton2010-number}.
+
+
+%********************************
+\subsection{Base/Radix Concepts}
+%********************************
+In mathematics and computer science, a base (also called a radix) is the number of unique symbols, including zero, used to represent numbers in a positional numeral system \cite{knuth1997,rosen2018}. The base of a number system is denoted by \( r \), and the unique symbols, or digits, are contained in the set \( D = \{0, 1, 2, \ldots, r-1\} \). In the decimal (base 10) system, for example, \( r = 10 \), and the set of digits \( D \) is \( \{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\} \). However, in other bases, such as binary (base 2) or hexadecimal (base 16), the set \( D \) and the value of \( r \) would differ.
+
+%*******************************************
+\subsection{Generalized Positional Notation}
+%*******************************************
+
+For a number in any base \( r \), the representation follows a similar positional notation structure to base 10. A number \( N \) in base \( r \) with \( n+1 \) digits can be written as:
+\[
+N = d_n \cdot r^n + d_{n-1} \cdot r^{n-1} + \ldots + d_1 \cdot r^1 + d_0 \cdot r^0
+\]
+where each \( d_i \in D \) is an integer from \( 0 \) to \( r-1 \) and represents the coefficient of each power of \( r \). This means that each position in the number corresponds to a specific power of \( r \), with \( r^n \) representing the highest place value (determined by the leftmost digit, \( d_n \)) and each subsequent term decreasing by a power of \( r \).
+
+%****************************************************
+\subsection{Positional Notation for Different Bases}
+%****************************************************
+The decimal system (base 10) is just one example of a positional numeral system. Other bases follow the same general rules but use different sets of digits. For instance:
+\begin{itemize}
+    \item Binary (base 2): Uses \( D = \{0, 1\} \), with each position representing powers of 2. This system is fundamental in digital computing, as all binary values can be represented by combinations of 0 and 1. A number \( N \) in binary can be represented as:
+    \[
+    N = d_n \cdot 2^n + d_{n-1} \cdot 2^{n-1} + \ldots + d_1 \cdot 2^1 + d_0 \cdot 2^0
+    \]
+
+    \item Octal (base 8): Uses \( D = \{0, 1, 2, 3, 4, 5, 6, 7\} \), where each position represents powers of 8. A number \( N \) in octal can be represented as:
+    \[
+    N = d_n \cdot 8^n + d_{n-1} \cdot 8^{n-1} + \ldots + d_1 \cdot 8^1 + d_0 \cdot 8^0
+    \]
+
+    \item Hexadecimal (base 16): Uses \( D = \{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F\} \), where each position represents powers of 16. A number \( N \) in hexadecimal can be represented as:
+    \[
+    N = d_n \cdot 16^n + d_{n-1} \cdot 16^{n-1} + \ldots + d_1 \cdot 16^1 + d_0 \cdot 16^0
+    \]
+
+    \item Duodecimal (base 12): Uses \( D = \{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, \text{A}, \text{B}\} \), where each position represents powers of 12. A number \( N \) in duodecimal can be represented as:
+    \[
+    N = d_n \cdot 12^n + d_{n-1} \cdot 12^{n-1} + \ldots + d_1 \cdot 12^1 + d_0 \cdot 12^0
+    \]
+
+    \item Sexagesimal (base 60): Uses \( D = \{0, 1, 2, \ldots, 59\} \), with each position representing powers of 60. A number \( N \) in sexagesimal can be represented as:
+    \[
+    N = d_n \cdot 60^n + d_{n-1} \cdot 60^{n-1} + \ldots + d_1 \cdot 60^1 + d_0 \cdot 60^0
+    \]
+\end{itemize}
+
+
+
+Bases 2, 8, and 16 are often used in computing and digital electronics because of their implementation properties. Historically, base 60, or the sexagesimal system, was used by the ancient Babylonians for mathematical and astronomical calculations, and its influence persists today in the way we measure time (e.g., 60 seconds in a minute, 60 minutes in an hour) \cite{robson2008}. Base 12, known as the duodecimal system, has also been significant, with roots in ancient cultures where it was valued for its divisibility by multiple factors (2, 3, 4, and 6), making it useful for trade, measurements, and time-keeping systems. Traces of base 12 are still evident in modern units, such as a dozen (12 items) and the division of hours into sets of 12 on a clock face \cite{ifrah2000}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Binary Arithmetic}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Binary arithmetic is the foundation of all digital computer systems because binary numbers, composed of only two digits (0 and 1), correspond directly to the on-off states of transistors, which are the basic building blocks of digital circuits. These two states are convenient for digital electronics because they can easily represent high and low voltage levels, aligning with binary logic \cite{knuth1997}. Despite its simplicity, binary arithmetic follows the same general rules as decimal arithmetic. This reduction to two possible states significantly simplifies hardware design and enables efficient processing \cite{rosen2018}.
+
+%***************************
+\subsection{Binary Addition}
+%***************************
+Binary addition operates similarly to decimal addition but involves only the digits 0 and 1, with carry rules adapted to binary logic. Binary addition requires only four basic cases:
+
+\[
+\begin{array}{l}
+    0 + 0 = 0 \\
+    0 + 1 = 1 \\
+    1 + 0 = 1 \\
+    1 + 1 = 10 \quad (\text{where 1 is carried to the next higher bit})
+\end{array}
+\]
+
+When the sum of two bits equals 2 (in decimal), this triggers a carry to the next higher bit, as shown in the last case. This carry-over behavior is fundamental to binary addition and is analogous to the carry mechanism in decimal addition. For instance, adding the binary numbers \( 1011 \) and \( 1101 \) proceeds as follows:
+
+\[
+\begin{array}{cccccl}
+  & 1& 1 & 1 & 1 &     (\text{Carry}) \\ % Carry row
+  &  & 1 & 0 & 1 & 1    \\ % First binary number
++ &  & 1 & 1 & 0 & 1    \\ % Second binary number
+  \hline
+  & 1 & 1 & 0 & 0 & 0    \\ % Result row
+\end{array} = 11000_2
+\]
+
+This example demonstrates that binary addition, although straightforward, can require multiple carry operations when the bit values sum to 1 in successive columns \cite{knuth1997art}.
+
+%******************************
+\subsection{Binary Subtraction}
+%******************************
+Binary subtraction is similar to decimal subtraction, with borrowing rules adapted to the binary system. Binary subtraction also involves four basic cases:
+
+\[
+\begin{array}{l}
+    0 - 0 = 0 \\
+    1 - 0 = 1 \\
+    1 - 1 = 0 \\
+    0 - 1 = 1 \quad (\text{borrow 1 from the next higher bit})
+\end{array}
+\]
+
+When subtracting a larger bit from a smaller bit (such as \( 0 - 1 \)), we need to "borrow" from the next higher bit, just as in decimal subtraction. This process is slightly simplified in binary because the only possible values are 0 and 1, reducing the complexity of borrowing. For instance, consider subtracting \( 101 \) from \( 1100 \):
+
+Step 1: Initial Setup. We add a 0 to the subtrahend to align the digits.
+\[
+\begin{array}{rcccc}
+    & 1 & 1 & 0 & 0 \\ % First binary number (1100)
+  - & 0 & 1 & 0 & 1 \\ % Second binary number (101)
+  \hline
+    &   &   &   &   \\
+\end{array}
+\]
+
+Step 2: Subtract the rightmost column.
+
+Here, \(0 - 1\) requires borrowing from the second column. Since the second column also has \(0\), we need to move leftward until we find a \(1\) to borrow. The third column has a 1. The minuend is set to \colorbox{yellow}{0} and the borrow row is set to two.
+\[
+\begin{array}{rcccc}
+    \text{Borrow:} &   &   & 2 & 0 \\ % Borrow initiated for the rightmost column
+                   & 1 & \fcolorbox{yellow}{yellow}{0} & 0 & 0 \\ % First binary number
+                 - & 0 & 1 & 0 & 1 \\ % Second binary number
+  \hline
+                   &   &   &   & 1 \\ % Result after subtracting rightmost column
+\end{array}
+\]
+
+Step 3. Move the \(2\) to the first column subtracting \(1\) from the second column. 
+\[
+\begin{array}{rcccc}
+    \text{Borrow:} &   &   & 1 & 2 \\ % Borrow initiated for the rightmost column
+                   & 1 & 0 & 0 & 0 \\ % First binary number
+                 - & 0 & 1 & 0 & 1 \\ % Second binary number
+  \hline
+                   &   &   &   & 1 \\ % Result after subtracting rightmost column
+\end{array}
+\]
+
+
+
+Step 4. We can subtract \(1-0=1\) and place the result in the second column.
+\[
+\begin{array}{rcccc}
+    \text{Borrow:} &   &   & 1 & 2 \\ % Borrow initiated for the rightmost column
+                   & 1 & 0 & 0 & 0 \\ % First binary number
+                 - & 0 & 1 & 0 & 1 \\ % Second binary number
+  \hline
+                   &   &   & 1 & 1 \\ % Result after subtracting rightmost column
+\end{array}
+\]
+
+Step 5. The third column has \(0-1\) so we need to borrow again. We set the fourth column minuend to \colorbox{yellow}{0} and place a 2 in the borrow row. We can then complete the subtraction \(2-1=1\) and place it in the third row of the result.
+\[
+\begin{array}{rcccc}
+    \text{Borrow:} &   & 2 & 1 & 2 \\ % Borrow initiated for the rightmost column
+                   & \fcolorbox{yellow}{yellow}{0} & 0 & 0 & 0 \\ % First binary number
+                 - & 0 & 1 & 0 & 1 \\ % Second binary number
+  \hline
+                   &   & 1 & 1 & 1 \\ % Result after subtracting rightmost column
+\end{array}
+\]
+
+Step 7. We complete the result by subtracting \(0-0=0\) and place a 0 in the fourth column of the result.
+\[
+\begin{array}{rcccc}
+    \text{Borrow:} & 0 & 2 & 1 & 2 \\ % Borrow initiated for the rightmost column
+                   & 0 & 0 & 0 & 0 \\ % First binary number
+                 - & 0 & 1 & 0 & 1 \\ % Second binary number
+  \hline
+                   & 0 & 1 & 1 & 1 \\ % Result after subtracting rightmost column
+\end{array}= 0111_2
+\]
+
+This example illustrates that borrowing in binary works similarly to decimal borrowing.
+
+%***************************************
+\subsection{Binary Multiplication - TBD}
+%***************************************
+\lipsum[1]
+
+%*********************************
+\subsection{Binary Division - TBD}
+%*********************************
+\lipsum[1]

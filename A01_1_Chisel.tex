@@ -1,12 +1,15 @@
+\section{Chisel}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+\subsection{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%
 Chisel (\textbf{C}onstructing \textbf{H}ardware \textbf{I}n a \textbf{S}cala \textbf{E}mbedded \textbf{L}anguage) is a hardware design language embedded within Scala. It allows hardware designers to write complex, parameterizable, and reusable hardware components using high-level programming constructs \cite{bachrach2012chisel}. 
 
 This Appendix is a very brief introduction to Chisel primarily for designers to reference features quickly. For processor design, \citep{chisel:book} is a highly recommended free book. The Chisel Cheat Sheet is also helpful \cite{chiselcheatsheet}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Key Features of Chisel}
+\subsection{Key Features of Chisel}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Chisel is a domain-specific language (DSL) for hardware design, using Scala's object-oriented and functional programming features \cite{chisel-doc}. It compiles to synthesizable Verilog, integrating with traditional hardware development flows.
 
@@ -17,7 +20,7 @@ Chisel is a domain-specific language (DSL) for hardware design, using Scala's ob
 
 
 %%%%%%%%%%%%%%%%%
-\section{Syntax}
+\subsection{Syntax}
 %%%%%%%%%%%%%%%%
 
 %************************
@@ -41,7 +44,7 @@ import chisel3.util._
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%
-\section{Data Types}
+\subsection{Data Types}
 %%%%%%%%%%%%%%%%%%%%
 Chisel provides specialized data types for hardware representation \cite{chisel-doc}.
 
@@ -90,7 +93,7 @@ Chisel provides specialized data types for hardware representation \cite{chisel-
 \paragraph{Shift (\texttt{<<, >>}).} \texttt{<<} (left shift), \texttt{>>} (right shift)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Modules and Hierarchy}
+\subsection{Modules and Hierarchy}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %****************************
 \subsection{Defining Modules}
@@ -142,7 +145,7 @@ class MyModule(val width: Int) extends Module {
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Wires and Registers}
+\subsection{Wires and Registers}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Wires represent combinational logic signals \cite{chisel-doc}.
 \begin{chiselcode}
@@ -164,7 +167,7 @@ myReg := myReg + 1.U
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Control Structures}
+\subsection{Control Structures}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %************************************
@@ -215,7 +218,7 @@ for (i <- 0 until n) {
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Functions and Procedures}
+\subsection{Functions and Procedures}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %******************************
 \subsection{Defining Functions}
@@ -235,7 +238,7 @@ val sum = add(io.in1, io.in2)
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameterized Types}
+\subsection{Parameterized Types}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Types can be parameterized for flexibility.
 \begin{chiselcode}
@@ -247,7 +250,7 @@ def myFunction[T <: Data](in: T): T = {
 The function \texttt{myFunction} is a generic method in Chisel that operates on a parameterized data type \texttt{T}. The parameter \texttt{T} is constrained to extend the \texttt{Data} type, which is the base class for all hardware types in Chisel, such as \texttt{UInt}, \texttt{SInt}, or \texttt{Bundle}. This ensures that \texttt{myFunction} can accept any valid Chisel hardware type as its input. The method takes a single input argument \texttt{in} of type \texttt{T} and returns a value of the same type \texttt{T}. While the function body is not specified, this structure is commonly used to define reusable, type-safe operations on hardware constructs, enabling modular and flexible hardware design.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Generic Modules}
+\subsection{Generic Modules}
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 Modules can be generic over data types.
 \begin{chiselcode}
@@ -264,7 +267,7 @@ The \texttt{MyGenericModule} class is a parameterized hardware module in Chisel.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Hardware Construction in Chisel}
+\subsection{Hardware Construction in Chisel}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %***********************************
@@ -298,7 +301,7 @@ class MyBundle extends Bundle {
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Testing and Verification}
+\subsection{Testing and Verification}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{ChiselTest Framework}
 %********************************
@@ -327,7 +330,7 @@ assert(io.out === expectedValue)
 \end{chiselcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Peculiarities of Chisel}
+\subsection{Peculiarities of Chisel}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %**************************************
 \subsection{Chisel is Embedded in Scala}
@@ -368,7 +371,7 @@ Be cautious when mixing Scala control structures (e.g., \texttt{if}, \texttt{for
 Designers must think in terms of hardware concurrency, even when writing code that resembles sequential software.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Installing Chisel on Ubuntu}
+\subsection{Installing Chisel on Ubuntu}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %******************************************
 \subsection{Install a Java Development Kit}
@@ -495,7 +498,7 @@ sudo apt-get install gtkwave
 %******************************
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Example Walkthrough}
+\subsection{Example Walkthrough}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Assuming you have cloned this book (Structured Computer Architecture), you will find the Chisel source files in the RTL/Chisel directory at the top level of the repository.
 
@@ -629,7 +632,7 @@ gtkwave waveform.vcd
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%0
-\section{Vivado Execution}
+\subsection{Vivado Execution}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Vivado is a comprehensive FPGA design suite developed by Xilinx. It integrates various tools for hardware design, simulation, synthesis, implementation, and debugging. Vivado supports Verilog, SystemVerilog, and VHDL for both design and simulation.
 
@@ -678,7 +681,7 @@ Vivado is a comprehensive FPGA design suite developed by Xilinx. It integrates v
 \end{itemize}
 
 %********************************************
-\section{Comparison of Vivado and Verilator}
+\subsection{Comparison of Vivado and Verilator}
 %********************************************
 Vivado and Verilator are both widely used in hardware design, but they cater to different needs. Below is a detailed comparison:
 
@@ -702,7 +705,7 @@ Vivado and Verilator are both widely used in hardware design, but they cater to 
 \label{tab:vivado_vs_verilator}
 \end{table}
 
-\section*{When to Use Vivado vs. Verilator}
+\subsection*{When to Use Vivado vs. Verilator}
 
 \begin{itemize}
     \item \textbf{Use Vivado:}
@@ -726,7 +729,7 @@ The following is the SystemVerilog module `waveFormGenerator`, which generates a
 \includeverilogcode{RTL/Verilog/src/WaveFormGenerator.sv}
 
 
-\section*{SystemVerilog Testbench}
+\subsection*{SystemVerilog Testbench}
 
 The testbench for the `waveFormGenerator` module monitors its signals during simulation:
 
@@ -747,7 +750,7 @@ module waveFormGenerator_tb;
 endmodule
 \end{verilogcode}
 
-\section*{Explanation}
+\subsection*{Explanation}
 
 \subsection*{Module Details}
 The `waveFormGenerator` module generates:

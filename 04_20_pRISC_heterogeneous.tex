@@ -1,6 +1,5 @@
 \chapter{Using the Heterogeneous System hRISC}\label{hrisc}
-
-%\minitoc
+\localtoc
 
 This appendix brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core toyRISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. First, the micro-architectures associated with the system components will be described.  The architecture of the entire system is then defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
 
@@ -706,6 +705,16 @@ and {\tt cAcc = 29}.
 
 $\diamond$
 \end{exemplu}
+
+
+\subsection{FLA 0.1}
+
+\includeverilogcode[caption={FLA 0.1. File: 00\_theKernel.sv  (SystemVerilog)}, 
+                    label={lst:theKernel}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=200]
+                    {\verilogSourceDir/A08_theKernel.sv}
 
 \subsection{Programming using FLA 0.1}
 

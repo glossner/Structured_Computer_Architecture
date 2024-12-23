@@ -1,10 +1,12 @@
+\section{System Verilog}
+
 %%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+\subsection{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%
 SystemVerilog is a hardware description and hardware verification language, which extends the capabilities of Verilog by incorporating advanced modeling features and constructs \cite{ieee1800-2017}. It combines design specification and verification features, making it a unified language for hardware design and verification. This chapter serves as a reference guide for hardware designers familiar with Verilog or VHDL, providing syntax and commands of SystemVerilog.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Overview of SystemVerilog}
+\subsection{Overview of SystemVerilog}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SystemVerilog enhances Verilog by introducing new data types, operators, and constructs for modeling complex hardware designs. It provides advanced features for design abstraction, code reusability, and verification, making it suitable for modern hardware development \cite{baker2010systemverilog}.
 
@@ -20,7 +22,7 @@ SystemVerilog enhances Verilog by introducing new data types, operators, and con
 \end{itemize}
 
 %%%%%%%%%%%%%%%%
-\section{Syntax}
+\subsection{Syntax}
 %%%%%%%%%%%%%%%%
 
 %***********************
@@ -88,7 +90,7 @@ SystemVerilog extends Verilog operators with new ones.
 \paragraph{\textbf{Conditional Operator}} Ternary operator (\texttt{? :}) enhanced for 4-state expressions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Procedural Blocks and Control Flow}
+\subsection{Procedural Blocks and Control Flow}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %**************************************
@@ -122,7 +124,7 @@ SystemVerilog introduces new control flow constructs.
 \paragraph{\texttt{`\$ifdef}, \texttt{`\$ifndef}, \texttt{`\$elsif}, \texttt{`\$else}, \texttt{`\$endif}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Interfaces and Modports}
+\subsection{Interfaces and Modports}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Interfaces encapsulate communication between modules.
@@ -144,7 +146,7 @@ Modports define the direction of signals for different roles.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Tasks and Functions}
+\subsection{Tasks and Functions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Functions return values and execute in zero simulation time.
 \begin{itemize}
@@ -161,7 +163,7 @@ Tasks can consume time and have input/output/inout arguments.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%
-\section{Packages}
+\subsection{Packages}
 %%%%%%%%%%%%%%%%%%%
 Packages allow the grouping of declarations that can be shared across modules.
 \begin{verilogcode}
@@ -177,7 +179,7 @@ import my_pkg::*;
 \end{verilogcode}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Object-Oriented Programming Features}
+\subsection{Object-Oriented Programming Features}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SystemVerilog introduces classes for verification purposes \cite{stapko2008advanced}.
 
@@ -199,7 +201,7 @@ SystemVerilog introduces classes for verification purposes \cite{stapko2008advan
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Assertions and Coverage}
+\subsection{Assertions and Coverage}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %**********************
@@ -224,7 +226,7 @@ Coverage metrics help measure how much of the design has been tested.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Peculiarities of SystemVerilog}
+\subsection{Peculiarities of SystemVerilog}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %**************************************
