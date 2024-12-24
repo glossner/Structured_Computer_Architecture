@@ -8,29 +8,20 @@ package generators
 import circt.stage.ChiselStage 
 import sys.process._  
 import java.io.File   
-import java.nio.file.{Files, StandardCopyOption} 
+import java.nio.file.{Files, Paths, StandardCopyOption, NoSuchFileException} 
+
 import java.io.IOException
 import java.io.PrintStream
 import java.io.OutputStream
 
 
-// Checks if firtool, yosys, and netlistsvg are in the environment PATH
+// Checks if firtool, sv2v, yosys, and netlistsvg are in the environment PATH
 // If yes, it uses the installed version
-// If no, it falls back to Chisel supplied firtool
+// If no, it falls back to Chisel supplied tools
 
 object GenerateHardware extends App {
-  // Default paths when running from toplevel RTL/Chisel
-  val generatedFirRTLPath = "generators/generated/firrtl"
-
-  val generatedSystemVerilogAnnotatedPath = "generators/generated/systemverilog_annotated" 
-  val generatedSystemVerilogCleanPath = "generators/generated/systemverilog_clean" 
-
-  val generatedVerilogCleanPath = "generators/generated/verilog_clean"
-  val generatedVerilogElaboratedPath = "generators/generated/verilog_yosys_elaborated"
-
-  val generatedNetlistPath = "generators/generated/netlist"
-  val generatedDiagramsPath = "generators/generated/diagrams"
-
+  
+  val shouldDeleteIntermediateFiles = true
 
   // Modules to Generate
   val modulesToGenerate = Seq(
@@ -43,7 +34,19 @@ object GenerateHardware extends App {
      (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
 
+  // Default paths when running from toplevel RTL/Chisel
+  val generatedFirRTLPath = "generators/generated/firrtl"     //*.fir.mlir
 
+  val generatedSystemVerilogAnnotatedPath = "generators/generated/systemverilog_annotated" 
+  val generatedSystemVerilogCleanPath = "generators/generated/systemverilog_clean" 
+
+  val generatedVerilogCleanPath = "generators/generated/verilog_sv2v_clean"
+  val generatedVerilogElaboratedPath = "generators/generated/verilog_yosys_elaborated"
+
+  val generatedNetlistPath = "generators/generated/netlist"
+  val generatedDiagramsPath = "generators/generated/diagrams"
+
+ 
   //#####################################################
   //# Should not need to change anything below this line
   //#####################################################
@@ -56,17 +59,15 @@ object GenerateHardware extends App {
       println("###########################################################################")
       println("  ")
 
-      generateFIRRTL(module, moduleName)
-
       //firtools generates SystemVerilog when --verilog is used
-      //  there is no way to change this behavior
-
+      generateFIRRTL(module, moduleName)
       generateSystemVerilogAnnotated(module, moduleName)
       generateSystemVerilogClean(module, moduleName)
       convertSystemVerilogToVerilog(module, moduleName)
       generateNetlist(module, moduleName)
       generateSVG(module, moduleName)
       convertSVGtoPNG(module, moduleName)
+      if(shouldDeleteIntermediateFiles) deleteIntermediateFiles(module, moduleName)
     
     } catch {
       case e: Exception =>
@@ -299,6 +300,33 @@ object GenerateHardware extends App {
   }
 
 
+  def deleteIntermediateFiles(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+    println(s"${moduleName}: deleteIntermediateFiles")
+
+    val edifFile = generatedNetlistPath + "/" + moduleName + ".edif"
+    val jsonNetlistFile =  generatedNetlistPath + "/" + moduleName + ".json" 
+    val jsonNetlistFlatFile =  generatedNetlistPath + "/" + moduleName + "_flat" + ".json" 
+    val svgFile = generatedDiagramsPath + "/" + moduleName + ".svg" 
+    val svgFlatFile = generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg" 
+    
+
+    val files = Array(edifFile, jsonNetlistFile, jsonNetlistFlatFile, svgFile, svgFlatFile)
+
+    files.foreach { file =>
+      val path = Paths.get(file)
+      try {
+        Files.delete(path)
+        println(s"File $file deleted successfully.")
+      } catch {
+        case e: NoSuchFileException =>
+          println(s"File $file does not exist.")
+        case e: SecurityException =>
+          println(s"Permission denied to delete $file.")
+        case e: Exception =>
+          println(s"An error occurred while deleting $file: ${e.getMessage}")
+      }
+    }
+  }
 
   
   // Helper function to see if a command is installed (firtool, yosys, etc.)
