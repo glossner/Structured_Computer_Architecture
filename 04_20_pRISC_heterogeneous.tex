@@ -719,14 +719,15 @@ $\diamond$
 \subsection{Programming using FLA 0.1}
 
 \begin{exemplu}
-The program multiplying two matrices written on host calls the components from the library FLA 0.1 which is included in the program running on the accelerator under the name: {\tt 00\_theKernel.sv}. The first two lines in the host program generates the two matrices to be multiplied. The call of multiplication is preceded by the function which start the cycles counter on controller and is followed by the start function. 
+The program multiplying a matrix with a vector written on host calls the components from the library FLA 0.1 which is included in the program running on the accelerator under the name: {\tt 00\_theKernel.sv}. The matrix whose last line is in the vector {\tt V[p-1]} is multiplied with the vector {\tt V[p]} and the result is stored as {\tt V[p+1]}. The multiplied matrix is generated using the function {\tt hSQGENX} which generate the  matrix starting with {\tt V[0] = IX} and continues with vectors with the components incremented with 1. {\tt V[p] = [3 3  ... 3]} is the multiplying vector.  
+
 {\em 
-\includeverilogcode[caption={The program on host for multiplying matrices. File: 0\_hProgram1.sv  (SystemVerilog)}, 
-                    label={lst:hProgram1}, 
+\includeverilogcode[caption={The program on host for matrix-vector multiply. File: 0\_hProgram3.sv  (SystemVerilog)}, 
+                    label={lst:hProgram3}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_hProgram1.sv}
+                    {\verilogSourceDir/A08_hProgram3.sv}
 }
 
 {\em 
@@ -737,6 +738,72 @@ The program multiplying two matrices written on host calls the components from t
                     lastline=20]
                     {\verilogSourceDir/A08_aProgram6.sv}
 }
+Running the program for $p = 16$ results:
+\begin{verbatim}
+    vect[0]    0   1   2   3   4   5   6   7   8   9  10  11  12  13   14   15
+    vect[1]    1   2   3   4   5   6   7   8   9  10  11  12  13  14   15   16
+    vect[2]    2   3   4   5   6   7   8   9  10  11  12  13  14  15   16   17
+    vect[3]    3   4   5   6   7   8   9  10  11  12  13  14  15  16   17   18
+    vect[4]    4   5   6   7   8   9  10  11  12  13  14  15  16  17   18   19
+    vect[5]    5   6   7   8   9  10  11  12  13  14  15  16  17  18   19   20
+    vect[6]    6   7   8   9  10  11  12  13  14  15  16  17  18  19   20   21
+    vect[7]    7   8   9  10  11  12  13  14  15  16  17  18  19  20   21   22
+    vect[8]    8   9  10  11  12  13  14  15  16  17  18  19  20  21   22   23
+    vect[9]    9  10  11  12  13  14  15  16  17  18  19  20  21  22   23   24
+    vect[10]  10  11  12  13  14  15  16  17  18  19  20  21  22  23   24   25
+    vect[11]  11  12  13  14  15  16  17  18  19  20  21  22  23  24   25   26
+    vect[12]  12  13  14  15  16  17  18  19  20  21  22  23  24  25   26   27
+    vect[13]  13  14  15  16  17  18  19  20  21  22  23  24  25  26   27   28
+    vect[14]  14  15  16  17  18  19  20  21  22  23  24  25  26  27   28   29
+    vect[15]  15  16  17  18  19  20  21  22  23  24  25  26  27  28   29   30
+    vect[16]   3   3   3   3   3   3   3   3   3   3   3   3   3   3    3    3
+    vect[17] 360 408 456 504 552 600 648 696 744 792 840 888 936 984 1032 1080
+\end{verbatim}
+
+The execution time resulting form the code listed in Listing \ref{lst:theKernel} is:
+$$t_{mvMult}(p) = 2p + log_2 p + 8 \in O(p)$$
+Table \ref{tab:mvPerformance} summarizes the time performance for matrix-vector multiplication. The constant associated with Big O notation used to indicate execution time tends towards 2 as this table suggests.
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|r|r|c|}
+\caption{Matrix-vector multiplication evaluation depending on the size of the square matrix.}
+\label{tab:mvPerformance} \\
+\hline
+\textbf{\# of Lines} & \textbf{\# of Cycles} & \textbf{\# Cycles/Dot Product} \\
+\hline
+\endfirsthead
+\hline
+\textbf{\# of Lines} & \textbf{\# of Cycles} & \textbf{\# Cycles/Dot Product} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+16  & 44     & 2.75 \\ \hline
+32  & 87    & 2.43 \\ \hline
+64  & 152    & 2.23 \\ \hline
+128 & 281   & 2.11 \\ \hline
+256 & 538  & 2.06 \\ \hline
+512 & 1051  & 2.03 \\ \hline
+\end{longtable}
+\end{table}
+
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+The program multiplying two matrices written on host calls the components from the library FLA 0.1 which is included in the program running on the accelerator under the name: {\tt 00\_theKernel.sv}. The first two lines in the host program generates the two matrices to be multiplied. The call of multiplication is preceded by the function which start the cycles counter on controller and is followed by the start function. 
+{\em 
+\includeverilogcode[caption={The program on host for multiplying matrices. File: 0\_hProgram1.sv  (SystemVerilog)}, 
+                    label={lst:hProgram1}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=20]
+                    {\verilogSourceDir/A08_hProgram1.sv}
+}
+
 
 The simulation provided, for $p=16$, the following:
 
@@ -792,7 +859,10 @@ The simulation provided, for $p=16$, the following:
     vect[47]  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
 \end{verbatim}
 }
-The execution time is evaluated by the simulator at {\tt aCC = 772 clock cycles} for $p = 16$. In Table \ref{tab:mmPerformance} are displayed the number of clock cycles per dot product for $p \times p$ matrices. 
+
+The execution time resulting form the code listed in Listing \ref{lst:theKernel} is: 
+$$t_{mmMult}(p) = 2p^2 + p \times log_2 p +12p +13 \in O(p^2)$$
+The execution time is evaluated by the simulator at {\tt aCC = 781 clock cycles} for $p = 16$. In Table \ref{tab:mmPerformance} are displayed the number of clock cycles per dot product for $p \times p$ matrices. The constant associated with Big O notation used to indicate execution time tends towards 2 as this table suggests.
 
 \begin{table}[H]
 \small
