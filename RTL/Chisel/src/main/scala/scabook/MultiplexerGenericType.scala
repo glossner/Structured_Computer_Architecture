@@ -6,24 +6,23 @@ package scabook
 import chisel3._
 import chisel3.util._
 
-class Multiplexer(val n: Int, val width: Int) extends Module {
+class MultiplexerGenericType[T <: Data](gen: T, val n: Int) extends Module {
   require(n > 0, "The number of inputs must be greater than zero.")
   require(isPow2(n), "The number of inputs must be a power of two.")
 
   val io = IO(new Bundle {
-    val inputs = Input(Vec(n, UInt(width.W))) // `n` inputs of type `UInt`
-    val select = Input(UInt(log2Ceil(n).W))  // Select line
-    val output = Output(UInt(width.W))       // Output of type `UInt`
+    val inputs = Input(Vec(n, gen))  // `n` inputs of type `T`
+    val select = Input(UInt(log2Ceil(n).W)) // Select line
+    val output = Output(gen) 
   })
 
   io.output := io.inputs(io.select) // Select which input
 }
 
 // Companion object to simplify instantiation
-object Multiplexer {
-  def apply(inputs: Vec[UInt], select: UInt): UInt = {
-    require(inputs.nonEmpty, "Inputs cannot be empty.")
-    val mux = Module(new Multiplexer(inputs.length, inputs(0).getWidth))
+object MultiplexerGenericType {
+  def apply[T <: Data](inputs: Vec[T], select: UInt): T = {
+    val mux = Module(new MultiplexerGenericType(inputs(0).cloneType, inputs.length))
     mux.io.inputs := inputs
     mux.io.select := select
     mux.io.output
