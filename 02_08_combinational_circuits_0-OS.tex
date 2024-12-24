@@ -677,7 +677,13 @@ A \textit{bus} in digital systems is a collection of parallel lines or pathways 
 
 \includechiselcode[caption={Parameterized Bus Type Multiplexer (Chisel: MultiplexerGenericType.scala)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=9]{\chiselSourceDir/MultiplexerGenericType.scala}
 
-Listing \ref{lst:chisel_muxT} shows a parameterized bus multiplexer in Chisel where the type of the bus is also parameterized using \texttt{T <: Data}. Given scala's generic types and type checking capabilities, it would be desirable to parameterize the bus type. Unfortunately, when generating hardware, this can sometimes appear as an invalid type conversion even if all interfaces are instantiated with \texttt{UInt<>}. Therefore, in this book, we have specified all classes to use \texttt{UInt}. This more closely aligns to verilog wires. Where possible, inside implementations, we still strive to ensure type safety using conversions such as \texttt{.asBool} and \texttt{.asSint}, etc. 
+
+\addcontentsline{toc}{paragraph}{gen vs dataType - Chisel} \index{Chisel!gen} \index{Chisel!dataType}
+Listing \ref{lst:chisel_muxT} shows a parameterized bus multiplexer in Chisel where the type of the bus is also parameterized using \texttt{[T <: Data](gen: T)]}. In Chisel, parameterizing modules with type parameters is a common practice to create reusable and modular designs. The choice between using \texttt{gen} and \texttt{dataType} depends on the context and the semantics of the module being designed. Each serves a slightly different purpose depending upon the intended hardware abstraction.
+
+The \texttt{gen} parameter is well-suited when the type represents a \textit{blueprint} for generating multiple hardware elements. This is particularly relevant in cases where the module processes or instantiates multiple instances of the same type, such as multiplexers or reusable modules like FIFO queues and bus interfaces. For example, in Listing \ref{lst:chisel_muxT}, a multiplexer uses \texttt{gen} to define the type of data inputs and outputs, emphasizing that multiple identical instances are being handled within the hardware structure. 
+
+ Given scala's generic types and type checking capabilities, it would be desirable to parameterize the bus type. Unfortunately, when generating hardware, this can sometimes appear as an invalid type conversion even if all interfaces are instantiated with \texttt{UInt<>}. Therefore, in this book, we have specified all classes to use \texttt{UInt}. This more closely aligns to verilog wires. Where possible, inside implementations, we still strive to ensure type safety using conversions such as \texttt{.asBool} and \texttt{.asSInt}, etc. 
 
 \includechiselcode[caption={Parameterized Bus Width Multiplexer (Chisel: Multiplexer.scala)}, label={lst:chisel_mux}, firstline=9, firstnumber=9, lastline=20]{\chiselSourceDir/Multiplexer.scala}
 
@@ -691,14 +697,14 @@ In Scala, a companion object is an object that shares the same name as a class a
 
 Listing \ref{lst:chisel_mux_companion} shows the companion object. The \texttt{Multiplexer} \textit{object} provides a factory method for creating and connecting instances of a parameterized multiplexer. The method takes a \texttt{Vec[UInt]} of inputs, and a \texttt{UInt} that specifies the selection signal for the multiplexer. After the module is instantiated, its I/O ports are connected. The \texttt{mux.io.inputs} port is connected to the \texttt{inputs} vector, and the \texttt{mux.io.select} port is connected to the \texttt{select} signal. Finally, the \texttt{apply} method returns the \texttt{mux.io.output}, providing the result of the multiplexer to the caller. 
 
-\includechiselcode[caption={1-to-4 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
+\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
 
-Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. It uses the companion object to connect the signals. If the I/O signals retain the same names as the Multiplexer class, the 1-to-4 8-bit bus multiplexer could have been instantiated the same way as the 2-to-4 decoder shown in Listing \ref{lst:chisel_2to4_decoder} - \texttt{class Mux4 extends Multiplexer(4)}. However, it is often more convenient for users of hardware libraries to see the I/O definitions in the leaf class. Generally, we try to follow this design principle for instantiated Chisel hardware and so Listing \ref{lst:chisel_mux4} fully specifies the I/O signals.
+Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. It uses the companion object to connect the signals. If the I/O signals retain the same names as the Multiplexer class, the 4-to-1 8-bit bus multiplexer could have been instantiated the same way as the 2-to-4 decoder shown in Listing \ref{lst:chisel_2to4_decoder} - \texttt{class Mux4 extends Multiplexer(4)}. However, it is often more convenient for users of hardware libraries to see the I/O definitions in the leaf class. Generally, we try to follow this design principle for instantiated Chisel hardware and so Listing \ref{lst:chisel_mux4} fully specifies the I/O signals.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{\diagramsDir/Mux4.png} 
-    \caption{Generated Schematic of a yosys Elaborated Chisel 1-to-4 Multiplexer.}
+    \includegraphics[width=0.7\textwidth]{\diagramsDir/Mux4.png} 
+    \caption{Generated Schematic of a yosys Elaborated Chisel 4-to-1 Multiplexer.}
     \label{fig:mux4} 
 \end{figure}
 
@@ -707,11 +713,11 @@ Figure \ref{fig:mux4} shows the hierarchical schematic after yosys elaboration.
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{\diagramsDir/Mux4_flat.png} 
-    \caption{Generated Schematic of a yosys Elaborated and Flattened Chisel 1-to-4 Multiplexer.}
+    \caption{Generated Schematic of a yosys Elaborated and Flattened Chisel 4-to-1 Multiplexer.}
     \label{fig:mux4_flat} 
 \end{figure}
 
-Figure \ref{fig:mux4_flat} shows the schematic after the elaborated design is flattened. It is built from multiple 1-to-2 multiplexers.
+Figure \ref{fig:mux4_flat} shows the schematic after the elaborated design is flattened. It is built from multiple 2-to-1 multiplexers.
 
 }% End Chisel Code
 
@@ -736,7 +742,7 @@ $$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
 %*********************************************************
 \subsubsection{Demultiplexer (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={1-to-16 DeMultiplexer (SystemVerilog)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
+\includeverilogcode[caption={1-to-16 DeMultiplexer (SystemVerilog: dMux.sv)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
 
 Listing \ref{lst:verilog_demux16} shows SystemVerilog code that implements a simple demultiplexer module, named \texttt{dMux}. This demultiplexer takes a input signal \texttt{dMuxEnable} and routes one-bit of it to one of the 16 output lines, represented by the vector \texttt{dMuxOut}, based on the 4-bit selection signal \texttt{dMuxIn}. Instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned. The operation is performed using a left-shift operation, where the input signal \texttt{dMuxEnable} is shifted by the value of \texttt{dMuxIn}, effectively enabling only one bit in the 16-bit output vector.
 
@@ -748,23 +754,15 @@ The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs
 %*************************************************
 \subsubsection{Parameterized Demultiplexer (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Bus Demultiplexer (Chisel)}, label={lst:chisel_demuxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Demultiplexer.scala}
+\includechiselcode[caption={Parameterized Bus Demultiplexer (Chisel: Demultiplexer.scala)}, label={lst:chisel_demuxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Demultiplexer.scala}
 
-Listing \ref{lst:chisel_demuxT} shows a generic, parameterized demultiplexer (demux) that can handle arbitrary data types and numbers of outputs. The \texttt{Demultiplexer} class extends the \texttt{Module} trait to create a hardware module. The parameterization is achieved through the use of type parameters \texttt{T}, which must be a subclass of \texttt{Data}, and the \texttt{numOutputs} integer, which specifies the number of outputs. The module includes a requirement that the number of outputs must be a power of two, enforced by the \texttt{require} statement. This ensures compatibility with the binary-based selection mechanism.
+Listing \ref{lst:chisel_demuxT} shows a parameterized demultiplexer (demux) that can handle an arbitrary number of outputs of type \texttt{Vec[UInt]}. The \texttt{Demultiplexer} class that extends Chisel's \texttt{Module} class to create a hardware module. The module includes a requirement that the number of outputs must be a power of two, enforced by the \texttt{require} statement. 
 
-The \texttt{io} bundle defines the interface for the module, consisting of an input signal of type \texttt{T}, a selection signal of width \(\log_2(\texttt{numOutputs})\), and a vector of \texttt{numOutputs} output signals, each of the same type as the input. The implementation defaults all output signals to zero using \texttt{foreach}, ensuring that only the selected output is driven by the input signal. This is achieved by indexing the output vector with the \texttt{select} signal, which determines the active output line.
+The \texttt{io} bundle defines the interface for the module, consisting of an input signal of type \texttt{UInt(width.W)}, a selection signal of width \(\log_2(\texttt{numOutputs})\), and a vector of \texttt{numOutputs} output signals. The implementation defaults all output signals to zero using \texttt{foreach}, ensuring that only the selected output is driven by the input signal. This is achieved by indexing the output vector with the \texttt{select} signal, which determines the active output line.
 
-The companion object provides a convenient factory method for instantiating the demultiplexer. By abstracting the creation process, it simplifies module usage in larger designs. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. 
+Simlar to the Multiplexer, a companion object provides a convenient factory method for instantiating the demultiplexer. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. 
 
-\addcontentsline{toc}{paragraph}{gen vs dataType - Chisel} \index{Chisel!gen} \index{Chisel!dataType}
-\paragraph{\texttt{gen} versus \texttt{dataType}}
-In Chisel, parameterizing modules with type parameters is a common practice to create reusable and modular designs. The choice between using \texttt{gen} and \texttt{dataType} depends on the context and the semantics of the module being designed. Each serves a slightly different purpose depending upon the intended hardware abstraction.
-
-The \texttt{gen} parameter is well-suited when the type represents a \textit{blueprint} for generating multiple hardware elements. This is particularly relevant in cases where the module processes or instantiates multiple instances of the same type, such as multiplexers or reusable modules like FIFO queues and bus interfaces. For example, in Listing \ref{lst:chisel_muxT}, a multiplexer uses \texttt{gen} to define the type of data inputs and outputs, emphasizing that multiple identical instances are being handled within the hardware structure. 
-
-The Demultiplexer in Listing \ref{lst:chisel_demuxT} uses \texttt{dataType}. This is more appropriate when the type parameter describes a single data type. This is typically seen in modules that process or transform a single data stream or element, such as serializers, deserializers, or arithmetic units. Using \texttt{dataType} in these cases enhances readability by conveying that the parameter refers to the specific type of data being processed rather than a general blueprint for multiple instances. 
-
-\includechiselcode[caption={1-to-16 Bus Demultiplexer (Chisel)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
+\includechiselcode[caption={1-to-16 Bus Demultiplexer (Chisel: DeMux16.scala)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
 
 Listing \ref{lst:chisel_demux16} shows a \texttt{DeMux16} class that defines a 1-to-16 demultiplexer that operates on 64-bit buses. This module is implemented as a subclass of \texttt{Module}, making it a Chisel hardware component. Its interface, specified by the \texttt{io} bundle, includes a 64-bit input bus (\texttt{io.input}), a 4-bit selection signal (\texttt{io.select}) to determine the active output, and a vector of 16 output buses (\texttt{io.outputs}), each 64 bits wide. The selection signal uses a 4-bit width because \(\log_2(16) = 4\), allowing indexing of the 16 outputs.
 
