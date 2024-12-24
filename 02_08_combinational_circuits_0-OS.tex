@@ -671,29 +671,47 @@ This design is both compact and efficient, leveraging Verilog's built-in array i
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
-\subsubsection{Parameterized Multiplexer (Chisel)}
+\subsubsection{Parameterized Bus Multiplexer (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Bus Multiplexer (Chisel: Multiplexer.scala)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Multiplexer.scala}
+A \textit{bus} in digital systems is a collection of parallel lines or pathways used to transfer data between components within a system. Each line in a bus corresponds to a bit in the data, allowing the bus to carry multi-bit data simultaneously. Buses are parameterized by their width, which determines how many bits can be transmitted at once, and are used to connect various hardware components, such as processors, memory, and peripherals. For example, a 32-bit bus can carry 32 bits of data in parallel. 
 
-Listing \ref{lst:chisel_muxT} shows a parameterized bus multiplexer in Chisel. A \textit{bus} in digital systems is a collection of parallel lines or pathways used to transfer data between components within a system. Each line in a bus corresponds to a bit in the data, allowing the bus to carry multi-bit data simultaneously. Buses are parameterized by their width, which determines how many bits can be transmitted at once, and are used to connect various hardware components, such as processors, memory, and peripherals. For example, a 32-bit bus can carry 32 bits of data in parallel. 
+\includechiselcode[caption={Parameterized Bus Type Multiplexer (Chisel: MultiplexerGenericType.scala)}, label={lst:chisel_muxT}, firstline=9, firstnumber=9, lastline=9]{\chiselSourceDir/MultiplexerGenericType.scala}
 
-The bus multiplexer is implemented as a class named \texttt{class Multiplexer}. This class is parameterized by the data type of the inputs (\texttt{T}) and the number of inputs (\texttt{n}). The class ensures through \texttt{require} statements that the number of inputs is both greater than zero and a power of two. 
+Listing \ref{lst:chisel_muxT} shows a parameterized bus multiplexer in Chisel where the type of the bus is also parameterized using \texttt{T <: Data}. Given scala's generic types and type checking capabilities, it would be desirable to parameterize the bus type. Unfortunately, when generating hardware, this can sometimes appear as an invalid type conversion even if all interfaces are instantiated with \texttt{UInt<>}. Therefore, in this book, we have specified all classes to use \texttt{UInt}. This more closely aligns to verilog wires. Where possible, inside implementations, we still strive to ensure type safety using conversions such as \texttt{.asBool} and \texttt{.asSint}, etc. 
+
+\includechiselcode[caption={Parameterized Bus Width Multiplexer (Chisel: Multiplexer.scala)}, label={lst:chisel_mux}, firstline=9, firstnumber=9, lastline=20]{\chiselSourceDir/Multiplexer.scala}
+
+Listing \ref{lst:chisel_mux} shows a bus multiplexer implemented as a class named \texttt{class Multiplexer}. This class is parameterized by the number of inputs (\texttt{n}) and the width of the bus (\texttt{width}). As shown on lines 14 through 16, all inputs and outputs are of type \texttt{UInt}  The class ensures through \texttt{require} statements that the number of inputs is both greater than zero and a power of two. 
 
 The I/O bundle defines the interface for the multiplexer. It includes a vector (bus) of inputs, a selection signal, and the output. The size of the selection signal is calculated using \texttt{log2Ceil}, ensuring that it has enough bits to address all the inputs. The core logic of the multiplexer is implemented in a single line \texttt{io.output := io.inputs(io.select)}, where the output is assigned the value of the selected input. This is performed using Chisel’s vector indexing.
 
 In Scala, a companion object is an object that shares the same name as a class and is defined in the same file. It acts as a singleton instance and provides a convenient way to group static-like methods and values associated with the class. Companion objects are particularly useful for factory methods, constants, or utility functions related to the class. Since they are in the same scope, companion objects and their corresponding classes can access each other's private members. This feature allows Scala developers to maintain clean and organized code, while still supporting the functional programming paradigm by avoiding the need for static members like in Java.
 
-The companion object \texttt{object Multiplexer} provides an \texttt{apply} method, making the multiplexer easy to instantiate and use. This method hides the details of creating the module and connecting its inputs, selection signal, and output. Instead, the user simply provides the inputs vector and the selection signal, and the multiplexer outputs the selected value.
+\includechiselcode[caption={Parameterized Bus Width Multiplexer Companion Object (Chisel: Multiplexer.scala)}, label={lst:chisel_mux_companion}, firstline=22, firstnumber=22, lastline=30]{\chiselSourceDir/Multiplexer.scala}
 
-The \texttt{Multiplexer} \textit{object} in Chisel provides a factory method for creating and connecting instances of a parameterized multiplexer. The method takes a \texttt{Vec[T]} of inputs, where \texttt{T} is a generic type extending \texttt{Data}, and a \texttt{UInt} that specifies the selection signal for the multiplexer.
+Listing \ref{lst:chisel_mux_companion} shows the companion object. The \texttt{Multiplexer} \textit{object} provides a factory method for creating and connecting instances of a parameterized multiplexer. The method takes a \texttt{Vec[UInt]} of inputs, and a \texttt{UInt} that specifies the selection signal for the multiplexer. After the module is instantiated, its I/O ports are connected. The \texttt{mux.io.inputs} port is connected to the \texttt{inputs} vector, and the \texttt{mux.io.select} port is connected to the \texttt{select} signal. Finally, the \texttt{apply} method returns the \texttt{mux.io.output}, providing the result of the multiplexer to the caller. 
 
-The \texttt{apply} method, defined with the same name as the object, simplifies the instantiation process for users. Within the \texttt{apply} method, an instance of the \texttt{Multiplexer} module is created using the \texttt{Module} construct. The \texttt{inputs(0).cloneType} is used to create a new instance of the type of the first input element. This is necessary because Chisel requires explicit cloning of hardware types to ensure correct behavior when instantiating modules. The \texttt{inputs.length} is passed as a parameter to the \texttt{Multiplexer} module to define the number of inputs for the multiplexer.
+\includechiselcode[caption={1-to-4 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
 
-After the module is instantiated, its I/O ports are connected. The \texttt{mux.io.inputs} port is connected to the \texttt{inputs} vector, and the \texttt{mux.io.select} port is connected to the \texttt{select} signal. Finally, the \texttt{apply} method returns the \texttt{mux.io.output}, providing the result of the multiplexer to the caller. 
+Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. It uses the companion object to connect the signals. If the I/O signals retain the same names as the Multiplexer class, the 1-to-4 8-bit bus multiplexer could have been instantiated the same way as the 2-to-4 decoder shown in Listing \ref{lst:chisel_2to4_decoder} - \texttt{class Mux4 extends Multiplexer(4)}. However, it is often more convenient for users of hardware libraries to see the I/O definitions in the leaf class. Generally, we try to follow this design principle for instantiated Chisel hardware and so Listing \ref{lst:chisel_mux4} fully specifies the I/O signals.
 
-\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\diagramsDir/Mux4.png} 
+    \caption{Generated Schematic of a yosys Elaborated Chisel 1-to-4 Multiplexer.}
+    \label{fig:mux4} 
+\end{figure}
 
-Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. The \texttt{select} signal determines which input is passed to the output. 
+Figure \ref{fig:mux4} shows the hierarchical schematic after yosys elaboration.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.25]{\diagramsDir/Mux4_flat.png} 
+    \caption{Generated Schematic of a yosys Elaborated and Flattened Chisel 1-to-4 Multiplexer.}
+    \label{fig:mux4_flat} 
+\end{figure}
+
+Figure \ref{fig:mux4_flat} shows the schematic after the elaborated design is flattened. It is built from multiple 1-to-2 multiplexers.
 
 }% End Chisel Code
 
