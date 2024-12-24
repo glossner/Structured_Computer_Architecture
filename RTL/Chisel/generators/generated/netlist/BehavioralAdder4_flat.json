@@ -1,825 +1,6 @@
 {
   "creator": "Yosys 0.48+5 (git sha1 7a362f1f7, clang++ 18.1.8 -fPIC -O3)",
   "modules": {
-    "BehavioralAdder": {
-      "attributes": {
-        "cells_not_processed": "00000000000000000000000000000001",
-        "src": "generators/generated/verilog_clean/BehavioralAdder4.v:1.1-10.10"
-      },
-      "ports": {
-        "io_a": {
-          "direction": "input",
-          "bits": [ 2, 3, 4, 5 ]
-        },
-        "io_b": {
-          "direction": "input",
-          "bits": [ 6, 7, 8, 9 ]
-        },
-        "io_sum": {
-          "direction": "output",
-          "bits": [ 10, 11, 12, 13 ]
-        }
-      },
-      "cells": {
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$2": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.19-25.36"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 2 ],
-            "B": [ 6 ],
-            "Y": [ 14 ]
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$7": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.19-28.36"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 3 ],
-            "B": [ 7 ],
-            "Y": [ 15 ]
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$10": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.17-29.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 16 ],
-            "B": [ 17 ],
-            "Y": [ 18 ]
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$12": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.17-30.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 19 ],
-            "B": [ 20 ],
-            "Y": [ 21 ]
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$17": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.19-33.36"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 4 ],
-            "B": [ 8 ],
-            "Y": [ 22 ]
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$20": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.17-34.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 23 ],
-            "B": [ 24 ],
-            "Y": [ 25 ]
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$22": {
-          "hide_name": 1,
-          "type": "$and",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.17-35.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 26 ],
-            "B": [ 27 ],
-            "Y": [ 28 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$3": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.17-25.37"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 14 ],
-            "Y": [ 29 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$5": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.22-26.36"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 30 ],
-            "Y": [ 11 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$8": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.17-28.37"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 15 ],
-            "Y": [ 19 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$9": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.24-29.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 29 ],
-            "Y": [ 17 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$11": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.24-30.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 18 ],
-            "Y": [ 20 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$14": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.22-31.36"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 31 ],
-            "Y": [ 12 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$16": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.17-32.37"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 32 ],
-            "Y": [ 33 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$18": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.17-33.37"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 22 ],
-            "Y": [ 26 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$19": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.24-34.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 21 ],
-            "Y": [ 24 ]
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$21": {
-          "hide_name": 1,
-          "type": "$not",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.24-35.31"
-          },
-          "port_directions": {
-            "A": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 25 ],
-            "Y": [ 27 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24$1": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24.17-24.34"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 3 ],
-            "B": [ 7 ],
-            "Y": [ 16 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$4": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.24-26.35"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 29 ],
-            "B": [ 16 ],
-            "Y": [ 30 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27$6": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27.17-27.34"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 4 ],
-            "B": [ 8 ],
-            "Y": [ 23 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$13": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.24-31.35"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 21 ],
-            "B": [ 23 ],
-            "Y": [ 31 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$15": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.19-32.36"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 5 ],
-            "B": [ 9 ],
-            "Y": [ 32 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36$23": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36.22-36.33"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 28 ],
-            "B": [ 33 ],
-            "Y": [ 13 ]
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37$24": {
-          "hide_name": 1,
-          "type": "$xor",
-          "parameters": {
-            "A_SIGNED": "00000000000000000000000000000000",
-            "A_WIDTH": "00000000000000000000000000000001",
-            "B_SIGNED": "00000000000000000000000000000000",
-            "B_WIDTH": "00000000000000000000000000000001",
-            "Y_WIDTH": "00000000000000000000000000000001"
-          },
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37.22-37.39"
-          },
-          "port_directions": {
-            "A": "input",
-            "B": "input",
-            "Y": "output"
-          },
-          "connections": {
-            "A": [ 2 ],
-            "B": [ 6 ],
-            "Y": [ 10 ]
-          }
-        }
-      },
-      "netnames": {
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$2_Y": {
-          "hide_name": 1,
-          "bits": [ 14 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.19-25.36"
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$7_Y": {
-          "hide_name": 1,
-          "bits": [ 15 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.19-28.36"
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$10_Y": {
-          "hide_name": 1,
-          "bits": [ 18 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.17-29.31"
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$12_Y": {
-          "hide_name": 1,
-          "bits": [ 21 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.17-30.31"
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$17_Y": {
-          "hide_name": 1,
-          "bits": [ 22 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.19-33.36"
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$20_Y": {
-          "hide_name": 1,
-          "bits": [ 25 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.17-34.31"
-          }
-        },
-        "$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$22_Y": {
-          "hide_name": 1,
-          "bits": [ 28 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.17-35.31"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$3_Y": {
-          "hide_name": 1,
-          "bits": [ 29 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.17-25.37"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$5_Y": {
-          "hide_name": 1,
-          "bits": [ 11 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.22-26.36"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$8_Y": {
-          "hide_name": 1,
-          "bits": [ 19 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.17-28.37"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$9_Y": {
-          "hide_name": 1,
-          "bits": [ 17 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.24-29.31"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$11_Y": {
-          "hide_name": 1,
-          "bits": [ 20 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.24-30.31"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$14_Y": {
-          "hide_name": 1,
-          "bits": [ 12 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.22-31.36"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$16_Y": {
-          "hide_name": 1,
-          "bits": [ 33 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.17-32.37"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$18_Y": {
-          "hide_name": 1,
-          "bits": [ 26 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.17-33.37"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$19_Y": {
-          "hide_name": 1,
-          "bits": [ 24 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.24-34.31"
-          }
-        },
-        "$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$21_Y": {
-          "hide_name": 1,
-          "bits": [ 27 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.24-35.31"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24$1_Y": {
-          "hide_name": 1,
-          "bits": [ 16 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24.17-24.34"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$4_Y": {
-          "hide_name": 1,
-          "bits": [ 30 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.24-26.35"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27$6_Y": {
-          "hide_name": 1,
-          "bits": [ 23 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27.17-27.34"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$13_Y": {
-          "hide_name": 1,
-          "bits": [ 31 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.24-31.35"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$15_Y": {
-          "hide_name": 1,
-          "bits": [ 32 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.19-32.36"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36$23_Y": {
-          "hide_name": 1,
-          "bits": [ 13 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36.22-36.33"
-          }
-        },
-        "$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37$24_Y": {
-          "hide_name": 1,
-          "bits": [ 10 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37.22-37.39"
-          }
-        },
-        "_00_": {
-          "hide_name": 0,
-          "bits": [ 16 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:5.8-5.12"
-          }
-        },
-        "_01_": {
-          "hide_name": 0,
-          "bits": [ 29 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:6.8-6.12"
-          }
-        },
-        "_02_": {
-          "hide_name": 0,
-          "bits": [ 23 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:7.8-7.12"
-          }
-        },
-        "_03_": {
-          "hide_name": 0,
-          "bits": [ 19 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:8.8-8.12"
-          }
-        },
-        "_04_": {
-          "hide_name": 0,
-          "bits": [ 18 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:9.8-9.12"
-          }
-        },
-        "_05_": {
-          "hide_name": 0,
-          "bits": [ 21 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:10.8-10.12"
-          }
-        },
-        "_06_": {
-          "hide_name": 0,
-          "bits": [ 33 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:11.8-11.12"
-          }
-        },
-        "_07_": {
-          "hide_name": 0,
-          "bits": [ 26 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:12.8-12.12"
-          }
-        },
-        "_08_": {
-          "hide_name": 0,
-          "bits": [ 25 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:13.8-13.12"
-          }
-        },
-        "_09_": {
-          "hide_name": 0,
-          "bits": [ 28 ],
-          "attributes": {
-            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:14.8-14.12"
-          }
-        },
-        "io_a": {
-          "hide_name": 0,
-          "bits": [ 2, 3, 4, 5 ],
-          "attributes": {
-            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:6.14-6.18"
-          }
-        },
-        "io_b": {
-          "hide_name": 0,
-          "bits": [ 6, 7, 8, 9 ],
-          "attributes": {
-            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:7.14-7.18"
-          }
-        },
-        "io_sum": {
-          "hide_name": 0,
-          "bits": [ 10, 11, 12, 13 ],
-          "attributes": {
-            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:8.20-8.26"
-          }
-        }
-      }
-    },
     "BehavioralAdder4": {
       "attributes": {
         "top": "00000000000000000000000000000001",
@@ -849,28 +30,712 @@
         }
       },
       "cells": {
-        "io_sum_adder": {
-          "hide_name": 0,
-          "type": "BehavioralAdder",
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$2": {
+          "hide_name": 1,
+          "type": "$and",
           "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
           },
           "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:23.18-27.3"
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.19-25.36"
           },
           "port_directions": {
-            "io_a": "input",
-            "io_b": "input",
-            "io_sum": "output"
+            "A": "input",
+            "B": "input",
+            "Y": "output"
           },
           "connections": {
-            "io_a": [ 4, 5, 6, 7 ],
-            "io_b": [ 8, 9, 10, 11 ],
-            "io_sum": [ 12, 13, 14, 15 ]
+            "A": [ 4 ],
+            "B": [ 8 ],
+            "Y": [ 16 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$7": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.19-28.36"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 9 ],
+            "Y": [ 17 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$10": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.17-29.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 18 ],
+            "B": [ 19 ],
+            "Y": [ 20 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$12": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.17-30.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 21 ],
+            "B": [ 22 ],
+            "Y": [ 23 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$17": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.19-33.36"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 6 ],
+            "B": [ 10 ],
+            "Y": [ 24 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$20": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.17-34.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 25 ],
+            "B": [ 26 ],
+            "Y": [ 27 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$22": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.17-35.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 28 ],
+            "B": [ 29 ],
+            "Y": [ 30 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$3": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.17-25.37"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 16 ],
+            "Y": [ 31 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$5": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.22-26.36"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 32 ],
+            "Y": [ 13 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$8": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.17-28.37"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 17 ],
+            "Y": [ 21 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$9": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.24-29.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 31 ],
+            "Y": [ 19 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$11": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.24-30.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 20 ],
+            "Y": [ 22 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$14": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.22-31.36"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 33 ],
+            "Y": [ 14 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$16": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.17-32.37"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 34 ],
+            "Y": [ 35 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$18": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.17-33.37"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 24 ],
+            "Y": [ 28 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$19": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.24-34.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23 ],
+            "Y": [ 26 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$21": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.24-35.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 27 ],
+            "Y": [ 29 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24$1": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24.17-24.34"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 9 ],
+            "Y": [ 18 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$4": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.24-26.35"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 31 ],
+            "B": [ 18 ],
+            "Y": [ 32 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27$6": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27.17-27.34"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 6 ],
+            "B": [ 10 ],
+            "Y": [ 25 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$13": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.24-31.35"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23 ],
+            "B": [ 25 ],
+            "Y": [ 33 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$15": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.19-32.36"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 11 ],
+            "Y": [ 34 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36$23": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36.22-36.33"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 30 ],
+            "B": [ 35 ],
+            "Y": [ 15 ]
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37$24": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37.22-37.39"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 4 ],
+            "B": [ 8 ],
+            "Y": [ 12 ]
           }
         }
       },
       "netnames": {
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$2_Y": {
+          "hide_name": 1,
+          "bits": [ 16 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.19-25.36"
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$7_Y": {
+          "hide_name": 1,
+          "bits": [ 17 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.19-28.36"
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$10_Y": {
+          "hide_name": 1,
+          "bits": [ 20 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.17-29.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$12_Y": {
+          "hide_name": 1,
+          "bits": [ 23 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.17-30.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$17_Y": {
+          "hide_name": 1,
+          "bits": [ 24 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.19-33.36"
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$20_Y": {
+          "hide_name": 1,
+          "bits": [ 27 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.17-34.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$and$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$22_Y": {
+          "hide_name": 1,
+          "bits": [ 30 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.17-35.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25$3_Y": {
+          "hide_name": 1,
+          "bits": [ 31 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:25.17-25.37"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$5_Y": {
+          "hide_name": 1,
+          "bits": [ 13 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.22-26.36"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28$8_Y": {
+          "hide_name": 1,
+          "bits": [ 21 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:28.17-28.37"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29$9_Y": {
+          "hide_name": 1,
+          "bits": [ 19 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:29.24-29.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30$11_Y": {
+          "hide_name": 1,
+          "bits": [ 22 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:30.24-30.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$14_Y": {
+          "hide_name": 1,
+          "bits": [ 14 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.22-31.36"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$16_Y": {
+          "hide_name": 1,
+          "bits": [ 35 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.17-32.37"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33$18_Y": {
+          "hide_name": 1,
+          "bits": [ 28 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:33.17-33.37"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34$19_Y": {
+          "hide_name": 1,
+          "bits": [ 26 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:34.24-34.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$not$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35$21_Y": {
+          "hide_name": 1,
+          "bits": [ 29 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:35.24-35.31"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24$1_Y": {
+          "hide_name": 1,
+          "bits": [ 18 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:24.17-24.34"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26$4_Y": {
+          "hide_name": 1,
+          "bits": [ 32 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:26.24-26.35"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27$6_Y": {
+          "hide_name": 1,
+          "bits": [ 25 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:27.17-27.34"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31$13_Y": {
+          "hide_name": 1,
+          "bits": [ 33 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:31.24-31.35"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32$15_Y": {
+          "hide_name": 1,
+          "bits": [ 34 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:32.19-32.36"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36$23_Y": {
+          "hide_name": 1,
+          "bits": [ 15 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:36.22-36.33"
+          }
+        },
+        "$flatten\\io_sum_adder.$xor$generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37$24_Y": {
+          "hide_name": 1,
+          "bits": [ 12 ],
+          "attributes": {
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:37.22-37.39"
+          }
+        },
         "clock": {
           "hide_name": 0,
           "bits": [ 2 ],
@@ -897,6 +762,110 @@
           "bits": [ 12, 13, 14, 15 ],
           "attributes": {
             "src": "generators/generated/verilog_clean/BehavioralAdder4.v:22.20-22.26"
+          }
+        },
+        "io_sum_adder._00_": {
+          "hide_name": 0,
+          "bits": [ 18 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _00_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:5.8-5.12"
+          }
+        },
+        "io_sum_adder._01_": {
+          "hide_name": 0,
+          "bits": [ 31 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _01_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:6.8-6.12"
+          }
+        },
+        "io_sum_adder._02_": {
+          "hide_name": 0,
+          "bits": [ 25 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _02_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:7.8-7.12"
+          }
+        },
+        "io_sum_adder._03_": {
+          "hide_name": 0,
+          "bits": [ 21 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _03_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:8.8-8.12"
+          }
+        },
+        "io_sum_adder._04_": {
+          "hide_name": 0,
+          "bits": [ 20 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _04_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:9.8-9.12"
+          }
+        },
+        "io_sum_adder._05_": {
+          "hide_name": 0,
+          "bits": [ 23 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _05_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:10.8-10.12"
+          }
+        },
+        "io_sum_adder._06_": {
+          "hide_name": 0,
+          "bits": [ 35 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _06_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:11.8-11.12"
+          }
+        },
+        "io_sum_adder._07_": {
+          "hide_name": 0,
+          "bits": [ 28 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _07_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:12.8-12.12"
+          }
+        },
+        "io_sum_adder._08_": {
+          "hide_name": 0,
+          "bits": [ 27 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _08_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:13.8-13.12"
+          }
+        },
+        "io_sum_adder._09_": {
+          "hide_name": 0,
+          "bits": [ 30 ],
+          "attributes": {
+            "hdlname": "io_sum_adder _09_",
+            "src": "generators/generated/verilog_yosys_elaborated/BehavioralAdder4.v:14.8-14.12"
+          }
+        },
+        "io_sum_adder.io_a": {
+          "hide_name": 0,
+          "bits": [ 4, 5, 6, 7 ],
+          "attributes": {
+            "hdlname": "io_sum_adder io_a",
+            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:6.14-6.18"
+          }
+        },
+        "io_sum_adder.io_b": {
+          "hide_name": 0,
+          "bits": [ 8, 9, 10, 11 ],
+          "attributes": {
+            "hdlname": "io_sum_adder io_b",
+            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:7.14-7.18"
+          }
+        },
+        "io_sum_adder.io_sum": {
+          "hide_name": 0,
+          "bits": [ 12, 13, 14, 15 ],
+          "attributes": {
+            "hdlname": "io_sum_adder io_sum",
+            "src": "generators/generated/verilog_clean/BehavioralAdder4.v:8.20-8.26"
           }
         },
         "reset": {

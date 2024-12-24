@@ -26,6 +26,7 @@ object GenerateHardware extends App {
   val generatedSystemVerilogCleanPath = "generators/generated/systemverilog_clean" 
 
   val generatedVerilogCleanPath = "generators/generated/verilog_clean"
+  val generatedVerilogElaboratedPath = "generators/generated/verilog_yosys_elaborated"
 
   val generatedNetlistPath = "generators/generated/netlist"
   val generatedDiagramsPath = "generators/generated/diagrams"
@@ -38,8 +39,8 @@ object GenerateHardware extends App {
      (() => new scabook.Mux4, "Mux4"),
      (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
      (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
-      (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
-    (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
+     (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
+     (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
 
 
@@ -183,58 +184,78 @@ object GenerateHardware extends App {
   def generateNetlist(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: generateNetlist")
     if ( isCmdInstalled("yosys")) {      
-      val systemVerilogFile = new File( generatedVerilogCleanPath + "/" + moduleName + ".v")
-      val blifFile = new File( generatedNetlistPath + "/" + moduleName + ".blif")
+      val systemVerilogInFile = new File( generatedVerilogCleanPath + "/" + moduleName + ".v")
+      val verilogOutFile = new File( generatedVerilogElaboratedPath + "/" + moduleName + ".v")
+      val edifFile = new File( generatedNetlistPath + "/" + moduleName + ".edif")
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
+      val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
+      // yosys flags
+       val yosysSynthFlags = s"synth -top $moduleName"
 
-      // Generate BLIF file
-      val yosysBLIFcommand = Seq(
+
+      // Generate synthesized (elaborated) verilog file
+      val yosysVerilogcommand = Seq(
           "yosys",
-          "-p",
-          s"read_verilog -sv $systemVerilogFile; synth -top $moduleName; write_blif $blifFile"
+           "-p",
+          s"read_verilog -sv $systemVerilogInFile; $yosysSynthFlags; write_verilog $verilogOutFile"
       )
-      val blifResult = yosysBLIFcommand.!  
-      if (blifResult != 0) {
-        println(s"Error: firtool execution failed with code $blifResult")
+      val yosysVerilogResult = yosysVerilogcommand.!  
+      if (yosysVerilogResult != 0) {
+        println(s"Error: yosys execution failed with code $yosysVerilogResult")
       } else {
-        println("BLIF file generated successfully!")
+        println("yosys synthesized (elaborated) verilog file generated successfully!")
+      }
+
+
+      // Write EDIF and JSON
+      val yosysWriteCommand = Seq(
+          "yosys",
+           "-p",
+          s"read_verilog -sv $verilogOutFile; write_edif $edifFile; write_json $jsonFile; flatten; write_json $jsonFileFlattened "
+      )
+      val yosysWriteResult = yosysWriteCommand.!  
+      if (yosysWriteResult != 0) {
+        println(s"Error: yosys writeCommand execution failed with code $yosysWriteResult")
+      } else {
+        println("EDIF and JSON files generated successfully!")
       }
  
-      // Generate JSON because netlistsvg works better with JSON
-      val yosysJSONcommand = Seq(
-          "yosys",
-          "-p",
-          s"read_verilog -sv $systemVerilogFile; synth -top $moduleName; flatten; write_json $jsonFile"
-        )
-      val jsonResult = yosysJSONcommand.!  // Execute the command
-      if (jsonResult != 0) {
-        println(s"Error: firtool execution failed with code $jsonResult")
-      } else {
-        println("JSON generated successfully!")
-      }
 
     } else {
       println("yosys not installed. See: https://github.com/YosysHQ/yosys and install it from https://github.com/YosysHQ/oss-cad-suite-build/releases")
     }    
   }
 
+
+
   def generateSVG(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: generateSVG")
     if ( isCmdInstalled("netlistsvg")) {      
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
       val jsonFileFullPath = jsonFile.getAbsolutePath()
+      val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
+      val jsonFileFlattenedFullPath = jsonFileFlattened.getAbsolutePath()
       val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
       val svgFileFullPath = svgFile.getAbsolutePath()
+      val svgFileFlattened = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")
+      val svgFileFlattenedFullPath = svgFileFlattened.getAbsolutePath()
 
+      // hierarchical svg
       val netlistSVGcommand = s"netlistsvg $jsonFileFullPath -o $svgFileFullPath"
-
-      println(s"netlistSVGcommand= $netlistSVGcommand")
-
       val netlistSVGresult = netlistSVGcommand.!  
       if (netlistSVGresult != 0) {
         println(s"Error: netlistsvg execution failed with code $netlistSVGresult")
       } else {
         println("SVG file generated successfully!")
+      }
+
+      // flattened svg
+      val netlistSVGflatCommand = s"netlistsvg $jsonFileFlattenedFullPath -o $svgFileFlattenedFullPath"
+      val netlistSVGFlatResult = netlistSVGflatCommand.!  
+      if (netlistSVGFlatResult != 0) {
+        println(s"Error: netlistsvg flattened execution failed with code $netlistSVGFlatResult")
+      } else {
+        println("SVG Flattened file generated successfully!")
       }
  
     } else {
@@ -248,23 +269,35 @@ object GenerateHardware extends App {
     if ( isCmdInstalled("rsvg-convert")) {      
       val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
       val pngFile = new File(generatedDiagramsPath + "/" + moduleName + ".png")
+
+      val svgFlatFile = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")
+      val pngFlatFile = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".png")
       
 
+      // hierarchical
       val convertSVGcommand = s"rsvg-convert -f png -d 300 -p 300 -o $pngFile $svgFile"
-
-      println(s"convertSVGcommand= $convertSVGcommand")
-
       val convertSVGresult = convertSVGcommand.!  
       if (convertSVGresult != 0) {
         println(s"Error: convertSVGtoPNG execution failed with code $convertSVGresult")
       } else {
         println("PNG file generated successfully!")
       }
- 
+     
+      // flattened
+      val convertSVGflatCommand = s"rsvg-convert -f png -d 300 -p 300 -o $pngFlatFile $svgFlatFile"
+      val convertSVGflatResult = convertSVGflatCommand.!  
+      if (convertSVGflatResult != 0) {
+        println(s"Error: convertSVGtoPNG Flattened execution failed with code $convertSVGflatResult")
+      } else {
+        println("PNG Flattened file generated successfully!")
+      }
+
+
     } else {
       println("rsvg-convert not installed. try: sudo apt install librsvg2-bin")
     }    
   }
+
 
 
   
