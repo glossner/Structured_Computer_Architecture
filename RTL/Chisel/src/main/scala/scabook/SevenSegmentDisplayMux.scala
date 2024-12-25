@@ -4,13 +4,25 @@
 package scabook
 
 import chisel3._
-import circt.stage.ChiselStage
 
 class SevenSegmentDisplayMux extends Module {
   val io = IO(new Bundle {
     val binIn = Input(UInt(4.W))  // 4-bit binary input
     val segOut = Output(UInt(7.W)) // 7-bit output for seven-segment display
   })
+
+  // Assign names to the binary I/O bits
+  val B0 = io.binIn(0).suggestName("B0")
+  val B1 = io.binIn(1).suggestName("B1")
+  val B2 = io.binIn(2).suggestName("B2")
+  val B3 = io.binIn(3).suggestName("B3")
+  val a = io.segOut(6).suggestName("a")
+  val b = io.segOut(5).suggestName("b")
+  val c = io.segOut(4).suggestName("c")
+  val d = io.segOut(3).suggestName("d")
+  val e = io.segOut(2).suggestName("e")
+  val f = io.segOut(1).suggestName("f")
+  val g = io.segOut(0).suggestName("g")
 
   io.segOut := Mux(io.binIn === 0.U, "b1111110".U(7.W), // 0: a, b, c, d, e, f
                Mux(io.binIn === 1.U, "b0110000".U(7.W), // 1: b, c
@@ -26,8 +38,3 @@ class SevenSegmentDisplayMux extends Module {
                ))))))))))
 }
 
-object SevenSegmentDisplayMux extends App {
-   ChiselStage.emitSystemVerilog(
-    new SevenSegmentDisplayMux, 
-    Array("-disable-all-randomization", "-strip-debug-info"))
-}

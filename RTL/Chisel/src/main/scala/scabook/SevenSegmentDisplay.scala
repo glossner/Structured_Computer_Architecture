@@ -11,6 +11,21 @@ class SevenSegmentDisplay extends Module {
     val segOut = Output(UInt(7.W)) // 7-bit output for seven-segment display
   })
 
+    // Assign names to the binary I/O bits
+    val B0 = WireDefault(io.binIn(0)).suggestName("B0")
+    val B1 = WireDefault(io.binIn(1)).suggestName("B1")
+    val B2 = WireDefault(io.binIn(2)).suggestName("B2")
+    val B3 = WireDefault(io.binIn(3)).suggestName("B3")
+
+    // Assign names to the 7-segment output bits
+    val a = WireDefault(io.segOut(6)).suggestName("a")
+    val b = WireDefault(io.segOut(5)).suggestName("b")
+    val c = WireDefault(io.segOut(4)).suggestName("c")
+    val d = WireDefault(io.segOut(3)).suggestName("d")
+    val e = WireDefault(io.segOut(2)).suggestName("e")
+    val f = WireDefault(io.segOut(1)).suggestName("f")
+    val g = WireDefault(io.segOut(0)).suggestName("g")
+
     io.segOut := "b0000000".U(7.W) // Default: All segments off
 
     when(       io.binIn === 0.U) { io.segOut := "b1111110".U(7.W)

@@ -23,6 +23,19 @@ module SevenSegmentDisplay(
       7'h6D,
       7'h30,
       7'h7E};
-  assign io_segOut = _GEN[io_binIn];
+  wire struct packed {logic [3:0] binIn; logic [6:0] segOut; } io;
+  wire             B0 = io.binIn[0];
+  wire             B1 = io.binIn[1];
+  wire             B2 = io.binIn[2];
+  wire             B3 = io.binIn[3];
+  wire             a = io.segOut[6];
+  wire             b = io.segOut[5];
+  wire             c = io.segOut[4];
+  wire             d = io.segOut[3];
+  wire             e = io.segOut[2];
+  wire             f = io.segOut[1];
+  wire             g = io.segOut[0];
+  assign io = '{binIn: io_binIn, segOut: _GEN[io.binIn]};
+  assign io_segOut = io.segOut;
 endmodule
 

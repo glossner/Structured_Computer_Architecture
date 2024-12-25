@@ -25,22 +25,23 @@ object GenerateHardware extends App {
 
   // Modules to Generate
   val modulesToGenerate = Seq(
-     (() => new scabook.Decoder2to4, "Decoder2to4"),
-     (() => new scabook.DeMux16, "DeMux16"),
-     (() => new scabook.Mux4, "Mux4"),
+    //  (() => new scabook.Decoder2to4, "Decoder2to4"),
+    //  (() => new scabook.DeMux16, "DeMux16"),
+    //  (() => new scabook.Mux4, "Mux4"),
      (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
-     (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
-     (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
-     (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
+     (() => new scabook.SevenSegmentDisplayMux, "SevenSegmentDisplayMux"),
+     (() => new scabook.SevenSegmentDisplayFlat, "SevenSegmentDisplayFlat"),
+    //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
+    //  (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
+    //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
 
   // Default paths when running from toplevel RTL/Chisel
-  val generatedFirRTLPath = "generators/generated/firrtl"     //*.fir.mlir
+  val generatedFirRTLPath = "generators/generated/firrtl"     //*.fir and *.fir.mlir
 
   val generatedSystemVerilogAnnotatedPath = "generators/generated/systemverilog_annotated" 
-  val generatedSystemVerilogCleanPath = "generators/generated/systemverilog_clean" 
-
-  val generatedVerilogCleanPath = "generators/generated/verilog_sv2v_clean"
+ 
+  val generatedSv2vPath = "generators/generated/verilog_sv2v_clean"
   val generatedVerilogElaboratedPath = "generators/generated/verilog_yosys_elaborated"
 
   val generatedNetlistPath = "generators/generated/netlist"
@@ -60,14 +61,13 @@ object GenerateHardware extends App {
       println("  ")
 
       //firtools generates SystemVerilog when --verilog is used
-      generateFIRRTL(module, moduleName)
-      generateSystemVerilogAnnotated(module, moduleName)
-      generateSystemVerilogClean(module, moduleName)
+      generateFIRRTLandSystemVerilog(module, moduleName)
       convertSystemVerilogToVerilog(module, moduleName)
       generateNetlist(module, moduleName)
       generateSVG(module, moduleName)
       convertSVGtoPNG(module, moduleName)
       if(shouldDeleteIntermediateFiles) deleteIntermediateFiles(module, moduleName)
+      //printHelp()
     
     } catch {
       case e: Exception =>
@@ -76,15 +76,19 @@ object GenerateHardware extends App {
     }
   }
 
-  def generateFIRRTL(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+  def generateFIRRTLandSystemVerilog(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: generateFIRTL")
+    // Stage1: Dump fir file with all annotations. Will also generate stipped fir.mlir file
     val firrtlBaseArgs = Array("--target", "firrtl",
-                                "--target-dir", generatedFirRTLPath)
-    if(isCmdInstalled("firtool")) {
-      
-      val firtoolPath = getCmdPath("firtool")  // Remove the type annotation
+                               "--dump-fir", // Keep signal names
+                               "--preserve-aggregate", "all",
+                               "--target-dir", generatedFirRTLPath)
+    
+    if(isCmdInstalled("firtool")) {      
+      val firtoolPath = getCmdPath("firtool") 
       println(s"firtoolPath=$firtoolPath") 
       
+      // --preserve-values=none keeps suggestName values
       val firrtlArgs: Array[String] =        
           firrtlBaseArgs ++ Array("--firtool-binary-path", firtoolPath)
          
@@ -92,6 +96,37 @@ object GenerateHardware extends App {
         firrtlArgs,
         Seq(chisel3.stage.ChiselGeneratorAnnotation(chiselModule)) 
       )
+
+      // Stage2: Use the dumped fir to produce an annotated fir.mlir and SystemVerilog file
+      val firFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir")
+      val mlirFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir.mlir")
+      val svFile = new File( generatedSystemVerilogAnnotatedPath + "/" + moduleName + ".sv")
+      val annotationFile =  new File( generatedFirRTLPath + "/" + moduleName + "_annotated.txt")
+      val mlirCommand = Seq(
+        "firtool",
+        //"-O=debug", // Compiler set to debug
+        "-g",   // Enable debug information
+        "-o", svFile.getAbsolutePath,
+        //s"--output-annotation-file=${annotationFile.getAbsolutePath()}",  //dump fir.mlir
+        //"--preserve-aggregate=all",
+        //"--split-aggregate",
+        "--preserve-values=all",
+         //s"--output-final-mlir=${mlirFile.getAbsolutePath()}", 
+        "--format=fir",  //input file format
+         firFile.getAbsolutePath, 
+      )
+
+      println(s"$moduleName - firtool command = $mlirCommand")
+
+      val result = mlirCommand.!  // Execute the command
+
+      if (result != 0) {
+        println(s"Error: firtool execution failed with code $result")
+      } else {
+        println("Annotated SystemVerilog generated successfully!")
+      }
+
+      //println(s"$moduleName: Successfully generated fir file")
     } else {
       println("firtool not installed. See: https://github.com/llvm/circt/releases")
       println("Falling back to Chisel supplied firtool")
@@ -102,75 +137,17 @@ object GenerateHardware extends App {
     }
   }
 
-  def generateSystemVerilogAnnotated(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
-    println(s"${moduleName}: generateSystemVerilogAnnotated")
-    if ( isCmdInstalled("firtool")) {      
-      val firrtlFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir.mlir")
-      val systemVerilogFile = new File( generatedSystemVerilogAnnotatedPath + "/" + moduleName + ".v")
-
-      val firtoolCleanVerilogCommand = Seq(
-        "firtool",
-        "-o", systemVerilogFile.getAbsolutePath,
-        "--verilog", 
-         firrtlFile.getAbsolutePath, 
-      )
-
-      val result = firtoolCleanVerilogCommand.!  // Execute the command
-
-      if (result != 0) {
-        println(s"Error: firtool execution failed with code $result")
-      } else {
-        println("Annotated SystemVerilog generated successfully!")
-      }
-    } else {
-      println("firtool not installed. See: https://github.com/llvm/circt/releases")
-      println("Falling back to Chisel supplied firtool")
-     
-      (new ChiselStage).execute(
-        Array("--target", "verilog",
-              "--target-dir", generatedSystemVerilogAnnotatedPath),
-        Seq(chisel3.stage.ChiselGeneratorAnnotation(chiselModule)) 
-      )
-    } 
-  }
-
-  def generateSystemVerilogClean(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
-    println(s"${moduleName}: generateSystemVerilogClean")
-    if ( isCmdInstalled("firtool")) {      
-      val firrtlFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir.mlir")
-      val systemVerilogFile = new File( generatedSystemVerilogCleanPath + "/" + moduleName + ".v")
-
-      val firtoolCleanVerilogCommand = Seq(
-        "firtool",
-        "-o", systemVerilogFile.getAbsolutePath,
-        "--verilog", 
-        "--strip-debug-info", 
-        firrtlFile.getAbsolutePath, 
-      )
-
-      val result = firtoolCleanVerilogCommand.!  // Execute the command
-
-      if (result != 0) {
-        println(s"Error: firtool execution failed with code $result")
-      } else {
-        println("Clean SystemVerilog generated successfully!")
-      }
-    } else {
-      println("firtool not installed. See: https://github.com/llvm/circt/releases")
-    }    
-  }
-
   def convertSystemVerilogToVerilog(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: convertSystemVerilogToVerilog")
     if ( isCmdInstalled("sv2v")) {      
-      val systemVerilogCleanFile = new File( generatedSystemVerilogCleanPath + "/" + moduleName + ".v")
-      val systemVerilogCleanFilePath = systemVerilogCleanFile.getAbsolutePath()
+      val systemVerilogAnnotatedFile = new File( generatedSystemVerilogAnnotatedPath + "/" + moduleName + ".sv")
+      val systemVerilogAnnotatedFilePath = systemVerilogAnnotatedFile.getAbsolutePath()
 
-      val verilogCleanFile = new File( generatedVerilogCleanPath + "/" + moduleName + ".v")
-      val verilogCleanFilePath = verilogCleanFile.getAbsolutePath()
+      val verilogSv2vFile = new File( generatedSv2vPath + "/" + moduleName + ".v")
+      val verilogSv2vFilePath = verilogSv2vFile.getAbsolutePath()
 
-      val sv2vCommand = Seq("sv2v", systemVerilogCleanFilePath)
-      val result = (sv2vCommand #> new File(verilogCleanFilePath)).!
+      val sv2vCommand = Seq("sv2v", systemVerilogAnnotatedFilePath)
+      val result = (sv2vCommand #> new File(verilogSv2vFilePath)).!
 
       if (result != 0) {
         println(s"Error: sv2v execution failed with code $result")
@@ -185,11 +162,14 @@ object GenerateHardware extends App {
   def generateNetlist(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: generateNetlist")
     if ( isCmdInstalled("yosys")) {      
-      val systemVerilogInFile = new File( generatedVerilogCleanPath + "/" + moduleName + ".v")
+      val systemVerilogInFile = new File( generatedSv2vPath + "/" + moduleName + ".v")
       val verilogOutFile = new File( generatedVerilogElaboratedPath + "/" + moduleName + ".v")
       val edifFile = new File( generatedNetlistPath + "/" + moduleName + ".edif")
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
       val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
+      val pdfFile = new File( generatedNetlistPath + "/" + moduleName + ".pdf")
+      val dotFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".dot")
+
       // yosys flags
        val yosysSynthFlags = s"synth -top $moduleName"
 
@@ -198,8 +178,9 @@ object GenerateHardware extends App {
       val yosysVerilogcommand = Seq(
           "yosys",
            "-p",
-          s"read_verilog -sv $systemVerilogInFile; $yosysSynthFlags; write_verilog $verilogOutFile"
+          s"read_verilog -sv $systemVerilogInFile;  $yosysSynthFlags; write_verilog $verilogOutFile"
       )
+      
       val yosysVerilogResult = yosysVerilogcommand.!  
       if (yosysVerilogResult != 0) {
         println(s"Error: yosys execution failed with code $yosysVerilogResult")
@@ -212,8 +193,10 @@ object GenerateHardware extends App {
       val yosysWriteCommand = Seq(
           "yosys",
            "-p",
-          s"read_verilog -sv $verilogOutFile; write_edif $edifFile; write_json $jsonFile; flatten; write_json $jsonFileFlattened "
+          s"read_verilog -sv $verilogOutFile; write_edif $edifFile; write_json $jsonFile;  flatten; write_json $jsonFileFlattened"
       )
+      // show -format pdf $moduleName  $pdfFile works but the symbols are not IEEE
+      
       val yosysWriteResult = yosysWriteCommand.!  
       if (yosysWriteResult != 0) {
         println(s"Error: yosys writeCommand execution failed with code $yosysWriteResult")
@@ -303,6 +286,7 @@ object GenerateHardware extends App {
   def deleteIntermediateFiles(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: deleteIntermediateFiles")
 
+    val mlirFile = generatedFirRTLPath + "/" + moduleName + ".fir.mlir"
     val edifFile = generatedNetlistPath + "/" + moduleName + ".edif"
     val jsonNetlistFile =  generatedNetlistPath + "/" + moduleName + ".json" 
     val jsonNetlistFlatFile =  generatedNetlistPath + "/" + moduleName + "_flat" + ".json" 
@@ -364,6 +348,48 @@ object GenerateHardware extends App {
   }
 
   def printHelp(): Unit = {
+    // circt 1.99.1 for chisel execute()
+    // [info] Usage: circt [options] [<arg>...]
+    // [info]   --help                   prints this usage text
+    // [info] Shell Options
+    // [info]   <arg>...                 optional unbounded args
+    // [info]   -td, --target-dir <directory>
+    // [info]                            Work directory (default: '.')
+    // [info]   -faf, --annotation-file <file>
+    // [info]                            An input annotation file
+    // [info]   -foaf, --output-annotation-file <file>
+    // [info]                            An output annotation file
+    // [info]   --show-registrations     print discovered registered libraries and transforms
+    // [info] Logging Options
+    // [info]   -ll, --log-level {error|warn|info|debug|trace}
+    // [info]                            Set global logging verbosity (default: None
+    // [info]   -cll, --class-log-level <FullClassName:{error|warn|info|debug|trace}>...
+    // [info]                            Set per-class logging verbosity
+    // [info]   --log-file <file>        Log to a file instead of STDOUT
+    // [info]   -lcn, --log-class-names  Show class names and log level in logging output
+    // [info] Chisel options
+    // [info]   --module <package>.<module>
+    // [info]                            The name of a Chisel module to elaborate (module must be in the classpath)
+    // [info]   --full-stacktrace        Show full stack trace when an exception is thrown
+    // [info]   --throw-on-first-error   Throw an exception on the first error instead of continuing
+    // [info]   --warnings-as-errors     Treat warnings as errors
+    // [info]   --warn-conf <value>      Warning configuration
+    // [info]   --warn-conf-file <value>
+    // [info]                            Warning configuration
+    // [info]   --source-root <file>     Root directory for source files, used for enhanced error reporting
+    // [info]   --dump-fir               Write the intermediate .fir file
+    // [info] CIRCT (MLIR FIRRTL Compiler) options
+    // [info]   --target {chirrtl|firrtl|hw|verilog|systemverilog}
+    // [info]                            The CIRCT
+    // [info]   --preserve-aggregate <value>
+    // [info]                            Do not lower aggregate types to ground types
+    // [info]   --split-verilog          Indicates that "firtool" should emit one-file-per-module and write separate outputs to separate files
+    // [info]   --firtool-binary-path path
+    // [info]                            Specifies the path to the "firtool" binary Chisel should use.
+    // [info] AspectLibrary
+    // [info]   --with-aspect <package>.<aspect>
+    // [info]                            The name/class of an aspect to compile with (must be a class/object without arguments!)
+
     (new ChiselStage).execute(
       Array("--help"),
       Seq(chisel3.stage.ChiselGeneratorAnnotation(() => new scabook.SevenSegmentDisplay))

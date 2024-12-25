@@ -1,0 +1,45 @@
+FIRRTL version 3.3.0
+circuit SevenSegmentDisplayMux :%[[
+  {
+    "class":"firrtl.transforms.DedupGroupAnnotation",
+    "target":"~SevenSegmentDisplayMux|SevenSegmentDisplayMux",
+    "group":"SevenSegmentDisplayMux"
+  }
+]]
+  module SevenSegmentDisplayMux : @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 8:7]
+    input clock : Clock @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 8:7]
+    input reset : UInt<1> @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 8:7]
+    output io : { flip binIn : UInt<4>, segOut : UInt<7>} @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 9:14]
+
+    node B0 = bits(io.binIn, 0, 0) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 15:20]
+    node B1 = bits(io.binIn, 1, 1) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 16:20]
+    node B2 = bits(io.binIn, 2, 2) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 17:20]
+    node B3 = bits(io.binIn, 3, 3) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 18:20]
+    node a = bits(io.segOut, 6, 6) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 19:20]
+    node b = bits(io.segOut, 5, 5) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 20:20]
+    node c = bits(io.segOut, 4, 4) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 21:20]
+    node d = bits(io.segOut, 3, 3) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 22:20]
+    node e = bits(io.segOut, 2, 2) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 23:20]
+    node f = bits(io.segOut, 1, 1) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 24:20]
+    node g = bits(io.segOut, 0, 0) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 25:20]
+    node _io_segOut_T = eq(io.binIn, UInt<1>(0h0)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 27:29]
+    node _io_segOut_T_1 = eq(io.binIn, UInt<1>(0h1)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 28:29]
+    node _io_segOut_T_2 = eq(io.binIn, UInt<2>(0h2)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 29:29]
+    node _io_segOut_T_3 = eq(io.binIn, UInt<2>(0h3)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 30:29]
+    node _io_segOut_T_4 = eq(io.binIn, UInt<3>(0h4)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 31:29]
+    node _io_segOut_T_5 = eq(io.binIn, UInt<3>(0h5)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 32:29]
+    node _io_segOut_T_6 = eq(io.binIn, UInt<3>(0h6)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 33:29]
+    node _io_segOut_T_7 = eq(io.binIn, UInt<3>(0h7)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 34:29]
+    node _io_segOut_T_8 = eq(io.binIn, UInt<4>(0h8)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 35:29]
+    node _io_segOut_T_9 = eq(io.binIn, UInt<4>(0h9)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 36:29]
+    node _io_segOut_T_10 = mux(_io_segOut_T_9, UInt<7>(0h7b), UInt<7>(0h0)) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 36:19]
+    node _io_segOut_T_11 = mux(_io_segOut_T_8, UInt<7>(0h7f), _io_segOut_T_10) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 35:19]
+    node _io_segOut_T_12 = mux(_io_segOut_T_7, UInt<7>(0h70), _io_segOut_T_11) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 34:19]
+    node _io_segOut_T_13 = mux(_io_segOut_T_6, UInt<7>(0h5f), _io_segOut_T_12) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 33:19]
+    node _io_segOut_T_14 = mux(_io_segOut_T_5, UInt<7>(0h5b), _io_segOut_T_13) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 32:19]
+    node _io_segOut_T_15 = mux(_io_segOut_T_4, UInt<7>(0h33), _io_segOut_T_14) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 31:19]
+    node _io_segOut_T_16 = mux(_io_segOut_T_3, UInt<7>(0h79), _io_segOut_T_15) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 30:19]
+    node _io_segOut_T_17 = mux(_io_segOut_T_2, UInt<7>(0h6d), _io_segOut_T_16) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 29:19]
+    node _io_segOut_T_18 = mux(_io_segOut_T_1, UInt<7>(0h30), _io_segOut_T_17) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 28:19]
+    node _io_segOut_T_19 = mux(_io_segOut_T, UInt<7>(0h7e), _io_segOut_T_18) @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 27:19]
+    connect io.segOut, _io_segOut_T_19 @[src/main/scala/scabook/SevenSegmentDisplayMux.scala 27:13]
