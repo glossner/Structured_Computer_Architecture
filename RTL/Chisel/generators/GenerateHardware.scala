@@ -29,9 +29,9 @@ object GenerateHardware extends App {
     //  (() => new scabook.DeMux16, "DeMux16"),
     //  (() => new scabook.Mux4, "Mux4"),
      (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
-     (() => new scabook.SevenSegmentDisplayMux, "SevenSegmentDisplayMux"),
-     (() => new scabook.SevenSegmentDisplayFlat, "SevenSegmentDisplayFlat"),
-    //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
+    //  (() => new scabook.SevenSegmentDisplayMux, "SevenSegmentDisplayMux"),
+    //  (() => new scabook.SevenSegmentDisplayFlat, "SevenSegmentDisplayFlat"),
+    // //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
     //  (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
@@ -41,7 +41,7 @@ object GenerateHardware extends App {
 
   val generatedSystemVerilogAnnotatedPath = "generators/generated/systemverilog_annotated" 
  
-  val generatedSv2vPath = "generators/generated/verilog_sv2v_clean"
+  val generatedSv2vPath = "generators/generated/verilog_sv2v"
   val generatedVerilogElaboratedPath = "generators/generated/verilog_yosys_elaborated"
 
   val generatedNetlistPath = "generators/generated/netlist"
