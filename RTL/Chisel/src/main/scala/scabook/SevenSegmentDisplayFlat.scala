@@ -35,6 +35,19 @@ class SevenSegmentDisplayFlat extends Module {
   io.segOut_f := segOut(1)
   io.segOut_g := segOut(0)
 
+    // Output decoding
+    // 0: a, b, c, d, e, f
+    // 1: b, c
+    // 2: a, b, g, e, d
+    // 3: a, b, g, c, d
+    // 4: f, g, b, c
+    // 5: a, f, g, c, d
+    // 6: a, f, g, e, d, c
+    // 7: a, b, c
+    // 8: All segments on
+    // 9: a, f, b, g, c, d
+    // Default: All segments off
+
   // Default: All segments off
   segOut := "b0000000".U
 

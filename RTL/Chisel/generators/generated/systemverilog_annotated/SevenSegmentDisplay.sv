@@ -47,7 +47,7 @@ module SevenSegmentDisplay(	// src/main/scala/scabook/SevenSegmentDisplay.scala:
   wire             f = _f_T;	// src/main/scala/scabook/SevenSegmentDisplay.scala:26:{24,34}
   wire             _g_T = io_segOut_0[0];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :27:34
   wire             g = _g_T;	// src/main/scala/scabook/SevenSegmentDisplay.scala:27:{24,34}
-  assign io_segOut_0 = _GEN[io_binIn_0];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :31:{35,47}, :32:35
+  assign io_segOut_0 = _GEN[io_binIn_0];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :44:{35,47}, :45:35
   assign io_segOut = io_segOut_0;	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7
 endmodule
 

@@ -26,6 +26,19 @@ class SevenSegmentDisplay extends Module {
     val f = WireDefault(io.segOut(1)).suggestName("f")
     val g = WireDefault(io.segOut(0)).suggestName("g")
 
+    // Output decoding
+    // 0: a, b, c, d, e, f
+    // 1: b, c
+    // 2: a, b, g, e, d
+    // 3: a, b, g, c, d
+    // 4: f, g, b, c
+    // 5: a, f, g, c, d
+    // 6: a, f, g, e, d, c
+    // 7: a, b, c
+    // 8: All segments on
+    // 9: a, f, b, g, c, d
+    // Default: All segments off
+
     io.segOut := "b0000000".U(7.W) // Default: All segments off
 
     when(       io.binIn === 0.U) { io.segOut := "b1111110".U(7.W)

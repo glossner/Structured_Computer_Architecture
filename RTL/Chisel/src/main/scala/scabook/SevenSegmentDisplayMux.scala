@@ -24,6 +24,19 @@ class SevenSegmentDisplayMux extends Module {
   val f = io.segOut(1).suggestName("f")
   val g = io.segOut(0).suggestName("g")
 
+    // Output decoding
+    // 0: a, b, c, d, e, f
+    // 1: b, c
+    // 2: a, b, g, e, d
+    // 3: a, b, g, c, d
+    // 4: f, g, b, c
+    // 5: a, f, g, c, d
+    // 6: a, f, g, e, d, c
+    // 7: a, b, c
+    // 8: All segments on
+    // 9: a, f, b, g, c, d
+    // Default: All segments off
+
   io.segOut := Mux(io.binIn === 0.U, "b1111110".U(7.W), // 0: a, b, c, d, e, f
                Mux(io.binIn === 1.U, "b0110000".U(7.W), // 1: b, c
                Mux(io.binIn === 2.U, "b1101101".U(7.W), // 2: a, b, g, e, d
