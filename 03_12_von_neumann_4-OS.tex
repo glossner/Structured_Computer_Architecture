@@ -19,18 +19,19 @@ Hilbert's address of 1900 to the International Congress of Mathematicians in Par
 
 Gödel's spectacular result triggered within five years four mathematicians Alonzo Church \cite{Church36}, Stephen Kleene \cite{Kleene36}, Emil Post \cite{Post36}, and Alan Turing \cite{Turing36} (listed alphabetically) to independently provide works that founded computer science. We focus in this chapter on Turing's work.
 
-\subsection{Turing Machine \& Related Work}
+\subsection{Turing Machine}
 
-In his paper, about "computable numbers" and Entscheidungsproblem, Alan Turing describes in words what he called a {\em computing machine}. We call it now Turing Machine (TM) and we describe it as a structure with three components:
+In his paper, about "computable numbers" and Entscheidungsproblem, Alan Turing describes in words what he called a {\em computing machine}. We call it now Turing Machine (TM) and we describe it as a structure with three components (see Figure \ref{tm}a):
 \begin{itemize}
-    \item an infinite {\bf band} of paper on/from which symbols belonging to a finite set of symbols can be write or read using
-    \item an accessing read/write {\bf head} under the control of
-    \item a {\bf finite automaton} (FA)
+    \item an infinite {\bf tape}\footnote{It is most likely that Turing was inspired by the telegraph communication systems of the 1930s that used a paper tape to receive messages.}  on/from which symbols belonging to a finite set of symbols -- the machine's alphabet -- can be write or read using
+    \item an accessing read/write {\bf head} which can move in each clock cycle one position to left or right under the control of
+    \item a {\bf finite automaton} (FA) whose state is updated in each clock cycle according to its state and the symbol accessed from the tape.
 \end{itemize}
-as is represented in Figure \ref{tm}. 
+The translation into a representation containing digital components is shown in Figure \ref{tm}b, where the infinite tape is substituted by an infinite RAM addressed by an up-down counter. 
 
-\placedrawing[H]{figures/12_02_turingMachine.lp}{Turing Machine. {\bf a.} Original description: Band \& Head \& FA. {\bf b.} Digital representation: Memory \& upDownConter \& FA.}{tm}
+\placedrawing[H]{figures/12_02_turingMachine.lp}{Turing Machine. {\bf a.} Original description: Tape \& Head \& FA. {\bf b.} Digital representation: Memory \& upDownConter \& FA.}{tm}
 
+TM is a mathematical concept because of its unlimited tape. This "infinity" is due to the fact that at the beginning of the computation the size of the space required on the tape is not known. This ignorance is dealt with by the mathematician Turing with the convenient concept of infinity. But it is beyond any doubt that any real useful computation must be done in a finite number of cycles, so we never traverse an infinite memory.
 
 
 \subsection{Theoretical Foundations of Number Representations in Turing's Work}
@@ -59,13 +60,13 @@ Formally:
 
 \subsubsection{Finite State Automaton for Number Manipulation}
 
-Turing proposed that any computable function, including arithmetic operations on numbers, could be executed by a finite set of states. Each state directs the machine to either:
+Turing proposed that any computable function, including arithmetic operations on numbers, could be executed by a sequence using a finite set of states. Each state directs the machine to either:
 1. Write a symbol.
 2. Erase a symbol.
 3. Move left or right along the tape.
 4. Transition to another state.
 
-This \textbf{finite state control} is the precursor to binary arithmetic and logical operations on numbers. It implies that any number representation (binary, decimal, or otherwise) can be manipulated using a sequence of state transitions based on the machine's rules.
+This \textbf{finite state control} is the precursor to binary arithmetic and logical operations on numbers. It implies that any number representation (binary, decimal, or otherwise) can be manipulated using a finite sequence of state transitions based on the machine's rules.
 
 Formally, for a Turing Machine \( M \), we have:
 \[
@@ -73,10 +74,10 @@ M = (Q, \Sigma, \delta, q_0, F)
 \]
 where:
 \begin{itemize}
-    \item \( Q \) is a finite set of states.
-    \item \( \Sigma \) is the tape alphabet.
-    \item \( \delta: Q \times \Sigma \to Q \times \Sigma \times \{L, R\} \) is the transition function.
-    \item \( q_0 \in Q \) is the initial state.
+    \item \( Q \) is a finite set of states,
+    \item \( \Sigma \) is the finite tape alphabet,
+    \item \( \delta: Q \times \Sigma \to Q \times \Sigma \times \{L, R, -\} \) is the transition function, where $L$ and $R$ moves the access head one position to left or right,
+    \item \( q_0 \in Q \) is the initial state,
     \item \( F \subseteq Q \) is the set of final (or halting) states.
 \end{itemize}
 
@@ -84,9 +85,17 @@ This structure allows Turing Machines to handle number representations in binary
 
 \subsubsection{Concept of Universal Representation}
 
-Turing’s concept of a \textbf{Universal Turing Machine} suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
+In Turing's words:
+\begin{quote}
+{\em It is possible to invent a single machine which can be used to compute
+any computable sequence. If this machine $\cal U$ is supplied with a tape on
+the beginning of which is written the S.D of some computing machine $\cal M$
+then $\cal U$ will compute the same sequence as $\cal M$.} \cite{Turing36}
+\end{quote}
 
-If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a Universal Turing Machine capable of simulating \( p \).
+Turing’s concept of a \textbf{Universal Turing Machine}, UTM, suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
+
+If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a UTM capable of simulating \( p \). The complexity and the size  of the FA of UTM is responsible for the complexity and the size of UTM. 
 
 \subsection{Summary of Key Theoretical Points in Turing's Paper}
 
@@ -100,6 +109,8 @@ If \( p \) is a program (or representation) for a number \( x \), then \( U(p) =
 Turing’s formal model set the stage for understanding how numbers can be systematically represented, stored, and manipulated by computational systems, laying foundational principles that influence number representations in modern computing.
 
 \section{von Neumann Abstract Model}
+
+TM is a mathematical model. The actual computing machines need an {\bf {\em intermediate model}}: an abstract one, able to solve the problem of computation using real entities. In this "moment" comes the  serendipitous  meeting between math and tech, between TM and digital circuits. 
 
 \section{Memory Management}
 
