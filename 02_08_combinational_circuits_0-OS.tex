@@ -819,7 +819,7 @@ $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_
 %*********************************************************
 \subsubsection{Seven Segment Display (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={Seven Segment Display (SystemVerilog)},     label={lst:verilog_sevensegmentdisplay}, firstline=7, firstnumber=7, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
+\includeverilogcode[caption={Seven Segment Display (SystemVerilog: SevenSegmentDisplay.sv)},     label={lst:verilog_sevensegmentdisplay}, firstline=7, firstnumber=7, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
 
 Listing \ref{lst:verilog_sevensegmentdisplay} shows SystemVerilog code that implements a seven-segment display decoder. The module, named \texttt{sevenSegmDys}, has a 4-bit binary input, \texttt{number}, and a 7-bit output, \texttt{seg}, which controls the state of the seven segments (labeled a through g) of the display. 
 
@@ -834,13 +834,28 @@ The module includes a \texttt{default} case that sets all segments to off (\text
 %*************************************************
 \subsubsection{Seven Segment Display (Chisel)}
 %*************************************************
-\includechiselcode[caption={Seven Segment Display (Chisel)},     label={lst:chisel_sevensegmentdisplay}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/SevenSegmentDisplay.scala}
+\includechiselcode[caption={Seven Segment Display (Chisel: SevenSegmentDisplay.scala)},     label={lst:chisel_sevensegmentdisplay}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/SevenSegmentDisplay.scala}
 
 Listing \ref{lst:chisel_sevensegmentdisplay} shows the \texttt{SevenSegmentDisplay} class is a Chisel module that decodes a 4-bit binary input (\texttt{binIn}) into a 7-bit output (\texttt{segOut}) representing the activation of segments on a seven-segment display. The input, \texttt{binIn}, can take values from 0 to 9, and the module determines which segments (labeled \texttt{a} through \texttt{g}) should be illuminated to form the corresponding numeric digit on the display.
+
+The \texttt{suggestName} method in Chisel provides a mechanism to assign meaningful, user-defined names to intermediate signals or wires within a hardware design. By default, Chisel generates arbitrary names for these components, which can make debugging and analyzing generated hardware descriptions (e.g., Verilog or FIRRTL) challenging. Using \texttt{suggestName}, designers can explicitly label signals with descriptive names that convey their purpose or function within the design, making the generated hardware more readable and easier to trace.
 
 The decoding logic is implemented using a series of \texttt{when} and \texttt{elsewhen} constructs. Each condition compares \texttt{binIn} with a specific value and assigns a 7-bit binary pattern to \texttt{segOut}. Each bit in the pattern corresponds to one of the seven segments, where a \texttt{1} turns the segment on, and a \texttt{0} turns it off. For example, when \texttt{binIn} is \texttt{0}, the output is \texttt{1111110}, which activates all segments except \texttt{g} to display the digit \texttt{0}. Similarly, for \texttt{binIn = 8}, all segments are activated (\texttt{1111111}). A default value of \texttt{0000000} is set for \texttt{segOut} to ensure all segments are off in case of invalid input.
 
 In Chisel 6.6, the use of the \texttt{switch} function is discouraged because it often leads to less modular and harder-to-read code, especially in large designs. The \texttt{switch} function can introduce an implicit and tightly coupled relationship between the control signal and the cases, reducing flexibility and increasing the risk of errors during refactoring. Instead, Chisel promotes the use of more functional constructs like pattern matching or chained \texttt{when} statements which makes the design less prone to subtle bugs.
+
+\includeverilogcode[caption={Propagation of suggestName() after yosys Elaboration (Generated SystemVerilog: yosys/SevenSegmentDisplay.v)},     label={lst:verilog_yosys_sevensegmentdisplay}, firstline=122, firstnumber=122, lastline=128]{\verilogGeneratedByYosysSourceDir/SevenSegmentDisplay.v}
+
+The snippet in Listing \ref{lst:verilog_yosys_sevensegmentdisplay} shows that the signal names are propagated through to the synthesized design.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{\diagramsDir/SevenSegmentDisplay.png} 
+    \caption{Generated Schematic of SevenSegmentDisplay.}
+    \label{fig:7seg_schematic} 
+\end{figure}
+
+Figure \ref{fig:7seg_schematic} shows the schematic after yosys elaboration. Unfortunately, netlistsvg does not retain the names even though they are in the generated verilog file.
 
 }%End Chisel
 
@@ -850,9 +865,9 @@ In Chisel 6.6, the use of the \texttt{switch} function is discouraged because it
 %*********************************************************************************
 \subsubsection{Seven Segment Display Language Comparison}
 %**********************************************************************************
-The Chisel and SystemVerilog implementations both utilize conditional logic. Chisel uses \texttt{when} statements, while SystemVerilog uses a \texttt{case} statement within an \texttt{always\_comb} block. The primary difference are due to the design of the two languages. Chisel, being embedded in Scala, provides a high-level, functional programming approach, emphasizing abstraction and type safety. SystemVerilog is a traditional hardware description language explicitly designed for synthesizable digital circuits. Chisel initializes the \texttt{segOut} output to a default value, simplifying handling unspecified input cases, while SystemVerilog uses the \texttt{default} case explicitly within its \texttt{case} statement. 
+The Chisel and SystemVerilog implementations both utilize conditional logic. Chisel uses \texttt{when} statements, while SystemVerilog uses a \texttt{case} statement within an \texttt{always\_comb} block. The primary decoding functions are both about the same number of lines of code. 
 
-Moreover, SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is purely combinational, making the designer's intent explicit. In contrast, Chisel does not inherently enforce combinational logic; it depends on how constructs like \texttt{when} are used. For instance, \texttt{when} can describe sequential behavior if used with registers, but in the given example, the direct use of \texttt{:=} ensures combinational behavior.
+SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is purely combinational, making the designer's intent explicit. In contrast, Chisel does not inherently enforce combinational logic; it depends on how constructs like \texttt{when} are used. For instance, \texttt{when} can describe sequential behavior if used with registers, but in the given example, the direct use of \texttt{:=} ensures combinational behavior.
 
 }
 %################################
