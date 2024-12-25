@@ -38,7 +38,7 @@
 \drawcenteredtext{94.0}{6.0}{{\bf b.}}
 \thinlines
 \drawcenteredtext{50.0}{20.0}{Head}
-\drawcenteredtext{46.0}{32.0}{Band}
+\drawcenteredtext{46.0}{32.0}{Tape}
 \thicklines
 \drawframebox{74.0}{27.0}{12.0}{10.0}{FA}
 \drawpath{88.0}{18.0}{106.0}{18.0}
