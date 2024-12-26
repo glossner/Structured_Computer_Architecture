@@ -288,9 +288,13 @@ the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing syste
     \item interrupt control instructions
 \end{enumerate}
 
-\placedrawing[H]{figures/05_07_toy_risc_isa.lp   C0.lp}{toyRISC ISA: {\tt 0\_ISAdefine.vh}.}{toyriscisa}
 
-
+\includeverilogcode[caption={toyRISC ISA.  File: 0\_DEFINES.vh  (SystemVerilog)}, 
+                    label={lst:toyRISCdefines}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=40]
+                    {\verilogSourceDir/A11_DEFINES.vh}
 
 The first field of the instruction, {\tt opCode}, contains the information used to determine what is the the action performed by  the current instruction.
 Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign} the entire design is listed. This design is meant to illustrate mainly the competence of the circuits without aiming to reach some performances in execution. In order to maximize the performance, it is necessary to apply special techniques (usually in the category of pipelines) related to the field of quantitative optimization of the organization of the computer system. See more on the quantitative approach in \citep{Hennessy19}.
@@ -344,6 +348,17 @@ In order to generate the code executable by the toyRISC processor, a code genera
 \subsubsection{Toy Assembler}
 
 The binary codes in the \ref{mnem} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in System Verilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. A portion of this generator is listed below to illustrate the idea of two-pass encoding; the whole is attached in the \ref{codeGen} section. In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
+
+\includeverilogcode[caption={.  File: 0\_DEFINESvh  (SystemVerilog)}, 
+                    label={lst:toyRISCdefines}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=40]
+                    {\verilogSourceDir/A11_DEFINES.vh}
+
+
+
+
 {\small
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={loop, repeat, doInParallel, for}]
