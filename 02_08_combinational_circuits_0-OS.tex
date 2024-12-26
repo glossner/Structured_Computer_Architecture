@@ -944,7 +944,7 @@ In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, c
 
 
 %*************************************************
-\subsubsection{Parameterized Behavioral Adder (Chisel)}
+\subsubsection{Parameterized Behavioral Adder (Chisel)} \label{sec:behavioral_addition}
 %*************************************************
 \includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=17]{\chiselSourceDir/adders/BehavioralAdder.scala}
 
@@ -1044,9 +1044,18 @@ When additional operations such as bitwise logical operations (AND, OR, XOR) and
 %*************************************
 \subsubsection{Behavioral Subtraction}
 %**************************************
+Similar to behavioral addition described in Section \ref{sec:behavioral_addition}, we can also provide for behavioral subtraction.
 
+\ifthenelse{\boolean{chiselversion}}{
+\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=8, firstnumber=8, lastline=9999]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
 
+Listing \ref{lst:chisel_addersubtractor_behavioral4} shows a behavioral adder/subtractor. 
 
+}%End Chisel Code
+
+%*************************************
+\subsubsection{Structural Subtraction}
+%**************************************
 
 
 \placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Substractor}{fig:adder_subtracter}
