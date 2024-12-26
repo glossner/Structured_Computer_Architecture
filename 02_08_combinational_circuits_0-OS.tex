@@ -1024,23 +1024,19 @@ Figure \ref{fig:full_adder}b shows a \textit{ripple carry adder} (RCA). Ripple-c
 
 While the design of ripple-carry adders is straightforward and easy to implement in hardware, their performance is limited by the sequential nature of carry propagation. The execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value, can be long. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. The delay for an addition operation increases linearly with the number of bits, as each bit must wait for the carry result from the preceding bit to be resolved. In the general case, the time is proportional to $n$ (it is in $O(n)$). 
 
+%****************************************
+\section{Multi-Function Arithmetic Units}
+%****************************************
 
-\ifthenelse{\boolean{chiselversion}}{
+A multifunction arithmetic unit performs a variety of arithmetic operations such as addition, subtraction, and sometimes multiplication or division, on the same hardware unit. These units are typically designed to handle both signed and unsigned numbers and often support different operand sizes, such as 8-bit, 16-bit, 32-bit, or 64-bit operations. By sharing hardware resources among multiple operations, multifunction arithmetic units reduce the overall complexity of the system.
 
-%*************************************************
-\subsubsection{Parameterized Ripple-Carry Adder (Chisel)}
-%*************************************************
-\includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}, label={lst:chisel_adder_ripple}, firstline=9, firstnumber=9, lastline=37]{\chiselSourceDir/adders/RippleCarryAdder.scala}
+A multifunction arithmetic unit includes configurable control signals, sometimes called an operation code or opcode, that dictate the operation to be performed. For example, an opcode may specify whether the operation is addition or subtraction, whether the operands are signed or unsigned, and the size of the operands. 
 
-Listing \ref{lst:chisel_adder_ripple} shows code that defines a \texttt{RippleCarryAdder} class in Chisel, which implements the ripple-carry adder (RCA) architecture for addition. The class extends the abstract \texttt{Adder} base class and is parameterized by a generic data type \texttt{T} and the adder's bit-width. 
+ Adding a sign/unsigned control bit to an arithmetic unit is a simple example of a multifunction arithmetic unity that enable the same hardware to handle both signed and unsigned operations. In the context of binary arithmetic, signed and unsigned numbers differ primarily in their interpretation of the most significant bit (MSB). For unsigned numbers, the MSB contributes solely to the magnitude of the value, while for signed numbers in two's complement representation, the MSB serves a dual purpose: it indicates the sign of the number (0 for positive, 1 for negative) and also contributes to its magnitude in determining the overall value. 
+ 
+ Adding a control signal for selecting between addition and subtraction further enhances the functionality of the unit. Subtraction can be implemented using the same hardware as addition by negating one of the operands, which involves flipping the bits and adding one. With two control signals—one for signed/unsigned selection and another for addition/subtraction—the unit becomes a multifunction adder/subtractor, capable of performing basic arithmetic operations across a wide range of use cases.
 
-The use of \texttt{Wire(Vec)} is for defining intermediate signals such as \texttt{carries} and \texttt{sumBits}. Specifically, \texttt{Wire(Vec(width + 1, Bool()))} creates a vector of Boolean wires, each representing a single-bit signal. This construct is particularly useful in hardware designs where multiple related signals, such as carry bits or partial sums, need to be managed efficiently. In the ripple-carry adder, \texttt{carries} is used to store the carry-out of each bit stage, starting with an initial carry-in of \texttt{false.B} and propagating through all stages of the addition. Similarly, \texttt{sumBits} is a vector that stores the computed sum bit for each stage, which is later concatenated into the final sum output.
-
-The addition operation proceeds iteratively across all \texttt{width} bits. For each bit position, the sum \texttt{io.a(i) \^ io.b(i) \^ carries(i)} is computed as the XOR of the corresponding bits of the inputs \texttt{a} and \texttt{b}, along with the carry-in. The carry-out is calculated based on the logical OR of three conditions: both input bits being high, one input bit being high along with the carry-in, or the other input bit being high with the carry-in. The resulting sum bits are stored in \texttt{sumBits}, which is then converted to an \texttt{UInt} and assigned to \texttt{io.sum}. 
-
-
-
-}
+When additional operations such as bitwise logical operations (AND, OR, XOR) and shifting (logical, arithmetic, and rotate) are incorporated into the same hardware unity, this is typically called an arithmetic logic unit (ALU). The control signals that specify a particular operation are referred to as an opcode. An ALU is the computational heart of a processor.
 
 %************************
 \subsection{Subtraction}
@@ -1062,6 +1058,59 @@ For example:
 
 Each $B_i$ is complemented and the increment with 1 is generated by inverting the carry input. All the inversions are performed under the command {\tt sub} applied to $5$ XORs.
 
+
+
+
+
+
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Parameterized Ripple-Carry Adder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}, label={lst:chisel_adder_ripple}, firstline=9, firstnumber=9, lastline=37]{\chiselSourceDir/adders/RippleCarryAdder.scala}
+
+Listing \ref{lst:chisel_adder_ripple} shows code that defines a \texttt{RippleCarryAdder} class in Chisel, which implements the ripple-carry adder (RCA) architecture for addition. 
+
+The \texttt{RippleCarryAdder} is a hardware module implemented in Chisel, designed to perform binary addition for numbers of a configurable bit width. The module takes two input operands \texttt{a} and \texttt{b}, each of size \texttt{width} bits, along with a \texttt{carryIn} input to handle any carry from a previous operation. The addition can be performed in either signed or unsigned mode, controlled by the \texttt{isSigned} input. The module outputs the sum of the inputs, a \texttt{carryOut} signal indicating carry propagation in unsigned addition, and an \texttt{overflow} signal to detect overflow in signed addition.
+
+Internally, the \texttt{RippleCarryAdder} uses a ripple-carry mechanism, where the carry bit propagates sequentially through each bit of the operands. To achieve this, the design employs a loop to iterate over all bits of the operands, calculating the sum and carry for each bit. The sum for a bit is computed using the XOR operation, while the carry is determined based on AND and OR operations between the bits of the operands and the carry from the previous bit. The result is stored in a vector of \texttt{Bool} wires, which is eventually converted into a \texttt{UInt} output.
+
+The \texttt{carryOut} signal is derived from the carry bit generated at the most significant bit (MSB) of the operands. This signal is used to indicate whether the result of an unsigned addition exceeds the maximum representable value for the given width. The \texttt{overflow} signal, on the other hand, is specific to signed arithmetic and checks whether the addition resulted in an overflow. This is done by comparing the carries into and out of the MSB using an XOR operation, which indicates overflow if the signs of the operands and the result are inconsistent.
+
+The companion object for \texttt{RippleCarryAdder} provides a factory method to create instances of the module. This method ensures that the width of the adder is positive and constructs the module with the specified parameters. By encapsulating the creation logic, the object simplifies the instantiation of the adder in larger designs, promoting reusability and maintainability. Overall, the \texttt{RippleCarryAdder} exemplifies the use of simple yet efficient ripple-carry logic to perform binary addition, highlighting the strengths and trade-offs of this approach in hardware design.
+
+
+The primary difference between a signed and an unsigned ripple-carry adder lies in how they interpret the binary numbers being added and how they handle overflow conditions. Both types of adders use the same basic ripple-carry mechanism for propagating carry bits through a series of full adders, but their behavior and application diverge due to differences in number representation.
+
+An unsigned ripple-carry adder is designed to add two unsigned binary numbers, which represent only non-negative integers. The range of values for an \( n \)-bit unsigned number is \( 0 \) to \( 2^n - 1 \). In this case, the carry-out from the most significant bit (MSB) indicates whether the sum exceeds the maximum representable value (\( 2^n - 1 \)) for the given width. This behavior is straightforward, as unsigned addition follows normal binary arithmetic rules. An overflow condition is typically not flagged explicitly in an unsigned ripple-carry adder, as the carry-out already provides sufficient information about the result exceeding the valid range.
+
+A signed ripple-carry adder works with signed binary numbers, typically represented in two's complement format. The range of values for an \( n \)-bit signed number is \( -2^{n-1} \) to \( 2^{n-1} - 1 \). Two's complement representation allows the same ripple-carry logic to be used, but special care is needed to detect overflow. Signed overflow occurs when the result of addition is outside the representable range. For example, adding two positive numbers should not yield a negative result, and adding two negative numbers should not yield a positive result. This is detected by comparing the carry into and out of the MSB using an XOR operation: \((\text{Carry-In} \oplus \text{Carry-Out})\). In signed addition, the carry-out from the MSB is not relevant, as it does not necessarily indicate overflow in two's complement representation.
+
+The key differences between signed and unsigned ripple-carry adders include the range of input and output, the interpretation of carry-out, the mechanism for detecting overflow, and the role of the MSB. In unsigned addition, the MSB contributes to the magnitude of the number, whereas in signed addition, the MSB represents the sign of the number, with 0 indicating positive and 1 indicating negative. These distinctions influence how the results of addition are interpreted and how hardware logic must be designed to handle edge cases like overflow.
+
+Modern hardware designs often unify the implementation of signed and unsigned adders by introducing a control signal, such as \texttt{isSigned}, to distinguish between the two modes. This signal can be used to interpret the result appropriately for signed or unsigned arithmetic and to enable or disable overflow detection logic depending on the operation type. By leveraging this flexibility, a single ripple-carry adder design can support both signed and unsigned computations, reducing hardware complexity and enhancing reusability in digital systems.
+
+In a signed ripple-carry adder, operands are interpreted in two's complement format, allowing both positive and negative numbers to be represented. When one operand is positive and the other is negative, the addition operation effectively performs subtraction. This behavior arises from the properties of two's complement arithmetic, where negating a number involves flipping its bits and adding one, making addition of a negative number equivalent to subtraction. 
+
+Consider a 4-bit signed ripple-carry adder. The range of representable numbers is \( -8 \) to \( 7 \). Let the first operand \( A \) be \( 5 \), represented as \( 0101 \), and the second operand \( B \) be \( -3 \), represented as \( 1101 \) in two's complement format. Adding these two values produces the expected result of \( A - |B| = 5 - 3 = 2 \).
+
+\[
+\begin{aligned}
+&\text{Operand A (5):} & 0101 \\
+&\text{Operand B (-3):} & 1101 \\
+&\text{Addition:} & 0101 + 1101 = 10010 \\
+&\text{Result (truncated to 4 bits):} & 0010 = 2
+\end{aligned}
+\]
+
+In the example, the adder computes \( 0101 + 1101 = 10010 \), and the result is truncated to 4 bits, yielding \( 0010 \), which corresponds to \( 2 \) in signed representation. Note that the carry-out from the MSB is discarded as it is not relevant in two's complement arithmetic. This demonstrates how the ripple-carry adder inherently performs subtraction when one operand is negative, without requiring any additional logic or special handling.
+
+This example illustrates the power of two's complement representation, where a single ripple-carry adder can handle both addition and subtraction seamlessly. The same hardware is used to process all operations, simplifying the design while supporting a wide range of arithmetic computations.
+
+
+Note that we do not inherit from the base class \texttt{Adder}. This could be done but then an implementer would be left to wonder where signals \texttt{a}, \texttt{b}, and \texttt{sum} are defined.  Instead, we prefer listing all I/O in the class as shown in Listing \ref{lst:chisel_adder_ripple} line 9.
+
+}% End Chisel Code
 
 
 
