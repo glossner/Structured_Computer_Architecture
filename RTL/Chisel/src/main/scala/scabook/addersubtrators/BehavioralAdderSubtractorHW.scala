@@ -5,7 +5,7 @@ package scabook.addersubtractors
 
 import chisel3._
 
-class BehavioralAdderSubtractor(width: Int) extends Module {
+class BehavioralAdderSubtractorHW(width: Int) extends Module {
   // Define the I/O for the module
   val io = IO(new Bundle {
     val a = Input(UInt(width.W))       // First operand
@@ -15,14 +15,15 @@ class BehavioralAdderSubtractor(width: Int) extends Module {
   })
 
   // Compute addition or subtraction
-  val fullResult = Mux(io.subtract.asBool, io.a - io.b, io.a + io.b)
-  
+  val bAdjusted = Mux(io.subtract.asBool, ~io.b + 1.U, io.b) // Two's complement for subtraction
+  val fullResult = io.a + bAdjusted
+
   // Truncate result to the specified width
   io.result := fullResult(width - 1, 0)
 }
 
 // Companion object for easier instantiation
-object BehavioralAdderSubtractor {
+object BehavioralAdderSubtractorHW {
   def apply(a: UInt, b: UInt, subtract: UInt, width: Int): UInt = {
     val module = Module(new BehavioralAdderSubtractor(width))
     module.io.a := a

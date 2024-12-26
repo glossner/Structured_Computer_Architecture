@@ -28,11 +28,13 @@ object GenerateHardware extends App {
     //  (() => new scabook.Decoder2to4, "Decoder2to4"),
     //  (() => new scabook.DeMux16, "DeMux16"),
     //  (() => new scabook.Mux4, "Mux4"),
-     (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
+    // (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
     //  (() => new scabook.SevenSegmentDisplayMux, "SevenSegmentDisplayMux"),
     //  (() => new scabook.SevenSegmentDisplayFlat, "SevenSegmentDisplayFlat"),
-    // //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
+    //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
     //  (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
+       (() => new scabook.addersubtractors.BehavioralAdderSubtractor4, "BehavioralAdderSubtractor4"), 
+       (() => new scabook.addersubtractors.BehavioralAdderSubtractorHW4, "BehavioralAdderSubtractorHW4"), 
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
   )
 
@@ -43,6 +45,7 @@ object GenerateHardware extends App {
  
   val generatedSv2vPath = "generators/generated/verilog_sv2v"
   val generatedVerilogElaboratedPath = "generators/generated/verilog_yosys_elaborated"
+  val generatedVerilogElaboratedFlatPath = "generators/generated/verilog_yosys_elaborated_flat"
 
   val generatedNetlistPath = "generators/generated/netlist"
   val generatedDiagramsPath = "generators/generated/diagrams"
@@ -63,7 +66,7 @@ object GenerateHardware extends App {
       //firtools generates SystemVerilog when --verilog is used
       generateFIRRTLandSystemVerilog(module, moduleName)
       convertSystemVerilogToVerilog(module, moduleName)
-      generateNetlist(module, moduleName)
+      synthesizeNetlist(module, moduleName)
       generateSVG(module, moduleName)
       convertSVGtoPNG(module, moduleName)
       if(shouldDeleteIntermediateFiles) deleteIntermediateFiles(module, moduleName)
@@ -159,11 +162,12 @@ object GenerateHardware extends App {
     }    
   }
 
-  def generateNetlist(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+  def synthesizeNetlist(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
     println(s"${moduleName}: generateNetlist")
     if ( isCmdInstalled("yosys")) {      
       val systemVerilogInFile = new File( generatedSv2vPath + "/" + moduleName + ".v")
       val verilogOutFile = new File( generatedVerilogElaboratedPath + "/" + moduleName + ".v")
+      val verilogOutFileFlat = new File( generatedVerilogElaboratedFlatPath + "/" + moduleName + "_flat" + ".v")
 
       val edifFile = new File( generatedNetlistPath + "/" + moduleName + ".edif")
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
@@ -171,9 +175,10 @@ object GenerateHardware extends App {
   
       // yosys flags
        val yosysSynthFlags = s"synth -top $moduleName"
-
+        
 
       // Generate synthesized (elaborated) verilog file
+      //Aggressive flags: "read_verilog your_design.v; synth -flatten -abc2; opt -purge; abc -script +resyn2;  opt_clean; write_verilog optimized_design.v;"
       val yosysVerilogcommand = Seq(
           "yosys",
            "-p",
@@ -187,12 +192,27 @@ object GenerateHardware extends App {
         println("yosys synthesized (elaborated) verilog file generated successfully!")
       }
 
+      // Synthesize flattened verilog
+      //Aggressive flags: "read_verilog your_design.v; synth -flatten -abc2; opt -purge; abc -script +resyn2;  opt_clean; write_verilog optimized_design.v;"
+      val yosysSynthFlatFlags =  s"synth -flatten -top $moduleName; rename $moduleName ${moduleName}_flat"      
+      val yosysVerilogCommandFlat = Seq(
+          "yosys",
+           "-p",
+          s"read_verilog -sv $systemVerilogInFile; $yosysSynthFlatFlags; write_verilog $verilogOutFileFlat"
+      )
+      
+      val yosysVerilogFlatResult = yosysVerilogCommandFlat.!  
+      if (yosysVerilogFlatResult != 0) {
+        println(s"Error: yosys execution failed with code $yosysVerilogFlatResult")
+      } else {
+        println("yosys synthesized (elaborated) verilog file generated successfully!")
+      }
 
       // Write EDIF and JSON
       val yosysWriteCommand = Seq(
           "yosys",
            "-p",
-          s"read_verilog -sv $verilogOutFile; write_edif $edifFile; write_json $jsonFile;  flatten; write_json $jsonFileFlattened"
+          s"read_verilog -sv $verilogOutFile; write_edif $edifFile; write_json $jsonFile; read_verilog -sv $verilogOutFileFlat;  write_json $jsonFileFlattened"
       )
       // show -format pdf $moduleName  $pdfFile works but the symbols are not IEEE
       
