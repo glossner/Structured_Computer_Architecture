@@ -10,7 +10,6 @@ module SevenSegmentDisplay (
 	output wire [6:0] io_segOut;
 	wire [3:0] io_binIn_0 = io_binIn;
 	wire [111:0] _GEN = 112'h00000000003dffe17edb3f3b587e;
-	wire [6:0] io_segOut_0;
 	wire _B0_T = io_binIn_0[0];
 	wire B0 = _B0_T;
 	wire _B1_T = io_binIn_0[1];
@@ -19,6 +18,7 @@ module SevenSegmentDisplay (
 	wire B2 = _B2_T;
 	wire _B3_T = io_binIn_0[3];
 	wire B3 = _B3_T;
+	wire [6:0] io_segOut_0;
 	wire _a_T = io_segOut_0[6];
 	wire a = _a_T;
 	wire _b_T = io_segOut_0[5];

@@ -24,7 +24,6 @@ module SevenSegmentDisplay(	// src/main/scala/scabook/SevenSegmentDisplay.scala:
       7'h6D,
       7'h30,
       7'h7E};
-  wire [6:0]       io_segOut_0;	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7
   wire             _B0_T = io_binIn_0[0];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :15:34
   wire             B0 = _B0_T;	// src/main/scala/scabook/SevenSegmentDisplay.scala:15:{25,34}
   wire             _B1_T = io_binIn_0[1];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :16:34
@@ -33,6 +32,7 @@ module SevenSegmentDisplay(	// src/main/scala/scabook/SevenSegmentDisplay.scala:
   wire             B2 = _B2_T;	// src/main/scala/scabook/SevenSegmentDisplay.scala:17:{25,34}
   wire             _B3_T = io_binIn_0[3];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :18:34
   wire             B3 = _B3_T;	// src/main/scala/scabook/SevenSegmentDisplay.scala:18:{25,34}
+  wire [6:0]       io_segOut_0;	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7
   wire             _a_T = io_segOut_0[6];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :21:34
   wire             a = _a_T;	// src/main/scala/scabook/SevenSegmentDisplay.scala:21:{24,34}
   wire             _b_T = io_segOut_0[5];	// src/main/scala/scabook/SevenSegmentDisplay.scala:8:7, :22:34

@@ -80,7 +80,7 @@ object GenerateHardware extends App {
     println(s"${moduleName}: generateFIRTL")
     // Stage1: Dump fir file with all annotations. Will also generate stipped fir.mlir file
     val firrtlBaseArgs = Array("--target", "firrtl",
-                               "--dump-fir", // Keep signal names
+                               "--dump-fir",  // Contains all suggestNames()
                                "--preserve-aggregate", "all",
                                "--target-dir", generatedFirRTLPath)
     
@@ -97,7 +97,7 @@ object GenerateHardware extends App {
         Seq(chisel3.stage.ChiselGeneratorAnnotation(chiselModule)) 
       )
 
-      // Stage2: Use the dumped fir to produce an annotated fir.mlir and SystemVerilog file
+      // Stage2: Use the dumped fir file to produce final mlir and annotated SystemVerilog files
       val firFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir")
       val mlirFile = new File( generatedFirRTLPath + "/" + moduleName + ".fir.mlir")
       val svFile = new File( generatedSystemVerilogAnnotatedPath + "/" + moduleName + ".sv")
@@ -105,13 +105,13 @@ object GenerateHardware extends App {
       val mlirCommand = Seq(
         "firtool",
         //"-O=debug", // Compiler set to debug
-        "-g",   // Enable debug information
+        //"-g",   // Enable debug information
         "-o", svFile.getAbsolutePath,
-        //s"--output-annotation-file=${annotationFile.getAbsolutePath()}",  //dump fir.mlir
+        //s"--output-annotation-file=${annotationFile.getAbsolutePath()}",  
         //"--preserve-aggregate=all",
         //"--split-aggregate",
         "--preserve-values=all",
-         //s"--output-final-mlir=${mlirFile.getAbsolutePath()}", 
+        s"--output-final-mlir=${mlirFile.getAbsolutePath()}", //output fir.mlir
         "--format=fir",  //input file format
          firFile.getAbsolutePath, 
       )
@@ -164,12 +164,11 @@ object GenerateHardware extends App {
     if ( isCmdInstalled("yosys")) {      
       val systemVerilogInFile = new File( generatedSv2vPath + "/" + moduleName + ".v")
       val verilogOutFile = new File( generatedVerilogElaboratedPath + "/" + moduleName + ".v")
+
       val edifFile = new File( generatedNetlistPath + "/" + moduleName + ".edif")
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
       val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
-      val pdfFile = new File( generatedNetlistPath + "/" + moduleName + ".pdf")
-      val dotFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".dot")
-
+  
       // yosys flags
        val yosysSynthFlags = s"synth -top $moduleName"
 
@@ -219,6 +218,7 @@ object GenerateHardware extends App {
       val jsonFileFullPath = jsonFile.getAbsolutePath()
       val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
       val jsonFileFlattenedFullPath = jsonFileFlattened.getAbsolutePath()
+      
       val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
       val svgFileFullPath = svgFile.getAbsolutePath()
       val svgFileFlattened = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")

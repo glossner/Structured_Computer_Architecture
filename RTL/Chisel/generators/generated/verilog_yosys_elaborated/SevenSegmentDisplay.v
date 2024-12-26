@@ -22,21 +22,21 @@ module SevenSegmentDisplay(clock, reset, io_binIn, io_segOut);
   wire _16_;
   wire _17_;
   wire _18_;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:15.7-15.9" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:14.7-14.9" *)
   wire B0;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:17.7-17.9" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:16.7-16.9" *)
   wire B1;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:19.7-19.9" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:18.7-18.9" *)
   wire B2;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:21.7-21.9" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:20.7-20.9" *)
   wire B3;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:14.7-14.12" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:13.7-13.12" *)
   wire _B0_T;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:16.7-16.12" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:15.7-15.12" *)
   wire _B1_T;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:18.7-18.12" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:17.7-17.12" *)
   wire _B2_T;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:20.7-20.12" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:19.7-19.12" *)
   wire _B3_T;
   (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:12.15-12.19" *)
   wire [111:0] _GEN;
@@ -79,7 +79,7 @@ module SevenSegmentDisplay(clock, reset, io_binIn, io_segOut);
   (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:10.20-10.29" *)
   output [6:0] io_segOut;
   wire [6:0] io_segOut;
-  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:13.13-13.24" *)
+  (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:21.13-21.24" *)
   wire [6:0] io_segOut_0;
   (* src = "generators/generated/verilog_sv2v/SevenSegmentDisplay.v:8.8-8.13" *)
   input reset;
