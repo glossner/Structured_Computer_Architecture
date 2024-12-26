@@ -1,0 +1,54 @@
+\chapter{Complete Code Listing}
+\localtoc
+
+%**********************
+\section{SystemVerilog}
+%**********************
+\subsection{Waveform Generator} \addcontentsline{localtableofcontents}{subsection}{Waveform Generator}
+\includeverilogcode[caption={Waveform Generator Code (Hand Written SystemVerilog)}]{\verilogSourceDir/waveFormGenerator.sv}
+
+\subsection{Decoder}
+\subsubsection{Parameterized Decoder}
+\includeverilogcode[caption={Parameterized Decoder (SystemVerilog: dcdParameterized.sv)}]{\verilogSourceDir/dcdParameterized.sv}
+\subsubsection{4-to-16 bit Behavioral Decoder}
+\includeverilogcode[caption={4-to-16 Behavioral Decoder (SystemVerilog:dcd.sv)}]{\verilogSourceDir/dcd.sv}
+
+\subsection{Multiplexer}
+\subsubsection{16-to-1 Single Bit Multiplexer}
+\includeverilogcode[caption={16-to-1 single bit Multiplexer (SystemVerilog: mux.sv)}]{\verilogSourceDir/mux.sv}
+
+\subsection{Demultiplexer}
+\subsubsection{1-to-16 bit Demultiplexer}
+\includeverilogcode[caption={1-to-16 bit Demultiplexer (SystemVerilog: dMux.sv)}]{\verilogSourceDir/dMux.sv}
+
+\subsection{Seven Segment Display}
+\includeverilogcode[caption={Seven Segment Display (SystemVerilog: SevenSegmentDisplay.sv)}]{\verilogSourceDir/SevenSegmentDisplay.sv}
+
+%***************
+\section{Chisel}
+%***************
+\subsection{Waveform Generator}
+\includechiselcode[caption={Waveform Generator Code (Chisel: WaveFormGenerator.scala)}, firstline=1, firstnumber=1, lastline=999]{\chiselSourceDir/WaveFormGenerator.scala}
+
+\subsection{Decoder}
+\subsubsection{Parameterized Decoder}
+\includechiselcode[caption={Parameterized Decoder (Chisel: Decoder.scala)}]{\chiselSourceDir/Decoder.scala}
+\subsubsection{2-to-4 Decoder}
+\includechiselcode[caption={Instantiated 2-to-4 Decoder (Chisel: Decoder2to4.scala)}]{\chiselSourceDir/Decoder2to4.scala}
+
+\subsection{Multiplexer}
+\subsubsection{Parameterized Bus Multiplexer}
+\includechiselcode[caption={Parameterized Bus Width Multiplexer (Chisel: Multiplexer.scala)}]{\chiselSourceDir/Multiplexer.scala}
+\subsubsection{4-to-1 8-bit Bus Multiplexer}
+\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}]{\chiselSourceDir/Mux4.scala}
+
+\subsection{Demultiplexer}
+\subsubsection{Parameterized Bus Demultiplexer}
+\includechiselcode[caption={Parameterized Bus Demultiplexer (Chisel: Demultiplexer.scala)}]{\chiselSourceDir/Demultiplexer.scala}
+\subsubsection{1-to-16 64-bit Bus Demultiplexer}
+\includechiselcode[caption={1-to-16 64-bit Bus Demultiplexer (Chisel: DeMux16.scala)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
+
+\subsection{Seven Segment Display}
+\subsubsection{\texttt{when} Version}
+\subsection{\texttt{Mux} Version}
+\subsubsection{Flat Version}

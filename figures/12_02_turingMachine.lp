@@ -61,9 +61,9 @@
 \drawvector{94.0}{24.0}{6.0}{0}{-1}
 \thinlines
 \drawcenteredtext{100.0}{27.0}{upDownCounter}
-\drawcenteredtext{102.0}{14.0}{Memory}
-\drawcenteredtext{92.0}{16.0}{dOut}
-\drawcenteredtext{92.0}{12.0}{dIn}
+\drawcenteredtext{104.0}{14.0}{Memory}
+\drawcenteredtext{93.0}{16.0}{dataOut}
+\drawcenteredtext{92.2}{12.0}{dataIn}
 \drawcenteredtext{84.0}{38.0}{\{up, down, nop\}}
 \end{picture}
 }
