@@ -21,7 +21,7 @@ Carry-save adders are specialized adders used primarily in multiplication. Unlik
 
 
 %*****************************
-\section{Kogge-Stone Adder}
+\section{Kogge-Stone Adder} \label{sec:kogge-stone-adder}
 %*****************************
 Parallel prefix adders are a class of high-performance adders designed to optimize the computation of carry signals in binary addition, significantly reducing delay compared to simpler adder designs like ripple-carry adders. They achieve this by dividing the addition process into three distinct stages: generating initial propagate and generate signals for each bit, computing intermediate carries through a tree-like prefix structure, and finally calculating the sum based on these carry signals. The tree structure allows the carry signals to be computed in parallel, with a logarithmic time complexity relative to the number of bits, making these adders highly efficient for large bit-width operations. These adders are widely used in modern high-speed computing systems and processors.
 
