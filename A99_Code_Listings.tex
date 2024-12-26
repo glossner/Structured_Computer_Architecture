@@ -24,6 +24,9 @@
 \subsection{Seven Segment Display}
 \includeverilogcode[caption={Seven Segment Display (SystemVerilog: SevenSegmentDisplay.sv)}]{\verilogSourceDir/SevenSegmentDisplay.sv}
 
+
+\ifthenelse{\boolean{chiselversion}}{
+
 %***************
 \section{Chisel}
 %***************
@@ -50,5 +53,21 @@
 
 \subsection{Seven Segment Display}
 \subsubsection{\texttt{when} Version}
+\includechiselcode[caption={Seven Segment Display using Bus and \texttt{when} (Chisel: SevenSegmentDisplay.scala)}]{\chiselSourceDir/SevenSegmentDisplay.scala}
 \subsection{\texttt{Mux} Version}
+\includechiselcode[caption={Seven Segment Display using Bus and \texttt{Mux} (Chisel: SevenSegmentDisplay.scala)}]{\chiselSourceDir/SevenSegmentDisplayMux.scala}
 \subsubsection{Flat Version}
+\includechiselcode[caption={Seven Segment Display using Named Inputs (Chisel: SevenSegmentDisplayFlat.scala)}]{\chiselSourceDir/SevenSegmentDisplayFlat.scala}
+
+\subsection{Adders}
+\subsubsection{Parameterized Abstract Adder}
+\includechiselcode[caption={Parameterized Abstract Adder (Chisel: Adder.scala)}]{\chiselSourceDir/adders/Adder.scala}
+\subsubsection{Parameterized Behavioral Adder}
+\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}]{\chiselSourceDir/adders/BehavioralAdder.scala}
+\subsubsection{4-bit Behavioral Adder}
+\includechiselcode[caption={4-bit Behavioral Adder (Chisel: BehavioralAdder4.scala)}]{\chiselSourceDir/adders/BehavioralAdder4.scala}
+
+
+
+}% End Chisel Version
+

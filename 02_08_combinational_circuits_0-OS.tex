@@ -883,9 +883,7 @@ Adders are fundamental components in digital computing systems. At the core of p
 %******************************
 \subsection{Behavioral Adders}
 %******************************
-
-
-
+Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
@@ -897,23 +895,9 @@ Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract clas
 
 The class is marked as \texttt{abstract}, which means it cannot be instantiated directly. Instead, specific implementations of the adder, such as ripple-carry or carry-lookahead adders, can extend this base class to reuse the IO definitions and width constraints. Using an abstract base class like \texttt{Adder} provides several benefits. It ensures consistency in IO definitions, as all derived adder implementations inherit the same \texttt{io} interface, guaranteeing a uniform input-output structure across different adder designs. It promotes reusability by defining the \texttt{io} interface and width validation logic once in the base class, reducing code duplication and improving maintainability. The abstract base class introduces a level of abstraction by encapsulating common properties and behaviors, allowing derived classes to focus solely on implementing specific adder designs without redefining shared elements.
 
-%*************************************************
-\subsubsection{Parameterized Behavioral Adder (Chisel)}
-%*************************************************
-%\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdderUnsigned.scala}
-
-Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, generic adder in Chisel. The class is parameterized by a data type \texttt{T} that extends \texttt{Data}, allowing it to work with various numeric types such as \texttt{UInt} or \texttt{SInt}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
-
-Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
-
-
-
-}% End Chisel
-
-%*******************************
-\subsection{4-bit Behavioral Adder}
-%******************************
-
+%************************
+\subsubsection{Precision}
+%*************************
 \begin{figure}[H]
     \centering
 \[
@@ -959,16 +943,60 @@ This shows that the result of $A + B$ can range from $0$ (minimum) to $2^{n+1} -
 In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, can represent values from $0$ to $2^4 - 1 = 15$. When adding the two largest 4-bit numbers, $A = 15_{base10}$ and $B = 15_{base10}$, the result is $A + B = 30_{base10}$. To represent $30_{base10}$ in binary, at least 5 bits are required, as the binary representation is $11110_2$. 
 
 
+%*************************************************
+\subsubsection{Parameterized Behavioral Adder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=17]{\chiselSourceDir/adders/BehavioralAdder.scala}
+
+Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, behavioral adder in Chisel. All interface IO are of type UInt. The class is parameterized by the width of the adder \texttt{width}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
+
+\textbf{An important point} is that Chisel will expand the result to keep full precision. In simulation, this may be the desired behavior. However, hardware can not dynamically expand wires. Chisel leaves this decision to the programmer but synthesis requires fixed widths. Our behavioral adder implementation truncates the sum result to the width of the output wires using \texttt{(width -1, 0} on line 16.
+
+%***********************************
+\subsection{4-bit Behavioral Adder}
+%***********************************
+\includechiselcode[caption={4-bit Behavioral Adder (Chisel: BehavioralAdder4.scala)}, label={lst:chisel_adder_behavioral4}, firstline=8, firstnumber=8, lastline=17]{\chiselSourceDir/adders/BehavioralAdder4.scala}
+
+Listing \ref{lst:chisel_adder_behavioral4} shows a 4-bit behavioral adder that instantiates the class \texttt{BehavioralAdder}. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.95]{\diagramsDir/BehavioralAdder4.png} 
+    \caption{High-level Schematic of a Behavioral 4-bit Adder.}
+    \label{fig:4bit_adder_behavioral} 
+\end{figure}
+
+After yosys elaboration, both a high-level and flatted circuit diagram can be generated. Figure \ref{fig:4bit_adder_behavioral} shows the schematic for a high-level schematic. Figure \ref{fig:4bit_adder_synth} shows the schematic for a yosys synthesized and flattened 4-bit adder.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{\diagramsDir/BehavioralAdder4_flat.png} 
+    \caption{Yosys Synthesized and Flattend Schematic of a Behavioral 4-bit Adder.}
+    \label{fig:4bit_adder_synth} 
+\end{figure}
+
+}% End Chisel
+
+
+%*****************************
+\subsection{Structural Adders}
+%*****************************
+
+Computers use structural adders to perform arithmetic operations efficiently at the hardware level. A structural adder is a circuit composed of interconnected logic gates designed to compute the sum of binary numbers. These adders allow computations to occur in a predictable, deterministic manner, with a fixed propagation delay determined by the design. Unlike behavioral implementations, structural adders operate at the level of individual bits, ensuring that addition is performed in accordance with the system's clock cycle.
+
+The concept of carry bits is central to structural adders. In binary arithmetic, when the sum of two bits exceeds the value that a single bit can represent, the excess is propagated as a carry bit to the next more significant bit. This mechanism ensures accuracy in multi-bit addition, but it also introduces challenges, such as carry propagation delays. 
+
+In this Section, we only provide an overview to the simplest structural adders. Practical implementations with higher performance (and complexity) are covered in Chapter \ref{chapt:perf_digital_logic}.
 
 %**********************
-\subsection{Half Adder}
+\subsubsection{Half Adder}
 %**********************
 \placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig:half_adder}
 
 Figure \ref{fig:half_adder} whose the simplest adder - the \textit{half adder}. It adds two binary digits and produces a sum and a carry bit. To build a half adder we use an XOR circuit. The XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
 
 %**********************
-\subsection{Increment}
+\subsubsection{Increment}
 %**********************
 \placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig:incrementer}
 
@@ -980,29 +1008,29 @@ Thus, the size of the $n$-bit number increment circuit, $S_{INCn}$, is proportio
 $$S_{INCn} \in O(n)$$
 $$D_{INCn} \in O(n)$$
 
-The depth of the circuit can be reduced by increasing the size (but in the limits of the same magnitude order) using a prefix network such as a Kogge-Stone adder \cite{kogge1973parallel}.
+The depth of the circuit can be reduced by increasing the size (but in the limits of the same magnitude order) using a prefix network such as a Kogge-Stone adder \cite{kogge1973parallel}. See Section \ref{sec:kogge-stone-adder}.
 
 %******************************
-\subsection{Full Adder (FA)}
+\subsubsection{Full Adder (FA)}
 %******************************
 Half adders cannot handle carry inputs, leading to the development of the \textit{full adder}, which incorporates a carry input along with two operand inputs. The Full Adder (FA) adds two one-bit numbers with the carry provided from the previous binary position. It generates the sum and the carry value for the next binary position. In Figure \ref{fig:full_adder}a, a FA is composed of two HAs and an OR circuit used to propagate the carry generated by the first HA or by the second HA. The first FA adds the two input bits, A and B, while the second FA adds the value of the carry, C, generated by the previous binary order.
 
 \placedrawing[H]{figures/02_16_adder_full.lp}{Adder. {\bf a.} Full Adder (FA). {\bf b.} 4-bit adder (ADD4).}{fig:full_adder}
 
-
-
-
 %*******************************
-\subsection{Ripple-Carry Adder}
+\subsubsection{Ripple-Carry Adder} \label{sec:ripple-carry-adder}
 %******************************
-Figure \ref{fig:full_adder}b shows that combining multiple full adders results in a \textit{ripple carry adder} (RCA). An issue with this serial type of adder is the execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. In the general case, the time is proportional to $n$ (it is in $O(n)$).
+Figure \ref{fig:full_adder}b shows a \textit{ripple carry adder} (RCA). Ripple-carry adders are one of the simplest and most fundamental types of binary adders. They work by connecting a series of full adders, each responsible for processing a single bit of the operands. The carry-out from each adder is propagated to the carry-in of the next, creating a "ripple" effect that moves from the least significant bit (LSB) to the most significant bit (MSB). 
+
+While the design of ripple-carry adders is straightforward and easy to implement in hardware, their performance is limited by the sequential nature of carry propagation. The execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value, can be long. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. The delay for an addition operation increases linearly with the number of bits, as each bit must wait for the carry result from the preceding bit to be resolved. In the general case, the time is proportional to $n$ (it is in $O(n)$). 
+
 
 \ifthenelse{\boolean{chiselversion}}{
 
 %*************************************************
 \subsubsection{Parameterized Ripple-Carry Adder (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}, label={lst:chisel_adder_ripple}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/adders/RippleCarryAdder.scala}
+\includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}, label={lst:chisel_adder_ripple}, firstline=9, firstnumber=9, lastline=37]{\chiselSourceDir/adders/RippleCarryAdder.scala}
 
 Listing \ref{lst:chisel_adder_ripple} shows code that defines a \texttt{RippleCarryAdder} class in Chisel, which implements the ripple-carry adder (RCA) architecture for addition. The class extends the abstract \texttt{Adder} base class and is parameterized by a generic data type \texttt{T} and the adder's bit-width. 
 
