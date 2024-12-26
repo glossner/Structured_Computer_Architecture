@@ -15,9 +15,9 @@ In current language we use the term computation without a rigorous definition. W
 
 Despite appearances, computers are not numerical instruments but logical structures that have their theoretical origin in solving decision-making problems. To the question: {\em where and when does the history of computers begin?}, the answer, however strange it may seem, is: {\em somewhere on the island of Crete about two and a half millennia ago}. Indeed, Epimenides of Knossos (the capital of the island of Crete), a semi-mythical Greek seer from the 7th or 6th century BC, caught himself saying that {\em "all Cretans are liars"}. Surprised, because in the next second he could not {\bf decide} whether the assertion he had just made was true or false. Thus was born, if the story is true, a problem that occupied the minds of seekers for millennia until it was rigorously reformulated by David Hilbert (1862–-1943) and definitively settled by Kurt G\" odel (1906--1978).
 
-Hilbert's address of 1900 to the International Congress of Mathematicians in Paris is perhaps the most influential speech ever given about mathematics \cite{Hilbert1900}. In it, Hilbert outlined 23 major mathematical problems to be studied in the coming century. One of them, the 10th, raises the issue of decision in a particular case. But, in a definitive form the problem is exposed in the book that David Hilbert writes together with Wilhelm Ackermann \cite{Hilbert1928}. This book included a clear statement of the {\em Entscheidungsproblem} (decision problem): {\em is there an algorithm that takes a statement formulated in a formal system and answers with "yes" or "no" whether the statement is true or false in the given system?} The first answer comes in 1931 from the logician  Kurt Gödel: {\bf {\em in a formal system one can correctly construct true structures whose truth cannot be proven or disproved}} \cite{Goedel1931} \cite{Goedel31}.
+Hilbert's address of 1900 to the International Congress of Mathematicians in Paris is perhaps the most influential speech ever given about mathematics \cite{Hilbert1900}. In it, Hilbert outlined 23 major mathematical problems to be studied in the coming century. One of them, the 10th, raises the issue of decision in a particular case. But, in a definitive form the problem is exposed in the book that David Hilbert writes together with Wilhelm Ackermann \cite{Hilbert1928}. This book included a clear statement of the {\em Entscheidungsproblem} (decision problem): {\em is there an algorithm that takes a statement formulated in a formal system and answers with "yes" or "no" whether the statement is true or false in the given system?} The first answer comes in 1931 from the logician  Kurt Gödel: {\bf {\em in a formal system one can correctly construct true structures whose truth cannot be proven or disproved}} \cite{Goedel1931} \cite{Goedel31}. 
 
-Gödel's spectacular result triggered within five years four mathematicians Alonzo Church \cite{Church36}, Stephen Kleene \cite{Kleene36}, Emil Post \cite{Post36}, and Alan Turing \cite{Turing36} (listed alphabetically) to independently provide works that founded computer science. We focus in this chapter on Turing's work.
+Gödel's spectacular result triggered within five years four mathematicians Alonzo Church \cite{Church36}, Stephen Kleene \cite{Kleene36}, Emil Post \cite{Post36}, and Alan Turing \cite{Turing36, Turing1937} (listed alphabetically) to independently provide works that founded computer science. We focus in this chapter on Turing's work.
 
 \subsection{Turing Machine}
 
@@ -95,7 +95,7 @@ then $\cal U$ will compute the same sequence as $\cal M$.} \cite{Turing36}
 
 Turing’s concept of a \textbf{Universal Turing Machine}, UTM, suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
 
-If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a UTM capable of simulating \( p \). The complexity and the size  of the FA of UTM is responsible for the complexity and the size of UTM. 
+If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a UTM capable of simulating \( p \). Given that a finite automaton has, by definition, a complex structure, theoretical research has carefully evaluated various versions for the FA associated with the UTM. We mention two limiting cases. One is that of the work of Claude Shannon who publishes a paper describing a UTM with an automaton having only 2 states \cite{Shannon56}. The consequence of this limitation is a combinational circuit on the loop of very large size. After 50 years a paper appears in which the finite automaton has zero states, that is, it is no longer necessary \cite{Stefan06Turing}. This establishes the possibility of simple processors, the RISC type, processors built only from simple recursively defined circuits.  
 
 \subsection{Summary of Key Theoretical Points in Turing's Paper}
 
@@ -110,7 +110,22 @@ Turing’s formal model set the stage for understanding how numbers can be syste
 
 \section{von Neumann Abstract Model}
 
-TM is a mathematical model. The actual computing machines need an {\bf {\em intermediate model}}: an abstract one, able to solve the problem of computation using real entities. In this "moment" comes the  serendipitous  meeting between math and tech, between TM and digital circuits. 
+TM is a mathematical model. The actual computing machines need an {\bf {\em intermediate model}}: an {\bf abstract} one, able to solve the problem of computation using real entities. In this "moment" comes the  serendipitous  meeting between math and tech, between TM and digital circuits. In the abstract model proposed by the mathematician John von Neumann the finite automaton and the accessing head are integrated in what we call a processor which communicate with the memory which contains  programs and data (see Figure \ref{fig44}). 
+
+%\section{von Neumann Computer Version: Four-Loop, Four-Order System ({\bf 4-OS})}
+
+The two types of processors defined in the previous section were used to define two abstract computer models.
+
+\smallskip
+
+{\bf Historical note}: in the 1940s, the first electronic computers were made in two versions that generated two models for the subsequent evolution. Traditionally, but erroneously, these models are called {\em architectures}. The concept of architecture appeared in the 1960s. For this reason, we will call these concepts {\em abstract models} instead of architectures.
+
+\smallskip
+
+
+\placedrawing[H]{figures/05_04_von_neumann.lp}{The abstract model of computer proposed by  John von Neumann.}{fig44}
+
+The interpretive processor is used in the definition of the {\em von Neumann abstract model}, in which the processor is loop connected to a single memory in which both programs and data are stored (see Figure \ref{fig44}). Thus, a 4-OS is obtained by connecting a 3-OS (Processor) with a 1-OS (Memory).
 
 \section{Memory Management}
 

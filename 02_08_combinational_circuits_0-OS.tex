@@ -697,7 +697,7 @@ In Scala, a companion object is an object that shares the same name as a class a
 
 Listing \ref{lst:chisel_mux_companion} shows the companion object. The \texttt{Multiplexer} \textit{object} provides a factory method for creating and connecting instances of a parameterized multiplexer. The method takes a \texttt{Vec[UInt]} of inputs, and a \texttt{UInt} that specifies the selection signal for the multiplexer. After the module is instantiated, its I/O ports are connected. The \texttt{mux.io.inputs} port is connected to the \texttt{inputs} vector, and the \texttt{mux.io.select} port is connected to the \texttt{select} signal. Finally, the \texttt{apply} method returns the \texttt{mux.io.output}, providing the result of the multiplexer to the caller. 
 
-\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/Mux4.scala}
+\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/Mux4.scala}
 
 Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. It uses the companion object to connect the signals. If the I/O signals retain the same names as the Multiplexer class, the 4-to-1 8-bit bus multiplexer could have been instantiated the same way as the 2-to-4 decoder shown in Listing \ref{lst:chisel_2to4_decoder} - \texttt{class Mux4 extends Multiplexer(4)}. However, it is often more convenient for users of hardware libraries to see the I/O definitions in the leaf class. Generally, we try to follow this design principle for instantiated Chisel hardware and so Listing \ref{lst:chisel_mux4} fully specifies the I/O signals.
 
@@ -742,7 +742,7 @@ $$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
 %*********************************************************
 \subsubsection{Demultiplexer (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={1-to-16 DeMultiplexer (SystemVerilog: dMux.sv)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
+\includeverilogcode[caption={1-to-16 bit Demultiplexer (SystemVerilog: dMux.sv)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
 
 Listing \ref{lst:verilog_demux16} shows SystemVerilog code that implements a simple demultiplexer module, named \texttt{dMux}. This demultiplexer takes a input signal \texttt{dMuxEnable} and routes one-bit of it to one of the 16 output lines, represented by the vector \texttt{dMuxOut}, based on the 4-bit selection signal \texttt{dMuxIn}. Instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned. The operation is performed using a left-shift operation, where the input signal \texttt{dMuxEnable} is shifted by the value of \texttt{dMuxIn}, effectively enabling only one bit in the 16-bit output vector.
 
@@ -762,7 +762,7 @@ The \texttt{io} bundle defines the interface for the module, consisting of an in
 
 Simlar to the Multiplexer, a companion object provides a convenient factory method for instantiating the demultiplexer. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. 
 
-\includechiselcode[caption={1-to-16 Bus Demultiplexer (Chisel: DeMux16.scala)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
+\includechiselcode[caption={1-to-16 64-bit Bus Demultiplexer (Chisel: DeMux16.scala)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
 
 Listing \ref{lst:chisel_demux16} shows a \texttt{DeMux16} class that defines a 1-to-16 demultiplexer that operates on 64-bit buses. This module is implemented as a subclass of \texttt{Module}, making it a Chisel hardware component. Its interface, specified by the \texttt{io} bundle, includes a 64-bit input bus (\texttt{io.input}), a 4-bit selection signal (\texttt{io.select}) to determine the active output, and a vector of 16 output buses (\texttt{io.outputs}), each 64 bits wide. The selection signal uses a 4-bit width because \(\log_2(16) = 4\), allowing indexing of the 16 outputs.
 
@@ -880,6 +880,86 @@ SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is pure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Adders are fundamental components in digital computing systems. At the core of processors, adders enable basic addition and form the building blocks for more complex arithmetic units, such as subtractors, multipliers, and dividers. An adder's efficiency directly impacts a processor's overall performance, as addition is one of the most frequently executed operations in computing.
 
+%******************************
+\subsection{Behavioral Adders}
+%******************************
+
+
+
+
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Parameterized Abstract Adder (Chisel)}
+%*************************************************
+\includechiselcode[caption={Parameterized Abstract Adder (Chisel: Adder.scala)}, label={lst:chisel_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/Adder.scala}
+
+Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract class \texttt{Adder}, which provides a framework for creating parameterized adder modules in Chisel. The class requires a \texttt{width} parameter, which specifies the bit-width of the inputs and outputs. The \texttt{Adder} class requires a width greater than zero to ensure valid hardware design, and this is enforced by the \texttt{require} statement. The \texttt{io} interface is defined using a \texttt{Bundle} that encapsulates three signals: \texttt{a}, \texttt{b}, and \texttt{sum}. The \texttt{a} and \texttt{b} signals are inputs of type \texttt{UInt} with the specified \texttt{width}, representing the operands of the adder. The \texttt{sum} signal is an output of type \texttt{UInt} with the specified \texttt{width}, representing the computed sum of the inputs.
+
+The class is marked as \texttt{abstract}, which means it cannot be instantiated directly. Instead, specific implementations of the adder, such as ripple-carry or carry-lookahead adders, can extend this base class to reuse the IO definitions and width constraints. Using an abstract base class like \texttt{Adder} provides several benefits. It ensures consistency in IO definitions, as all derived adder implementations inherit the same \texttt{io} interface, guaranteeing a uniform input-output structure across different adder designs. It promotes reusability by defining the \texttt{io} interface and width validation logic once in the base class, reducing code duplication and improving maintainability. The abstract base class introduces a level of abstraction by encapsulating common properties and behaviors, allowing derived classes to focus solely on implementing specific adder designs without redefining shared elements.
+
+%*************************************************
+\subsubsection{Parameterized Behavioral Adder (Chisel)}
+%*************************************************
+%\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdderUnsigned.scala}
+
+Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, generic adder in Chisel. The class is parameterized by a data type \texttt{T} that extends \texttt{Data}, allowing it to work with various numeric types such as \texttt{UInt} or \texttt{SInt}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
+
+Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
+
+
+
+}% End Chisel
+
+%*******************************
+\subsection{4-bit Behavioral Adder}
+%******************************
+
+\begin{figure}[H]
+    \centering
+\[
+\begin{array}{|c|c|c|c|c|c|c|}
+\hline
+\text{A (bin)} & \text{A (dec)} & \text{B (bin)} & \text{B (dec)} & \text{Sum (bin)} & \text{Sum (dec)} & \text{Overflow} \\
+\hline
+0000 & 0 & 0000 & 0 & 0000 & 0 & 0 \\
+0001 & 1 & 0010 & 2 & 0011 & 3 & 0 \\
+0111 & 7 & 0001 & 1 & 1000 & 8 & 0 \\
+1111 & 15 & 0001 & 1 & 0000 & 0 & 1 \\
+1010 & 10 & 0110 & 6 & 0000 & 0 & 1 \\
+1110 & 14 & 1111 & 15 & 1101 & 13 & 1 \\
+1111 & 15 & 1111 & 15 & 1110 & 14 & 1 \\
+\hline
+\end{array}
+\]
+    \caption{4-bit Behavioral Adder Partial Truth Table}
+    \label{fig:4bit_adder_tt} 
+\end{figure}
+
+Figure \ref{fig:4bit_adder_tt} shows the partial truth table for a 4-bit behavioral adder. The column labeled overflow shows that $n$-bits in not sufficient to add two $n$-bit numbers. In general, adding two $n$-bit binary numbers requires $2n+1$ bits to store the result.
+
+Consider two $n$-bit binary numbers, $A$ and $B$, where each can be represented in the form:
+\[
+A = \sum_{i=0}^{n-1} a_i \cdot 2^i, \quad B = \sum_{i=0}^{n-1} b_i \cdot 2^i
+\]
+
+where $a_i, b_i \in \{0, 1\}$ are the binary digits (bits) of $A$ and $B$, respectively.
+
+The range of each $n$-bit number can take any value from $0$ to $2^n - 1$. Therefore:
+\[
+0 \leq A \leq 2^n - 1, \quad 0 \leq B \leq 2^n - 1
+\]
+
+The maximum value of $A + B$ occurs when both $A$ and $B$ are at their maximum value, i.e., $A = 2^n - 1$ and $B = 2^n - 1$. In this case:
+\[
+A + B = (2^n - 1) + (2^n - 1) = 2^n + 2^n - 2 = 2^{n+1} - 2
+\]
+
+This shows that the result of $A + B$ can range from $0$ (minimum) to $2^{n+1} - 2$ (maximum). To store a result as large as $2^{n+1} - 2$, at least $n+1$ bits are required.
+
+In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, can represent values from $0$ to $2^4 - 1 = 15$. When adding the two largest 4-bit numbers, $A = 15_{base10}$ and $B = 15_{base10}$, the result is $A + B = 30_{base10}$. To represent $30_{base10}$ in binary, at least 5 bits are required, as the binary representation is $11110_2$. 
+
+
+
 %**********************
 \subsection{Half Adder}
 %**********************
@@ -909,29 +989,15 @@ Half adders cannot handle carry inputs, leading to the development of the \texti
 
 \placedrawing[H]{figures/02_16_adder_full.lp}{Adder. {\bf a.} Full Adder (FA). {\bf b.} 4-bit adder (ADD4).}{fig:full_adder}
 
+
+
+
 %*******************************
 \subsection{Ripple-Carry Adder}
 %******************************
 Figure \ref{fig:full_adder}b shows that combining multiple full adders results in a \textit{ripple carry adder} (RCA). An issue with this serial type of adder is the execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. In the general case, the time is proportional to $n$ (it is in $O(n)$).
 
 \ifthenelse{\boolean{chiselversion}}{
-%*************************************************
-\subsubsection{Parameterized Abstract Adder (Chisel)}
-%*************************************************
-\includechiselcode[caption={Parameterized Abstract Adder (Chisel)}, label={lst:chisel_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/Adder.scala}
-
-Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract class \texttt{Adder}, which provides a generic framework for creating parameterized adder modules in Chisel. The class is parameterized by a type \texttt{T} that extends \texttt{Data}, allowing it to operate on various data types such as \texttt{UInt} or \texttt{SInt}. The \texttt{Adder} class requires a width greater than zero to ensure valid hardware design, and this is enforced by the \texttt{require} statement. The input and output ports of the module are defined in the \texttt{io} object, where the inputs \texttt{a} and \texttt{b}, and the output \texttt{sum}, are all of type \texttt{T}. 
-
-The companion object \texttt{Adder} dynamically instantiates a specific adder type by accepting two arguments: the generic data type \texttt{gen} and a constructor function \texttt{constructor} that returns an instance of a subclass of \texttt{Adder}. This allows for flexible creation of adder instances without directly coupling the instantiation logic to the specific adder implementation. By using the \texttt{Module} wrapper within the companion object, the hardware description generated adheres to Chisel's module instantiation conventions, ensuring compatibility with the Chisel hardware generation flow. 
-
-%*************************************************
-\subsubsection{Parameterized Behavioral Adder (Chisel)}
-%*************************************************
-%\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/BehavioralAdderUnsigned.scala}
-
-Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, generic adder in Chisel. The class is parameterized by a data type \texttt{T} that extends \texttt{Data}, allowing it to work with various numeric types such as \texttt{UInt} or \texttt{SInt}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
-
-Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
 
 %*************************************************
 \subsubsection{Parameterized Ripple-Carry Adder (Chisel)}
@@ -946,8 +1012,7 @@ The addition operation proceeds iteratively across all \texttt{width} bits. For 
 
 
 
-
-}% End Chisel
+}
 
 %************************
 \subsection{Subtraction}

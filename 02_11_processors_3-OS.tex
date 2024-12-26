@@ -2,7 +2,7 @@
 \localtoc
 
 
-In this lesson we will  close the third loop. It can be closed through a combinational circuit, through a memory circuit, or through an automaton. For our purpose, we are interested only on this last case, that of closing the third loop over an automaton through another automaton. We will focus, but not limited  on the third loop that allows us to introduce the concept of the processor exemplified with a simple engine called {\bf {\em toyRISC}}. We will practice the processor concept in the context provided by the fifth loop, the one that defines the computer concept in the currently practiced understanding, that of Reduced Instruction Set Computer (RISC) type computing systems. Only for those interested and familiar with System Verilog HDL, at the end of this text there is an appendix that allows the simulation of the system described in this lesson.
+In this chapter we will  close the third loop. It can be closed through a combinational circuit, through a memory circuit, or through an automaton. For our purpose, we are interested only on this last case, that of closing the third loop over an automaton through another automaton. We will focus, but not limited  on the third loop that allows us to introduce the concept of the processor exemplified with a simple engine called {\bf {\em toyRISC}}. We will practice the processor concept in the context provided by the fifth loop, the one that defines the computer concept in the currently practiced understanding, that of Reduced Instruction Set Computer (RISC) type computing systems. Only for those interested and familiar with System Verilog HDL, at the end of this text there is an appendix that allows the simulation of the system described in this lesson.
 
 At the level of the third loop, we are at a {\em turning point} where the physical structure of the circuits will meet the informational structure of the programs. The functionality will be determined starting from this point by the circuit-information combination. The interface between structural and informational aspects is provided by the concept of {\bf {\em architecture}} borrowed from the field of construction.
 
@@ -46,9 +46,7 @@ module CEA(input    logic [1:0] X           ,
             zero            ,
             reset           ,
             clock           );
-
     logic [31;0] UD/COUNTER ;
-
     always_ff @(posedge clock)
         if(reset)   UD/COUNTER <= 0             ;
             else if(up)             UD/COUNTER <= UD/COUNTER + 1;
@@ -63,7 +61,8 @@ endmodule
 $\diamond$
 \end{exemplu}
 
-\section{Processor: Three-Loop, Three-Order System ({\bf 3-OS})}
+
+\section{Processor}
 
 \subsection{Architecture vs. Organization}
 
@@ -104,27 +103,22 @@ And so the Hardware -- Software duet turned into the Hardware -- Architecture --
 \end{table}
 
 
-\section{Processor}
-
-There are several ways to close the third loop over a generic 2-OS represented by an automaton in order to obtain the generic structure o a {\bf processor}. On the closed loop over an automaton we can connect a 0-OS (a combinational circuit), a 1-OS (a memory), or a 2-OS (an automaton). The last version is the most significant (see Figure \ref{fig40}). It is the subject of this lesson.
+There are several ways to close the third loop over a generic 2-OS represented by an automaton in order to obtain the generic structure o a {\bf processor}. On the closed loop over an automaton we can connect a 0-OS (a combinational circuit), a 1-OS (a memory), or a 2-OS (an automaton). The last version is the most significant (see Figure \ref{fig40}). It is the main subject of this chapter.
 
 The two machines that configure a processor have distinct functions:
-\begin{itemize}
-\item functional automaton that performs data processing functions; it is a simple automaton
-
-\item control automaton that ensures the sequential operation of the processor implemented in two possible versions:
-\begin{itemize}
-\item  a complex controller of the type presented in \ref{contrAut}, when, in addition to fetching the instruction from the program memory, it is also necessary to break it down into a sequence of micro-instructions executed by the functional automaton
-\item  a simple controller of the counter type presented in \ref{progCounter}, when it is sufficient to bring the instruction from the program memory because the instruction is simple enough to be executed directly by the functional automaton
-\end{itemize}
-
-\end{itemize}
 
 \placedrawing[H]{figures/05_01_generic_processor.lp}{Generic Processor}{fig40}
 
+\begin{itemize}
+    \item functional automaton that performs data processing functions; it is a simple automaton
+    \item control automaton that ensures the sequential operation of the processor implemented in two possible versions:
+        \begin{itemize}
+            \item  a complex controller of the type presented in \ref{contrAut}, when, in addition to fetching the instruction from the program memory, it is also necessary to break it down into a sequence of micro-instructions executed by the functional automaton
+            \item  a simple controller of the counter type presented in \ref{progCounter}, when it is sufficient to bring the instruction from the program memory because the instruction is simple enough to be executed directly by the functional automaton
+        \end{itemize}
+\end{itemize}
+
 The two types of control generate two types of processors, as follows in the next section.
-
-
 
 \subsection{Interpreting Processor (CISC processor)}
 
@@ -138,6 +132,8 @@ For each instruction the CISC processor must perform:
     \item instruction execute
     \item compute the address for the next instruction
 \end{enumerate}
+
+
 so that an instruction is executed in a variable number of at least several clock cycles.
 
 \subsection{Executing Processor (RISC processor)}
@@ -158,34 +154,10 @@ How did you get to this way of designing a processor that executes only simple, 
 
     \item thus, for frequent operations, the effector structure could be imagined to work quickly, and for the less frequent ones, the possibility of their performance is ensured
 \end{itemize}
-
-
 Thus, a RISC processor executes instead of interpreting. Programs represent sequences of simple instructions, which are executed in parallel with the control of their evolution. Indeed, the functional automaton operates on the data while the control automaton calculates the address from which the next instruction will be read.
 Both types of operations fall into the category of simple ones, the fact that it allows us to consider a RISC processor as simple to distinguish it from a CISC one which is complex due to the control automaton.
 
 
-\section{von Neumann Computer Version: Four-Loop, Four-Order System ({\bf 4-OS})}
-
-The two types of processors defined in the previous section were used to define two abstract computer models.
-
-\smallskip
-
-{\bf Historical note}: in the 1940s, the first electronic computers were made in two versions that generated two models for the subsequent evolution. Traditionally, but erroneously, these models are called {\em architectures}. The concept of architecture appeared in the 1960s. For this reason, we will call these concepts {\em abstract models} instead of architectures.
-
-\smallskip
-
-
-\placedrawing[H]{figures/05_04_von_neumann.lp}{The abstract model of computer proposed by  John von Neumann.}{fig44}
-
-The interpretive processor is used in the definition of the {\em von Neumann abstract model}, in which the processor is loop connected to a single memory in which both programs and data are stored (see Figure \ref{fig44}). Thus, a 4-OS is obtained by connecting a 3-OS (Processor) with a 1-OS (Memory).
-
-\section{Harvard Computer Version: Five-Loop, Five-Order System ({\bf 5-OS})}
-
-The Harvard abstract model assumes a fifth loop. The processor together with the program memory forms a 4-OS, and by closing another loop through the data memory, a 5-OS is obtained (see Figure \ref{fig45}).
-
-\placedrawing[H]{figures/05_05_harvard_model.lp}{The Harvard abstract model  of computer.}{fig45}
-
-We will continue to focus, for obvious reasons, on RISC-type processors that allow the implementation of the Harvard abstract model.
 
 \section{{\bf {\em ToyRISC Processor}}}
 
@@ -208,13 +180,9 @@ memory. The control automaton does not ``know" the function to be
 performed, it ``knows" how to ``fetch the function" from an external storage
 support, the program memory.
 
-\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}
-
 {\bf Important note}: the organization presented in the following is designed only from the circuit point of view with emphasis on the {\em competence} of the system. In order to maximize the performance the design must apply specific techniques to increase the frequency of the clock cycle. This concern goes beyond the aims of this lecture. We will partially address these issues in the next lesson. Books on the organization and architecture of computing systems deal extensively with issues of maximizing performance. Books on the architecture and organization of computers written by John Hennessy and David Patterson are recommended  \citep{Hennessy19, Patterson19}.
 
-
 In Figure \ref{fig43}, the organization of the processor {\bf {\em toyRISC}} is represented. It contains two simple loop-connected automata, PC and RALU, serially connected with a complex and small section, DCD.
-
 
 
 \subsubsection{PC: a control automaton}
@@ -233,6 +201,7 @@ the control of the program {\em calls} a  function and a return is
 needed. For all the previously described behaviors the
 combinational circuit {\bf nextPC} (described in {\tt nextPc.v} module of the design presented in Appendix \ref{toyRiscDesign}) is designed to close the loop over the Program Counter register.
 
+\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}
 
 \subsubsection{RALU: a functional automaton}
 
