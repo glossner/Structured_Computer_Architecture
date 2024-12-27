@@ -14,8 +14,8 @@ class BehavioralAdderSubtractorHW(width: Int) extends Module {
     val result = Output(UInt(width.W)) // Result of addition or subtraction
   })
 
-  // Compute addition or subtraction
-  val bAdjusted = Mux(io.subtract.asBool, ~io.b + 1.U, io.b) // Two's complement for subtraction
+  // Two's complement for subtraction
+  val bAdjusted = Mux(io.subtract.asBool, ~io.b + 1.U, io.b) 
   val fullResult = io.a + bAdjusted
 
   // Truncate result to the specified width
