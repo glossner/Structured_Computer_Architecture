@@ -1,0 +1,61 @@
+FIRRTL version 3.3.0
+circuit MultifunctionAdderSubtractor64 :%[[
+  {
+    "class":"firrtl.transforms.DedupGroupAnnotation",
+    "target":"~MultifunctionAdderSubtractor64|MultifunctionAdderSubtractor64",
+    "group":"MultifunctionAdderSubtractor64"
+  }
+]]
+  module MultifunctionAdderSubtractor64 : @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 35:7]
+    input clock : Clock @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 35:7]
+    input reset : UInt<1> @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 35:7]
+    output io : { flip a : UInt<64>, flip b : UInt<64>, result : UInt<64>, flip opcode : UInt<4>, carryOut : UInt<1>} @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 36:14]
+
+    node isSub = bits(io.opcode, 3, 3) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 48:24]
+    node isAdd = eq(isSub, UInt<1>(0h0)) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 49:15]
+    node isSigned = bits(io.opcode, 2, 2) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 50:27]
+    node operandSize = bits(io.opcode, 1, 0) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 51:30]
+    wire width : UInt @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 54:26]
+    connect width, UInt<7>(0h40) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 54:26]
+    node _T = eq(UInt<1>(0h0), operandSize) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+    when _T : @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+      connect width, UInt<4>(0h8) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 56:25]
+    else :
+      node _T_1 = eq(UInt<1>(0h1), operandSize) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+      when _T_1 : @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+        connect width, UInt<5>(0h10) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 57:25]
+      else :
+        node _T_2 = eq(UInt<2>(0h2), operandSize) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+        when _T_2 : @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+          connect width, UInt<6>(0h20) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 58:25]
+        else :
+          node _T_3 = eq(UInt<2>(0h3), operandSize) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+          when _T_3 : @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 55:23]
+            connect width, UInt<7>(0h40) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 59:25]
+    node _mask_T = dshl(UInt<1>(0h1), width) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 63:20]
+    node _mask_T_1 = sub(_mask_T, UInt<1>(0h1)) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 63:30]
+    node mask = tail(_mask_T_1, 1) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 63:30]
+    node aEffective = and(io.a, mask) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 64:25]
+    node bEffective = and(io.b, mask) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 65:25]
+    node _bAdjusted_T = not(bEffective) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 68:30]
+    node _bAdjusted_T_1 = add(_bAdjusted_T, UInt<1>(0h1)) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 68:42]
+    node _bAdjusted_T_2 = tail(_bAdjusted_T_1, 1) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 68:42]
+    node bAdjusted = mux(isSub, _bAdjusted_T_2, bEffective) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 68:22]
+    node _fullResult_T = asSInt(aEffective) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 72:17]
+    node _fullResult_T_1 = asSInt(bAdjusted) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 72:37]
+    node _fullResult_T_2 = add(_fullResult_T, _fullResult_T_1) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 72:24]
+    node _fullResult_T_3 = asUInt(_fullResult_T_2) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 72:45]
+    node _fullResult_T_4 = add(aEffective, bAdjusted) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 73:17]
+    node fullResult = mux(isSigned, _fullResult_T_3, _fullResult_T_4) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 71:23]
+    node truncatedResult = and(fullResult, mask) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 77:36]
+    node _extendedResult_T = asSInt(truncatedResult) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 83:21]
+    node _extendedResult_T_1 = pad(_extendedResult_T, 64) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 83:31]
+    node _extendedResult_T_2 = asUInt(_extendedResult_T_1) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 83:36]
+    node _extendedResult_T_3 = pad(truncatedResult, 64) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 84:24]
+    node extendedResult = mux(isSigned, _extendedResult_T_2, _extendedResult_T_3) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 82:27]
+    connect io.result, truncatedResult @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 88:13]
+    node _io_carryOut_T = gt(fullResult, mask) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 94:27]
+    node _io_carryOut_T_1 = lt(aEffective, bEffective) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 94:46]
+    node _io_carryOut_T_2 = mux(isAdd, _io_carryOut_T, _io_carryOut_T_1) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 94:8]
+    node _io_carryOut_T_3 = mux(isSigned, UInt<1>(0h0), _io_carryOut_T_2) @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 93:21]
+    connect io.carryOut, _io_carryOut_T_3 @[src/main/scala/scabook/addersubtractors/MultifunctionAdderSubtractor64.scala 93:15]

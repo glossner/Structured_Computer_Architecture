@@ -6,12 +6,12 @@ package scabook.addersubtractors
 import chisel3._
 import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
-import scabook.addersubtractors.MultifunctionAdder.Opcode
+import scabook.addersubtractors.MultifunctionAdderSubtractor64.Opcode
 
-class MultifunctionAdderSubtractorTest extends AnyFlatSpec {
+class MultifunctionAdderSubtractor64Test extends AnyFlatSpec {
 
-  "MultifunctionAdder" should "correctly compute addition and subtraction for all opcodes and handle overflow/underflow with truncation" in {
-    simulate(new MultifunctionAdderSubtractor) { dut =>
+  "MultifunctionAdderSubtractor64" should "correctly compute addition and subtraction for all opcodes and handle overflow/underflow with truncation" in {
+    simulate(new MultifunctionAdderSubtractor64) { dut =>
       def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt, expectedCarry: Boolean): Unit = {
         dut.io.a.poke(a.U(64.W))
         dut.io.b.poke(b.U(64.W))

@@ -11,7 +11,7 @@ import chisel3.util._
 // b3: Add/Sub
 // b2: Signed/Unsigned
 // b1b0: 8/16/32/64 bits
-object MultifunctionAdderSubtractor {
+object MultifunctionAdderSubtractor64 {
   object Opcode {
     val ADD_U8  = "b0000".U
     val ADD_U16 = "b0001".U
@@ -32,7 +32,7 @@ object MultifunctionAdderSubtractor {
   }
 }
 
-class MultifunctionAdderSubtractor extends Module {
+class MultifunctionAdderSubtractor64 extends Module {
   val io = IO(new Bundle {
     val a = Input(UInt(64.W))
     val b = Input(UInt(64.W))
