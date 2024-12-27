@@ -875,6 +875,210 @@ SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is pure
 %################################
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Behavioral vs. Structural Descriptions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Digital circuits can be described using two primary approaches: by defining their functional behavior or by specifying their internal structure. A behavioral description focuses on the circuit's input-output relationships, detailing what the circuit does without concern for how it is implemented internally. Conversely, a structural description specifies the arrangement and interconnection of the components that make up the circuit, providing a blueprint for how the desired functionality is achieved. 
+
+The design of digital systems is inherently a \textbf{hierarchical process}. It begins with a top-level module that represents the overall system and is populated by submodules. Each submodule is defined similarly, with the process continuing until the simplest modules are reached. These basic modules are described directly, either through functional descriptions or by mapping to primitive hardware elements. This hierarchical organization allows for clear abstraction and separation of concerns, enabling designers to manage complexity effectively and focus on smaller, more manageable parts of the system.
+
+One of the defining characteristics of digital design is \textbf{modularity}. In this approach, a complex problem is decomposed into smaller, simpler problems that are solved independently. This process is repeated recursively until the simplest possible components are identified and implemented. Modularity facilitates the reuse of identical modules throughout the design, enabling replication of the same component multiple times. This not only reduces development effort but also ensures consistency and reliability across the system. Furthermore, modular design supports scalability and maintainability, as individual modules can be optimized or replaced without affecting the rest of the system.
+
+\placedrawing[h]{figures/01_04_4bit_adder.lp}{{\bf Hierarchical Decomposition Adder Modules.} {\small {\bf a.} Top-level 2-input 4-bit adder. {\bf b.} The structure of a 3-input 4-bit adder.} }{fig:hierarchical_adders}
+
+Figure \ref{fig:hierarchical_adders}a shows an adder module. No indication of how this module is implemented is provided. We infer from its name that it adds two 4-bit numbers. Figure \ref{fig:hierarchical_adders}b shows a 3-input 4-bit adder composed of two 2-input 4-bit adders. It is structural because it shows the adder is constructed of two 4-bit adders.
+
+
+The Verilog code describing the module {\tt adder} is:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      adder.sv
+Circuit name:   Adder
+Description:    The module 'adder' has 2 4-bit inputs and one 4-bit output
+                The circuit adds modulo 16; do not use or provide carry
+                signal
+*************************************************************************/
+module adder(   output logic [3:0] out ,    // 4-bit output
+                input  logic [3:0] in0 ,    // 4-bit input
+                input  logic [3:0] in1 );   // 4-bit input
+
+    assign out = in0 + in1;
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+The story just told by the previous Verilog module is: ``the 4-bit adder has two inputs, {\tt in0, in1}, one output, {\tt out}, and
+its output is continuously assigned to the value obtained by
+adding modulo 16 the two input numbers".
+
+  $\diamond$
+\end{exemplu}
+
+What we just learned from the previous first simple example is
+summarized in the following {\bf SystemVerilogSummary}.
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{description}
+\item[/*]: begin comment
+\item[*/]: end comment
+\item[module]: keyword which indicates the beginning of the
+description of a circuit as a module having the name which
+immediately follows (in our example, the name is: {\tt adder})
+
+\item[endmodule]: keyword which indicates the end of the module's
+description which started with the previous keyword {\bf module}
+
+\item[output]: keyword used to declare a terminal as an output (in
+our example the terminal {\tt out} is declared as output)
+
+\item[input]: keyword used to declare the terminal as an input (in
+our example the terminals {\tt in0} and {\tt in1} are declared as
+inputs)
+
+\item[logic]: a data type with 4-state bits: {\tt 0, 1, x, z} where 0 means low, 1 means high, x means unknown, and z means an undriven net.
+
+\item[initial]: a block which starts at the beginning of simulation
+
+\item[begin ... end]: block delimiters
+
+\item[\#]: indicate a raw value
+
+\item[forever]: indicate an unending operation
+
+\item[$\sim$]: negation operator
+
+\item[assign]: keyword called the {\em continuous assignment},
+used here to specify the function performed by the module (the
+output {\tt out} takes continuously the value computed by adding
+the two input numbers)
+
+\item[(...)]: delimiters used to delimit the list of terminals
+(external connections)
+
+\item[,]: delimiter to separate each terminal within a list of
+terminals
+
+\item[;]: delimiter for end of line
+
+\item[[ $ \dots$ ]]: delimiters which contains the definition of
+the bits associated with a connection, for example [3:0] define
+the number of bits for the three connections in the previous
+example
+
+\item[+]: the operator {\tt add}, the only one used in the
+previous example.
+\end{description}
+\rule[5mm]{16cm}{0.25mm}
+}
+\end{verisum}
+
+
+
+\begin{exemplu}
+The previously exemplified module ({\tt adder}) will be used to
+design a modulo 16 3-number adder, called {\tt threeAdder} (see Figure
+\ref{first_ex}b). It adds 3 4-bit numbers providing a 4-bit result
+(modulo 16 sum). Follows the {\bf structural} description:
+{\small
+{\em
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
+/*************************************************************************
+File name:      threeAdder.sv
+Circuit name:   Three Input Adder
+Description:    The module 'threeAdder' has 3 4-bit inputs and one 4-bit
+                output. The circuit adds modulo 16 three numbers;
+                do not provide carry output
+*************************************************************************/
+module threeAdder( output   logic [3:0]  out,
+                   input    logic [3:0]  in0,
+                   input    logic [3:0]  in1,
+                   input    logic [3:0]  in2);
+
+    logic [3:0] sum ;
+
+    adder   inAdder(.out(sum),
+                    .in0(in1),
+                    .in1(in2)),
+            outAdder(.out(out),
+                     .in0(in0),
+                     .in1(sum));
+endmodule
+\end{lstlisting}
+\end{shaded*}
+}
+}
+
+Two modules of {\tt adder} type (defined in the previous example)
+are instantiated as {\tt inAdder}, {\tt outAdder}, they are
+interconnected using the wire {\tt sum}, and are connected to the
+terminals of the {\tt threeAdder} module. The resulting structure
+computes the sum of three numbers. $\diamond$
+\end{exemplu}
+
+\begin{verisum}{\em :
+
+\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
+
+\begin{itemize}
+\item How a previously defined module (in our example: {\tt
+adder}) is two times instantiated using two different names ({\tt
+inAdder} and {\tt outAdder} in our example)
+
+\item A ``safe" way to allocate the terminals for a module
+previously defined and instantiated inside the current module:
+each original terminal name is preceded by a dot, and followed by
+a parenthesis containing the name of the wire or of the terminal
+where it is connected (in our example, {\tt outAdder( ...
+.in1(sum))} means: the terminal {\tt in1} of the instance {\tt
+outAdder} is connected to the wire {\tt sum})
+
+\item The successive instantiations of the same module can be
+separated by a ``,".
+\end{itemize}
+\rule[5mm]{16cm}{0.25mm} }
+\end{verisum}
+
+While the module {\tt adder} is a {\em behavioral} description,
+the module {\tt threeAdder} is a {\em structural} one. The first
+tells us {\em what} is the function of the module, and the second
+tells us {\em how} its functionality is performed by using a
+structure containing two instantiation of a previously defined
+subsystems, and an internal connection.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Adders}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -950,7 +1154,7 @@ In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, c
 
 Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, behavioral adder in Chisel. All interface IO are of type UInt. The class is parameterized by the width of the adder \texttt{width}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
 
-\textbf{An important point} is that Chisel will expand the result to keep full precision. In simulation, this may be the desired behavior. However, hardware can not dynamically expand wires. Chisel leaves this decision to the programmer but synthesis requires fixed widths. Our behavioral adder implementation truncates the sum result to the width of the output wires using \texttt{(width -1, 0} on line 16.
+\textbf{An important point} is that Chisel will expand the result to keep full precision. In simulation, this may be the desired behavior. However, hardware cannot dynamically expand wires. Chisel leaves this decision to the programmer but synthesis requires fixed widths. Our behavioral adder implementation truncates the sum result to the width of the output wires using \texttt{(width -1, 0} on line 16.
 
 %***********************************
 \subsection{4-bit Behavioral Adder}
