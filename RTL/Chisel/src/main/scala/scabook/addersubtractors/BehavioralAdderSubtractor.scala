@@ -8,10 +8,10 @@ import chisel3._
 class BehavioralAdderSubtractor(width: Int) extends Module {
   // Define the I/O for the module
   val io = IO(new Bundle {
-    val a = Input(UInt(width.W))       // First operand
-    val b = Input(UInt(width.W))       // Second operand
-    val subtract = Input(UInt(1.W))    // Control signal: 1 for subtraction, 0 for addition
-    val result = Output(UInt(width.W)) // Result of addition or subtraction
+    val a = Input(UInt(width.W))       
+    val b = Input(UInt(width.W))       
+    val subtract = Input(UInt(1.W))    // 1 for subtraction, 0 for addition
+    val result = Output(UInt(width.W)) 
   })
 
   // Compute addition or subtraction
