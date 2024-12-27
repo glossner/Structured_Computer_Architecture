@@ -11,7 +11,7 @@ import chisel3.util._
 // b3: Add/Sub
 // b2: Signed/Unsigned
 // b1b0: 8/16/32/64 bits
-object MultifunctionAdder {
+object MultifunctionAdderSubtractor {
   object Opcode {
     val ADD_U8  = "b0000".U
     val ADD_U16 = "b0001".U
@@ -37,15 +37,18 @@ class MultifunctionAdderSubtractor extends Module {
     val a = Input(UInt(64.W))
     val b = Input(UInt(64.W))
     val result = Output(UInt(64.W))
-    val opcode = Input(UInt(4.W)) // 4-bit opcode signal (MSB: Add/Sub, Bit 2: Signed/Unsigned, Bits 1-0: Operand size)
+    val opcode = Input(UInt(4.W)) 
     val carryOut = Output(Bool())
   })
 
   // Decode control signals
-  val isSub = io.opcode(3) // MSB: 1 for Subtraction, 0 for Addition
+  // b3: Add/Sub
+  // b2: Signed/Unsigned
+  // b1b0: 8/16/32/64 bits
+  val isSub = io.opcode(3) 
   val isAdd = !isSub
-  val isSigned = io.opcode(2) // Bit 2: 1 for Signed, 0 for Unsigned
-  val operandSize = io.opcode(1, 0) // Bits 1-0: 00 for 8-bit, 01 for 16-bit, 10 for 32-bit, 11 for 64-bit
+  val isSigned = io.opcode(2) 
+  val operandSize = io.opcode(1, 0) 
 
   // Determine effective width based on operand size
   val width = WireDefault(64.U)
@@ -66,7 +69,7 @@ class MultifunctionAdderSubtractor extends Module {
 
   // Perform addition or subtraction
   val fullResult = Mux(isSigned,
-    (aEffective.asSInt +& bAdjusted.asSInt).asUInt, // Signed operation
+    (aEffective.asSInt +& bAdjusted.asSInt).asUInt, // Signed 
     (aEffective +& bAdjusted)                       // Unsigned operation
   )
 
@@ -74,9 +77,11 @@ class MultifunctionAdderSubtractor extends Module {
   val truncatedResult = fullResult & mask
 
    // Extend the result to 64 bits
+   // Sign-extend for signed operations
+   // Zero-extend for unsigned operations
   val extendedResult = Mux(isSigned,
-    truncatedResult.asSInt.pad(64).asUInt, // Sign-extend for signed operations
-    truncatedResult.pad(64)                // Zero-extend for unsigned operations
+    truncatedResult.asSInt.pad(64).asUInt, // Sign-extend
+    truncatedResult.pad(64)                // Zero-extend
   )
 
   // Assign the extended result to output
@@ -84,7 +89,8 @@ class MultifunctionAdderSubtractor extends Module {
 
    // Carry out logic
   // For unsigned operations: carryOut is set if there's an overflow (addition) or borrow (subtraction)
+  // Signed overflow not implemented
   io.carryOut := Mux(isSigned, false.B, 
-    Mux(isAdd, fullResult > mask, aEffective < bEffective) // Overflow for addition, borrow for subtraction
+    Mux(isAdd, fullResult > mask, aEffective < bEffective)
     )
 }
