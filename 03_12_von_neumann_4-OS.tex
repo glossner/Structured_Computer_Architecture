@@ -24,7 +24,7 @@ Gödel's spectacular result triggered within five years four mathematicians Alon
 In his paper, about "computable numbers" and Entscheidungsproblem, Alan Turing describes in words what he called a {\em computing machine}. We call it now Turing Machine (TM) and we describe it as a structure with three components (see Figure \ref{tm}a):
 \begin{itemize}
     \item an infinite {\bf tape}\footnote{It is most likely that Turing was inspired by the telegraph communication systems of the 1930s that used a paper tape to receive messages.}  on/from which symbols belonging to a finite set of symbols -- the machine's alphabet -- can be write or read using
-    \item an accessing read/write {\bf head} which can move in each clock cycle one position to left or right under the control of
+    \item an accessing write/read {\bf head} which can move in each clock cycle one position to left or right under the control of
     \item a {\bf finite automaton} (FA) whose state is updated in each clock cycle according to its state and the symbol accessed from the tape.
 \end{itemize}
 The translation into a representation containing digital components is shown in Figure \ref{tm}b, where the infinite tape is substituted by an infinite RAM addressed by an up-down counter. 
@@ -60,15 +60,19 @@ Formally:
 
 \subsubsection{Finite State Automaton for Number Manipulation}
 
-Turing proposed that any computable function, including arithmetic operations on numbers, could be executed by a sequence using a finite set of states. Each state directs the machine to either:
-1. Write a symbol.
-2. Erase a symbol.
-3. Move left or right along the tape.
-4. Transition to another state.
+Turing proposed that any computable function, including arithmetic operations on numbers, could be executed by a sequence using a finite set of states. Each pair 
+\begin{verbatim} 
+         {state, symbol_currently_accessed_on_tape} 
+\end{verbatim} 
+directs the machine to either:
+1. Write or erase a symbol, 
+2. Move left or right along the tape.
+3. Transition to another state.
 
 This \textbf{finite state control} is the precursor to binary arithmetic and logical operations on numbers. It implies that any number representation (binary, decimal, or otherwise) can be manipulated using a finite sequence of state transitions based on the machine's rules.
 
-Formally, for a Turing Machine \( M \), we have:
+\begin{definition}
+Formally, for a Turing Machine \( M(T) \), we have:
 \[
 M = (Q, \Sigma, \delta, q_0, F)
 \]
@@ -80,8 +84,13 @@ where:
     \item \( q_0 \in Q \) is the initial state,
     \item \( F \subseteq Q \) is the set of final (or halting) states.
 \end{itemize}
+and a tape $T$ whose content is initially, in the state $q_0$,  accessed with the read/write head positioned on the first symbol.
 
-This structure allows Turing Machines to handle number representations in binary or any base by processing symbol strings according to their state rules.
+$\diamond$
+\end{definition}
+This structure allows \( M(T) \) to handle number representations in binary or any base by processing symbol strings according to their state rules in a finite number of cycles. In other words, for any function $F: X \rightarrow Y$ there exists a TM whose finite automaton, starting from the initial state $q_0$ and having on the tape $x \in X$, reaches a final state, $q_f$, and generates on the tape, after a finite number of steps, $y \in Y$ if $F(x) = y$.
+
+{\bf Important note}: for each computable sequence another TM is needed.
 
 \subsubsection{Concept of Universal Representation}
 
@@ -95,7 +104,9 @@ then $\cal U$ will compute the same sequence as $\cal M$.} \cite{Turing36}
 
 Turing’s concept of a \textbf{Universal Turing Machine}, UTM, suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
 
-If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a UTM capable of simulating \( p \). Given that a finite automaton has, by definition, a complex structure, theoretical research has carefully evaluated various versions for the FA associated with the UTM. We mention two limiting cases. One is that of the work of Claude Shannon who publishes a paper describing a UTM with an automaton having only 2 states \cite{Shannon56}. The consequence of this limitation is a combinational circuit on the loop of very large size. After 50 years a paper appears in which the finite automaton has zero states, that is, it is no longer necessary \cite{Stefan06Turing}. This establishes the possibility of simple processors, the RISC type, processors built only from simple recursively defined circuits.  
+If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a UTM capable of simulating \( p \). Given that a finite automaton has, by definition, a complex structure, theoretical research has carefully evaluated various versions for the FA associated with the UTM. We mention two limiting cases. One is that of the work of Claude Shannon who publishes a paper describing a UTM with an automaton having only 2 states \cite{Shannon56}. The consequence of this limitation is a combinational circuit on the loop of the 2-state finite automaton of very large size. Another occurs after 50 years. It is  a paper in which the finite automaton has zero states, that is, it is no longer necessary \cite{Stefan06Turing}. This establishes the possibility of simple processors, the RISC type, processors built only from simple recursively defined circuits.  
+
+Formally: for any computation done by a TM $M(T)$ can be used the UTM $${\cal U}(<M,T>)$$ where the stream of symbols $M$ describes the automaton of the TM $M(T)$, while the stream of symbols $T$ is the tape of the same TM. In contemporary terms, $M$ is the program, while $T$ is data , both stored in the same memory.
 
 \subsection{Summary of Key Theoretical Points in Turing's Paper}
 
@@ -110,7 +121,7 @@ Turing’s formal model set the stage for understanding how numbers can be syste
 
 \section{von Neumann Abstract Model}
 
-TM is a mathematical model. The actual computing machines need an {\bf {\em intermediate model}}: an {\bf abstract} one, able to solve the problem of computation using real entities. In this "moment" comes the  serendipitous  meeting between math and tech, between TM and digital circuits. In the abstract model proposed by the mathematician John von Neumann the finite automaton and the accessing head are integrated in what we call a processor which communicate with the memory which contains  programs and data (see Figure \ref{fig44}). 
+TM is a mathematical model. The actual computing machines need an {\bf {\em intermediate model}}: an {\bf abstract} one, able to solve the problem of computation using real entities. In this "moment" comes the  serendipitous  meeting between math and tech, between UTM and digital circuits. In the abstract model proposed by the mathematician John von Neumann the finite automaton and the accessing head are integrated in what we call a processor which communicate with the memory which contains  programs and data (see Figure \ref{fig44}). 
 
 %\section{von Neumann Computer Version: Four-Loop, Four-Order System ({\bf 4-OS})}
 
@@ -131,7 +142,7 @@ The interpretive processor is used in the definition of the {\em von Neumann abs
 
 \subsection{Memory Gap}\label{memGap}
 
-The evolution of the performance of the three components of a computer system occurred at a very different rate due to strictly technological aspects. The most disturbing difference, with major structural consequences, occurred in the case of processor and memory speed performances. The frequency of the processor clock increased  much faster than the memory access time (see Figure \ref{pmPGap}. Processor clock frequency increased with 60\% per year, while the access time for memories with only 10\% per year.
+The evolution of the performance of the three components of a computer system (see Figure \ref{pmio}) occurred at a very different rate due to strictly technological aspects. The most disturbing difference, with major structural consequences, occurred in the case of processor and memory speed performances. The frequency of the processor clock increased  much faster than the memory access time (see Figure \ref{pmPGap}. Processor clock frequency increased with 60\% per year, while the access time for memories with only 10\% per year.
 
 \placedrawing[H]{figures/06_02_processor_memory_gap.lp}{Processor-Memory Performance Gap \citep{Patterson97}.}{pmPGap}
 
@@ -139,7 +150,7 @@ Due to this difference, what we now call a memory gap occurred. The fast process
 
 \paragraph{Locality principle} says that if a certain location is accessed in the data or program memory, then the next accesses will be made with a high probability in a reasonably small vicinity.
 
-\bigskip
+%\bigskip
 
 Applying the locality principle allowed the definition of the strategies that govern the conception of a hierarchy of effective memories.
 
@@ -229,9 +240,6 @@ cell has two functions:
     with the content of the cell generating the signal $AO'=0$ if
     the input matches the content.
 \end{itemize}
-
-
-
 
 The cell is {\em written} as an $m$-bit latch and is continuously
 {\em interrogated} using a combinational circuit as comparator.
@@ -369,7 +377,6 @@ smaller than the virtual set of the possible names ($2^{p} <<<
 device having the size in $O(2^{p})$ is used.
 
 
-
 \subsubsection{Translation Lookaside Buffer (TLB)}
 
 The associative memory will allow us to design a translation lookaside buffer (TLB) with a size given by the number of pages in the physical memory, unlike the one based on a RAM type memory which has a size given by the much larger number of pages in the virtual memory.
@@ -443,17 +450,6 @@ In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Fi
 
 \placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
 
-\noindent\rule{16cm}{0.8pt}
-
-{\bf Q.6.1}: In the waveforms in Figure \ref{bus} the distance between $t_1$ and $t_2$ is only one clock cycle. In reality, this distance can be tens or even hundreds of clock cycles. What is the explanation of this fact?
-
-\bigskip
-
-{\bf Q.6.2}: Why do you think that a single clock cycle was enough for writing?
-
-
-\noindent\rule{16cm}{0.8pt}
-
 The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 clock cycles in the example illustrated by Figure \ref{bus}. Usually, this latency is very high, reaching hundreds of cycles.
 
 
@@ -462,13 +458,13 @@ The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 cl
 \subsubsection{Definition}
 
 First-In-First-Out (FIFO) memory is a special memory device represented in Figure \ref{fifo1}. It has the following connections (see Figure \ref{fifo1}a):
-
-\placedrawing[H]{figures/06_10_fifo.lp}{{\bf a.} Block schematic of FIFO. {\bf b.} {\tt write A} operation. {\bf c.} {\tt write D.} {\bf d.} {\tt write F}. {\bf e.} {\tt read}.}{fifo1}
-
 \begin{description}
     \item[dataIn]: the data entry of $n$ bits to which the word that will be recorded in the rightmost unoccupied location is applied.
     \item[dataOut]: the $n$ bit data output from which the oldest unextracted record is extracted
     \item[full]: it signals the fact that the memory is full and will not accept a new write before executing at least one read
+
+\placedrawing[H]{figures/06_10_fifo.lp}{{\bf a.} Block schematic of FIFO. {\bf b.} {\tt write A} operation. {\bf c.} {\tt write D.} {\bf d.} {\tt write F}. {\bf e.} {\tt read}.}{fifo1}
+    
     \item[write]: if activated when {\tt full = 0}, then {\tt dataIn} is queued
     \item[empty]: it signals the fact that the memory is empty and will not accept a new read before executing at least one write
     \item[read]: if activated when {\tt empty = 0}, then {\tt dataOut} is extracted from the  queue

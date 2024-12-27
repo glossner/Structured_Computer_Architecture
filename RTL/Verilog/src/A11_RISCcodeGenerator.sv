@@ -66,55 +66,7 @@
         end
     endtask
 
-    task BRNZ; // branch if not zero
-        input   [4:0]   left    ;
-        input   [9:0]   label   ;
-
-        begin   opCode  = `nzbr ;
-                d       = 5'b0  ;
-                l       = left  ;
-                ULB(label)      ;
-                endLine         ;
-        end
-    endtask
-
-    task RET; // return from subroutine
-        input   [4:0] left  ;
-
-        begin   opCode  = `ret  ;
-                d       = 5'b0  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task HALT; // halt running
-        begin   opCode  = `halt ;
-                d       = 5'b0  ;
-                l       = 5'b0  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task EI; // enable interrupt
-        begin   opCode  = `eint ;
-                d       = 5'b0  ;
-                l       = 5'b0  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task DI; // disable interrupt
-        begin   opCode  = `dint ;
-                d       = 5'b0  ;
-                l       = 5'b0  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
+   // ...
 
 // ARITHMETIC & LOGIC INSTRUCTIONS
     task ADD; // addition
@@ -130,97 +82,7 @@
         end
     endtask
 
-    task SUB; // subtract
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `sub          ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task ADDV; // addition with value
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `addv ;
-                d       = dest  ;
-                l       = left  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
-    task MULT; // multiplication
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `mult         ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task MULTV; // multiplication with value
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `multv;
-                d       = dest  ;
-                l       = left  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
-    task ADDC; // carry from addition
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `addc         ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task SUBC; // carry from subtract
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `subc         ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task ADDVC; // carry from addition with value
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `addvc;
-                d       = dest  ;
-                l       = left  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
+   // ...
     task LSH; // logic shift with one position
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -233,53 +95,7 @@
         end
     endtask
 
-    task ASH; // arithmetic shift with one porition
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `ash  ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task MOVE; // data move inside register file
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `move ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task SWAP; // swap in register
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `swap ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task NOT; // bitwise NOT
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `bwnot;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
+    // ...
 
     task AND; // bitwise AND
         input   [4:0]   dest    ;
@@ -294,31 +110,7 @@
         end
     endtask
 
-    task OR; // bitwise OR
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `bwor     ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task XOR; // bitwise XOR
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `bwxor        ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
+	// ...
 
 // DATA TRANSFER INSTRUCTIONS
     task READ; // data read
@@ -355,18 +147,8 @@
         end
     endtask
 
-    task VAL; // value load
-        input   [4:0]   dest    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `val  ;
-                d       = dest  ;
-                l       = 5'b0  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
+   // ...
+   
     // RUNNING
     initial begin   addrCounter = 0;
                     `include "program.sv" // first pass

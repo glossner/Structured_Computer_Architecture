@@ -1042,25 +1042,44 @@ When additional operations such as bitwise logical operations (AND, OR, XOR) and
 \subsection{Subtraction}
 %************************
 %*************************************
-\subsubsection{Behavioral Subtraction}
+\subsubsection{Behavioral Subtractor}
 %**************************************
-Similar to behavioral addition described in Section \ref{sec:behavioral_addition}, we can also provide for behavioral subtraction.
+Similar to behavioral addition described in Section \ref{sec:behavioral_addition}, we can also provide for behavioral subtraction. A subtractor can share hardware with an adder making an adder/subtractor the simplest multifunction arithmetic unit.
 
 \ifthenelse{\boolean{chiselversion}}{
-\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=8, firstnumber=8, lastline=9999]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
 
-Listing \ref{lst:chisel_addersubtractor_behavioral4} shows a behavioral adder/subtractor. 
+\includechiselcode[caption={Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor.scala)}, label={lst:chisel_addersubtractor_behavioral}, firstline=8, firstnumber=8, lastline=22]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor.scala}
+
+Listing \ref{lst:chisel_addersubtractor_behavioral} shows a behavioral adder/subtractor. 
+The \texttt{BehavioralAdderSubtractor} class defines a parameterized hardware module in Chisel for performing addition or subtraction of unsigned integers. The module is parameterized by a \texttt{width}, allowing it to handle operands of varying bit widths. The input-output interface (\texttt{io}) is defined as a \texttt{Bundle} that includes two inputs (\texttt{a} and \texttt{b}), each of type \texttt{UInt} with the specified bit width, a control signal (\texttt{subtract}) to select the operation, and an output (\texttt{result}) that provides the computed value.
+
+The core computation is performed using a \texttt{Mux} construct, which selects between addition (\texttt{io.a + io.b}) and subtraction (\texttt{io.a - io.b}) based on the value of the \texttt{subtract} signal. If \texttt{subtract} is 0, addition is performed; otherwise, subtraction is performed. 
+
+The result of the operation is assigned to the \texttt{io.result} output. To ensure that the output adheres to the specified bit width, the \texttt{fullResult} is truncated using \texttt{(width - 1, 0)}, which extracts only the least significant \texttt{width} bits of the result. This ensures that the output does not exceed the desired width, even in cases of overflow or underflow. 
+
+\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=17, firstnumber=17, lastline=17]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
+
+Listing \ref{lst:chisel_addersubtractor_behavioral4} shows an instantiation of a Chisel 4-bit behavioral adder/subtractor. The \texttt{BehavioralAdderSubtractor4} module defines an input-output interface (\texttt{io}) consisting of two 4-bit unsigned inputs (\texttt{a} and \texttt{b}), a 1-bit control signal (\texttt{subtract}), and a 4-bit unsigned output (\texttt{sum}). 
+
+The arithmetic operation itself is delegated to a reusable module called \texttt{BehavioralAdderSubtractor}, which is invoked with the necessary parameters, including the two input values (\texttt{a} and \texttt{b}), the \texttt{subtract} control signal, and the bit width of the operation (4 bits in this case). The result of the operation is assigned to the \texttt{sum} output. 
 
 }%End Chisel Code
 
 %*************************************
 \subsubsection{Structural Subtraction}
 %**************************************
+Two's complement subtraction can be performed by taking the 2's complement of the subtrahend performing addition.
 
+\ifthenelse{\boolean{chiselversion}}{
+
+\includechiselcode[caption={Parameterized Two's Complement Adder/Subtractor (Chisel)}, label={lst:chisel_2s_subtractor}, firstline=17, firstnumber=17, lastline=22]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractorHW.scala}
+}
+
+Listing \ref{lst:chisel_2s_subtractor} lines 17 through 22 show subtraction by first negating the subtrahend.
 
 \placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Substractor}{fig:adder_subtracter}
 
-Two's complement subtraction is performed by taking the 2's complement of the subtrahend performing addition. Figure \ref{fig:adder_subtracter} shows the addition of XOR gates to complement the subtrahend. Setting the initial carry to 1 provides the 2's complement of the subtrahend.
+ Figure \ref{fig:adder_subtracter} shows the addition of XOR gates to complement the subtrahend. Setting the initial carry to 1 provides the 2's complement of the subtrahend.
 
 For example:
 \begin{verbatim}

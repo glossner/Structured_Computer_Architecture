@@ -304,14 +304,23 @@ Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign}
 In order to generate the code executable by the toyRISC processor, a code generator  translates the mnemonics into binary code. In Table \ref{mnem}, the mnemonics used to write assembly programs are listed. In the second column the action performed specified and in the last column the binary codes are listed. The binary code is organized in 5 or 4 fields.  The first field represents the operation code, the second the destination address of the result  in the register file ({\tt ddddd} is the binary code of the actual value when it matters), the third field represents the address for the left operand ({\tt lllll} is the binary code of the actual value when it matters). The least significant 16 bits are organized in 2 fields or in one field. In the first case 5 bits ({\tt rrrrr} is the binary code of the actual value when it matters) represents the address of the right operand and the rest 11 bits have no meaning, while in the second case all the 16 bits represents a value ({\tt vvvvvvvvvvvvvvvv} is the binary code of the actual value when it matters).
 
 \begin{table}[H]
-  \begin{center}
-    \caption{Assembly language mnemonics, their meanings and binary form.}
-    \label{mnem}
-    {\scriptsize
-    {\tt
-    \begin{tabular}{|l|l|l|}
-      \hline
-     Mnemonics & Description & Binary form \\ \hline \hline
+\footnotesize
+\centering
+\begin{longtable}{|l|l|l|}
+\caption{Assembly language mnemonics, their meaning and binary form.}
+\label{tab:riscISA} \\
+\hline
+\textbf{Mnemonics} & Description & Binary form \\
+\hline
+\endfirsthead
+\hline
+\textbf{Mnemonics} & Description & Binary form \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
       NOP                       & rf[0] <= rf[0] + 0                            & 110010\_00000\_00000\_00000\_00000000000  \\ \hline
       RJMP(label)               & pc <= pc + value                              & 000001\_00000\_00000\_vvvvvvvvvvvvvvv     \\ \hline
       BRZ(left,label)         & pc <= (left = 0) ? pc+immediate : pc+1          & 000010\_00000\_lllll\_vvvvvvvvvvvvvvv     \\ \hline
@@ -340,20 +349,18 @@ In order to generate the code executable by the toyRISC processor, a code genera
       LOAD(dest)            & rf[dest] <= dataOut                               & 100111\_ddddd\_00000\_00000\_00000000000  \\ \hline
       STORE(left,right)     & dataMemory[left] <= rf[right]                     & 101000\_00000\_lllll\_rrrrr\_00000000000  \\ \hline
       VAL(dest,val)         & rf[dest] <= \{{11{val[20]}}, value\}              & 010111\_ddddd\_00000\_vvvvvvvvvvvvvvv     \\ \hline
-    \end{tabular}
-    }}
-  \end{center}
+\end{longtable}
 \end{table}
 
 \subsubsection{Toy Assembler}
 
 The binary codes in the \ref{mnem} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in System Verilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. A portion of this generator is listed below to illustrate the idea of two-pass encoding; the whole is attached in the \ref{codeGen} section. In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
 
-\includeverilogcode[caption={Binary code generator for toyRISC processor.  File: RISCcodeGenerator.sv  (SystemVerilog)}, 
+\includeverilogcode[caption={A sample of the binary code generator for toyRISC processor.  File: RISCcodeGenerator.sv  (SystemVerilog)}, 
                     label={lst:RISCcodeGenerator}, 
                     firstline=1, 
                     firstnumber=1, 
-                    lastline=400]
+                    lastline=160]
                     {\verilogSourceDir/A11_RISCcodeGenerator.sv}
 
 \begin{verisum}{\em :
@@ -368,28 +375,22 @@ The binary codes in the \ref{mnem} table are generated, for reasons of maintaini
 
 \subsubsection{Simulator}
 
-The simulator used to validate the processor design is described in detail in the \ref{simrisc} section, where the processor was instantiated and the data, {\tt dataMemory}, and program, {\tt ProgMemory} memories were added. The interrupt signal {\tt intIn} has been activated, which will be taken into account immediately by the instruction {\tt DI} will allow it.
+The simulator used to validate the processor design is described in detail in the \ref{riscsim} section, where the processor was instantiated and the data, {\tt dataMemory}, and program, {\tt ProgMemory} memories were added. The interrupt signal {\tt intIn} has been activated, which will be taken into account immediately by the instruction {\tt DI} will allow it.
 
 
 \subsubsection{Assembly Programs}
 
 \begin{exemplu}\label{exADD}
 Let by a following simple program:
-{\small
-\begin{verbatim}
-            NOP         ;
-            VAL(0,1)    ;
-            VAL(1,2)    ;
-            VAL(2,3)    ;
-            VAL(3,4)    ;
-            VAL(4,5)    ;
-            ADD(0,0,1)  ;
-            ADD(0,0,2)  ;
-            ADD(0,0,3)  ;
-            ADD(0,0,4)  ;
-            HALT        ;
-\end{verbatim}
+{\em 
+\includeverilogcode[caption={toyRISC program: initializes the first 5 registers and adds them in register 0.  File: A11\_RISCprogram1.sv  (SystemVerilog)}, 
+                    label={lst:A11_RISCprogram1.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A11_RISCprogram1.sv}
 }
+
 The code generator loads in the program memory the following binary form of the program:
 {\small
 \begin{verbatim}
@@ -433,24 +434,13 @@ $\diamond$
 
 \begin{exemplu}
 Let us take an example to show how the interrupt acts. The interrupt is applied from the beginning of the test, but it is enabled only after the instruction {\tt EI} runs.
-
-{\small
-\begin{verbatim}
-            VAL(31,10)  ;
-            VAL(2,23)   ;
-            VAL(0,13)   ;
-            EI          ;
-            ADDV(0,0,2) ;
-            NOP         ;
-            ADDV(0,0,4) ;
-            HALT        ;
-            NOP         ;
-            NOP         ;
-// subroutine triggered by interrupt
-            DI          ;
-            VAL(3,44)   ;
-            RET(30)     ;
-\end{verbatim}
+{\em 
+\includeverilogcode[caption={toyRISC program: tests the interrupt action.  File: A11\_RISCprogram2.sv  (SystemVerilog)}, 
+                    label={lst:A11_RISCprogram2.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A11_RISCprogram2.sv}
 }
 
 The toy assembler generates in {\tt progMemory} the following executable code:
@@ -498,15 +488,15 @@ $\diamond$
 
 \begin{exemplu}
 Let be a wrong program which runs forever because of an unconditional jump.
-{\small
-\begin{verbatim}
-            VAL(0,3)    ;
-    LB(1);  ADDV(0,0,-1);
-            NOP         ;
-            RJMP(1)     ;
-            HALT        ;
-\end{verbatim}
+{\em 
+\includeverilogcode[caption={toyRISC program: an unending running program.  File: A11\_RISCprogram3.sv  (SystemVerilog)}, 
+                    label={lst:A11_RISCprogram3.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A11_RISCprogram3.sv}
 }
+
 The simulation provides:
 {\small
 \begin{verbatim}
@@ -541,16 +531,15 @@ $\diamond$
 
 \begin{exemplu}
 Let be a  program which works with {\tt dataMemory}.
-{\small
-\begin{verbatim}
-            VAL(0,1)    ;
-            VAL(1,55)   ;
-            STORE(0,1)  ;
-            READ(0)     ;
-            LOAD(2)     ;
-            HALT        ;
-\end{verbatim}
+{\em 
+\includeverilogcode[caption={toyRISC program: tests the access to the data memory.  File: A11\_RISCprogram4.sv  (SystemVerilog)}, 
+                    label={lst:A11_RISCprogram4.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A11_RISCprogram4.sv}
 }
+
 The simulation provides:
 {\small
 \begin{verbatim}
@@ -659,15 +648,13 @@ $\diamond$
 {\bf Solution}
 
 The program is:
-{\small
-\begin{verbatim}
-            VAL(0,11)   ;
-            VAL(1,22)   ;
-            VAL(2,33)   ;
-            VAL(3,44)   ;
-            HALT        ;
-\end{verbatim}
-}
+\includeverilogcode[caption={toyRISC program used to validate the simulator.  File: A11\_RISCprogram5.sv  (SystemVerilog)}, 
+                    label={lst:A11_RISCprogram5.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A11_RISCprogram5.sv}
+
 The program generated by {\tt RISCcodeGenerator.sv} is:
 {\small
 \begin{verbatim}
