@@ -940,7 +940,7 @@ The class is marked as \texttt{abstract}, which means it cannot be instantiated 
     \label{fig:4bit_adder_tt} 
 \end{figure}
 
-Figure \ref{fig:4bit_adder_tt} shows the partial truth table for a 4-bit behavioral adder. The column labeled overflow shows that $n$-bits in not sufficient to add two $n$-bit numbers. In general, adding two $n$-bit binary numbers requires $2n+1$ bits to store the result.
+Figure \ref{fig:4bit_adder_tt} shows the partial truth table for a 4-bit behavioral adder. The column labeled overflow shows that $n$-bits in not sufficient to add two $n$-bit numbers. In general, adding two $n$-bit binary numbers requires $n+1$ bits to store the result.
 
 Consider two $n$-bit binary numbers, $A$ and $B$, where each can be represented in the form:
 \[
@@ -965,12 +965,14 @@ In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, c
 
 \ifthenelse{\boolean{verilogversion}}{
 %*************************************************
-\subsubsection{Parameterized Behavioral Adder (Chisel)} \label{sec:behavioral_addition}
+\subsubsection{2-input 4-bit Behavioral Adder (SystemVerilog)} 
 %*************************************************
 
-\includeverilogcode[caption={16-to-1 single bit Multiplexer (SystemVerilog: mux.sv)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/mux.sv}
+\includeverilogcode[caption={Behavorial 2-input 4-bit Adder (SystemVerilog: adder.sv)},     label={lst:verilog_adder}, firstline=9, firstnumber=9, lastline=999]{\verilogSourceDir/adder.sv}
 
+Listing \ref{lst:verilog_adder} shows a 2-input 4-bit adder implemented in SystemVerilog. It is designed to perform 4-bit unsigned addition. It takes two 4-bit inputs, \texttt{in0} and \texttt{in1}, and produces a 4-bit output, \texttt{out}, representing the sum of the two inputs. The addition operation is performed using the \texttt{assign} statement, which continuously evaluates the sum of \texttt{in0} and \texttt{in1} and assigns the result to \texttt{out}.
 
+This module does not include provisions for detecting overflow, which occurs when the result of the addition exceeds the 4-bit range (0 to 15). In such cases, the sum wraps around, effectively discarding the carry bit that exceeds the 4-bit width making it a modulo 16 adder. 
 }%End verilog code
 
 
@@ -981,7 +983,7 @@ In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, c
 
 Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \texttt{BehavioralAdder}, which extends the abstract \texttt{Adder} class to implement a simple, behavioral adder in Chisel. All interface IO are of type UInt. The class is parameterized by the width of the adder \texttt{width}. The addition operation is specified behaviorally using the expression \texttt{io.a + io.b}, which computes the sum of the two input signals and assigns it to the output signal \texttt{io.sum}. 
 
-\textbf{An important point} is that Chisel will expand the result to keep full precision. In simulation, this may be the desired behavior. However, hardware cannot dynamically expand wires. Chisel leaves this decision to the programmer but synthesis requires fixed widths. Our behavioral adder implementation truncates the sum result to the width of the output wires using \texttt{(width -1, 0} on line 16.
+\textbf{An important point} is that Chisel will expand the result to keep full precision. In simulation, this may be the desired behavior. However, hardware cannot dynamically expand wires. Chisel leaves this decision to the programmer but synthesis requires fixed widths. Our behavioral adder implementation truncates the sum result to the width of the output wires using \texttt{(width -1, 0)} on line 16.
 
 %***********************************
 \subsection{4-bit Behavioral Adder}
@@ -1017,14 +1019,14 @@ Computers use structural adders to perform arithmetic operations efficiently at 
 
 The concept of carry bits is central to structural adders. In binary arithmetic, when the sum of two bits exceeds the value that a single bit can represent, the excess is propagated as a carry bit to the next more significant bit. This mechanism ensures accuracy in multi-bit addition, but it also introduces challenges, such as carry propagation delays. 
 
-In this Section, we only provide an overview to the simplest structural adders. Practical implementations with higher performance (and complexity) are covered in Chapter \ref{chapt:perf_digital_logic}.
+In this Section, we only provide an overview of the simplest structural adders. Practical implementations with higher performance (and complexity) are covered in Chapter \ref{chapt:perf_digital_logic}.
 
 %**********************
 \subsubsection{Half Adder}
 %**********************
 \placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig:half_adder}
 
-Figure \ref{fig:half_adder} whose the simplest adder - the \textit{half adder}. It adds two binary digits and produces a sum and a carry bit. To build a half adder we use an XOR circuit. The XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
+Figure \ref{fig:half_adder} shows the simplest adder - the \textit{half adder}. It adds two binary digits and produces a sum and a carry bit. To build a half adder we use an XOR circuit. The XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
 
 %**********************
 \subsubsection{Increment}
@@ -1051,7 +1053,7 @@ Half adders cannot handle carry inputs, leading to the development of the \texti
 %*******************************
 \subsubsection{Ripple-Carry Adder} \label{sec:ripple-carry-adder}
 %******************************
-Figure \ref{fig:full_adder}b shows a \textit{ripple carry adder} (RCA). Ripple-carry adders are one of the simplest and most fundamental types of binary adders. They work by connecting a series of full adders, each responsible for processing a single bit of the operands. The carry-out from each adder is propagated to the carry-in of the next, creating a "ripple" effect that moves from the least significant bit (LSB) to the most significant bit (MSB). 
+Figure \ref{fig:full_adder}b shows a schematic for a \textit{ripple carry adder} (RCA). Ripple-carry adders are one of the simplest and most fundamental types of binary adders. They work by connecting a series of full adders, each responsible for processing a single bit of the operands. The carry-out from each adder is propagated to the carry-in of the next, creating a "ripple" effect that moves from the least significant bit (LSB) to the most significant bit (MSB). 
 
 While the design of ripple-carry adders is straightforward and easy to implement in hardware, their performance is limited by the sequential nature of carry propagation. The execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value, can be long. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. The delay for an addition operation increases linearly with the number of bits, as each bit must wait for the carry result from the preceding bit to be resolved. In the general case, the time is proportional to $n$ (it is in $O(n)$). 
 
@@ -1136,11 +1138,32 @@ Each $B_i$ is complemented and the increment with 1 is generated by inverting th
 As synthesis design tools become more mature, it is interesting to note that both the Behavioral adder/subtractor and the Two's complement adder/subtractor synthesize to the same netlist shown in Figure \ref{fig:4bit_addsub_synth}
 }%End Chisel Code
 
+\ifthenelse{\boolean{chiselversion}}{
+%***********************************************************************************************
+\subsubsection{Multifunction 8/16/32/64-bit Signed/Unsigned Behavioral Adder/Subtractor (Chisel)}
+%*************************************************************************************************
+\includechiselcode[caption={Multifunction 64-bit Adder/Subtractor (Chisel)}, label={lst:chisel_mf64_adder}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor.scala}
+
+Listing \ref{lst:chisel_mf64_adder} shows a \texttt{MultifunctionAdderSubtractor} module that implements a highly configurable arithmetic unit capable of performing addition and subtraction on operands of various sizes and types. The operation is controlled by a 4-bit opcode, which encodes the operation type (add or subtract), whether the operands are signed or unsigned, and the operand width (8, 16, 32, or 64 bits). 
+
+The module's control logic begins by decoding the opcode into three key signals: \texttt{isSub}, \texttt{isSigned}, and \texttt{operandSize}. These signals determine whether the operation is addition or subtraction, whether the operands are treated as signed or unsigned, and the effective width of the operands, respectively. The \texttt{operandSize} signal selects between four possible widths (8, 16, 32, and 64 bits) using a \texttt{switch} construct, allowing the module to dynamically adapt to different operand sizes while maintaining a fixed 64-bit input width. The bit selections in the \texttt{opcode} are not randomly chosen. They ensure minimal decoding is required to determine which operation to perform and the types associated with the operation.
+
+The module then masks the inputs (\texttt{io.a} and \texttt{io.b}) to match the selected operand width, ensuring that only the relevant bits are considered in the arithmetic operation. For subtraction, the \texttt{bEffective} value is adjusted using two's complement logic (\texttt{$\sim$b + 1}). This adjustment allows subtraction to be implemented using the same addition circuitry.
+
+The arithmetic operation itself is performed using a \texttt{Mux} construct that selects between signed and unsigned addition or subtraction. Signed operations use \texttt{asSInt} to treat the operands as signed integers, while unsigned operations directly add or subtract the masked inputs. 
+
+The \texttt{+&} operator is used to perform addition while preserving the carry-out bit. Unlike the standard addition operator (\texttt{+}), which only computes the sum of two operands within a fixed width, \texttt{+&} ensures that the result includes an extra bit to accommodate any overflow from the addition. The result of the operation is then truncated to the selected width using a bitwise \texttt{\&} operation with the mask. For output consistency, the result is extended back to 64 bits using either sign extension or zero extension, depending on whether the operation is signed or unsigned.
+
+The module also includes logic to generate a carry-out signal. For unsigned operations, this signal indicates overflow (for addition) or borrow (for subtraction). The logic uses comparisons with the mask and operand values to determine whether a carry or borrow occurred. 
+
+
+}%End Chisel Code
+
 
 \ifthenelse{\boolean{chiselversion}}{
-%*********************************************************************************
-\subsubsection{Multifunction Parameterized Ripple-Carry Adder/Subtractor (Chisel)}
-%*********************************************************************************
+%*************************************************************************************************
+\subsubsection{Multifunction Parameterized Signed/Unsigned Ripple-Carry Adder/Subtractor (Chisel)}
+%**************************************************************************************************
 \includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}, label={lst:chisel_adder_ripple}, firstline=9, firstnumber=9, lastline=37]{\chiselSourceDir/adders/RippleCarryAdder.scala}
 
 Listing \ref{lst:chisel_adder_ripple} shows code that defines a \texttt{RippleCarryAdder} class in Chisel, which implements the ripple-carry adder (RCA) architecture for addition. 

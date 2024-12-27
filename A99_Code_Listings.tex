@@ -24,6 +24,10 @@
 \subsection{Seven Segment Display}
 \includeverilogcode[caption={Seven Segment Display (SystemVerilog: SevenSegmentDisplay.sv)}]{\verilogSourceDir/SevenSegmentDisplay.sv}
 
+\subsection{Adders}
+\subsubsection{4-bit Behavioral Adder}
+\includeverilogcode[caption={Behavorial 2-input 4-bit Adder (SystemVerilog: adder.sv)}]{\verilogSourceDir/adder.sv}
+
 
 \ifthenelse{\boolean{chiselversion}}{
 
@@ -63,11 +67,19 @@
 \subsubsection{Parameterized Abstract Adder}
 \includechiselcode[caption={Parameterized Abstract Adder (Chisel: Adder.scala)}]{\chiselSourceDir/adders/Adder.scala}
 \subsubsection{Parameterized Behavioral Adder}
-\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}, label={lst:chisel_adder_behavioral}]{\chiselSourceDir/adders/BehavioralAdder.scala}
+\includechiselcode[caption={Parameterized Behavioral Adder (Chisel)}]{\chiselSourceDir/adders/BehavioralAdder.scala}
 \subsubsection{4-bit Behavioral Adder}
 \includechiselcode[caption={4-bit Behavioral Adder (Chisel: BehavioralAdder4.scala)}]{\chiselSourceDir/adders/BehavioralAdder4.scala}
 
-
+\subsection{Multi-Function Arithmetic Units}
+\subsubsection{Behavioral Subtractor}
+\includechiselcode[caption={Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor.scala)}]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor.scala}
+\subsubsection{4-bit Behavioral Subtractor}
+\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
+\subsubsection{Structural Subtractor}
+\includechiselcode[caption={Parameterized Two's Complement Adder/Subtractor}]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractorHW.scala}
+\subsubsection{Multifunction Parameterized Ripple-Carry Adder/Subtractor}
+\includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}]{\chiselSourceDir/adders/RippleCarryAdder.scala}
 
 }% End Chisel Version
 
