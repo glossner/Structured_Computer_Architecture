@@ -25,6 +25,7 @@ class SevenSegmentDisplayFlatTester extends AnyFlatSpec {
 
     // Simulate the SevenSegmentDisplayFlat module
     simulate(new SevenSegmentDisplayFlat) { dut =>
+      val printDebug = false
       for ((expectedOutput, inputValue) <- expectedOutputs.zipWithIndex) {
         // Set the individual bits of the input using poke()
         dut.io.binIn_B0.poke((inputValue & 1) == 1) // Boolean for poke()
@@ -36,7 +37,7 @@ class SevenSegmentDisplayFlatTester extends AnyFlatSpec {
         dut.clock.step()
 
         // Debugging: Print the bitwise output for verification
-        println(s"Testing input $inputValue")
+        if(printDebug) println(s"Testing input $inputValue")
         val bitValues = Seq(
           dut.io.segOut_a.peek().litValue, // MSB (a)
           dut.io.segOut_b.peek().litValue,
@@ -47,7 +48,7 @@ class SevenSegmentDisplayFlatTester extends AnyFlatSpec {
           dut.io.segOut_g.peek().litValue  // LSB (g)
         )
 
-        println(s"Output bits: ${bitValues.mkString(", ")}")
+        if (printDebug) println(s"Output bits: ${bitValues.mkString(", ")}")
 
         // Combine the bits into a single value, matching the output order
         val actualOutput = bitValues.zipWithIndex.foldLeft(0L) {
@@ -55,7 +56,7 @@ class SevenSegmentDisplayFlatTester extends AnyFlatSpec {
         }
 
         val expectedValue = expectedOutput.litValue
-        println(s"Expected: $expectedValue, Got: $actualOutput")
+        if (printDebug) println(s"Expected: $expectedValue, Got: $actualOutput")
 
         // Compare the reconstructed output with the expected value
         assert(

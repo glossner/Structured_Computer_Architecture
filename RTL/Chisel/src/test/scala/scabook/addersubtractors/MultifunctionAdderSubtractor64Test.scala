@@ -12,13 +12,14 @@ class MultifunctionAdderSubtractor64Test extends AnyFlatSpec {
 
   "MultifunctionAdderSubtractor64" should "correctly compute addition and subtraction for all opcodes and handle overflow/underflow with truncation" in {
     simulate(new MultifunctionAdderSubtractor64) { dut =>
+      val printDebug = false
       def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt, expectedCarry: Boolean): Unit = {
         dut.io.a.poke(a.U(64.W))
         dut.io.b.poke(b.U(64.W))
         dut.io.opcode.poke(opcode)
         dut.clock.step()
         val result = dut.io.result.peek().litValue
-        val carryOut = dut.io.carryOut.peek().litToBoolean
+        val carryOut = dut.io.carryOut.peek().litValue == 1 // Convert UInt(1.W) to Boolean by comparing to 1
         assert(result == expected, s"Expected result $expected but got $result for opcode $opcode")
         assert(carryOut == expectedCarry, s"Expected carryOut $expectedCarry but got $carryOut for opcode $opcode")
       }
@@ -58,10 +59,12 @@ class MultifunctionAdderSubtractor64Test extends AnyFlatSpec {
         if (isAdd) {
           val overflowExpected = if (signed) maxVal + 1 else BigInt(0)  //maxVal+1 because result is returned a UInt
           val overflowCarry = !signed 
-            
-          println(s"Opcode: $opcode, Signed: $signed, Width: $width")
-          println(s"MaxVal: $maxVal, MinVal: $minVal")
-          println(s"OverflowExpected: $overflowExpected, OverflowCarry: $overflowCarry")
+
+          if (printDebug) {  
+            println(s"Opcode: $opcode, Signed: $signed, Width: $width")
+            println(s"MaxVal: $maxVal, MinVal: $minVal")
+            println(s"OverflowExpected: $overflowExpected, OverflowCarry: $overflowCarry")
+          }
 
           testOperation(maxVal, 1, opcode, overflowExpected, overflowCarry)
         }

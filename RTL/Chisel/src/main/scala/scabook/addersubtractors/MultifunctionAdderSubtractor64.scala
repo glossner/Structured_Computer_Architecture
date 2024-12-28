@@ -38,7 +38,7 @@ class MultifunctionAdderSubtractor64 extends Module {
     val b = Input(UInt(64.W))
     val result = Output(UInt(64.W))
     val opcode = Input(UInt(4.W)) 
-    val carryOut = Output(Bool())
+    val carryOut = Output(UInt(1.W))
   })
 
   // Decode control signals
