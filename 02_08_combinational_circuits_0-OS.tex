@@ -1142,7 +1142,7 @@ As synthesis design tools become more mature, it is interesting to note that bot
 %***********************************************************************************************
 \subsubsection{Multifunction 8/16/32/64-bit Signed/Unsigned Behavioral Adder/Subtractor (Chisel)}
 %*************************************************************************************************
-\includechiselcode[caption={Multifunction 64-bit Adder/Subtractor (Chisel)}, label={lst:chisel_mf64_adder}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor.scala}
+\includechiselcode[caption={Multifunction 64-bit Adder/Subtractor (Chisel)}, label={lst:chisel_mf64_adder}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor64.scala}
 
 Listing \ref{lst:chisel_mf64_adder} shows a \texttt{MultifunctionAdderSubtractor} module that implements a highly configurable arithmetic unit capable of performing addition and subtraction on operands of various sizes and types. The operation is controlled by a 4-bit opcode, which encodes the operation type (add or subtract), whether the operands are signed or unsigned, and the operand width (8, 16, 32, or 64 bits). 
 
@@ -1152,7 +1152,7 @@ The module then masks the inputs (\texttt{io.a} and \texttt{io.b}) to match the 
 
 The arithmetic operation itself is performed using a \texttt{Mux} construct that selects between signed and unsigned addition or subtraction. Signed operations use \texttt{asSInt} to treat the operands as signed integers, while unsigned operations directly add or subtract the masked inputs. 
 
-The \texttt{+&} operator is used to perform addition while preserving the carry-out bit. Unlike the standard addition operator (\texttt{+}), which only computes the sum of two operands within a fixed width, \texttt{+&} ensures that the result includes an extra bit to accommodate any overflow from the addition. The result of the operation is then truncated to the selected width using a bitwise \texttt{\&} operation with the mask. For output consistency, the result is extended back to 64 bits using either sign extension or zero extension, depending on whether the operation is signed or unsigned.
+The \texttt{+\&} operator is used to perform addition while preserving the carry-out bit. Unlike the standard addition operator (\texttt{+}), which only computes the sum of two operands within a fixed width, \texttt{+\&} ensures that the result includes an extra bit to accommodate any overflow from the addition. The result of the operation is then truncated to the selected width using a bitwise \texttt{\&} operation with the mask. For output consistency, the result is extended back to 64 bits using either sign extension or zero extension, depending on whether the operation is signed or unsigned.
 
 The module also includes logic to generate a carry-out signal. For unsigned operations, this signal indicates overflow (for addition) or borrow (for subtraction). The logic uses comparisons with the mask and operand values to determine whether a carry or borrow occurred. 
 
@@ -1223,35 +1223,13 @@ An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and 
 
 \placedrawing[H]{figures/02_19_8function_alu.lp}{The generic form of a 8-function Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig15}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      alu.sv
-Circuit name:   arithmetic and logic unit
-Description:    the circuit selects, using the selection code 'func', one
-                of the 8 functions
-*************************************************************************/
-module ALU(input    logic         crIn          ,
-            input   logic [2:0]   func          ,
-            input   logic [31:0]  left, right   ,
-            output  logic         crOut         ,
-            output  logic [31:0]  out           );
+\includeverilogcode[caption={Arithmetic and Logic Unit.   File: A08\_alu.sv  (SystemVerilog)}, 
+                    label={lst:A08_alu.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_alu.sv}
 
-  always_comb case(func)
-                3'b000: {crOut, out} = left + right + crIn;     //add
-                3'b001: {crOut, out} = left - right - crIn;     //sub
-                3'b010: {crOut, out} = {1'b0, left & right};    //and
-                3'b011: {crOut, out} = {1'b0, left | right};    //or
-                3'b100: {crOut, out} = {1'b0, left ^ right};    //xor
-                3'b101: {crOut, out} = {1'b0, ~left};           //not
-                3'b110: {crOut, out} = {1'b0, left};            //left
-                3'b111: {crOut, out} = {1'b0, left >> 1};       //shr
-            endcase
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
 
 \begin{verisum}{\em :
 
@@ -1325,30 +1303,13 @@ $\begin{bmatrix}
 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 1 & 1
 \end{bmatrix}$
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      waveform1.sv
-Description:    W = aaaccccbaa =
-*************************************************************************/
-module waveform1;
-    logic [1:0] W;
-
-    parameter   a = 2'b01,
-                b = 2'b10,
-                c = 2'b11;
-
-    initial begin       W = a   ;
-                    #6  W = c  	;
-                    #8  W = b  	;
-                    #2  W = a  	;
-                    #4  $stop   ;
-            end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Waveforms.   File: A08\_waveform1.sv  (SystemVerilog)}, 
+                    label={lst:A08_waveform1.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_waveform1.sv}
+                    
 The resulting waveforms are captured in Figure \ref{w1}.
 
 \placedrawing[H]{figures/02_21_waveform1.lp}{Output for waveform1.sv}{w1}
@@ -1386,22 +1347,14 @@ A half adder is defined by the following Boolean expressions:
 $$sum = a \oplus b$$
 $$cr = a \cdot b$$
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      halfAdder.sv
-Description:
-*************************************************************************/
-module halfAdder(   input   logic a, b,
-                    output  logic sum, cr);
+\includeverilogcode[caption={Half adder.   File: A08\_halfAdder.sv  (SystemVerilog)}, 
+                    label={lst:A08_halfAdder.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_halfAdder.sv}
 
-    xor myXor(sum, a, b);
-    and myAnd(cr, a, b);
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+
 Using Vivado toll the elaborated design represented in Figure \ref{halfadd} is provided.
 
 \placedrawing[H]{figures/02_22_half_adder.lp}{}{halfadd}
@@ -1420,87 +1373,39 @@ $\diamond$
 {\bf Solution}
 
 For the first solution we have the following design:
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      fullAdder.sv
-Description:
-*************************************************************************/
-module fullAdder(   input   logic a, b, crIn,
-                    output  logic sum, crOut);
-    logic sum0, cr0, cr1;
 
-    xor myXor(sum0, a, b);
-    xor outXor(sum, sum0, crIn);
-    and myAnd1(cr0, a, b);
-    and myAnd2(cr1, sum0, crIn);
-    or myOr(crOut, cr0, cr1);
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Full adder.   File: A08\_fullAdder.sv  (SystemVerilog)}, 
+                    label={lst:A08_fullAdder.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_fullAdder.sv}
+                    
 Using Vivado toll the elaborated design represented in Figure \ref{fulladd} is provided.
 
 \placedrawing[H]{figures/02_23_full_adder.lp}{}{fulladd}
 
 For the second solution we have the following design:
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      hFullAdder.sv
-Description:    Hierarchical Full-Adder
-*************************************************************************/
-module hFullAdder(  input   logic a, b, crIn,
-                    output  logic sum, crOut);
-    logic sum0, cr0, cr1;
 
-    halfAdder   ha0(.a  (a      ),
-                    .b  (b      ),
-                    .sum(sum0   ),
-                    .cr (cr0    )),
-                ha1(.a  (sum0   ),
-                    .b  (crIn   ),
-                    .sum(sum    ),
-                    .cr (cr1    ));
-    or outOr(crOut, cr0, cr1);
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Hierarchical Full-Adder.   File: A08\_hFullAdder.sv  (SystemVerilog)}, 
+                    label={lst:A08_hFullAdder.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_hFullAdder.sv}
+
 Using Vivado toll the elaborated design represented in Figure \ref{hfulladd} is provided.
 
 \placedrawing[H]{figures/02_24_full_adder_from_half_adders.lp}{}{hfulladd}
 
 For testing the functionality of the full-adder the following module is designed:
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      testFullAdder.sv
-Description:    Hierarchical Full-Adder
-*************************************************************************/
-module testFullAdder();
-    logic a, b, crIn, sum, crOut;
-
-    hFullAdder dut(a, b, crIn, sum, crOut);
-
-    initial begin       {a,b,crIn} = 3'b000 ;
-                    #1  {a,b,crIn} = 3'b001 ;
-                    #1  {a,b,crIn} = 3'b010 ;
-                    #1  {a,b,crIn} = 3'b011 ;
-                    #1  {a,b,crIn} = 3'b100 ;
-                    #1  {a,b,crIn} = 3'b101 ;
-                    #1  {a,b,crIn} = 3'b110 ;
-                    #1  {a,b,crIn} = 3'b111 ;
-                    #1  $stop               ;
-            end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Hierarchical Full-Adder.   File: A08\_testFullAdder.sv  (SystemVerilog)}, 
+                    label={lst:A08_testFullAdder.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_testFullAdder.sv}
 
 \placedrawing[H]{figures/02_25_full_adder_waveform.lp}{}{sfulladd}
 

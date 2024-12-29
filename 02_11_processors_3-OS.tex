@@ -25,37 +25,14 @@ $$= ((\{a,b,e\} \times \{zero\}), (\{idle, run, yes, no\} \times \{nop, up, down
 
 The top module for the System Verilog design is:
 {\em
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: CEA.sv
-Description: Counter expanded automaton with a 32-bit counter for
-             recognizing the language a^nb^n
-************************************************************************/
-`define nop     2'b00
-`define up      2'b01
-`define down    2'b10
-module CEA(input    logic [1:0] X           ,
-            output  logic [1:0] Y           ,
-            output  logic       reset, clock);
-
-    FA fa(  X               ,
-            Y               ,
-            conterCommand   ,
-            zero            ,
-            reset           ,
-            clock           );
-    logic [31;0] UD/COUNTER ;
-    always_ff @(posedge clock)
-        if(reset)   UD/COUNTER <= 0             ;
-            else if(up)             UD/COUNTER <= UD/COUNTER + 1;
-                    else if(down)   UD/COUNTER <= UD/COUNTER - 1;
-                            else    UD/COUNTER <= UD/COUNTER    ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}}
+\includeverilogcode[caption={ Counter expanded automaton with a 32-bit counter for
+             recognizing the language $a^nb^n$.  File: 0\_CEA.vh  (SystemVerilog)}, 
+                    label={lst:CEA}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=40]
+                    {\verilogSourceDir/A11_CEA.sv}
+}
 \hspace{-6mm}while for the finite automaton FA the implementation is similar for the design in Example \ref{mealySV}.
 
 $\diamond$
@@ -180,6 +157,8 @@ memory. The control automaton does not ``know" the function to be
 performed, it ``knows" how to ``fetch the function" from an external storage
 support, the program memory.
 
+\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}
+
 {\bf Important note}: the organization presented in the following is designed only from the circuit point of view with emphasis on the {\em competence} of the system. In order to maximize the performance the design must apply specific techniques to increase the frequency of the clock cycle. This concern goes beyond the aims of this lecture. We will partially address these issues in the next lesson. Books on the organization and architecture of computing systems deal extensively with issues of maximizing performance. Books on the architecture and organization of computers written by John Hennessy and David Patterson are recommended  \citep{Hennessy19, Patterson19}.
 
 In Figure \ref{fig43}, the organization of the processor {\bf {\em toyRISC}} is represented. It contains two simple loop-connected automata, PC and RALU, serially connected with a complex and small section, DCD.
@@ -201,7 +180,6 @@ the control of the program {\em calls} a  function and a return is
 needed. For all the previously described behaviors the
 combinational circuit {\bf nextPC} (described in {\tt nextPc.v} module of the design presented in Appendix \ref{toyRiscDesign}) is designed to close the loop over the Program Counter register.
 
-\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}
 
 \subsubsection{RALU: a functional automaton}
 
@@ -244,7 +222,6 @@ is completely moved in the code stored inside the program memory.
 \subsection{Instruction Set Architecture}
 
 The storage resources on which the ISA definition is based are the following:
-
 \begin{verbatim}
  reg    [31:0]  programMemory[0:65535]  ;
  reg    [31:0]  dataMemory[0:1023]      ;
@@ -253,16 +230,11 @@ The storage resources on which the ISA definition is based are the following:
  reg            intEnable               ; // interrupt enable FF
  \end{verbatim}
 
-
-
-
  The structure of the arithmetic \& logic instructions have two forms:
  \begin{itemize}
     \item {\tt destinationRegiste <= leftOperamd OP rightOperand}
     \item {\tt destinationRegiste <= leftOperamd OP immediateValue}
  \end{itemize}
-
-
 \hspace{-5mm}with the  following two formats:
 \begin{verbatim}
         instruction[31:0] = {opCode[5:0],       // operation code
@@ -277,8 +249,6 @@ The storage resources on which the ISA definition is based are the following:
                              immediate[15:0]}   // value
 \end{verbatim}
 
-
-
 Instruction Set Architecture, ISA, of the {\bf {\em toyRISC}} processor is described in
 the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing system includes at least the following types of instructions:
 \begin{enumerate}
@@ -287,7 +257,6 @@ the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing syste
     \item memory access instructions
     \item interrupt control instructions
 \end{enumerate}
-
 
 \includeverilogcode[caption={toyRISC ISA.  File: 0\_DEFINES.vh  (SystemVerilog)}, 
                     label={lst:toyRISCdefines}, 
@@ -354,7 +323,7 @@ In order to generate the code executable by the toyRISC processor, a code genera
 
 \subsubsection{Toy Assembler}
 
-The binary codes in the \ref{mnem} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in System Verilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. A portion of this generator is listed below to illustrate the idea of two-pass encoding; the whole is attached in the \ref{codeGen} section. In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
+The binary codes in the \ref{tab:riscISA} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in System Verilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. A portion of this generator is listed below to illustrate the idea of two-pass encoding; the whole is attached in the \ref{codeGen} section. In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
 
 \includeverilogcode[caption={A sample of the binary code generator for toyRISC processor.  File: RISCcodeGenerator.sv  (SystemVerilog)}, 
                     label={lst:RISCcodeGenerator}, 
@@ -394,40 +363,33 @@ Let by a following simple program:
 The code generator loads in the program memory the following binary form of the program:
 {\small
 \begin{verbatim}
-progMemory[0]    = 11001000000000000000000000000000
-progMemory[1]    = 01011100000000000000000000000001
-progMemory[2]    = 01011100001000000000000000000010
-progMemory[3]    = 01011100010000000000000000000011
-progMemory[4]    = 01011100011000000000000000000100
-progMemory[5]    = 01011100100000000000000000000101
-progMemory[6]    = 11000000000000000000100000000000
-progMemory[7]    = 11000000000000000001000000000000
-progMemory[8]    = 11000000000000000001100000000000
-progMemory[9]    = 11000000000000000010000000000000
-progMemory[10] 	 = 00011000000000000000000000000000
-progMemory[11] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+progMemory[0] 	 = 01011100000000000000000000000001
+progMemory[1] 	 = 01011100001000000000000000000010
+progMemory[2] 	 = 01011100010000000000000000000011
+progMemory[3] 	 = 01011100011000000000000000000100
+progMemory[4] 	 = 01011100100000000000000000000101
+progMemory[5] 	 = 11000000000000000000100000000000
+progMemory[6] 	 = 11000000000000000001000000000000
+progMemory[7] 	 = 11000000000000000001100000000000
+progMemory[8] 	 = 11000000000000000010000000000000
 \end{verbatim}
 }
 The clock period is equal with 2 time units. The program starts at the time unit {\tt t=5} after the 4 time units action of the {\tt reset} signal.
 The value of the program counter and of the first 2 registers in the register file evolve as follows:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x]  ei=x inta=x
-t=1  pc=1023  RF=[x, x, x, x]  ei=0 inta=0
-t=5  pc=   0  RF=[x, x, x, x]  ei=0 inta=0
-t=7  pc=   1  RF=[x, x, x, x]  ei=0 inta=0
-t=9  pc=   2  RF=[1, x, x, x]  ei=0 inta=0
-t=11 pc=   3  RF=[1, 2, x, x]  ei=0 inta=0
-t=13 pc=   4  RF=[1, 2, 3, x]  ei=0 inta=0
-t=15 pc=   5  RF=[1, 2, 3, 4]  ei=0 inta=0
-t=17 pc=   6  RF=[1, 2, 3, 4]  ei=0 inta=0
-t=19 pc=   7  RF=[3, 2, 3, 4]  ei=0 inta=0
-t=21 pc=   8  RF=[6, 2, 3, 4]  ei=0 inta=0
-t=23 pc=   9  RF=[10, 2, 3, 4] ei=0 inta=0
-t=25 pc=  10  RF=[15, 2, 3, 4] ei=0 inta=0
+pc= 0 RF=[1, x, x, x]  ei=0 inta=0
+pc= 1 RF=[1, x, x, x]  ei=0 inta=0
+pc= 2 RF=[1, 2, x, x]  ei=0 inta=0
+pc= 3 RF=[1, 2, 3, x]  ei=0 inta=0
+pc= 4 RF=[1, 2, 3, 4]  ei=0 inta=0
+pc= 5 RF=[1, 2, 3, 4]  ei=0 inta=0
+pc= 6 RF=[3, 2, 3, 4]  ei=0 inta=0
+pc= 7 RF=[6, 2, 3, 4]  ei=0 inta=0
+pc= 8 RF=[10, 2, 3, 4] ei=0 inta=0
+pc= 9 RF=[15, 2, 3, 4] ei=0 inta=0
 \end{verbatim}
 }
-
 
 $\diamond$
 \end{exemplu}
@@ -466,20 +428,18 @@ progMemory[13] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 The simulation provides:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x]    ei=x inta=x
-t=1  pc=1023  RF=[x, x, x, x]    ei=0 inta=0
-t=5  pc=   0  RF=[x, x, x, x]    ei=0 inta=0
-t=7  pc=   1  RF=[x, x, x, x]    ei=0 inta=0
-t=9  pc=   2  RF=[x, x, 23, x]   ei=0 inta=0
-t=11 pc=   3  RF=[13, x, 23, x]  ei=0 inta=0
-t=13 pc=   4  RF=[13, x, 23, x]  ei=1 inta=1
-t=15 pc=  10  RF=[13, x, 23, x]  ei=0 inta=0
-t=17 pc=  11  RF=[13, x, 23, x]  ei=0 inta=0
-t=19 pc=  12  RF=[13, x, 23, 44] ei=0 inta=0
-t=21 pc=   4  RF=[13, x, 23, 44] ei=0 inta=0
-t=23 pc=   5  RF=[15, x, 23, 44] ei=0 inta=0
-t=25 pc=   6  RF=[15, x, 23, 44] ei=0 inta=0
-t=27 pc=   7  RF=[19, x, 23, 44] ei=0 inta=0
+pc=  0  RF=[x, x, x, x]     ei=0 inta=0
+pc=  1  RF=[x, x, x, x]     ei=0 inta=0
+pc=  2  RF=[x, x, 23, x]    ei=0 inta=0
+pc=  3  RF=[13, x, 23, x]   ei=0 inta=0
+pc=  4  RF=[13, x, 23, x]   ei=1 inta=1
+pc= 10  RF=[13, x, 23, x]   ei=0 inta=0
+pc= 11  RF=[13, x, 23, x]   ei=0 inta=0
+pc= 12  RF=[13, x, 23, 44]  ei=0 inta=0
+pc=  4  RF=[13, x, 23, 44]  ei=0 inta=0
+pc=  5  RF=[15, x, 23, 44]  ei=0 inta=0
+pc=  6  RF=[15, x, 23, 44]  ei=0 inta=0
+pc=  7  RF=[19, x, 23, 44]  ei=0 inta=0
 \end{verbatim}
 }
 
@@ -500,28 +460,26 @@ Let be a wrong program which runs forever because of an unconditional jump.
 The simulation provides:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x] ei=x inta=x
-t=1  pc=1023  RF=[x, x, x, x] ei=0 inta=0
-t=5  pc=   0  RF=[3, x, x, x] ei=0 inta=0
-t=7  pc=   1  RF=[3, x, x, x] ei=0 inta=0
-t=9  pc=   2  RF=[2, x, x, x] ei=0 inta=0
-t=11 pc=   3  RF=[2, x, x, x] ei=0 inta=0
-t=13 pc=   1  RF=[2, x, x, x] ei=0 inta=0
-t=15 pc=   2  RF=[1, x, x, x] ei=0 inta=0
-t=17 pc=   3  RF=[1, x, x, x] ei=0 inta=0
-t=19 pc=   1  RF=[1, x, x, x] ei=0 inta=0
-t=21 pc=   2  RF=[0, x, x, x] ei=0 inta=0
-t=23 pc=   3  RF=[0, x, x, x] ei=0 inta=0
-t=25 pc=   1  RF=[0, x, x, x] ei=0 inta=0
-t=27 pc=   2  RF=[4294967295, x, x, x] ei=0 inta=0
-t=29 pc=   3  RF=[4294967295, x, x, x] ei=0 inta=0
-t=31 pc=   1  RF=[4294967295, x, x, x] ei=0 inta=0
-t=33 pc=   2  RF=[4294967294, x, x, x] ei=0 inta=0
-t=35 pc=   3  RF=[4294967294, x, x, x] ei=0 inta=0
-t=37 pc=   1  RF=[4294967294, x, x, x] ei=0 inta=0
-t=39 pc=   2  RF=[4294967293, x, x, x] ei=0 inta=0
-t=41 pc=   3  RF=[4294967293, x, x, x] ei=0 inta=0
-t=43 pc=   1  RF=[4294967293, x, x, x] ei=0 inta=0
+pc= 0  RF=[3, x, x, x]          ei=0 inta=0
+pc= 1  RF=[3, x, x, x]          ei=0 inta=0
+pc= 2  RF=[2, x, x, x]          ei=0 inta=0
+pc= 3  RF=[2, x, x, x]          ei=0 inta=0
+pc= 1  RF=[2, x, x, x]          ei=0 inta=0
+pc= 2  RF=[1, x, x, x]          ei=0 inta=0
+pc= 3  RF=[1, x, x, x]          ei=0 inta=0
+pc= 1  RF=[1, x, x, x]          ei=0 inta=0
+pc= 2  RF=[0, x, x, x]          ei=0 inta=0
+pc= 3  RF=[0, x, x, x]          ei=0 inta=0
+pc= 1  RF=[0, x, x, x]          ei=0 inta=0
+pc= 2  RF=[4294967295, x, x, x] ei=0 inta=0
+pc= 3  RF=[4294967295, x, x, x] ei=0 inta=0
+pc= 1  RF=[4294967295, x, x, x] ei=0 inta=0
+pc= 2  RF=[4294967294, x, x, x] ei=0 inta=0
+pc= 3  RF=[4294967294, x, x, x] ei=0 inta=0
+pc= 1  RF=[4294967294, x, x, x] ei=0 inta=0
+pc= 2  RF=[4294967293, x, x, x] ei=0 inta=0
+pc= 3  RF=[4294967293, x, x, x] ei=0 inta=0
+pc= 1  RF=[4294967293, x, x, x] ei=0 inta=0
 \end{verbatim}
 }
 
@@ -543,14 +501,12 @@ Let be a  program which works with {\tt dataMemory}.
 The simulation provides:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x]   ei=x inta=x
-t=1  pc=1023  RF=[x, x, x, x]   ei=0 inta=0
-t=5  pc=   0  RF=[1, x, x, x]   ei=0 inta=0
-t=7  pc=   1  RF=[1, x, x, x]   ei=0 inta=0
-t=9  pc=   2  RF=[1, 55, x, x]  ei=0 inta=0
-t=11 pc=   3  RF=[1, 55, x, x]  ei=0 inta=0
-t=13 pc=   4  RF=[1, 55, x, x]  ei=0 inta=0
-t=15 pc=   5  RF=[1, 55, 55, x] ei=0 inta=0
+pc= 0  RF=[1, x, x, x]    ei=0 inta=0
+pc= 1  RF=[1, x, x, x]    ei=0 inta=0
+pc= 2  RF=[1, 55, x, x]   ei=0 inta=0
+pc= 3  RF=[1, 55, x, x]   ei=0 inta=0
+pc= 4  RF=[1, 55, x, x]   ei=0 inta=0
+pc= 5  RF=[1, 55, 55, x]  ei=0 inta=0
 \end{verbatim}
 }
 
@@ -669,13 +625,11 @@ progMemory[5]    = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 The result of simulation is:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x]
-t=1  pc=1023  RF=[x, x, x, x]
-t=5  pc=   0  RF=[11, x, x, x]
-t=7  pc=   1  RF=[11, x, x, x]
-t=9  pc=   2  RF=[11, 22, x, x]
-t=11 pc=   3  RF=[11, 22, 33, x]
-t=13 pc=   4  RF=[11, 22, 33, 44]
+pc= 0  RF=[11, x, x, x]
+pc= 1  RF=[11, x, x, x]
+pc= 2  RF=[11, 22, x, x]
+pc= 3  RF=[11, 22, 33, x]
+pc= 4  RF=[11, 22, 33, 44]
 \end{verbatim}
 }
 

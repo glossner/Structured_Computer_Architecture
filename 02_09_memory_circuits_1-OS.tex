@@ -171,41 +171,14 @@ controllable loops inside a complex system.
 
 \begin{exemplu}
 The previously exemplified {\tt threeAdder.sv} module performs the addition of three numbers in twice the time of the sum of two numbers. We can reduce the execution time through a pipeline solution that uses two registers. The solution is presented in the following module:
-{\small
 {\em
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      pipelinedThreeAdder.sv
-Circuit name:   pipelined Three Input Adder
-Description:    The module 'threeAdder' has 3 4-bit inputs and one 4-bit
-                output. The circuit adds modulo 16 three numbers;
-                do not provide carry output
-*************************************************************************/
-module pipelinedThreeAdder( output  logic [3:0] out     ,
-                            input   logic [3:0] in0     ,
-                            input   logic [3:0] in1     ,
-                            input   logic [3:0] in2     ,
-                            input   logic       clock   );
-    logic [3:0] syncReg ;
-    logic [3:0] pipeReg ;
-    logic [3:0] sum     ;
-
-    adder   inAdder(    .out(sum    ),
-                        .in0(in0    ),
-                        .in1(in1    )),
-            outAdder(   .out(out    ),
-                        .in0(syncReg),
-                        .in1(pipeReg));
-    always_ff @(posedge clock)  begin   syncReg <= in2  ;
-                                        pipeReg <= sum  ;
-                                end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-}
-
+\includeverilogcode[caption={The module 'threeAdder' has 3 4-bit inputs and one 4-bit output. The circuit adds modulo 16 three numbers; do not provide carry output.   File: A09\_pipelinedThreeAdder.sv  (SystemVerilog)}, 
+                    label={lst:A09_pipelinedThreeAdder.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=60]
+                    {\verilogSourceDir/A09_pipelinedThreeAdder.sv}
+}  
 Two modules of {\tt adder} defined Example \ref{adder}
 are instantiated as {\tt inAdder} and {\tt outAdder}, they are
 interconnected using the pipeline  register {\tt pipeReg}. The register {\tt subcReg} is used to synchronize the {\tt in2} input with the pipelined result provided by {\tt inAdder}.
@@ -273,27 +246,12 @@ defined related to the active edge of clock for all the input
 connections: {\em data}, {\em write-enable}, and {\em address}.
 The data output is also related to the same edge.}}{swave}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      syncRAM.sv
-Circuit name:   Synchronous RAM
-Description:    4096 32-bit words synchronous RAM; asynchronous read
-*************************************************************************/
-module syncRAM( output  logic [31:0]    out     ,
-                input   logic [31:0]    in      ,
-                input   logic [12:0]    addr    ,
-                input   logic           we      ,
-                input   logic           clock   );
-    logic [31:0]    mem[0:8191]   ;
-
-    always_ff @(posedge clock) if (we) mem[addr] <= in  ;
-    assign out  = mem[addr] ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={4096 32-bit words synchronous RAM; asynchronous read.   File: A09\_syncRAM.sv  (SystemVerilog)}, 
+                    label={lst:A09_syncRAM.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=60]
+                    {\verilogSourceDir/A09_syncRAM.sv}
 
 \subsection{Synchronous pipelined RAM}\label{sybcPipeMem}
 
@@ -301,30 +259,15 @@ The time $t_{ACC}$ offered by a RAM can sometimes be too high for the speed requ
 
 A skilled designer will almost always be able to hide the effect of latency and take advantage of the increase in system frequency obtained through the pipeline register from the RAM output.
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      syncPipeRAM.sv
-Circuit name:   Synchronous pipelined RAM
-Description:    4096 32-bit words synchronous pipelined RAM
-*************************************************************************/
-module syncPipeRAM( output  logic [31:0]    out     ,
-                    input   logic [31:0]    in      ,
-                    input   logic [12:0]    addr    ,
-                    input   logic           we      ,
-                    input   logic           clock   );
-    logic [31:0]    mem[0:8191]   ;
+\includeverilogcode[caption={4096 32-bit words synchronous RAM; asynchronous read.   File: A09\_syncPipeRAM.sv  (SystemVerilog)}, 
+                    label={lst:A09_syncPipeRAM.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=60]
+                    {\verilogSourceDir/A09_syncPipeRAM.sv}
 
-    always_ff @(posedge clock)  begin if (we)   mem[addr] <= in     ;
-                                                out  <= mem[addr]   ;
-                                end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\subsection{{\bf {\em Register file}}}\label{registerFile}
 
-\subsection{{\bf {\em Register file}}}
 
 A register file is a battery of registers from which, in each clock cycle, any two registers can be accessed for reading and any register for writing. The implementation of such a circuit is done with a synchronous memory with three ports: two for reading and one for writing (see Figure \ref{file_reg}), where:
 
@@ -341,33 +284,12 @@ anyone. }}{file_reg}
 \end{description}
 The internal structure of a file register is characterized by the two multiplexers that ensure access to any pair of stored values.
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      regFile.sv
-Circuit name:   Register File
-Description:    Three-port, 32 32-bit words implemented with a
-                synchronous RAM
-*************************************************************************/
-module regFile( output  logic [31:0]    leftOut     ,
-                output  logic [31:0]    rightOut    ,
-                input   logic [31:0]    in          ,
-                input   logic [4:0]     leftAddr    ,
-                input   logic [4:0]     rightAddr   ,
-                input   logic [4:0]     destAddr    ,
-                input   logic           we          ,
-                input   logic           clock       );
-    logic [31:0]    mem[0:31]   ;
-
-    always_ff @(posedge clock) if (we) mem[destAddr] <= in  ;
-
-    assign leftOut  = mem[leftAddr] ;
-    assign rightOut = mem[rightAddr];
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Register file.   File: A09\_regFile.sv  (SystemVerilog)}, 
+                    label={lst:A09_regFile.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A09_regFile.sv}
 
 \begin{verisum}{\em :
 
@@ -536,66 +458,24 @@ $\diamond$
 {\bf Solution}
 
 The system consists in 4 registers, {\tt reg0, ..., reg3}, serially connected and a tree of three adders used to sum the content of the registers. The first register, {\tt reg0}, receives in each clock cycle the input value, {\tt in}. Register {\tt reg1} receives the content of {\tt reg1}, {\tt reg2} receives the content of {\tt reg1}, and {\tt reg3} the content of {\tt reg2}. The first two and the last two registers are added using two adders whose outputs are added using the output adder. The division by 4 is simply performed selecting the 32 most significant bits from the output of the last adder.
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      mean.sv
-Circuit name:
-Description:
-*************************************************************************/
-module mean(output  logic [31:0]    out     ,
-            input   logic [31:0]    in     	,
-            input   logic           reset  	,
-            input   logic           clock   );
-    logic [31:0]    reg0;
-    logic [31:0]    reg1;
-    logic [31:0]    reg2;
-    logic [31:0]    reg3;
-    logic [32:0]    sum0;
-    logic [32:0]    sum1;
-    logic [33:0]    sum;
 
-    always_ff @(posedge clock)  if( reset)  begin   reg0 <= 0   ;
-                                                    reg1 <= 0   ;
-                                                    reg2 <= 0   ;
-                                                    reg3 <= 0   ;
-                                            end
-                                    else    begin   reg0 <= in  ;
-                                                    reg1 <= reg0;
-                                                    reg2 <= reg1;
-                                                    reg3 <= reg2;
-                                            end
-    assign #1 sum0 = reg0 + reg1    ;
-    assign #1 sum1 = reg2 + reg3    ;
-    assign #1 sum  = sum0 + sum1    ;
-    assign    out  = sum[33:2]      ;
-endmodule
+\includeverilogcode[caption={Circuit that compute the mean value from the last component of a received stream of numbers.   File: A09\_mean.sv  (SystemVerilog)}, 
+                    label={lst:A09_mean.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A09_mean.sv}
 
-module testMean;
-    logic [31:0]    out     ;
-    logic [31:0]    in     	;
-    logic           reset  	;
-    logic           clock   ;
 
-    initial begin               clock = 0       ;
-                    forever #3  clock = ~clock  ;
-            end
 
-    initial begin       reset = 1       ;
-                        in    = 32'b1000;
-                    #6  reset = 0       ;
-                    #60 $finish         ;
-            end
+\includeverilogcode[caption={Tester for circuit {\tt mean}.   File: A09\_testMean.sv  (SystemVerilog)}, 
+                    label={lst:A09_testMean.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A09_testMean.sv}
 
-    mean dut(   out     ,
-                in      ,
-                reset   ,
-                clock   );
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+
 The minimal period of clock is: $T_{clock} = t_p + 2 \times t_{sum} + t_{SU_{min}} = \#106$
 
 \begin{problem}
@@ -631,42 +511,21 @@ $\diamond$
 
 {\bf Solution}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      defines.vh
-*************************************************************************/
-`define wordSize     32
-`define addressSize  16
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Define the parameterized synchronous RAM.   File: A09\_defineParamSyncPipeRAM.vh  (SystemVerilog)}, 
+                    label={lst:A09_defineParamSyncPipeRAM.vh}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A09_defineParamSyncPipeRAM.vh}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      syncPipeRAM.sv
-Circuit name:   Synchronous pipelined RAM
-Description:    2^(`addressSize) locations of  (`wordSize)-bit words
-                synchronous pipelined RAM
-*************************************************************************/
-`include "DEFINES.vh"
-module syncPipeRAM( output  logic [`wordSize-1:0]       out     ,
-                    input   logic [`wordSize-1:0]       in      ,
-                    input   logic [`addressSize-1:0]    addr    ,
-                    input   logic                       we      ,
-                    input   logic                       clock   );
-    logic [`wordSize-1:0]    mem[0:2**{`addressSize}-1]   ;
+\includeverilogcode[caption={Parameterized synchronous RAM.   File: A09\_paramSyncPipeRAM.sv  (SystemVerilog)}, 
+                    label={lst:A09_paramSyncPipeRAM.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A09_paramSyncPipeRAM.sv}
 
-    always_ff @(posedge clock)  begin if (we)   mem[addr] <= in     ;
-                                                out  <= mem[addr]   ;
-                                end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+
 
 \begin{problem}
 Consider memory modules of 1KB and design with them a memory of 4K 32-bit word.
