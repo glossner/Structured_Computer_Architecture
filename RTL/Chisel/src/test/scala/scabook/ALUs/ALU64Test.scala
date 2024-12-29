@@ -12,7 +12,7 @@ class ALU64Test extends AnyFlatSpec {
 
   "ALU64" should "correctly compute addition and subtraction for all opcodes and test Flags" in {
     simulate(new ALU64) { dut =>
-      val printDebugInfo = true
+      val printDebugInfo = false
 
       testArithmetic()
       testLogic()
@@ -37,7 +37,7 @@ class ALU64Test extends AnyFlatSpec {
         val overflowFlag = dut.io.overflowFlag.peek().litValue == 1
         val zeroFlag = dut.io.zeroFlag.peek().litValue == 1
         val negativeFlag = dut.io.negativeFlag.peek().litValue == 1
-        println(s"[ALU64 - Result] -- Sum: $result, Carry: $carryOut, zeroFlag: $zeroFlag, negativeFlag $negativeFlag")
+        if(printDebugInfo) println(s"[ALU64 - Result] -- Sum: $result, Carry: $carryOut, zeroFlag: $zeroFlag, negativeFlag $negativeFlag")
         
         assert(result == expected, s"[ALU64] -- Expected result 0x${expected.toString(16)} but got 0x${result.toString(16)} for opcode $opcode")
         if( isSigned ) {

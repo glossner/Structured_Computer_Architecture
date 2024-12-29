@@ -74,7 +74,7 @@ class ALU64 extends Module {
     val negativeFlag = Output(UInt(1.W))  //N
   })
 
-  val printDebugInfo = true
+  val printDebugInfo = false
 
   // Debug internals of ALU
   if(printDebugInfo) printf(p"[Inside ALU64] --\n") 
