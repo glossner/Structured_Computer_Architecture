@@ -17,6 +17,7 @@ class MultifunctionAdderSubtractor64Test extends AnyFlatSpec {
         dut.io.a.poke(a.U(64.W))
         dut.io.b.poke(b.U(64.W))
         dut.io.opcode.poke(opcode)
+        dut.io.carryIn.poke(0.U(1.W))
         dut.clock.step()
         val result = dut.io.result.peek().litValue
         val carryOut = dut.io.carryOut.peek().litValue == 1 // Convert UInt(1.W) to Boolean by comparing to 1

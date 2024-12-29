@@ -12,6 +12,8 @@ import chisel3.util._
 // b2: Signed/Unsigned
 // b1b0: 8/16/32/64 bits
 object MultifunctionAdderSubtractor64 {
+
+  // Define Opcodes within the companion object
   object Opcode {
     val ADD_U8  = "b0000".U
     val ADD_U16 = "b0001".U
@@ -30,16 +32,28 @@ object MultifunctionAdderSubtractor64 {
     val SUB_S32 = "b1110".U
     val SUB_S64 = "b1111".U
   }
+
+  // Companion object 
+  def apply(
+    a: UInt,
+    b: UInt,
+    opcode: UInt,
+    carryIn: Option[UInt] = None // optional
+  ): MultifunctionAdderSubtractor64 = {
+    val module = Module(new MultifunctionAdderSubtractor64)
+    module.io.a := a
+    module.io.b := b
+    module.io.opcode := opcode
+    carryIn match {
+      case Some(value) => module.io.carryIn := value // Connect when provided
+      case None => module.io.carryIn := 0.U         // Default to 0 if not provided
+    }
+    module
+  }
 }
 
-class MultifunctionAdderSubtractor64 extends Module {
-  val io = IO(new Bundle {
-    val a = Input(UInt(64.W))
-    val b = Input(UInt(64.W))
-    val result = Output(UInt(64.W))
-    val opcode = Input(UInt(4.W)) 
-    val carryOut = Output(UInt(1.W))
-  })
+class MultifunctionAdderSubtractor64 extends MultiFunctionAdderSubtractor(64) {
+
 
   // Decode control signals
   // b3: Add/Sub
@@ -94,3 +108,5 @@ class MultifunctionAdderSubtractor64 extends Module {
     Mux(isAdd, fullResult > mask, aEffective < bEffective)
     )
 }
+
+
