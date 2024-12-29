@@ -32,7 +32,7 @@ The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}.
                     firstline=1, 
                     firstnumber=1, 
                     lastline=68]
-                    {\verilogSourceDir/A08_hetSys.sv}
+                    {\verilogSourceDir/A20_hetSys.sv}
 
 The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
 
@@ -66,7 +66,7 @@ The internal state of the host (dimensioned with small memories to support fast 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=70]
-                    {\verilogSourceDir/A08_hostDEFINES.vh}
+                    {\verilogSourceDir/A20_hostDEFINES.vh}
 
 \subsection{Accelerator micro-architecture}
 
@@ -96,7 +96,7 @@ The internal state of the 32-bit word controller (dimensioned with small memorie
                     firstline=1, 
                     firstnumber=1, 
                     lastline=60]
-                    {\verilogSourceDir/A08_sequencerDEFINES.vh}
+                    {\verilogSourceDir/A20_sequencerDEFINES.vh}
 
 \paragraph{Right operand select}
 is specified by the 3-bit field,  {\tt cMode}  used to select the right operand  {\tt op} in SEQUENCER where:
@@ -189,7 +189,7 @@ The internal state of the Map array is stored in:
                     firstline=1, 
                     firstnumber=1, 
                     lastline=60]
-                    {\verilogSourceDir/A08_mapDEFINES.vh}
+                    {\verilogSourceDir/A20_mapDEFINES.vh}
 
 \paragraph{Right operand select} is specified by the 3-bit field,  {\tt mMode}  used to select the right operand  {\tt op} in each cell from MAP where:
 \begin{verbatim}
@@ -224,7 +224,7 @@ The previously defined three micro-architecture are assembled in a unique file, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=60]
-                    {\verilogSourceDir/A08_DEFINES.vh}
+                    {\verilogSourceDir/A20_DEFINES.vh}
 
 
 \section{Heterogeneous architecture}
@@ -547,7 +547,7 @@ The heterogeneous system runs two programs simultaneously. They are assembled in
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_hProgram.sv}
+                    {\verilogSourceDir/A20_hProgram.sv}
 The accelerator's program consists of pairs of instructions (see Listing \ref{lst:aProgram}). One instruction executed by the controller of types {\tt cXXX}, and another issued by the controller for Map array, of form {\tt XXX}.
 The accelerator's program is self-delimited, i.e., it starts with {\tt cPload(0)} -- loads the program in controller's program memory starting from the address 0 -- and ends with {\tt cPrun(0)} -- execute the program loaded in the controller's program memory starting from the address 0.
 
@@ -556,7 +556,7 @@ The accelerator's program is self-delimited, i.e., it starts with {\tt cPload(0)
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram.sv}
+                    {\verilogSourceDir/A20_aProgram.sv}
 
 Programming hRISC is done in two ways, a simple direct one -- inserting directly in {\tt 0\_aProgram.sv} a executable accelerator code -- or using a program written using hISA and FLA 0.1 inserted in 0\_hProgram.sv.
 
@@ -570,7 +570,7 @@ Let's consider a 16-cell system. The reduction function add is used to add in th
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram1.sv}
+                    {\verilogSourceDir/A20_aProgram1.sv}
 }
 The result of simulation is:
 {\small
@@ -601,7 +601,7 @@ If we ned to write a program to be executed in Map arrays with $p$ cells, then t
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram2.sv}
+                    {\verilogSourceDir/A20_aProgram2.sv}
 }
 The result of simulation for $p=16$ is:
 {\small
@@ -637,7 +637,7 @@ We can evaluate the speedup, compared to the execution time of a single-core com
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram3.sv}
+                    {\verilogSourceDir/A20_aProgram3.sv}
 }
 The execution time for adding with the controller $p$ numbers is: $t_{adding\_p\_numbers} = 7 \times p + 6$. Therefore, the acceleration provided by using the heterogeneous approach is $$\alpha = \frac{7 \times p + 6}{2 \times (1 + log_2 p)} > \frac{p}{log_2 p}$$
 The bad news: latency introduced by the reduce network which is responsible for the $log$ at the denominator. Good news:  the inequality is an advantage provided by the fact that in the heterogeneous approach the addition is done by Map, and the control is done by controller controller, while in the mono-core approach both the operation an the control are executed by the controller.
@@ -655,7 +655,7 @@ The program which loads in the even cells the index multiplied by 2 and in the o
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram4.sv}
+                    {\verilogSourceDir/A20_aProgram4.sv}
 }
 The result of the execution is:
 {\scriptsize
@@ -693,7 +693,7 @@ The program generates a pseudo-random sequence in {\tt ADD} and selects in {\tt 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram5.sv}
+                    {\verilogSourceDir/A20_aProgram5.sv}
 }
 The program execution provides:
 \begin{verbatim}
@@ -711,8 +711,8 @@ $\diamond$
                     label={lst:theKernel}, 
                     firstline=1, 
                     firstnumber=1, 
-                    lastline=200]
-                    {\verilogSourceDir/A08_theKernel.sv}
+                    lastline=210]
+                    {\verilogSourceDir/A20_theKernel.sv}
 
 \subsection{Programming using FLA 0.1}
 
@@ -725,7 +725,7 @@ The program multiplying a matrix with a vector written on host calls the compone
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_hProgram3.sv}
+                    {\verilogSourceDir/A20_hProgram3.sv}
 }
 
 {\em 
@@ -734,7 +734,7 @@ The program multiplying a matrix with a vector written on host calls the compone
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_aProgram6.sv}
+                    {\verilogSourceDir/A20_aProgram6.sv}
 }
 Running the program for $p = 16$ results:
 \begin{verbatim}
@@ -799,7 +799,7 @@ The program multiplying two matrices written on host calls the components from t
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_hProgram1.sv}
+                    {\verilogSourceDir/A20_hProgram1.sv}
 }
 
 
@@ -903,7 +903,7 @@ The program for multiply-add matrices written on host calls the components from 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=20]
-                    {\verilogSourceDir/A08_hProgram2.sv}
+                    {\verilogSourceDir/A20_hProgram2.sv}
 }
 The simulation provided, for $p=16$, the following values for the resulting matrix:
 {\small

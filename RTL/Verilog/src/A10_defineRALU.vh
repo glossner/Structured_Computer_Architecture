@@ -1,0 +1,12 @@
+`define bigv  4'b0001 // rf[dest] = {rf[left][15:0],rf[right][15:0]}
+`define add   4'b0010 // rf[dest] = rf[left] + rf[right]
+`define sub   4'b0011 // rf[dest] = rf[left] - rf[right]
+`define addcr 4'b0100 // rf[dest] = (rf[left] + rf[right])[32]
+`define subcr 4'b0101 // rf[dest] = (rf[left] - rf[right])[32]
+`define lsh   4'b1000 // rf[dest] = rf[left] >> 1
+`define ash   4'b1001 // rf[dest] = {rf[left][31],rf[left][31:1]}
+`define move  4'b1010 // rf[dest] = rf[left]
+`define mult  4'b1011 // rf[dest] = rf[left] * rf[right]
+`define bwand 4'b1101 // rf[dest] = rf[left] & rf[right]
+`define bwor  4'b1110 // rf[dest] = rf[left] | rf[right]
+`define bwxor 4'b1111 // rf[dest] = rf[left] ^ rf[right]

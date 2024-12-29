@@ -1,11 +1,8 @@
 \chapter{Computers: Four-Loop, Fourth-Order Systems (4-OS)}\label{lect6}
 \localtoc
 
-The processor is the core of a computing system that contains also a memory subsystem and an input-output subsystem. The physical resources involved are tightly interleaved in various form of actual organization. The memory associated with the processor contains programs and data, while the input-output system has two main functions: expanding the memory capacity and ensuring the interaction of the system with the outside world.
+After the first part of this textbook described the symbolic structures involved in computing, and the second part described the physical structures that can be used to implement computing systems, the time has come to involve the unifying entity represented by {\bf {\em information}}. Indeed, information is the one that takes control once the serendipitous meeting between representations, physical structures, and an acting symbolic structure occurs. The symbolic structure we are referring to is the information that manifests itself in the form of computer programs. Computing systems represent the synthesis between the physical structure of circuits and the symbolic structure of programs. This was made possible by a conceptual clarification -- the emergence of mathematical models of computation -- and a technological evolution -- the structuring of digital systems by increasing their autonomy through the impact of included loops.
 
-\placedrawing[H]{figures/12_01_computing_components.lp}{The three-partite functionality of a computing system.}{pmio}
-
-The way in which the tripartite functionality is distributed in a given system shows significant variations from one implementation to another. In the following, we will limit ourselves to a simple version, but not simpler than one that allows us to introduce the main concepts and problems. But, first we will show the serendipitous way in which the evolution of logic circuits meets a fundamental mathematical model for what can be rigorously defined as computation.
 
 \section{The mathematical model of the Turing Machine}
 
@@ -137,6 +134,38 @@ The two types of processors defined in the previous section were used to define 
 \placedrawing[H]{figures/05_04_von_neumann.lp}{The abstract model of computer proposed by  John von Neumann.}{fig44}
 
 The interpretive processor is used in the definition of the {\em von Neumann abstract model}, in which the processor is loop connected to a single memory in which both programs and data are stored (see Figure \ref{fig44}). Thus, a 4-OS is obtained by connecting a 3-OS (Processor) with a 1-OS (Memory).
+
+
+\section{System Organization}
+
+The processor is the core of a computing system that contains also a memory subsystem and an input-output subsystem. The physical resources involved are tightly interleaved in various form of actual organization. The memory associated with the processor contains programs and data, while the input-output system has two main functions: expanding the memory capacity and ensuring the interaction of the system with the outside world.
+
+\placedrawing[H]{figures/12_01_computing_components.lp}{The three-partite functionality of a computing system.}{pmio}
+
+The way in which the tripartite functionality is distributed in a given system shows significant variations from one implementation to another. In the following, we will limit ourselves to a simple version, but not simpler than one that allows us to introduce the main concepts and problems. But, first we will show the serendipitous way in which the evolution of logic circuits meets a fundamental mathematical model for what can be rigorously defined as computation.
+
+How looks the actual structure of a computing system? In Figure \ref{compSys} is exemplified a system where are emphasized two buses: the internal bus and the input-output bus. They are interconnected by two units: Bus Bridge and DMA (Direct Memory Access).
+
+\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a computing system.}{compSys}
+
+On Internal Bus are connected fast devices while on the Input-Output Bus are connected devices involving a lot of data transfer.
+
+The memory hierarchy is distributed in the version represented in Figure \ref{compSys}  as follows:
+\begin{enumerate}
+    \item Register File in the processor, having a capacity of 32W $\div$ 1024W, accessed for reading or writing in a single clock cycle
+    \item the two 1st level cache memories, each having a capacity of 128KB $\div$ 1MB, accessed for reading or writing in 1 $\div$ 3  clock cycles:
+        \begin{itemize}
+            \item Program Cache
+            \item Data Cache
+        \end{itemize}
+        so that at this level the system is structured according to the Harvard abstract model
+    \item 2nd Level Cache memory, having a capacity of 1MB $\div$ 8MB, so that at this level the system is structured according to the von Neumann abstract model
+    \item Hard Disk connected through:
+        \begin{itemize}
+            \item Bus Bridge
+            \item DMA
+        \end{itemize}
+\end{enumerate}
 
 \section{Memory Management}
 
@@ -407,30 +436,6 @@ In what follows, we will consider the simple example in which the hierarchy cont
         \end{itemize}
 \end{itemize}
 
-\section{System Organization}
-
-How looks the actual structure of a computing system? In Figure \ref{compSys} is exemplified a system where are emphasized two buses: the internal bus and the input-output bus. They are interconnected by two units: Bus Bridge and DMA (Direct Memory Access).
-
-\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a computing system.}{compSys}
-
-On Internal Bus are connected fast devices while on the Input-Output Bus are connected devices involving a lot of data transfer.
-
-The memory hierarchy is distributed in the version represented in Figure \ref{compSys}  as follows:
-\begin{enumerate}
-    \item Register File in the processor, having a capacity of 32W $\div$ 1024W, accessed for reading or writing in a single clock cycle
-    \item the two 1st level cache memories, each having a capacity of 128KB $\div$ 1MB, accessed for reading or writing in 1 $\div$ 3  clock cycles:
-        \begin{itemize}
-            \item Program Cache
-            \item Data Cache
-        \end{itemize}
-        so that at this level the system is structured according to the Harvard abstract model
-    \item 2nd Level Cache memory, having a capacity of 1MB $\div$ 8MB, so that at this level the system is structured according to the von Neumann abstract model
-    \item Hard Disk connected through:
-        \begin{itemize}
-            \item Bus Bridge
-            \item DMA
-        \end{itemize}
-\end{enumerate}
 
 
 \section{I/O}
