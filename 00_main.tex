@@ -75,10 +75,13 @@
 \makeatother
 
 \newcommand{\localtoc}{%
-    \localtableofcontents % Call the existing \localtableofcontents command
-    \newpage              % Add a page break
+    \begingroup
+    \setcounter{tocdepth}{2} % Set depth to include sections and subsections
+    \localtableofcontents    % Call the local TOC
+    \newpage                 % Add a page break
+    \setcounter{tocdepth}{4} % Set depth to include sections and subsections
+    \endgroup
 }
-
 
 
 
