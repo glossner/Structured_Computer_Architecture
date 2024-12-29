@@ -916,9 +916,9 @@ Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract clas
 
 The class is marked as \texttt{abstract}, which means it cannot be instantiated directly. Instead, specific implementations of the adder, such as ripple-carry or carry-lookahead adders, can extend this base class to reuse the IO definitions and width constraints. Using an abstract base class like \texttt{Adder} provides several benefits. It ensures consistency in IO definitions, as all derived adder implementations inherit the same \texttt{io} interface, guaranteeing a uniform input-output structure across different adder designs. It promotes reusability by defining the \texttt{io} interface and width validation logic once in the base class, reducing code duplication and improving maintainability. The abstract base class introduces a level of abstraction by encapsulating common properties and behaviors, allowing derived classes to focus solely on implementing specific adder designs without redefining shared elements.
 
-%************************
-\subsubsection{Precision}
-%*************************
+%************************************
+\subsubsection{Precision in Addition}
+%************************************
 \begin{figure}[H]
     \centering
 \[
@@ -1056,6 +1056,147 @@ Half adders cannot handle carry inputs, leading to the development of the \texti
 Figure \ref{fig:full_adder}b shows a schematic for a \textit{ripple carry adder} (RCA). Ripple-carry adders are one of the simplest and most fundamental types of binary adders. They work by connecting a series of full adders, each responsible for processing a single bit of the operands. The carry-out from each adder is propagated to the carry-in of the next, creating a "ripple" effect that moves from the least significant bit (LSB) to the most significant bit (MSB). 
 
 While the design of ripple-carry adders is straightforward and easy to implement in hardware, their performance is limited by the sequential nature of carry propagation. The execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value, can be long. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. The delay for an addition operation increases linearly with the number of bits, as each bit must wait for the carry result from the preceding bit to be resolved. In the general case, the time is proportional to $n$ (it is in $O(n)$). 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Multipliers}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Adders are fundamental components in digital computing systems. At the core of processors, adders enable basic addition and form the building blocks for more complex arithmetic units, such as subtractors, multipliers, and dividers. An adder's efficiency directly impacts a processor's overall performance, as addition is one of the most frequently executed operations in computing.
+
+%******************************
+\subsection{Behavioral Multiplier}
+%******************************
+Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
+
+\ifthenelse{\boolean{chiselversion}}{
+%*************************************************
+\subsubsection{Parameterized Abstract Multiplier (Chisel)}
+%*************************************************
+%\includechiselcode[caption={Parameterized Abstract Adder (Chisel: Adder.scala)}, label={lst:chisel_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/Adder.scala}
+
+Listing \ref{lst:chisel_adder_abstract} shows 
+
+}% End Chisel code
+
+%******************************************
+\subsubsection{Precision in Multiplication}
+%*******************************************
+
+\begin{figure}[H]
+    \centering
+\[
+\begin{array}{|c|c|c|c|c|c|}
+\hline
+\text{A (bin)} & \text{A (dec)} & \text{B (bin)} & \text{B (dec)} & \text{Product (bin)} & \text{Product (dec)} \\
+\hline
+0001 & 1 & 0001 & 1 & 00000001 & 1 \\
+0011 & 3 & 0010 & 2 & 00000110 & 6 \\
+0111 & 7 & 0101 & 5 & 00101111 & 35 \\
+1111 & 15 & 1111 & 15 & 11100001 & 225 \\
+1000 & 8 & 1001 & 9 & 10010000 & 144 \\
+1111 & 15 & 0001 & 1 & 00001111 & 15 \\
+0110 & 6 & 0011 & 3 & 00010010 & 18 \\
+\hline
+\end{array}
+\]
+    \caption{4-bit Behavioral Multiplier Partial Truth Table for Unsigned Numbers}
+    \label{fig:4bit_multiplier_tt_unsigned}
+\end{figure}
+
+Figure \ref{fig:4bit_multiplier_tt_unsigned} shows the partial truth table for a 4-bit behavioral multiplier using unsigned numbers. The results demonstrate that multiplying two $n$-bit numbers may require up to $2n$ bits to represent the full product.
+
+Consider two $n$-bit binary numbers, $A$ and $B$, where each can be represented in the form:
+\[
+A = \sum_{i=0}^{n-1} a_i \cdot 2^i, \quad B = \sum_{i=0}^{n-1} b_i \cdot 2^i
+\]
+
+where $a_i, b_i \in \{0, 1\}$ are the binary digits (bits) of $A$ and $B$, respectively.
+
+The maximum product occurs when both $A$ and $B$ are at their maximum value, i.e., $A = 2^n - 1$ and $B = 2^n - 1$. In this case:
+\[
+A \times B = (2^n - 1) \times (2^n - 1) = 2^{2n} - 2^n - 2^n + 1 = 2^{2n} - 2^{n+1} + 1
+\]
+
+This shows that the result of $A \times B$ can range from $0$ (minimum) to approximately $2^{2n}$ (maximum). To store a result as large as $2^{2n} - 1$, $2n$ bits are required.
+
+In the case of 4-bit unsigned numbers, each operand, $A$ and $B$, can represent values from $0$ to $2^4 - 1 = 15$. When multiplying the two largest 4-bit numbers, $A = 15_{base10}$ and $B = 15_{base10}$, the result is $A \times B = 225_{base10}$. To represent $225_{base10}$ in binary, at least 8 bits are required, as the binary representation is $11100001_2$.
+
+\begin{figure}[H]
+    \centering
+\[
+\begin{array}{|c|c|c|c|c|c|}
+\hline
+\text{A (bin)} & \text{A (dec)} & \text{B (bin)} & \text{B (dec)} & \text{Product (bin)} & \text{Product (dec)} \\
+\hline
+0111 & 7 & 0101 & 5 & 00101111 & 35 \\
+1001 & -7 & 0011 & 3 & 11011101 & -21 \\
+0110 & 6 & 1100 & -4 & 11101100 & -24 \\
+1010 & -6 & 1010 & -6 & 00110000 & 36 \\
+1111 & -1 & 1111 & -1 & 00000001 & 1 \\
+1000 & -8 & 0001 & 1 & 11111000 & -8 \\
+0111 & 7 & 1111 & -1 & 11111001 & -7 \\
+\hline
+\end{array}
+\]
+    \caption{4-bit Behavioral Multiplier Partial Truth Table for Signed Numbers}
+    \label{fig:4bit_multiplier_tt_signed}
+\end{figure}
+
+Figure \ref{fig:4bit_multiplier_tt_signed} shows the partial truth table for signed numbers. Here, the results indicate that $2n$ bits are also required to store the signed product. 
+
+For signed numbers, represented using two's complement, the analysis differs slightly due to the sign extension for negative operands. In two's complement, the most significant bit (MSB) represents the sign, with $0$ for positive and $1$ for negative numbers. The value of an $n$-bit signed number $A$ is given by:
+\[
+A = -a_{n-1} \cdot 2^{n-1} + \sum_{i=0}^{n-2} a_i \cdot 2^i
+\]
+
+Similarly, for $B$:
+\[
+B = -b_{n-1} \cdot 2^{n-1} + \sum_{i=0}^{n-2} b_i \cdot 2^i
+\]
+
+The maximum and minimum values of $A$ and $B$ are $2^{n-1} - 1$ (maximum positive) and $-2^{n-1}$ (minimum negative), respectively. The maximum magnitude of the product occurs when one operand is at its maximum positive value and the other is at its minimum negative value:
+\[
+\text{Max Magnitude: } |A \times B| = (2^{n-1} - 1) \cdot 2^{n-1} = 2^{2n-1} - 2^{n-1}
+\]
+
+In this case, the signed product can range from:
+\[
+-2^{2n-2} \leq A \times B \leq 2^{2n-2} - 1
+\]
+
+Thus, $2n$ bits are still required to store the full result of signed multiplication to account for both the sign and the magnitude.
+
+%**************************************************************************
+\subsubsection{Two's Complement Multiplication and Intermediate Overflows}
+%**************************************************************************
+
+In two's complement multiplication, intermediate overflows that occur during the computation process generally do not affect the correctness of the final result, provided that the final result fits within the target bit range. This behavior arises due to the nature of two's complement arithmetic, which wraps values and preserves correctness when results are truncated to the appropriate bit width.
+
+During multiplication in hardware implementations, intermediate results may produce higher-order bits that "overflow" beyond the required range. For example, multiplying two 4-bit numbers in two's complement may generate intermediate results that temporarily require more than 4 bits. These overflows occur due to the nature of the multiplication operation but are irrelevant to the correctness of the final result, provided the final result fits in 4 bits.
+
+For a signed \(n\)-bit number in two's complement, the range of representable values is \(-2^{n-1}\) to \(2^{n-1} - 1\). As long as the final product lies within this range, any intermediate overflows are inconsequential. For example, multiplying \(-7\) (\(1001\)) and \(3\) (\(0011\)) in 4-bit two's complement results in \(11101101\) in 8 bits. When truncated back to 4 bits, the result is \(1101\), which correctly represents \(-21\).
+
+Consider multiplying \(4\) (\(0100\)) and \(2\) (\(0010\)) and \(-1\) \(1111\) in 4-bit two's complement arithmetic:
+\[
+4 \times 2 = 8
+\]
+\[
+0100 \times 0010 = 0000\_1000 = 1000
+\]
+8 is not representable in 2's complement 4-bits but ignoring the overflow and multiplying by $-1$ gives
+\[
+1000 \times 1111 = 0111\_1000 = 1000
+\]
+
+When truncated to 4 bits, the result becomes:
+\[
+1000
+\]
+This correctly represents \(-8\) in 4-bit two's complement arithmetic, demonstrating that intermediate overflows do not affect the correctness of the final result.
+
+
+In arithmetic and logical operations, the handling of the extended result, which refers to the extra bits generated during operations such as multiplication or addition, depends on the operation context, the target application, and the architecture. For example, multiplication of two \texttt{n}-bit numbers produces a \texttt{2n}-bit result. In many cases, the result is stored in its entirety, especially in applications that require high precision, such as digital signal processing (DSP) or scientific computing. Architectures like x86 provide instructions that store the low and high halves of the result in separate registers, enabling seamless access to the full \texttt{2n}-bit result.
+
+Modern instruction set architectures (ISAs) often provide distinct opcodes for accessing either the low or high parts of the extended result. For example, in RISC-V, instructions like \texttt{MUL} produce the lower bits of a multiplication result, while \texttt{MULH} and \texttt{MULHU} are used to extract the higher bits for signed and unsigned operations, respectively. Alternatively, some architectures provide combined instructions that store the full-width result across multiple registers. The choice between retaining or discarding the extended result ultimately depends on application requirements, hardware resource constraints, and the overall design philosophy of the ISA. In many ALU designs, retaining the low bits is the default behavior, with access to the high bits provided through additional instructions or status flags for more specialized use cases.
 
 %****************************************
 \section{Multi-Function Arithmetic Units}
