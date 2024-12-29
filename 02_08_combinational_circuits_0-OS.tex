@@ -1065,20 +1065,23 @@ Adders are fundamental components in digital computing systems. At the core of p
 %******************************
 \subsection{Behavioral Multiplier}
 %******************************
-Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
+Similar to behavioral adders, behavioral multipliers describe what the circuit should do without specifying how it is implemented at the gate level. 
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
 \subsubsection{Parameterized Abstract Multiplier (Chisel)}
 %*************************************************
-%\includechiselcode[caption={Parameterized Abstract Adder (Chisel: Adder.scala)}, label={lst:chisel_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/Adder.scala}
+\includechiselcode[caption={Parameterized Abstract Multiplier (Chisel: Multiplier.scala)}, label={lst:chisel_mult_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/multipliers/Multiplier.scala}
 
-Listing \ref{lst:chisel_adder_abstract} shows 
+Listing \ref{lst:chisel_mult_abstract} shows an abstract multiplier. The \texttt{Multiplier} class is an abstract module in Chisel, designed to serve as a base for implementing various multiplier designs. The module defines the basic input-output (I/O) interface and enforces the requirement that the bit-width of the operands, specified by the \texttt{width} parameter, must be greater than zero. This ensures that any concrete multiplier inheriting from this class adheres to a consistent interface and valid configuration.
+
+The I/O interface comprises two unsigned integer inputs, \texttt{a} and \texttt{b}, both of the specified \texttt{width}, and a single output, \texttt{result}, which provides the full precision product of the multiplication. The \texttt{result} output has a width of \texttt{2 * width}, reflecting the theoretical maximum number of bits required to store the result of multiplying two \texttt{width}-bit numbers. This abstract design provides a clear structure, enabling easy extension for implementing specific multiplier architectures while ensuring correctness in the fundamental behavior.
+
 
 }% End Chisel code
 
 %******************************************
-\subsubsection{Precision in Multiplication}
+\subsection{Precision in Multiplication}
 %*******************************************
 
 \begin{figure}[H]
@@ -1166,7 +1169,7 @@ In this case, the signed product can range from:
 Thus, $2n$ bits are still required to store the full result of signed multiplication to account for both the sign and the magnitude.
 
 %**************************************************************************
-\subsubsection{Two's Complement Multiplication and Intermediate Overflows}
+\subsection{Two's Complement Multiplication and Intermediate Overflows}
 %**************************************************************************
 
 In two's complement multiplication, intermediate overflows that occur during the computation process generally do not affect the correctness of the final result, provided that the final result fits within the target bit range. This behavior arises due to the nature of two's complement arithmetic, which wraps values and preserves correctness when results are truncated to the appropriate bit width.
