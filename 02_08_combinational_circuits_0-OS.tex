@@ -1337,6 +1337,32 @@ We now present a multifunction adder/subtractor that is closer to what might be 
 
 \includechiselcode[caption={Abstract Multifunction Adder/Subtractor (Chisel: MultifunctionAdderSubtractor.scala)}, label={lst:chisel_mf_adder_abstract}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor.scala}
 
+Listing \ref{lst:chisel_mf_adder_abstract} serves as an abstract base class for constructing modules that implement multi-functional arithmetic operations. The class is declared as \texttt{abstract}, meaning it is not directly instantiated but instead serves as a blueprint for more specific implementations. It extends the \texttt{Module} class, the fundamental building block for Chisel designs. The constructor accepts a single parameter \texttt{width} that specifies the bit-width of the operands and results. A \texttt{require} statement ensures this value is greater than zero, providing an early runtime check for invalid parameters.
+
+The \texttt{io} field defines the input-output interface of the module using a Chisel \texttt{Bundle}. The bundle includes the following signals:
+\begin{itemize}
+    \item \texttt{a}: An input signal representing the first operand, of type \texttt{UInt} with the specified width.
+    \item \texttt{b}: An input signal representing the second operand, also a \texttt{UInt} with the same width.
+    \item \texttt{opcode}: A 4-bit input signal that specifies the operation to be performed (e.g., addition, subtraction).
+    \item \texttt{carryIn}: An optional 1-bit input signal for an optional carry-in, defaulting to \texttt{0}.
+    \item \texttt{result}: An output signal representing the computed result, with the same width as the operands.
+    \item \texttt{carryOut}: An optional 1-bit output signal that indicates a carry-out from unsigned arithmetic.
+    \item \texttt{overflowFlag}: An optional 1-bit output signal that indicates an overflow in signed arithmetic.
+    \item \texttt{zeroFlag}: An optional 1-bit output signal that indicates whether the result is zero.
+    \item \texttt{negativeFlag}: An optional 1-bit output signal that indicates whether the result is negative in signed arithmetic.
+\end{itemize}
+
+The base class provides default assignments for the optional output signals \texttt{carryOut}, \texttt{overflowFlag}, \texttt{zeroFlag}, and \texttt{negativeFlag}. All are initialized to \texttt{DontCare}. This indicates that these signals are not actively driven by the base class, leaving their implementation to derived classes.
+
+This base class is designed for flexibility and modularity:
+\begin{itemize}
+    \item The parameterized \texttt{width} ensures that the design can accommodate operands of any bit-width, making it reusable across different use cases.
+    \item The abstract nature of the class allows specific implementations (e.g., addition-subtraction for specific operand sizes or opcode handling) to extend and customize its behavior.
+    \item By defining a consistent interface through the \texttt{io} bundle, the class simplifies integration into larger designs and promotes compatibility.
+\end{itemize}
+
+We now proceed to an implementation. While the arithmetic is still behavioral, the inclusion of flags moves it close to a structural implementation.
+
 \includechiselcode[caption={Multifunction 64-bit Adder/Subtractor (Chisel)}, label={lst:chisel_mf64_adder}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor64.scala}
 
 Listing \ref{lst:chisel_mf64_adder} shows a 64-bit multifunction adder-subtractor module. It is part of the package \texttt{scabook.addersubtractors} and is designed to perform a variety of arithmetic operations, including addition and subtraction, over signed and unsigned integers of varying bit widths (8, 16, 32, and 64). The implementation is parameterized by an opcode, which encodes the operation type and operand characteristics. 
@@ -1353,20 +1379,17 @@ The class \texttt{MultifunctionAdderSubtractor64} extends a generic \texttt{Mult
 
 Its internal implementation uses the opcode to decode control signals and manage input operands.
 
-The code first decodes the control signals:
+The code first decodes the control signals. The bit selections in the \texttt{opcode} are not randomly chosen. They ensure minimal decoding is required to determine which operation to perform and the types associated with the operation.
 \begin{itemize}
     \item \texttt{isSub}: A Boolean flag derived from \texttt{b3} to indicate subtraction.
     \item \texttt{isSigned}: A flag derived from \texttt{b2} to indicate signed arithmetic.
     \item \texttt{operandSize}: The operand size determined by the bits \texttt{b1b0}.
 \end{itemize}
 
-\subsection*{Operand Masking and Adjustment}
 The effective operand width is determined using a multiplexer (\texttt{MuxCase}) and is used to create a mask that truncates inputs to their specified width. Operands \texttt{a} and \texttt{b} are masked accordingly, and \texttt{b} is adjusted for subtraction using two's complement logic (\texttt{~b + 1}).
 
-\subsection*{Arithmetic Operations}
-The code performs the arithmetic operation (addition or subtraction) based on the \texttt{isSub} and \texttt{isSigned} flags. For signed arithmetic, the operands are cast to \texttt{SInt} types before addition. The result is then masked to fit within the specified operand size.
+The code performs the arithmetic operation (addition or subtraction) based on the \texttt{isSub} and \texttt{isSigned} flags. For signed arithmetic, the operands are cast to \texttt{SInt} types before addition. The result is then masked to fit within the specified operand size. The \texttt{+\&} operator is used to perform addition while preserving the carry-out bit. Unlike the standard addition operator (\texttt{+}), which only computes the sum of two operands within a fixed width, \texttt{+\&} ensures that the result includes an extra bit to accommodate any overflow from the addition. The result of the operation is then truncated to the selected width using a bitwise \texttt{\&} operation with the mask. For output consistency, the result is extended back to 64 bits using either sign extension or zero extension, depending on whether the operation is signed or unsigned.
 
-\subsection*{Flags Computation}
 The module computes several flags to indicate the outcome of the operation:
 \begin{itemize}
     \item \textbf{Carry/Borrow Flag}: Indicates whether there was a carry or borrow in unsigned arithmetic. The flag depends on the operand size.
@@ -1375,36 +1398,9 @@ The module computes several flags to indicate the outcome of the operation:
     \item \textbf{Negative Flag}: Identifies whether the result is negative in signed arithmetic.
 \end{itemize}
 
-\subsection*{Debugging}
 The code includes optional debugging functionality, controlled by the \texttt{printDebugInfo} flag. When enabled, intermediate values, such as operand adjustments, flags, and results, are printed using the \texttt{printf} method.
 
-\subsection*{Output Signals}
 The final result of the arithmetic operation is assigned to \texttt{io.result}. Flags, including carry, overflow, zero, and negative, are also output through the corresponding IO ports.
-
-
-
-
-
-
-
-
-a \texttt{MultifunctionAdderSubtractor} module that implements a highly configurable arithmetic unit capable of performing addition and subtraction on operands of various sizes and types. The operation is controlled by a 4-bit opcode, which encodes the operation type (add or subtract), whether the operands are signed or unsigned, and the operand width (8, 16, 32, or 64 bits). 
-
-
-
-
-
-
-
-The module's control logic begins by decoding the opcode into three key signals: \texttt{isSub}, \texttt{isSigned}, and \texttt{operandSize}. These signals determine whether the operation is addition or subtraction, whether the operands are treated as signed or unsigned, and the effective width of the operands, respectively. The \texttt{operandSize} signal selects between four possible widths (8, 16, 32, and 64 bits) using a \texttt{switch} construct, allowing the module to dynamically adapt to different operand sizes while maintaining a fixed 64-bit input width. The bit selections in the \texttt{opcode} are not randomly chosen. They ensure minimal decoding is required to determine which operation to perform and the types associated with the operation.
-
-The module then masks the inputs (\texttt{io.a} and \texttt{io.b}) to match the selected operand width, ensuring that only the relevant bits are considered in the arithmetic operation. For subtraction, the \texttt{bEffective} value is adjusted using two's complement logic (\texttt{$\sim$b + 1}). This adjustment allows subtraction to be implemented using the same addition circuitry.
-
-The arithmetic operation itself is performed using a \texttt{Mux} construct that selects between signed and unsigned addition or subtraction. Signed operations use \texttt{asSInt} to treat the operands as signed integers, while unsigned operations directly add or subtract the masked inputs. 
-
-The \texttt{+\&} operator is used to perform addition while preserving the carry-out bit. Unlike the standard addition operator (\texttt{+}), which only computes the sum of two operands within a fixed width, \texttt{+\&} ensures that the result includes an extra bit to accommodate any overflow from the addition. The result of the operation is then truncated to the selected width using a bitwise \texttt{\&} operation with the mask. For output consistency, the result is extended back to 64 bits using either sign extension or zero extension, depending on whether the operation is signed or unsigned.
-
-The module also includes logic to generate a carry-out signal. For unsigned operations, this signal indicates overflow (for addition) or borrow (for subtraction). The logic uses comparisons with the mask and operand values to determine whether a carry or borrow occurred. 
 
 
 }%End Chisel Code
