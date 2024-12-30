@@ -1,5 +1,91 @@
 \chapter{Performance Optimized Digital Logic}\label{chapt:perf_digital_logic}
 \localtoc
+
+\subsection{Comparison of \texttt{when} and \texttt{MuxCase} in Chisel}
+
+The choice between \texttt{when} and \texttt{MuxCase} in Chisel depends on the specific design scenario and synthesis goals. Below is a detailed comparison of these two constructs:
+
+\paragraph{Behavioral and Structural Implications}
+\texttt{when} is more natural and intuitive for conditions that resemble software-like \texttt{if-else} logic. It typically generates cascaded conditional logic (e.g., \texttt{if-else} structures) in the hardware, where each condition is checked sequentially. On the other hand, \texttt{MuxCase} represents a priority-free selection logic, akin to a multiplexer, where all conditions are evaluated simultaneously. This structure often synthesizes directly into a multiplexer tree, which can result in better performance and reduced latency for certain designs.
+
+\paragraph{Synthesis Implications}
+\textbf{Timing and Performance:}  
+For timing, \texttt{when} introduces propagation delays due to the cascading nature of sequential conditions. In contrast, \texttt{MuxCase} generates parallel logic, potentially yielding better timing performance as conditions are evaluated independently.
+
+\textbf{Area:}  
+The \texttt{when} construct can produce more compact hardware for sequential conditions since unused conditions are pruned early. However, \texttt{MuxCase} may generate larger hardware if many mutually exclusive conditions are evaluated together because all conditions are checked in parallel.
+
+\textbf{Readability:}  
+\texttt{when} is preferable for sequential, human-readable conditions with natural priority, while \texttt{MuxCase} is better suited for a concise representation of mutually exclusive cases.
+
+\paragraph{Specific Considerations}
+\textbf{Mutually Exclusive Conditions:}  
+If conditions are naturally exclusive, \texttt{MuxCase} is often a better fit. For example:
+\[
+\texttt{val result = MuxCase(0.U, Seq(}
+\]
+\[
+\quad (\texttt{opcode === ADD} \rightarrow \texttt{(a + b),}
+\]
+\[
+\quad (\texttt{opcode === SUB} \rightarrow \texttt{(a - b))}
+\]
+\texttt{))}
+This translates to a 3-to-1 multiplexer in hardware.
+
+\textbf{Priority Logic:}  
+When conditions have a natural priority (e.g., an \texttt{else} case that catches all unhandled conditions), \texttt{when} is preferable. For example:
+\[
+\texttt{when(opcode === ADD) \{}
+\]
+\[
+\quad \texttt{result := a + b}
+\]
+\[
+\texttt{\}.elsewhen(opcode === SUB) \{}
+\]
+\[
+\quad \texttt{result := a - b}
+\]
+\[
+\texttt{\}.otherwise \{}
+\]
+\[
+\quad \texttt{result := 0.U}
+\]
+\texttt{\}}  
+This logic represents a chain of conditional checks in hardware.
+
+\paragraph{Recommendation}
+\texttt{when} should be used for conditions with priority, sequential evaluation, or better readability when handling control logic. In contrast, \texttt{MuxCase} is ideal for selection logic like multiplexer trees, where all conditions are naturally parallel and priority-free. By carefully analyzing the nature of your conditions and their synthesis implications, you can choose the construct that aligns best with your performance and area optimization goals.
+
+
+\subsubsection{Switch Synthesis in Chisel}
+In Chisel, a \texttt{switch} statement is a construct used for multi-way branching based on a condition or value. The hardware synthesized from a \texttt{switch} statement depends on the conditions and the synthesis toolchain. Generally, it can result in one of the following hardware structures:
+
+A \textbf{multiplexer tree} is generated if the \texttt{switch} conditions are mutually exclusive, with each case corresponding to a distinct value of the selector. For instance:
+\[
+\texttt{
+val result = Wire(UInt(8.W)) \\
+switch(selector) \{ \\
+\quad is("b00".U) \{ result := a \} \\
+\quad is("b01".U) \{ result := b \} \\
+\quad is("b10".U) \{ result := c \} \\
+\quad is("b11".U) \{ result := d \} \\
+\}
+}
+\]
+This would synthesize into a 4-to-1 multiplexer controlled by the value of \texttt{selector}.
+
+When the \texttt{switch} includes overlapping or non-mutually-exclusive conditions, \textbf{priority logic} is typically generated. Priority logic evaluates cases sequentially, giving precedence to earlier conditions. For wide selectors or more complex logic, synthesis tools may generate \textbf{decoder logic} to translate the selector into one-hot or prioritized enable signals that control the corresponding cases.
+
+\subsubsection{Comparison with \texttt{MuxCase} and \texttt{when}}
+\texttt{MuxCase} is more explicit and directly creates a multiplexer, making it compact and efficient for mutually exclusive conditions. \texttt{when} constructs explicitly generate priority logic. In contrast, \texttt{switch} can represent either multiplexers or priority logic depending on the use case, providing a flexible but less predictable synthesis.
+
+\subsubsection{Limitations of \texttt{switch}}
+While \texttt{switch} provides a clean and readable way to handle multi-way branching, it is not always recommended for large or complex selectors. For wide selectors, the generated decoder logic can result in significant area and timing overhead. Additionally, overlapping or non-mutually-exclusive cases can inadvertently lead to priority chains that increase latency and complicate timing analysis. Designers must carefully evaluate the trade-offs between simplicity in the design code and hardware efficiency, especially for performance-critical applications.
+
+
 %**********************************
 \section{Carry Lookahead Adder}
 %*********************************
