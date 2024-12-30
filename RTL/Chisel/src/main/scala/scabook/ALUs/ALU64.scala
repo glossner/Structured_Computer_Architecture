@@ -118,9 +118,9 @@ class ALU64 extends Module {
     printf(p"  bAdjusted =  0x${Hexadecimal(bAdjusted)},\n")
   }
 
-  //######################
+  //***********************
   // Arithmetic operations
-  //######################
+  //***********************
   val adderSubtractor = Module(new MultifunctionAdderSubtractor64)
 
   // Connect inputs
@@ -137,24 +137,24 @@ class ALU64 extends Module {
   io.negativeFlag := adderSubtractor.io.negativeFlag
   
 
-  //###################
+  //********************
   // Logical operations
-  //###################
+  //********************
   // b4b3b2: logical operation
-val logicalResult = MuxCase(0.U(64.W), Seq(
-  (io.opcode(4, 2) === "b000".U) -> (aEffective & bEffective),                               // AND
-  (io.opcode(4, 2) === "b001".U) -> (aEffective | bEffective),                               // OR
-  (io.opcode(4, 2) === "b010".U) -> (aEffective ^ bEffective),                               // XOR
-  (io.opcode(4, 2) === "b011".U) -> ((aEffective << (bEffective(5, 0) & (width - 1.U))).asUInt & mask), // SLL
-  (io.opcode(4, 2) === "b100".U) -> ((aEffective >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask), // SRL
-  (io.opcode(4, 2) === "b101".U) -> ((aEffective.asSInt >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask) // SRA
-))
+  val logicalResult = MuxCase(0.U(64.W), Seq(
+    (io.opcode(4, 2) === "b000".U) -> (aEffective & bEffective),                               // AND
+    (io.opcode(4, 2) === "b001".U) -> (aEffective | bEffective),                               // OR
+    (io.opcode(4, 2) === "b010".U) -> (aEffective ^ bEffective),                               // XOR
+    (io.opcode(4, 2) === "b011".U) -> ((aEffective << (bEffective(5, 0) & (width - 1.U))).asUInt & mask), // SLL
+    (io.opcode(4, 2) === "b100".U) -> ((aEffective >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask), // SRL
+    (io.opcode(4, 2) === "b101".U) -> ((aEffective.asSInt >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask) // SRA
+  ))
 
   if(printDebugInfo) printf(p"  logicalResult =     0x${Hexadecimal(logicalResult)}\n")
 
-  //##############
-  // Final result
-  //##############
+  //**************************
+  // Assign results to outputs
+  //**************************
   io.result := Mux(isArithmetic, adderSubtractor.io.result, logicalResult)
   io.carryOutFlag := Mux(isArithmetic, adderSubtractor.io.carryOut, 0.U)
   io.overflowFlag := Mux(isArithmetic, adderSubtractor.io.overflowFlag, 0.U)

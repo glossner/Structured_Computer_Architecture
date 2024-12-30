@@ -94,9 +94,9 @@ class MultifunctionAdderSubtractor64 extends MultiFunctionAdderSubtractor(64) {
     printf(p"  bAdjusted =  0x${Hexadecimal(bAdjusted)},\n")
   }
 
-  //######################
+  //**********************
   // Arithmetic operations
-  //######################
+  //***********************
   val fullArithmeticResult = Mux(isSigned,
     (aEffective.asSInt +& bAdjusted.asSInt).asUInt, // Signed operation
     (aEffective +& bAdjusted)                       // Unsigned operation
@@ -108,15 +108,15 @@ class MultifunctionAdderSubtractor64 extends MultiFunctionAdderSubtractor(64) {
     printf(p"  truncatedResult =     0x${Hexadecimal(truncatedResult)}\n")
   }
  
-  //##############
+  //*************
   // Final result
-  //##############
+  //*************
   io.result := truncatedResult
   if(printDebugInfo) printf(p"  io.result =     0x${Hexadecimal(io.result)}\n")
 
-  //##############
+  //**************
   // Compute Flags
-  //##############
+  //**************
 
   // Carry Flag: Unsigned Arithmetic
 
