@@ -683,7 +683,7 @@ Listing \ref{lst:chisel_muxT} shows a parameterized bus multiplexer in Chisel wh
 
 The \texttt{gen} parameter is well-suited when the type represents a \textit{blueprint} for generating multiple hardware elements. This is particularly relevant in cases where the module processes or instantiates multiple instances of the same type, such as multiplexers or reusable modules like FIFO queues and bus interfaces. For example, in Listing \ref{lst:chisel_muxT}, a multiplexer uses \texttt{gen} to define the type of data inputs and outputs, emphasizing that multiple identical instances are being handled within the hardware structure. 
 
- Given scala's generic types and type checking capabilities, it would be desirable to parameterize the bus type. Unfortunately, when generating hardware, this can sometimes appear as an invalid type conversion even if all interfaces are instantiated with \texttt{UInt<>}. Therefore, in this book, we have specified all classes to use \texttt{UInt}. This more closely aligns to verilog wires. Where possible, inside implementations, we still strive to ensure type safety using conversions such as \texttt{.asBool} and \texttt{.asSInt}, etc. 
+ Given scala's generic types and type checking capabilities, it would be desirable to parameterize the bus type. Unfortunately, when generating hardware, this can sometimes appear as an invalid type conversion even if all interfaces are instantiated with \texttt{UInt<>}. Therefore, \textbf{ \textit{in this book, we have specified all classes to use \texttt{UInt}. This more closely aligns to verilog wires. }}Where possible, inside implementations, we still strive to ensure type safety using conversions such as \texttt{.asBool} and \texttt{.asSInt}, etc. 
 
 \includechiselcode[caption={Parameterized Bus Width Multiplexer (Chisel: Multiplexer.scala)}, label={lst:chisel_mux}, firstline=9, firstnumber=9, lastline=20]{\chiselSourceDir/Multiplexer.scala}
 
@@ -851,11 +851,30 @@ The snippet in Listing \ref{lst:verilog_yosys_sevensegmentdisplay} shows that th
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.5]{\diagramsDir/SevenSegmentDisplay.png} 
-    \caption{Generated Schematic of SevenSegmentDisplay.}
+    \caption{Generated Schematic of SevenSegmentDisplay Using \texttt{when} statements.}
     \label{fig:7seg_schematic} 
 \end{figure}
 
 Figure \ref{fig:7seg_schematic} shows the schematic after yosys elaboration. Unfortunately, netlistsvg does not retain the names even though they are in the generated verilog file.
+
+%*********************************************************************************
+\subsubsection{Seven Segment Display Using MuxSelect}
+%**********************************************************************************
+In Chisel, there are several constructs that can produce hardware in various forms. See Chapter \ref{chapt:perf_digital_logic} Section \ref{sec:muxcase} for details of using \texttt{when}, vs. \texttt{switch}, vs. \texttt{MuxCase}. From a programmer's point of view, \texttt{when} is likely the most familiar. However, \textbf{\textit{ \texttt{when} will priority encode complex signals.}} In the case of the Seven Segment Display, where all the conditions are independent, it will generate the signals in parallel.
+
+\includechiselcode[caption={Seven Segment Display Using MuxCase (Chisel: SevenSegmentDisplayMuxCase.scala)},     label={lst:chisel_sevensegmentdisplay_muxcase}, firstline=43, firstnumber=43, lastline=54]{\chiselSourceDir/SevenSegmentDisplayMuxCase.scala}
+
+When the designer wants \textbf{\textit{to guarantee parallel generation of hardware, \texttt{MuxCase} is preferred.}} Listing \ref{lst:chisel_sevensegmentdisplay_muxcase} shows the Chisel code using \texttt{MuxCase} instead of \texttt{when}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.25]{\diagramsDir/SevenSegmentDisplayMuxCase_not_asic.png} 
+    \caption{Generated Schematic of SevenSegmentDisplayMuxCase.}
+    \label{fig:7seg_schematic_muxcase} 
+\end{figure}
+
+Figure \ref{fig:7seg_schematic_muxcase} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code. Note that all multiplexers are reduced to parallel logic.
+
 
 }%End Chisel
 
