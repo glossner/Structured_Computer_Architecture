@@ -1,20 +1,17 @@
 module {
-  hw.module @MultifunctionAdderSubtractor64(in %clock : i1, in %reset : i1, in %io_a : i64, in %io_b : i64, in %io_opcode : i4, in %io_carryIn : i1, out io_result : i64, out io_carryOut : i1, out io_overflowFlag : i1, out io_zeroFlag : i1, out io_negativeFlag : i1) {
+  hw.module private @MultifunctionAdderSubtractor64(in %io_a : i64, in %io_b : i64, in %io_opcode : i4, out io_result : i64, out io_carryOut : i1, out io_overflowFlag : i1, out io_zeroFlag : i1, out io_negativeFlag : i1) {
     %io_a_0 = sv.wire sym @sym name "io_a" {hw.verilogName = "io_a_0"} : !hw.inout<i64>
     sv.assign %io_a_0, %io_a : i64
     %io_b_1 = sv.wire sym @sym_0 name "io_b" {hw.verilogName = "io_b_0"} : !hw.inout<i64>
     sv.assign %io_b_1, %io_b : i64
     %io_opcode_2 = sv.wire sym @sym_1 name "io_opcode" {hw.verilogName = "io_opcode_0"} : !hw.inout<i4>
     sv.assign %io_opcode_2, %io_opcode : i4
-    %io_carryIn_3 = sv.wire sym @sym_2 name "io_carryIn" {hw.verilogName = "io_carryIn_0"} : !hw.inout<i1>
-    sv.assign %io_carryIn_3, %io_carryIn : i1
     %c1_i65 = hw.constant 1 : i65
     %c1_i2 = hw.constant 1 : i2
     %c0_i65 = hw.constant 0 : i65
     %c-1_i2 = hw.constant -1 : i2
     %c0_i2 = hw.constant 0 : i2
     %true = hw.constant true
-    %false = hw.constant false
     %c-2_i2 = hw.constant -2 : i2
     %c32_i7 = hw.constant 32 : i7
     %c16_i7 = hw.constant 16 : i7
@@ -28,6 +25,9 @@ module {
     %c-1_i64 = hw.constant -1 : i64
     %_mask_T_4 = sv.wire sym @sym_24 {hw.verilogName = "_mask_T_4"} : !hw.inout<i64>
     sv.assign %_mask_T_4, %c-1_i64 : i64
+    %false = hw.constant false
+    %io_carryIn = sv.wire sym @sym_2 {hw.verilogName = "io_carryIn"} : !hw.inout<i1>
+    sv.assign %io_carryIn, %false : i1
     %_io_carryOut_T_6 = sv.wire sym @sym_63 {hw.verilogName = "_io_carryOut_T_6"} : !hw.inout<i1>
     %isOverflow = sv.wire sym @sym_105 {hw.verilogName = "isOverflow"} : !hw.inout<i1>
     %isZero = sv.wire sym @sym_107 {hw.verilogName = "isZero"} : !hw.inout<i1>
@@ -510,7 +510,369 @@ module {
     %264 = sv.read_inout %io_negativeFlag : !hw.inout<i1>
     hw.output %260, %261, %262, %263, %264 : i64, i1, i1, i1, i1
   }
-  om.class @MultifunctionAdderSubtractor64_Class(%basepath: !om.frozenbasepath) {
+  hw.module @ALU64(in %clock : i1, in %reset : i1, in %io_a : i64, in %io_b : i64, out io_result : i64, in %io_opcode : i6, out io_carryOutFlag : i1, out io_overflowFlag : i1, out io_zeroFlag : i1, out io_negativeFlag : i1) {
+    %_adderSubtractor_io_result = sv.wire {hw.verilogName = "_adderSubtractor_io_result"} : !hw.inout<i64>
+    %_adderSubtractor_io_carryOut = sv.wire {hw.verilogName = "_adderSubtractor_io_carryOut"} : !hw.inout<i1>
+    %_adderSubtractor_io_overflowFlag = sv.wire {hw.verilogName = "_adderSubtractor_io_overflowFlag"} : !hw.inout<i1>
+    %_adderSubtractor_io_zeroFlag = sv.wire {hw.verilogName = "_adderSubtractor_io_zeroFlag"} : !hw.inout<i1>
+    %_adderSubtractor_io_negativeFlag = sv.wire {hw.verilogName = "_adderSubtractor_io_negativeFlag"} : !hw.inout<i1>
+    %io_a_0 = sv.wire sym @sym name "io_a" {hw.verilogName = "io_a_0"} : !hw.inout<i64>
+    sv.assign %io_a_0, %io_a : i64
+    %io_b_1 = sv.wire sym @sym_0 name "io_b" {hw.verilogName = "io_b_0"} : !hw.inout<i64>
+    sv.assign %io_b_1, %io_b : i64
+    %io_opcode_2 = sv.wire sym @sym_2 name "io_opcode" {hw.verilogName = "io_opcode_0"} : !hw.inout<i6>
+    sv.assign %io_opcode_2, %io_opcode : i6
+    %0 = hw.aggregate_constant [-1, 4294967295, 65535, 255] : !hw.array<4xi64>
+    %1 = sv.wire {hw.verilogName = "_GEN"} : !hw.inout<array<4xi64>>
+    sv.assign %1, %0 : !hw.array<4xi64>
+    %2 = hw.aggregate_constant [-64 : i7, 32 : i7, 16 : i7, 8 : i7] : !hw.array<4xi7>
+    %3 = sv.wire {hw.verilogName = "_GEN_0"} : !hw.inout<array<4xi7>>
+    sv.assign %3, %2 : !hw.array<4xi7>
+    %c3_i3 = hw.constant 3 : i3
+    %c2_i3 = hw.constant 2 : i3
+    %c1_i3 = hw.constant 1 : i3
+    %c1_i65 = hw.constant 1 : i65
+    %c0_i57 = hw.constant 0 : i57
+    %c0_i184 = hw.constant 0 : i184
+    %c0_i127 = hw.constant 0 : i127
+    %c0_i3 = hw.constant 0 : i3
+    %true = hw.constant true
+    %c-1_i64 = hw.constant -1 : i64
+    %c-4_i3 = hw.constant -4 : i3
+    %c-3_i3 = hw.constant -3 : i3
+    %c0_i64 = hw.constant 0 : i64
+    %false = hw.constant false
+    %_io_carryOutFlag_T = sv.wire sym @sym_68 {hw.verilogName = "_io_carryOutFlag_T"} : !hw.inout<i1>
+    %_io_overflowFlag_T = sv.wire sym @sym_69 {hw.verilogName = "_io_overflowFlag_T"} : !hw.inout<i1>
+    %_io_zeroFlag_T = sv.wire sym @sym_70 {hw.verilogName = "_io_zeroFlag_T"} : !hw.inout<i1>
+    %_io_negativeFlag_T = sv.wire sym @sym_71 {hw.verilogName = "_io_negativeFlag_T"} : !hw.inout<i1>
+    %4 = sv.read_inout %io_opcode_2 : !hw.inout<i6>
+    %5 = comb.extract %4 from 5 : (i6) -> i1
+    %_isArithmetic_T = sv.wire sym @sym_7 {hw.verilogName = "_isArithmetic_T"} : !hw.inout<i1>
+    sv.assign %_isArithmetic_T, %5 : i1
+    %_isLogical_T = sv.wire sym @sym_9 {hw.verilogName = "_isLogical_T"} : !hw.inout<i1>
+    sv.assign %_isLogical_T, %5 : i1
+    %6 = sv.read_inout %_isArithmetic_T : !hw.inout<i1>
+    %7 = comb.xor bin %6, %true : i1
+    %isArithmetic = sv.wire sym @sym_8 {hw.verilogName = "isArithmetic"} : !hw.inout<i1>
+    sv.assign %isArithmetic, %7 : i1
+    %8 = sv.read_inout %_isLogical_T : !hw.inout<i1>
+    %isLogical = sv.wire sym @sym_10 {hw.verilogName = "isLogical"} : !hw.inout<i1>
+    sv.assign %isLogical, %8 : i1
+    %9 = sv.read_inout %io_opcode_2 : !hw.inout<i6>
+    %10 = comb.extract %9 from 3 : (i6) -> i1
+    %_isSub_T = sv.wire sym @sym_11 {hw.verilogName = "_isSub_T"} : !hw.inout<i1>
+    sv.assign %_isSub_T, %10 : i1
+    %11 = sv.read_inout %_isSub_T : !hw.inout<i1>
+    %_isSub_T_1 = sv.wire sym @sym_12 {hw.verilogName = "_isSub_T_1"} : !hw.inout<i1>
+    sv.assign %_isSub_T_1, %11 : i1
+    %12 = sv.read_inout %_isSub_T_1 : !hw.inout<i1>
+    %13 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %14 = comb.and bin %12, %13 : i1
+    %isSub = sv.wire sym @sym_13 {hw.verilogName = "isSub"} : !hw.inout<i1>
+    sv.assign %isSub, %14 : i1
+    %15 = sv.read_inout %io_opcode_2 : !hw.inout<i6>
+    %16 = comb.extract %15 from 2 : (i6) -> i1
+    %_isSigned_T = sv.wire sym @sym_14 {hw.verilogName = "_isSigned_T"} : !hw.inout<i1>
+    sv.assign %_isSigned_T, %16 : i1
+    %17 = sv.read_inout %_isSigned_T : !hw.inout<i1>
+    %18 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %19 = comb.and bin %17, %18 : i1
+    %isSigned = sv.wire sym @sym_15 {hw.verilogName = "isSigned"} : !hw.inout<i1>
+    sv.assign %isSigned, %19 : i1
+    %20 = sv.read_inout %io_opcode_2 : !hw.inout<i6>
+    %21 = comb.extract %20 from 0 : (i6) -> i2
+    %operandSize = sv.wire sym @sym_16 {hw.verilogName = "operandSize"} : !hw.inout<i2>
+    sv.assign %operandSize, %21 : i2
+    %22 = sv.read_inout %3 : !hw.inout<array<4xi7>>
+    %23 = sv.read_inout %operandSize : !hw.inout<i2>
+    %24 = hw.array_get %22[%23] : !hw.array<4xi7>, i2
+    %width = sv.wire sym @sym_17 {hw.verilogName = "width"} : !hw.inout<i7>
+    sv.assign %width, %24 : i7
+    %25 = sv.read_inout %operandSize : !hw.inout<i2>
+    %26 = sv.read_inout %1 : !hw.inout<array<4xi64>>
+    %27 = hw.array_get %26[%25] : !hw.array<4xi64>, i2
+    %mask = sv.wire sym @sym_18 {hw.verilogName = "mask"} : !hw.inout<i64>
+    sv.assign %mask, %27 : i64
+    %28 = sv.read_inout %io_a_0 : !hw.inout<i64>
+    %29 = sv.read_inout %mask : !hw.inout<i64>
+    %30 = comb.and bin %28, %29 : i64
+    %aEffective = sv.wire sym @sym_19 {hw.verilogName = "aEffective", sv.namehint = "aEffective"} : !hw.inout<i64>
+    sv.assign %aEffective, %30 : i64
+    %31 = sv.read_inout %aEffective : !hw.inout<i64>
+    %_logicalResult_T_27 = sv.wire sym @sym_53 {hw.verilogName = "_logicalResult_T_27"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_27, %31 : i64
+    %32 = sv.read_inout %io_b_1 : !hw.inout<i64>
+    %33 = sv.read_inout %mask : !hw.inout<i64>
+    %34 = comb.and bin %32, %33 : i64
+    %bEffective = sv.wire sym @sym_20 {hw.verilogName = "bEffective", sv.namehint = "bEffective"} : !hw.inout<i64>
+    sv.assign %bEffective, %34 : i64
+    %35 = sv.read_inout %bEffective : !hw.inout<i64>
+    %36 = comb.xor bin %35, %c-1_i64 : i64
+    %_bAdjusted_T = sv.wire sym @sym_21 {hw.verilogName = "_bAdjusted_T"} : !hw.inout<i64>
+    sv.assign %_bAdjusted_T, %36 : i64
+    %37 = sv.read_inout %_bAdjusted_T : !hw.inout<i64>
+    %38 = comb.concat %false, %37 : i1, i64
+    %39 = comb.add bin %38, %c1_i65 : i65
+    %_bAdjusted_T_1 = sv.wire sym @sym_22 {hw.verilogName = "_bAdjusted_T_1"} : !hw.inout<i65>
+    sv.assign %_bAdjusted_T_1, %39 : i65
+    %40 = sv.read_inout %_bAdjusted_T_1 : !hw.inout<i65>
+    %41 = comb.extract %40 from 0 : (i65) -> i64
+    %_bAdjusted_T_2 = sv.wire sym @sym_23 {hw.verilogName = "_bAdjusted_T_2"} : !hw.inout<i64>
+    sv.assign %_bAdjusted_T_2, %41 : i64
+    %42 = sv.read_inout %isSub : !hw.inout<i1>
+    %43 = sv.read_inout %_bAdjusted_T_2 : !hw.inout<i64>
+    %44 = sv.read_inout %bEffective : !hw.inout<i64>
+    %45 = comb.mux bin %42, %43, %44 : i64
+    %bAdjusted = sv.wire sym @sym_24 {hw.verilogName = "bAdjusted"} : !hw.inout<i64>
+    sv.assign %bAdjusted, %45 : i64
+    %46 = sv.read_inout %io_opcode_2 : !hw.inout<i6>
+    %47 = comb.extract %46 from 0 : (i6) -> i4
+    %_adderSubtractor_io_opcode_T = sv.wire sym @sym_25 {hw.verilogName = "_adderSubtractor_io_opcode_T", sv.namehint = "adderSubtractor.io_opcode"} : !hw.inout<i4>
+    sv.assign %_adderSubtractor_io_opcode_T, %47 : i4
+    %48 = sv.read_inout %io_opcode_2 : !hw.inout<i6>
+    %49 = comb.extract %48 from 2 : (i6) -> i3
+    %_logicalResult_T = sv.wire sym @sym_26 {hw.verilogName = "_logicalResult_T"} : !hw.inout<i3>
+    sv.assign %_logicalResult_T, %49 : i3
+    %_logicalResult_T_3 = sv.wire sym @sym_29 {hw.verilogName = "_logicalResult_T_3"} : !hw.inout<i3>
+    sv.assign %_logicalResult_T_3, %49 : i3
+    %_logicalResult_T_6 = sv.wire sym @sym_32 {hw.verilogName = "_logicalResult_T_6"} : !hw.inout<i3>
+    sv.assign %_logicalResult_T_6, %49 : i3
+    %_logicalResult_T_9 = sv.wire sym @sym_35 {hw.verilogName = "_logicalResult_T_9"} : !hw.inout<i3>
+    sv.assign %_logicalResult_T_9, %49 : i3
+    %_logicalResult_T_17 = sv.wire sym @sym_43 {hw.verilogName = "_logicalResult_T_17"} : !hw.inout<i3>
+    sv.assign %_logicalResult_T_17, %49 : i3
+    %_logicalResult_T_25 = sv.wire sym @sym_51 {hw.verilogName = "_logicalResult_T_25"} : !hw.inout<i3>
+    sv.assign %_logicalResult_T_25, %49 : i3
+    %50 = sv.read_inout %_logicalResult_T : !hw.inout<i3>
+    %51 = comb.icmp bin eq %50, %c0_i3 : i3
+    %_logicalResult_T_1 = sv.wire sym @sym_27 {hw.verilogName = "_logicalResult_T_1"} : !hw.inout<i1>
+    sv.assign %_logicalResult_T_1, %51 : i1
+    %52 = sv.read_inout %aEffective : !hw.inout<i64>
+    %53 = sv.read_inout %bEffective : !hw.inout<i64>
+    %54 = comb.and bin %52, %53 : i64
+    %_logicalResult_T_2 = sv.wire sym @sym_28 {hw.verilogName = "_logicalResult_T_2"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_2, %54 : i64
+    %55 = sv.read_inout %_logicalResult_T_3 : !hw.inout<i3>
+    %56 = comb.icmp bin eq %55, %c1_i3 : i3
+    %_logicalResult_T_4 = sv.wire sym @sym_30 {hw.verilogName = "_logicalResult_T_4"} : !hw.inout<i1>
+    sv.assign %_logicalResult_T_4, %56 : i1
+    %57 = sv.read_inout %aEffective : !hw.inout<i64>
+    %58 = sv.read_inout %bEffective : !hw.inout<i64>
+    %59 = comb.or bin %57, %58 : i64
+    %_logicalResult_T_5 = sv.wire sym @sym_31 {hw.verilogName = "_logicalResult_T_5"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_5, %59 : i64
+    %60 = sv.read_inout %_logicalResult_T_6 : !hw.inout<i3>
+    %61 = comb.icmp bin eq %60, %c2_i3 : i3
+    %_logicalResult_T_7 = sv.wire sym @sym_33 {hw.verilogName = "_logicalResult_T_7"} : !hw.inout<i1>
+    sv.assign %_logicalResult_T_7, %61 : i1
+    %62 = sv.read_inout %aEffective : !hw.inout<i64>
+    %63 = sv.read_inout %bEffective : !hw.inout<i64>
+    %64 = comb.xor bin %62, %63 : i64
+    %_logicalResult_T_8 = sv.wire sym @sym_34 {hw.verilogName = "_logicalResult_T_8"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_8, %64 : i64
+    %65 = sv.read_inout %_logicalResult_T_9 : !hw.inout<i3>
+    %66 = comb.icmp bin eq %65, %c3_i3 : i3
+    %_logicalResult_T_10 = sv.wire sym @sym_36 {hw.verilogName = "_logicalResult_T_10"} : !hw.inout<i1>
+    sv.assign %_logicalResult_T_10, %66 : i1
+    %67 = sv.read_inout %bEffective : !hw.inout<i64>
+    %68 = comb.extract %67 from 0 : (i64) -> i6
+    %_logicalResult_T_11 = sv.wire sym @sym_37 {hw.verilogName = "_logicalResult_T_11"} : !hw.inout<i6>
+    sv.assign %_logicalResult_T_11, %68 : i6
+    %_logicalResult_T_19 = sv.wire sym @sym_45 {hw.verilogName = "_logicalResult_T_19"} : !hw.inout<i6>
+    sv.assign %_logicalResult_T_19, %68 : i6
+    %_logicalResult_T_28 = sv.wire sym @sym_54 {hw.verilogName = "_logicalResult_T_28"} : !hw.inout<i6>
+    sv.assign %_logicalResult_T_28, %68 : i6
+    %69 = sv.read_inout %width : !hw.inout<i7>
+    %70 = comb.concat %false, %69 : i1, i7
+    %c1_i8 = hw.constant 1 : i8
+    %71 = comb.sub %70, %c1_i8 : i8
+    %72 = sv.wire {hw.verilogName = "_GEN_1"} : !hw.inout<i8>
+    sv.assign %72, %71 : i8
+    %_logicalResult_T_12 = sv.wire sym @sym_38 {hw.verilogName = "_logicalResult_T_12"} : !hw.inout<i8>
+    %73 = sv.read_inout %72 : !hw.inout<i8>
+    sv.assign %_logicalResult_T_12, %73 : i8
+    %_logicalResult_T_20 = sv.wire sym @sym_46 {hw.verilogName = "_logicalResult_T_20"} : !hw.inout<i8>
+    %74 = sv.read_inout %72 : !hw.inout<i8>
+    sv.assign %_logicalResult_T_20, %74 : i8
+    %_logicalResult_T_29 = sv.wire sym @sym_55 {hw.verilogName = "_logicalResult_T_29"} : !hw.inout<i8>
+    %75 = sv.read_inout %72 : !hw.inout<i8>
+    sv.assign %_logicalResult_T_29, %75 : i8
+    %76 = sv.read_inout %_logicalResult_T_12 : !hw.inout<i8>
+    %77 = comb.extract %76 from 0 : (i8) -> i7
+    %_logicalResult_T_13 = sv.wire sym @sym_39 {hw.verilogName = "_logicalResult_T_13"} : !hw.inout<i7>
+    sv.assign %_logicalResult_T_13, %77 : i7
+    %78 = sv.read_inout %_logicalResult_T_13 : !hw.inout<i7>
+    %79 = comb.extract %78 from 0 : (i7) -> i6
+    %80 = sv.read_inout %_logicalResult_T_11 : !hw.inout<i6>
+    %81 = comb.and bin %79, %80 : i6
+    %82 = comb.concat %false, %81 : i1, i6
+    %_logicalResult_T_14 = sv.wire sym @sym_40 {hw.verilogName = "_logicalResult_T_14"} : !hw.inout<i7>
+    sv.assign %_logicalResult_T_14, %82 : i7
+    %83 = sv.read_inout %aEffective : !hw.inout<i64>
+    %84 = comb.concat %c0_i127, %83 : i127, i64
+    %85 = sv.read_inout %_logicalResult_T_14 : !hw.inout<i7>
+    %86 = comb.concat %c0_i184, %85 : i184, i7
+    %87 = comb.shl bin %84, %86 : i191
+    %_logicalResult_T_15 = sv.wire sym @sym_41 {hw.verilogName = "_logicalResult_T_15"} : !hw.inout<i191>
+    sv.assign %_logicalResult_T_15, %87 : i191
+    %88 = sv.read_inout %_logicalResult_T_15 : !hw.inout<i191>
+    %89 = comb.extract %88 from 0 : (i191) -> i64
+    %90 = sv.read_inout %mask : !hw.inout<i64>
+    %91 = comb.and bin %89, %90 : i64
+    %92 = comb.concat %c0_i127, %91 : i127, i64
+    %_logicalResult_T_16 = sv.wire sym @sym_42 {hw.verilogName = "_logicalResult_T_16"} : !hw.inout<i191>
+    sv.assign %_logicalResult_T_16, %92 : i191
+    %93 = sv.read_inout %_logicalResult_T_17 : !hw.inout<i3>
+    %94 = comb.icmp bin eq %93, %c-4_i3 : i3
+    %_logicalResult_T_18 = sv.wire sym @sym_44 {hw.verilogName = "_logicalResult_T_18"} : !hw.inout<i1>
+    sv.assign %_logicalResult_T_18, %94 : i1
+    %95 = sv.read_inout %_logicalResult_T_20 : !hw.inout<i8>
+    %96 = comb.extract %95 from 0 : (i8) -> i7
+    %_logicalResult_T_21 = sv.wire sym @sym_47 {hw.verilogName = "_logicalResult_T_21"} : !hw.inout<i7>
+    sv.assign %_logicalResult_T_21, %96 : i7
+    %97 = sv.read_inout %_logicalResult_T_21 : !hw.inout<i7>
+    %98 = comb.extract %97 from 0 : (i7) -> i6
+    %99 = sv.read_inout %_logicalResult_T_19 : !hw.inout<i6>
+    %100 = comb.and bin %98, %99 : i6
+    %101 = comb.concat %false, %100 : i1, i6
+    %_logicalResult_T_22 = sv.wire sym @sym_48 {hw.verilogName = "_logicalResult_T_22"} : !hw.inout<i7>
+    sv.assign %_logicalResult_T_22, %101 : i7
+    %102 = sv.read_inout %_logicalResult_T_22 : !hw.inout<i7>
+    %103 = comb.concat %c0_i57, %102 : i57, i7
+    %104 = sv.read_inout %aEffective : !hw.inout<i64>
+    %105 = comb.shru bin %104, %103 : i64
+    %_logicalResult_T_23 = sv.wire sym @sym_49 {hw.verilogName = "_logicalResult_T_23"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_23, %105 : i64
+    %106 = sv.read_inout %_logicalResult_T_23 : !hw.inout<i64>
+    %107 = sv.read_inout %mask : !hw.inout<i64>
+    %108 = comb.and bin %106, %107 : i64
+    %_logicalResult_T_24 = sv.wire sym @sym_50 {hw.verilogName = "_logicalResult_T_24"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_24, %108 : i64
+    %109 = sv.read_inout %_logicalResult_T_25 : !hw.inout<i3>
+    %110 = comb.icmp bin eq %109, %c-3_i3 : i3
+    %_logicalResult_T_26 = sv.wire sym @sym_52 {hw.verilogName = "_logicalResult_T_26"} : !hw.inout<i1>
+    sv.assign %_logicalResult_T_26, %110 : i1
+    %111 = sv.read_inout %_logicalResult_T_29 : !hw.inout<i8>
+    %112 = comb.extract %111 from 0 : (i8) -> i7
+    %_logicalResult_T_30 = sv.wire sym @sym_56 {hw.verilogName = "_logicalResult_T_30"} : !hw.inout<i7>
+    sv.assign %_logicalResult_T_30, %112 : i7
+    %113 = sv.read_inout %_logicalResult_T_30 : !hw.inout<i7>
+    %114 = comb.extract %113 from 0 : (i7) -> i6
+    %115 = sv.read_inout %_logicalResult_T_28 : !hw.inout<i6>
+    %116 = comb.and bin %114, %115 : i6
+    %117 = comb.concat %false, %116 : i1, i6
+    %_logicalResult_T_31 = sv.wire sym @sym_57 {hw.verilogName = "_logicalResult_T_31"} : !hw.inout<i7>
+    sv.assign %_logicalResult_T_31, %117 : i7
+    %118 = sv.read_inout %_logicalResult_T_31 : !hw.inout<i7>
+    %119 = comb.concat %c0_i57, %118 : i57, i7
+    %120 = sv.read_inout %_logicalResult_T_27 : !hw.inout<i64>
+    %121 = comb.shrs bin %120, %119 : i64
+    %_logicalResult_T_32 = sv.wire sym @sym_58 {hw.verilogName = "_logicalResult_T_32"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_32, %121 : i64
+    %122 = sv.read_inout %_logicalResult_T_32 : !hw.inout<i64>
+    %_logicalResult_T_33 = sv.wire sym @sym_59 {hw.verilogName = "_logicalResult_T_33"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_33, %122 : i64
+    %123 = sv.read_inout %mask : !hw.inout<i64>
+    %124 = sv.read_inout %_logicalResult_T_33 : !hw.inout<i64>
+    %125 = comb.and bin %124, %123 : i64
+    %_logicalResult_T_34 = sv.wire sym @sym_60 {hw.verilogName = "_logicalResult_T_34"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_34, %125 : i64
+    %126 = sv.read_inout %_logicalResult_T_26 : !hw.inout<i1>
+    %127 = sv.read_inout %_logicalResult_T_34 : !hw.inout<i64>
+    %128 = comb.mux bin %126, %127, %c0_i64 : i64
+    %_logicalResult_T_35 = sv.wire sym @sym_61 {hw.verilogName = "_logicalResult_T_35"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_35, %128 : i64
+    %129 = sv.read_inout %_logicalResult_T_18 : !hw.inout<i1>
+    %130 = sv.read_inout %_logicalResult_T_24 : !hw.inout<i64>
+    %131 = sv.read_inout %_logicalResult_T_35 : !hw.inout<i64>
+    %132 = comb.mux bin %129, %130, %131 : i64
+    %_logicalResult_T_36 = sv.wire sym @sym_62 {hw.verilogName = "_logicalResult_T_36"} : !hw.inout<i64>
+    sv.assign %_logicalResult_T_36, %132 : i64
+    %133 = sv.read_inout %_logicalResult_T_36 : !hw.inout<i64>
+    %134 = comb.concat %c0_i127, %133 : i127, i64
+    %135 = sv.read_inout %_logicalResult_T_10 : !hw.inout<i1>
+    %136 = sv.read_inout %_logicalResult_T_16 : !hw.inout<i191>
+    %137 = comb.mux bin %135, %136, %134 : i191
+    %_logicalResult_T_37 = sv.wire sym @sym_63 {hw.verilogName = "_logicalResult_T_37"} : !hw.inout<i191>
+    sv.assign %_logicalResult_T_37, %137 : i191
+    %138 = sv.read_inout %_logicalResult_T_8 : !hw.inout<i64>
+    %139 = comb.concat %c0_i127, %138 : i127, i64
+    %140 = sv.read_inout %_logicalResult_T_7 : !hw.inout<i1>
+    %141 = sv.read_inout %_logicalResult_T_37 : !hw.inout<i191>
+    %142 = comb.mux bin %140, %139, %141 : i191
+    %_logicalResult_T_38 = sv.wire sym @sym_64 {hw.verilogName = "_logicalResult_T_38"} : !hw.inout<i191>
+    sv.assign %_logicalResult_T_38, %142 : i191
+    %143 = sv.read_inout %_logicalResult_T_5 : !hw.inout<i64>
+    %144 = comb.concat %c0_i127, %143 : i127, i64
+    %145 = sv.read_inout %_logicalResult_T_4 : !hw.inout<i1>
+    %146 = sv.read_inout %_logicalResult_T_38 : !hw.inout<i191>
+    %147 = comb.mux bin %145, %144, %146 : i191
+    %_logicalResult_T_39 = sv.wire sym @sym_65 {hw.verilogName = "_logicalResult_T_39"} : !hw.inout<i191>
+    sv.assign %_logicalResult_T_39, %147 : i191
+    %148 = sv.read_inout %_logicalResult_T_2 : !hw.inout<i64>
+    %149 = comb.concat %c0_i127, %148 : i127, i64
+    %150 = sv.read_inout %_logicalResult_T_1 : !hw.inout<i1>
+    %151 = sv.read_inout %_logicalResult_T_39 : !hw.inout<i191>
+    %152 = comb.mux bin %150, %149, %151 : i191
+    %logicalResult = sv.wire sym @sym_66 {hw.verilogName = "logicalResult"} : !hw.inout<i191>
+    sv.assign %logicalResult, %152 : i191
+    %153 = sv.read_inout %_adderSubtractor_io_result : !hw.inout<i64>
+    %154 = comb.concat %c0_i127, %153 : i127, i64
+    %155 = sv.read_inout %logicalResult : !hw.inout<i191>
+    %156 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %157 = comb.mux bin %156, %154, %155 : i191
+    %_io_result_T = sv.wire sym @sym_67 {hw.verilogName = "_io_result_T"} : !hw.inout<i191>
+    sv.assign %_io_result_T, %157 : i191
+    %158 = sv.read_inout %_io_result_T : !hw.inout<i191>
+    %159 = comb.extract %158 from 0 : (i191) -> i64
+    %io_result = sv.wire sym @sym_1 {hw.verilogName = "io_result_0"} : !hw.inout<i64>
+    sv.assign %io_result, %159 : i64
+    %160 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %161 = sv.read_inout %_adderSubtractor_io_carryOut : !hw.inout<i1>
+    %162 = comb.and %160, %161 : i1
+    sv.assign %_io_carryOutFlag_T, %162 : i1
+    %163 = sv.read_inout %_io_carryOutFlag_T : !hw.inout<i1>
+    %io_carryOutFlag = sv.wire sym @sym_3 {hw.verilogName = "io_carryOutFlag_0"} : !hw.inout<i1>
+    sv.assign %io_carryOutFlag, %163 : i1
+    %164 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %165 = sv.read_inout %_adderSubtractor_io_overflowFlag : !hw.inout<i1>
+    %166 = comb.and %164, %165 : i1
+    sv.assign %_io_overflowFlag_T, %166 : i1
+    %167 = sv.read_inout %_io_overflowFlag_T : !hw.inout<i1>
+    %io_overflowFlag = sv.wire sym @sym_4 {hw.verilogName = "io_overflowFlag_0"} : !hw.inout<i1>
+    sv.assign %io_overflowFlag, %167 : i1
+    %168 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %169 = sv.read_inout %_adderSubtractor_io_zeroFlag : !hw.inout<i1>
+    %170 = comb.and %168, %169 : i1
+    sv.assign %_io_zeroFlag_T, %170 : i1
+    %171 = sv.read_inout %_io_zeroFlag_T : !hw.inout<i1>
+    %io_zeroFlag = sv.wire sym @sym_5 {hw.verilogName = "io_zeroFlag_0"} : !hw.inout<i1>
+    sv.assign %io_zeroFlag, %171 : i1
+    %172 = sv.read_inout %isArithmetic : !hw.inout<i1>
+    %173 = sv.read_inout %_adderSubtractor_io_negativeFlag : !hw.inout<i1>
+    %174 = comb.and %172, %173 : i1
+    sv.assign %_io_negativeFlag_T, %174 : i1
+    %175 = sv.read_inout %_io_negativeFlag_T : !hw.inout<i1>
+    %io_negativeFlag = sv.wire sym @sym_6 {hw.verilogName = "io_negativeFlag_0"} : !hw.inout<i1>
+    sv.assign %io_negativeFlag, %175 : i1
+    %176 = sv.read_inout %aEffective : !hw.inout<i64>
+    %177 = sv.read_inout %bEffective : !hw.inout<i64>
+    %178 = sv.read_inout %_adderSubtractor_io_opcode_T : !hw.inout<i4>
+    %adderSubtractor.io_result, %adderSubtractor.io_carryOut, %adderSubtractor.io_overflowFlag, %adderSubtractor.io_zeroFlag, %adderSubtractor.io_negativeFlag = hw.instance "adderSubtractor" @MultifunctionAdderSubtractor64(io_a: %176: i64, io_b: %177: i64, io_opcode: %178: i4) -> (io_result: i64, io_carryOut: i1, io_overflowFlag: i1, io_zeroFlag: i1, io_negativeFlag: i1) {hw.verilogName = "adderSubtractor", sv.namehint = "adderSubtractor.io_result"}
+    sv.assign %_adderSubtractor_io_negativeFlag, %adderSubtractor.io_negativeFlag : i1
+    sv.assign %_adderSubtractor_io_zeroFlag, %adderSubtractor.io_zeroFlag : i1
+    sv.assign %_adderSubtractor_io_overflowFlag, %adderSubtractor.io_overflowFlag : i1
+    sv.assign %_adderSubtractor_io_carryOut, %adderSubtractor.io_carryOut : i1
+    sv.assign %_adderSubtractor_io_result, %adderSubtractor.io_result : i64
+    %179 = sv.read_inout %io_result : !hw.inout<i64>
+    %180 = sv.read_inout %io_carryOutFlag : !hw.inout<i1>
+    %181 = sv.read_inout %io_overflowFlag : !hw.inout<i1>
+    %182 = sv.read_inout %io_zeroFlag : !hw.inout<i1>
+    %183 = sv.read_inout %io_negativeFlag : !hw.inout<i1>
+    hw.output %179, %180, %181, %182, %183 : i64, i1, i1, i1, i1
+  }
+  om.class @ALU64_Class(%basepath: !om.frozenbasepath) {
     om.class.fields
   }
 }

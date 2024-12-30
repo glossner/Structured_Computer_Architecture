@@ -31,12 +31,14 @@ object GenerateHardware extends App {
     // (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
     //  (() => new scabook.SevenSegmentDisplayMux, "SevenSegmentDisplayMux"),
     //  (() => new scabook.SevenSegmentDisplayFlat, "SevenSegmentDisplayFlat"),
+    //  (() => new scabook.SevenSegmentDisplayMuxCase, "SevenSegmentDisplayMuxCase"),
     //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
     //  (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor4, "BehavioralAdderSubtractor4"), 
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractorHW4, "BehavioralAdderSubtractorHW4"), 
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
-    (() => new scabook.addersubtractors.MultifunctionAdderSubtractor64, "MultifunctionAdderSubtractor64"), 
+    //  (() => new scabook.addersubtractors.MultifunctionAdderSubtractor64, "MultifunctionAdderSubtractor64"), 
+    (() => new scabook.ALUs.ALU64, "ALU64"), 
   )
 
   // Default paths when running from toplevel RTL/Chisel
@@ -64,12 +66,16 @@ object GenerateHardware extends App {
       println("###########################################################################")
       println("  ")
 
+      // val convertSVGcommand = "rsvg-convert"
+      val convertSVGcommand = "convert"       //ImageMagick
+      // val convertSVGcommand = "inkscape"
+
       //firtools generates SystemVerilog when --verilog is used
       generateFIRRTLandSystemVerilog(module, moduleName)
       convertSystemVerilogToVerilog(module, moduleName)
       synthesizeNetlist(module, moduleName)
       generateSVG(module, moduleName)
-      convertSVGtoPNG(module, moduleName)
+      convertSVGtoPNG(module, moduleName, convertSVGcommand)
       if(shouldDeleteIntermediateFiles) deleteIntermediateFiles(module, moduleName)
       //printHelp()
     
@@ -269,9 +275,9 @@ object GenerateHardware extends App {
   }
 
   
-  def convertSVGtoPNG(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+  def convertSVGtoPNG(chiselModule: () => chisel3.Module, moduleName: String, svgCommand: String): Unit = {
     println(s"${moduleName}: convertSVGtoPNG")
-    if ( isCmdInstalled("rsvg-convert")) {      
+    if ( isCmdInstalled(svgCommand)) {      
       val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
       val pngFile = new File(generatedDiagramsPath + "/" + moduleName + ".png")
 
@@ -280,7 +286,15 @@ object GenerateHardware extends App {
       
 
       // hierarchical
-      val convertSVGcommand = s"rsvg-convert -f png -d 300 -p 300 -o $pngFile $svgFile"
+      val convertSVGcommand = 
+        if (svgCommand == "rsvg-convert") 
+          s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngFile $svgFile" 
+        else if (svgCommand == "inkscape")
+          s"inkscape --export-type=png --export-filename=$pngFile $svgFile" 
+        else if (svgCommand == "convert") s"convert $svgFile $pngFile"
+        else 
+          ""
+
       val convertSVGresult = convertSVGcommand.!  
       if (convertSVGresult != 0) {
         println(s"Error: convertSVGtoPNG execution failed with code $convertSVGresult")
@@ -290,6 +304,14 @@ object GenerateHardware extends App {
      
       // flattened
       val convertSVGflatCommand = s"rsvg-convert -f png -d 300 -p 300 -o $pngFlatFile $svgFlatFile"
+        if (svgCommand == "rsvg-convert") 
+          s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngFlatFile $svgFlatFile" 
+        else if (svgCommand == "inkscape")
+          s"inkscape --export-type=png --export-filename=$pngFlatFile $svgFlatFile" 
+        else if (svgCommand == "convert")  s"convert $svgFlatFile $pngFlatFile"
+        else 
+          ""
+
       val convertSVGflatResult = convertSVGflatCommand.!  
       if (convertSVGflatResult != 0) {
         println(s"Error: convertSVGtoPNG Flattened execution failed with code $convertSVGflatResult")

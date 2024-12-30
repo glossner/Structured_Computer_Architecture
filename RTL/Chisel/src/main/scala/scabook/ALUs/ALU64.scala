@@ -6,6 +6,7 @@ package scabook.ALUs
 import chisel3._
 import chisel3.util._
 
+import scabook.addersubtractors.MultifunctionAdderSubtractor64
 
 // Opcodes
 // b5: arithmetic/logic
@@ -120,121 +121,44 @@ class ALU64 extends Module {
   //######################
   // Arithmetic operations
   //######################
-  val fullArithmeticResult = Mux(isSigned,
-    (aEffective.asSInt +& bAdjusted.asSInt).asUInt, // Signed operation
-    (aEffective +& bAdjusted)                       // Unsigned operation
-  )
-  val arithmeticResult = fullArithmeticResult & mask
+  val adderSubtractor = Module(new MultifunctionAdderSubtractor64)
+
+  // Connect inputs
+  adderSubtractor.io.a := aEffective
+  adderSubtractor.io.b := bEffective
+  adderSubtractor.io.carryIn := 0.U(1.W)
+  adderSubtractor.io.opcode := io.opcode(3, 0)
+
+  // Connect outputs to the ALU64 outputs
+  io.result := adderSubtractor.io.result
+  io.carryOutFlag := adderSubtractor.io.carryOut
+  io.overflowFlag := adderSubtractor.io.overflowFlag
+  io.zeroFlag := adderSubtractor.io.zeroFlag
+  io.negativeFlag := adderSubtractor.io.negativeFlag
   
-  if(printDebugInfo) {
-    printf(p"  fullArithmeticResult = 0x${Hexadecimal(fullArithmeticResult)}\n")
-    printf(p"  arithmeticResult =     0x${Hexadecimal(arithmeticResult)}\n")
-  }
 
   //###################
   // Logical operations
   //###################
   // b4b3b2: logical operation
-  val logicalResult = WireDefault(0.U(64.W))
-  when(io.opcode(4, 2) === "b000".U) { // AND
-    logicalResult := aEffective & bEffective
-  }.elsewhen(io.opcode(4, 2) === "b001".U) { // OR
-    logicalResult := aEffective | bEffective
-  }.elsewhen(io.opcode(4, 2) === "b010".U) { // XOR
-    logicalResult := aEffective ^ bEffective
-  }.elsewhen(io.opcode(4, 2) === "b011".U) { // SLL (Shift Left Logical)
-    logicalResult := (aEffective << (bEffective(5, 0) & (width - 1.U))).asUInt & mask
-  }.elsewhen(io.opcode(4, 2) === "b100".U) { // SRL (Shift Right Logical)
-    logicalResult := (aEffective >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask
-  }.elsewhen(io.opcode(4, 2) === "b101".U) { // SRA (Shift Right Arithmetic)
-    logicalResult := (aEffective.asSInt >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask
-  }.otherwise { 
-    // Handle unsupported opcodes explicitly
-    logicalResult := 0.U // Default result for unsupported operations
-  }
+val logicalResult = MuxCase(0.U(64.W), Seq(
+  (io.opcode(4, 2) === "b000".U) -> (aEffective & bEffective),                               // AND
+  (io.opcode(4, 2) === "b001".U) -> (aEffective | bEffective),                               // OR
+  (io.opcode(4, 2) === "b010".U) -> (aEffective ^ bEffective),                               // XOR
+  (io.opcode(4, 2) === "b011".U) -> ((aEffective << (bEffective(5, 0) & (width - 1.U))).asUInt & mask), // SLL
+  (io.opcode(4, 2) === "b100".U) -> ((aEffective >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask), // SRL
+  (io.opcode(4, 2) === "b101".U) -> ((aEffective.asSInt >> (bEffective(5, 0) & (width - 1.U))).asUInt & mask) // SRA
+))
+
   if(printDebugInfo) printf(p"  logicalResult =     0x${Hexadecimal(logicalResult)}\n")
 
   //##############
   // Final result
   //##############
-  io.result := Mux(isArithmetic, arithmeticResult, logicalResult)
-  if(printDebugInfo) printf(p"  io.result =     0x${Hexadecimal(io.result)}\n")
+  io.result := Mux(isArithmetic, adderSubtractor.io.result, logicalResult)
+  io.carryOutFlag := Mux(isArithmetic, adderSubtractor.io.carryOut, 0.U)
+  io.overflowFlag := Mux(isArithmetic, adderSubtractor.io.overflowFlag, 0.U)
+  io.zeroFlag := Mux(isArithmetic, adderSubtractor.io.zeroFlag, 0.U)
+  io.negativeFlag := Mux(isArithmetic, adderSubtractor.io.negativeFlag, 0.U)
 
-  //##############
-  // Compute Flags
-  //##############
-
-  // Carry Flag: Unsigned Arithmetic
-
-  // Chisel considers width a dynamic construct
-  //   Unfortunately, every width must be explicit
-
-  val isCarry = WireDefault(false.B)
-  when(width === 8.U) {
-    isCarry := fullArithmeticResult(8)
-  }.elsewhen(width === 16.U) {
-    isCarry := fullArithmeticResult(16)
-  }.elsewhen(width === 32.U) {
-    isCarry := fullArithmeticResult(32)
-  }.elsewhen(width === 64.U) {
-    isCarry := fullArithmeticResult(64)
-  }
-
- // Borrow
-  val isBorrow = WireDefault(false.B)
-  when(isSub && !isSigned) {
-    isBorrow := aEffective < bEffective // Borrow for unsigned subtraction
-}
-
-  if(printDebugInfo) printf(p"  isCarry =     0x${Hexadecimal(isCarry)}\n")
-  if(printDebugInfo) printf(p"  isBorrow =    0x${Hexadecimal(isBorrow)}\n")
-
-  io.carryOutFlag := MuxCase(0.U, Seq(
-    (isArithmetic && !isSigned && !isSub) -> isCarry, 
-    (isArithmetic && !isSigned &&  isSub) -> isBorrow,
-    isLogical -> 0.U // No carryOut for logical operations
-  )) 
-
-  if(printDebugInfo) printf(p"  io.carryOut =     0x${Hexadecimal(io.carryOutFlag)}\n")
-
-  // Overflow: Signed Arithmetic
-  // Adding with different signs can't cause overflow
-  // Overflow = both operand signs the same, result sign different
-  val aSign = WireDefault(false.B)
-  val bSign = WireDefault(false.B)
-  val sumSign = WireDefault(false.B)
-
-  when(width === 8.U) {
-    aSign := aEffective(7)
-    bSign := bAdjusted(7)
-    sumSign := fullArithmeticResult(7)
-  }.elsewhen(width === 16.U) {
-    aSign := aEffective(15)
-    bSign := bAdjusted(15)
-    sumSign := fullArithmeticResult(15)
-  }.elsewhen(width === 32.U) {
-    aSign := aEffective(31)
-    bSign := bAdjusted(31)
-    sumSign := fullArithmeticResult(31)
-  }.elsewhen(width === 64.U) {
-    aSign := aEffective(63)
-    bSign := bAdjusted(63)
-    sumSign := fullArithmeticResult(63)
-  }
-
-  val isOverflow = (aSign === bSign) && (aSign =/= sumSign)
-  if (printDebugInfo) printf(p"  overflowFlag =     0x${Hexadecimal(isOverflow)}\n")
-  io.overflowFlag := isOverflow
-
-  val isZero = !arithmeticResult.orR // Reduction OR to check if any bit in `io.result` is 1
-  if (printDebugInfo) printf(p"  zeroFlag =     0x${Hexadecimal(isZero)}\n")
-  io.zeroFlag := isZero
-
-  val isNegative = WireDefault(false.B)
-  when(isSigned) { 
-    isNegative := sumSign // Use := for assigning values in Chisel
-  }.otherwise {
-    isNegative := false.B
-  }
-  io.negativeFlag := isNegative
 }
