@@ -5,7 +5,7 @@ package scabook.addersubtractors
 
 import chisel3._
 
-abstract class MultiFunctionAdderSubtractor(width: Int) extends Module {
+abstract class MultifunctionAdderSubtractor(width: Int) extends Module {
   require(width > 0, "Width must be greater than 0")
 
   val io = IO(new Bundle {

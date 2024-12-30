@@ -52,7 +52,7 @@ object MultifunctionAdderSubtractor64 {
   }
 }
 
-class MultifunctionAdderSubtractor64 extends MultiFunctionAdderSubtractor(64) {
+class MultifunctionAdderSubtractor64 extends MultifunctionAdderSubtractor(64) {
 
   val printDebugInfo = false
 
