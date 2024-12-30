@@ -31,14 +31,14 @@ object GenerateHardware extends App {
     // (() => new scabook.SevenSegmentDisplay, "SevenSegmentDisplay"),
     //  (() => new scabook.SevenSegmentDisplayMux, "SevenSegmentDisplayMux"),
     //  (() => new scabook.SevenSegmentDisplayFlat, "SevenSegmentDisplayFlat"),
-    //  (() => new scabook.SevenSegmentDisplayMuxCase, "SevenSegmentDisplayMuxCase"),
+      (() => new scabook.SevenSegmentDisplayMuxCase, "SevenSegmentDisplayMuxCase"),
     //  (() => new scabook.WaveFormGenerator, "WaveFormGenerator"),
     //  (() => new scabook.adders.BehavioralAdder4, "BehavioralAdder4"),  
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor4, "BehavioralAdderSubtractor4"), 
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractorHW4, "BehavioralAdderSubtractorHW4"), 
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
     //  (() => new scabook.addersubtractors.MultifunctionAdderSubtractor64, "MultifunctionAdderSubtractor64"), 
-    (() => new scabook.ALUs.ALU64, "ALU64"), 
+    //(() => new scabook.ALUs.ALU64, "ALU64"), 
   )
 
   // Default paths when running from toplevel RTL/Chisel
@@ -52,6 +52,9 @@ object GenerateHardware extends App {
 
   val generatedNetlistPath = "generators/generated/netlist"
   val generatedDiagramsPath = "generators/generated/diagrams"
+
+  val skywaterPdkLib = "/home/jglossner/GitRepos/open_pdks/sources/sky130_fd_sc_hd/timing/sky130_fd_sc_hd__tt_025C_1v80.lib"
+  val optimizeForASIC = true
 
  
   //#####################################################
@@ -73,7 +76,7 @@ object GenerateHardware extends App {
       //firtools generates SystemVerilog when --verilog is used
       generateFIRRTLandSystemVerilog(module, moduleName)
       convertSystemVerilogToVerilog(module, moduleName)
-      synthesizeNetlist(module, moduleName)
+      synthesizeNetlist(module, moduleName, optimizeForASIC)
       generateSVG(module, moduleName)
       convertSVGtoPNG(module, moduleName, convertSVGcommand)
       if(shouldDeleteIntermediateFiles) deleteIntermediateFiles(module, moduleName)
@@ -169,28 +172,70 @@ object GenerateHardware extends App {
     }    
   }
 
-  def synthesizeNetlist(chiselModule: () => chisel3.Module, moduleName: String): Unit = {
+  def synthesizeNetlist(chiselModule: () => chisel3.Module, moduleName: String, optimizeForASIC: Boolean): Unit = {
     println(s"${moduleName}: generateNetlist")
     if ( isCmdInstalled("yosys")) {      
       val systemVerilogInFile = new File( generatedSv2vPath + "/" + moduleName + ".v")
       val verilogOutFile = new File( generatedVerilogElaboratedPath + "/" + moduleName + ".v")
       val verilogOutFileFlat = new File( generatedVerilogElaboratedFlatPath + "/" + moduleName + "_flat" + ".v")
 
+      val verilogOutSynthFile = new File( generatedVerilogElaboratedPath + "/" + moduleName + "_synth" + ".v")
+      val verilogOutSynthFileFlat = new File( generatedVerilogElaboratedFlatPath + "/" + moduleName + "_synth_flat" + ".v")
+
+
       val edifFile = new File( generatedNetlistPath + "/" + moduleName + ".edif")
+      val edifSynthFile = new File( generatedNetlistPath + "/" + moduleName + "_synth" + ".edif")
+
       val jsonFile = new File( generatedNetlistPath + "/" + moduleName + ".json")
+      val jsonSynthFile = new File( generatedNetlistPath + "/" + moduleName + "_synth" + ".json")
+
       val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
+      val jsonSynthFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_synth_flat" + ".json")
   
-      // yosys flags
-       val yosysSynthFlags = s"synth -top $moduleName"
-        
 
       // Generate synthesized (elaborated) verilog file
       //Aggressive flags: "read_verilog your_design.v; synth -flatten -abc2; opt -purge; abc -script +resyn2;  opt_clean; write_verilog optimized_design.v;"
-      val yosysVerilogcommand = Seq(
-          "yosys",
-           "-p",
-          s"read_verilog -sv $systemVerilogInFile;  $yosysSynthFlags; write_verilog $verilogOutFile"
-      )
+      val yosysVerilogcommand =
+        if (optimizeForASIC) {
+          Seq(
+            "yosys",
+            "-p",
+            s"""
+            read_liberty -lib $skywaterPdkLib; 
+            read_verilog -sv $systemVerilogInFile; 
+            prep -top $moduleName;             
+            synth -top $moduleName; 
+            abc -liberty $skywaterPdkLib; 
+            techmap;  
+            opt_clean
+            write_verilog -noattr $verilogOutSynthFile
+            write_json $jsonSynthFile
+            """
+          )
+          // Use this Seq to generate exact library mappings
+          // Seq(
+          //   "yosys",
+          //   "-p",
+          //   s"""
+          //   read_liberty -lib $skywaterPdkLib; 
+          //   read_verilog -sv $systemVerilogInFile; 
+          //   prep -top $moduleName; 
+          //   synth -top $moduleName; 
+          //   dfflibmap -liberty $skywaterPdkLib; 
+          //   abc -liberty $skywaterPdkLib; 
+          //   opt_clean; 
+          //   write_verilog -noattr $verilogOutSynthFile
+          //   """
+          // )
+        } else {
+          Seq(
+            "yosys",
+            "-p",
+            s" read_verilog -sv $systemVerilogInFile; synth -top $moduleName; write_verilog $verilogOutFile"
+          )
+        }
+
+      println(s"Yosys command= ${yosysVerilogcommand.mkString(" ")}")
       
       val yosysVerilogResult = yosysVerilogcommand.!  
       if (yosysVerilogResult != 0) {
@@ -201,12 +246,57 @@ object GenerateHardware extends App {
 
       // Synthesize flattened verilog
       //Aggressive flags: "read_verilog your_design.v; synth -flatten -abc2; opt -purge; abc -script +resyn2;  opt_clean; write_verilog optimized_design.v;"
-      val yosysSynthFlatFlags =  s"synth -flatten -top $moduleName; rename $moduleName ${moduleName}_flat"      
-      val yosysVerilogCommandFlat = Seq(
-          "yosys",
-           "-p",
-          s"read_verilog -sv $systemVerilogInFile; $yosysSynthFlatFlags; write_verilog $verilogOutFileFlat"
-      )
+      val yosysVerilogCommandFlat = 
+        if (optimizeForASIC) {
+            Seq(
+            "yosys",
+            "-p",
+            s"""
+            read_liberty -lib $skywaterPdkLib; 
+            read_verilog -sv $systemVerilogInFile;   
+            flatten;         
+            rename $moduleName ${moduleName}_flat; 
+            prep -top ${moduleName}_flat; 
+            synth -top ${moduleName}_flat; 
+            opt_clean; 
+            techmap;
+            write_verilog -noattr $verilogOutSynthFileFlat; 
+            write_json $jsonSynthFileFlattened
+            """
+          )
+          // show -format svg -prefix /home/jglossner/${moduleName}_flat.svg
+
+          // Use this Seq to generate exact library mappings
+          //           Seq(
+          //   "yosys",
+          //   "-p",
+          //   s"""
+          //   read_liberty -lib $skywaterPdkLib; 
+          //   read_verilog -sv $systemVerilogInFile;   
+          //   flatten;         
+          //   rename $moduleName ${moduleName}_flat; 
+          //   prep -top ${moduleName}_flat; 
+          //   synth -top ${moduleName}_flat; 
+          //   dfflibmap -liberty $skywaterPdkLib; 
+          //   abc -liberty $skywaterPdkLib; 
+          //   opt_clean; 
+          //   write_verilog -noattr $verilogOutSynthFileFlat
+          //   """
+          // )
+        } else {
+            Seq(
+            "yosys",
+            "-p",
+            s"""
+            read_verilog -sv $systemVerilogInFile; 
+            flatten -top $moduleName; 
+            rename $moduleName ${moduleName}_flat"; 
+            synth -top $moduleName;             
+            write_verilog $verilogOutFileFlat"
+            """
+          )
+        }
+        
       
       val yosysVerilogFlatResult = yosysVerilogCommandFlat.!  
       if (yosysVerilogFlatResult != 0) {
@@ -215,21 +305,6 @@ object GenerateHardware extends App {
         println("yosys synthesized (elaborated) verilog file generated successfully!")
       }
 
-      // Write EDIF and JSON
-      val yosysWriteCommand = Seq(
-          "yosys",
-           "-p",
-          s"read_verilog -sv $verilogOutFile; write_edif $edifFile; write_json $jsonFile; read_verilog -sv $verilogOutFileFlat;  write_json $jsonFileFlattened"
-      )
-      // show -format pdf $moduleName  $pdfFile works but the symbols are not IEEE
-      
-      val yosysWriteResult = yosysWriteCommand.!  
-      if (yosysWriteResult != 0) {
-        println(s"Error: yosys writeCommand execution failed with code $yosysWriteResult")
-      } else {
-        println("EDIF and JSON files generated successfully!")
-      }
- 
 
     } else {
       println("yosys not installed. See: https://github.com/YosysHQ/yosys and install it from https://github.com/YosysHQ/oss-cad-suite-build/releases")
@@ -245,14 +320,32 @@ object GenerateHardware extends App {
       val jsonFileFullPath = jsonFile.getAbsolutePath()
       val jsonFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_flat" + ".json")
       val jsonFileFlattenedFullPath = jsonFileFlattened.getAbsolutePath()
+
+      val jsonSynthFile = new File( generatedNetlistPath + "/" + moduleName + "_synth" + ".json")
+      val jsonSynthFileFullPath = jsonSynthFile.getAbsolutePath()
+      val jsonSynthFileFlattened = new File( generatedNetlistPath + "/" + moduleName + "_synth_flat" + ".json")
+      val jsonSynthFileFlattenedFullPath = jsonSynthFileFlattened.getAbsolutePath()
+
       
       val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
       val svgFileFullPath = svgFile.getAbsolutePath()
       val svgFileFlattened = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")
       val svgFileFlattenedFullPath = svgFileFlattened.getAbsolutePath()
 
+
+      val svgSynthFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
+      val svgSynthFileFullPath = svgSynthFile.getAbsolutePath()
+      val svgSynthFileFlattened = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")
+      val svgSynthFileFlattenedFullPath = svgSynthFileFlattened.getAbsolutePath()
+
       // hierarchical svg
-      val netlistSVGcommand = s"netlistsvg $jsonFileFullPath -o $svgFileFullPath"
+      val netlistSVGcommand =
+        if(optimizeForASIC) {
+          s"netlistsvg $jsonSynthFileFullPath -o $svgSynthFileFullPath"
+        } else {
+          s"netlistsvg $jsonFileFullPath -o $svgFileFullPath"
+        }      
+       
       val netlistSVGresult = netlistSVGcommand.!  
       if (netlistSVGresult != 0) {
         println(s"Error: netlistsvg execution failed with code $netlistSVGresult")
@@ -261,7 +354,13 @@ object GenerateHardware extends App {
       }
 
       // flattened svg
-      val netlistSVGflatCommand = s"netlistsvg $jsonFileFlattenedFullPath -o $svgFileFlattenedFullPath"
+      val netlistSVGflatCommand =
+        if(optimizeForASIC) {
+          s"netlistsvg $jsonSynthFileFlattenedFullPath -o $svgSynthFileFlattenedFullPath"
+        } else {
+          s"netlistsvg $jsonFileFlattenedFullPath -o $svgFileFlattenedFullPath"
+        }            
+      
       val netlistSVGFlatResult = netlistSVGflatCommand.!  
       if (netlistSVGFlatResult != 0) {
         println(s"Error: netlistsvg flattened execution failed with code $netlistSVGFlatResult")
@@ -279,21 +378,36 @@ object GenerateHardware extends App {
     println(s"${moduleName}: convertSVGtoPNG")
     if ( isCmdInstalled(svgCommand)) {      
       val svgFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
+      val svgSynthFile = new File(generatedDiagramsPath + "/" + moduleName + ".svg")
+
       val pngFile = new File(generatedDiagramsPath + "/" + moduleName + ".png")
+      val pngSynthFile = new File(generatedDiagramsPath + "/" + moduleName + "_synth" + ".png")
 
       val svgFlatFile = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")
+      val svgSynthFlatFile = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg")
+
       val pngFlatFile = new File(generatedDiagramsPath + "/" + moduleName + "_flat" + ".png")
-      
+      val pngSynthFlatFile = new File(generatedDiagramsPath + "/" + moduleName + "_synth_flat" + ".png")
 
       // hierarchical
       val convertSVGcommand = 
-        if (svgCommand == "rsvg-convert") 
-          s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngFile $svgFile" 
-        else if (svgCommand == "inkscape")
-          s"inkscape --export-type=png --export-filename=$pngFile $svgFile" 
-        else if (svgCommand == "convert") s"convert $svgFile $pngFile"
-        else 
-          ""
+        if(optimizeForASIC) {
+          if (svgCommand == "rsvg-convert") 
+            s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngSynthFile $svgSynthFile" 
+          else if (svgCommand == "inkscape")
+            s"inkscape --export-type=png --export-filename=$pngSynthFile $svgSynthFile" 
+          else if (svgCommand == "convert") s"convert $svgSynthFile $pngSynthFile"
+          else 
+            ""
+        } else {        
+          if (svgCommand == "rsvg-convert") 
+            s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngFile $svgFile" 
+          else if (svgCommand == "inkscape")
+            s"inkscape --export-type=png --export-filename=$pngFile $svgFile" 
+          else if (svgCommand == "convert") s"convert $svgFile $pngFile"
+          else 
+            ""
+      }
 
       val convertSVGresult = convertSVGcommand.!  
       if (convertSVGresult != 0) {
@@ -303,14 +417,25 @@ object GenerateHardware extends App {
       }
      
       // flattened
-      val convertSVGflatCommand = s"rsvg-convert -f png -d 300 -p 300 -o $pngFlatFile $svgFlatFile"
-        if (svgCommand == "rsvg-convert") 
-          s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngFlatFile $svgFlatFile" 
-        else if (svgCommand == "inkscape")
-          s"inkscape --export-type=png --export-filename=$pngFlatFile $svgFlatFile" 
-        else if (svgCommand == "convert")  s"convert $svgFlatFile $pngFlatFile"
-        else 
-          ""
+      val convertSVGflatCommand = 
+        if(optimizeForASIC) {
+          if (svgCommand == "rsvg-convert") 
+            s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngSynthFlatFile $svgSynthFlatFile" 
+          else if (svgCommand == "inkscape")
+            s"inkscape --export-type=png --export-filename=$pngSynthFlatFile $svgSynthFlatFile" 
+          else if (svgCommand == "convert")  s"convert $svgSynthFlatFile $pngSynthFlatFile"
+          else 
+            ""
+        } else {
+          if (svgCommand == "rsvg-convert") 
+            s"rsvg-convert -f png -d 300 -p 300 -w 1920 -h 1080 -o $pngFlatFile $svgFlatFile" 
+          else if (svgCommand == "inkscape")
+            s"inkscape --export-type=png --export-filename=$pngFlatFile $svgFlatFile" 
+          else if (svgCommand == "convert")  s"convert $svgFlatFile $pngFlatFile"
+          else 
+            ""
+        }
+
 
       val convertSVGflatResult = convertSVGflatCommand.!  
       if (convertSVGflatResult != 0) {
@@ -330,17 +455,32 @@ object GenerateHardware extends App {
     println(s"${moduleName}: deleteIntermediateFiles")
 
     val mlirFile = generatedFirRTLPath + "/" + moduleName + ".fir.mlir"
+    
     val edifFile = generatedNetlistPath + "/" + moduleName + ".edif"
+    val edifSynthFile = generatedNetlistPath + "/" + moduleName + "_synth" + ".edif"
+    
     val jsonNetlistFile =  generatedNetlistPath + "/" + moduleName + ".json" 
     val jsonNetlistFlatFile =  generatedNetlistPath + "/" + moduleName + "_flat" + ".json" 
+    val jsonSynthFile =  generatedNetlistPath + "/" + moduleName + "_synth" + ".json"
+    val jsonSynthFileFlattened = generatedNetlistPath + "/" + moduleName + "_synth_flat" + ".json"
+
     val svgFile = generatedDiagramsPath + "/" + moduleName + ".svg" 
-    val svgFlatFile = generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg" 
+    val svgSynthFile = generatedDiagramsPath + "/" + moduleName + ".svg"
+    val svgFlatFile = generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg"
+    val svgSynthFlatFile = generatedDiagramsPath + "/" + moduleName + "_flat" + ".svg"
+
+
+    val files =
+      if(optimizeForASIC) {
+        Array(jsonSynthFile, jsonSynthFileFlattened,
+              svgSynthFile, svgSynthFlatFile)
+      } else {
+        Array(jsonNetlistFile, jsonNetlistFlatFile, 
+              svgFile, svgFlatFile)
+      }
     
-
-    val files = Array(edifFile, jsonNetlistFile, jsonNetlistFlatFile, svgFile, svgFlatFile)
-
     files.foreach { file =>
-      val path = Paths.get(file)
+      val path = Paths.get(file)      
       try {
         Files.delete(path)
         println(s"File $file deleted successfully.")
