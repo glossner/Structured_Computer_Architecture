@@ -10,7 +10,7 @@ class BehavioralAdderSubtractor(width: Int) extends Module {
   val io = IO(new Bundle {
     val a = Input(UInt(width.W))       
     val b = Input(UInt(width.W))       
-    val subtract = Input(UInt(1.W))    // 1 for subtraction, 0 for addition
+    val subtract = Input(UInt(1.W))    // 0: add, 1:subtract
     val result = Output(UInt(width.W)) 
   })
 
