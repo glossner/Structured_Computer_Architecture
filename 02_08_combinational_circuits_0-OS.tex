@@ -869,12 +869,29 @@ When the designer wants \textbf{\textit{to guarantee parallel generation of hard
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{\diagramsDir/SevenSegmentDisplayMuxCase_not_asic.png} 
-    \caption{Generated Schematic of SevenSegmentDisplayMuxCase.}
+    \caption{Generated Schematic of SevenSegmentDisplay Using MuxCase.}
     \label{fig:7seg_schematic_muxcase} 
 \end{figure}
 
-Figure \ref{fig:7seg_schematic_muxcase} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code. Note that all multiplexers are reduced to parallel logic.
+Figure \ref{fig:7seg_schematic_muxcase} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code. Note that all multiplexers are reduced to parallel logic. However, it is also a lot of logic.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{\diagramsDir/SevenSegmentDisplayMuxCase_synth_flat.png} 
+    \caption{Generated Schematic of SevenSegmentDisplay Using MuxCase and Skywater 130nm ASIC Technology files.}
+    \label{fig:7seg_schematic_muxcase_asic} 
+\end{figure}
+
+Figure \ref{fig:7seg_schematic_muxcase_asic} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code with optimization guided by the Skywater CMOS 130nm technology library. Note that most of the gates are now NAND/NOR which are more efficient in CMOS implementations. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{\diagramsDir/SevenSegmentDisplayMuxCase_synth.png} 
+    \caption{Generated Schematic of SevenSegmentDisplay Using MuxCase Showing Exact Standard Cell Skywater 130nm ASIC Cells.}
+    \label{fig:7seg_schematic_muxcase_asic_130} 
+\end{figure}
+
+Figure \ref{fig:7seg_schematic_muxcase_asic_130} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code with optimization guided by the Skywater CMOS 130nm technology library and the exact library cells selected from the Skywater library. The library has efficient implementations of 3-input gates. That selection is reflected in the synthesized design.
 
 }%End Chisel
 
@@ -1079,7 +1096,6 @@ While the design of ripple-carry adders is straightforward and easy to implement
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Multipliers}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Adders are fundamental components in digital computing systems. At the core of processors, adders enable basic addition and form the building blocks for more complex arithmetic units, such as subtractors, multipliers, and dividers. An adder's efficiency directly impacts a processor's overall performance, as addition is one of the most frequently executed operations in computing.
 
 %******************************
 \subsection{Behavioral Multiplier}
@@ -1224,6 +1240,9 @@ When truncated to 4 bits, the result becomes:
 \]
 This correctly represents \(-8\) in 4-bit two's complement arithmetic, demonstrating that intermediate overflows do not affect the correctness of the final result.
 
+%**************************************************************************
+\subsection{Handling Extended Results}
+%**************************************************************************
 
 In arithmetic and logical operations, the handling of the extended result, which refers to the extra bits generated during operations such as multiplication or addition, depends on the operation context, the target application, and the architecture. For example, multiplication of two \texttt{n}-bit numbers produces a \texttt{2n}-bit result. In many cases, the result is stored in its entirety, especially in applications that require high precision, such as digital signal processing (DSP) or scientific computing. Architectures like x86 provide instructions that store the low and high halves of the result in separate registers, enabling seamless access to the full \texttt{2n}-bit result.
 
@@ -1247,7 +1266,7 @@ When additional operations such as bitwise logical operations (AND, OR, XOR) and
 \subsection{Subtraction}
 %************************
 %*************************************
-\subsubsection{Behavioral Subtractor}
+\subsubsection{Behavioral Adder/Subtractor}
 %**************************************
 Similar to behavioral addition described in Section \ref{sec:behavioral_addition}, we can also provide for behavioral subtraction. A subtractor can share hardware with an adder making an adder/subtractor the simplest multifunction arithmetic unit.
 
