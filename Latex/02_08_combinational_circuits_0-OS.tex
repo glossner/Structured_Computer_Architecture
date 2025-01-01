@@ -1420,20 +1420,13 @@ Internally, the \texttt{RippleCarryAdder} uses a ripple-carry mechanism, where t
 
 The \texttt{carryOut} signal is derived from the carry bit generated at the most significant bit (MSB) of the operands. This signal is used to indicate whether the result of an unsigned addition exceeds the maximum representable value for the given width. The \texttt{overflow} signal, on the other hand, is specific to signed arithmetic and checks whether the addition resulted in an overflow. This is done by comparing the carries into and out of the MSB using an XOR operation, which indicates overflow if the signs of the operands and the result are inconsistent.
 
-The companion object for \texttt{RippleCarryAdder} provides a factory method to create instances of the module. This method ensures that the width of the adder is positive and constructs the module with the specified parameters. By encapsulating the creation logic, the object simplifies the instantiation of the adder in larger designs, promoting reusability and maintainability. Overall, the \texttt{RippleCarryAdder} exemplifies the use of simple yet efficient ripple-carry logic to perform binary addition, highlighting the strengths and trade-offs of this approach in hardware design.
-
+A companion object (not shown) for the \texttt{RippleCarryAdder} provides a factory method to create instances of the module. This method ensures that the width of the adder is positive and constructs the module with the specified parameters. 
 
 The primary difference between a signed and an unsigned ripple-carry adder lies in how they interpret the binary numbers being added and how they handle overflow conditions. Both types of adders use the same basic ripple-carry mechanism for propagating carry bits through a series of full adders, but their behavior and application diverge due to differences in number representation.
 
-An unsigned ripple-carry adder is designed to add two unsigned binary numbers, which represent only non-negative integers. The range of values for an \( n \)-bit unsigned number is \( 0 \) to \( 2^n - 1 \). In this case, the carry-out from the most significant bit (MSB) indicates whether the sum exceeds the maximum representable value (\( 2^n - 1 \)) for the given width. This behavior is straightforward, as unsigned addition follows normal binary arithmetic rules. An overflow condition is typically not flagged explicitly in an unsigned ripple-carry adder, as the carry-out already provides sufficient information about the result exceeding the valid range.
+An \textbf{unsigned ripple-carry adder} is designed to add two unsigned binary numbers, which represent only non-negative integers. The range of values for an \( n \)-bit unsigned number is \( 0 \) to \( 2^n - 1 \). In this case, the carry-out from the most significant bit (MSB) indicates whether the sum exceeds the maximum representable value (\( 2^n - 1 \)) for the given width. This behavior is straightforward, as unsigned addition follows normal binary arithmetic rules. An overflow condition is typically not flagged explicitly in an unsigned ripple-carry adder, as the carry-out already provides sufficient information about the result exceeding the valid range.
 
-A signed ripple-carry adder works with signed binary numbers, typically represented in two's complement format. The range of values for an \( n \)-bit signed number is \( -2^{n-1} \) to \( 2^{n-1} - 1 \). Two's complement representation allows the same ripple-carry logic to be used, but special care is needed to detect overflow. Signed overflow occurs when the result of addition is outside the representable range. For example, adding two positive numbers should not yield a negative result, and adding two negative numbers should not yield a positive result. This is detected by comparing the carry into and out of the MSB using an XOR operation: \((\text{Carry-In} \oplus \text{Carry-Out})\). In signed addition, the carry-out from the MSB is not relevant, as it does not necessarily indicate overflow in two's complement representation.
-
-The key differences between signed and unsigned ripple-carry adders include the range of input and output, the interpretation of carry-out, the mechanism for detecting overflow, and the role of the MSB. In unsigned addition, the MSB contributes to the magnitude of the number, whereas in signed addition, the MSB represents the sign of the number, with 0 indicating positive and 1 indicating negative. These distinctions influence how the results of addition are interpreted and how hardware logic must be designed to handle edge cases like overflow.
-
-Modern hardware designs often unify the implementation of signed and unsigned adders by introducing a control signal, such as \texttt{isSigned}, to distinguish between the two modes. This signal can be used to interpret the result appropriately for signed or unsigned arithmetic and to enable or disable overflow detection logic depending on the operation type. By leveraging this flexibility, a single ripple-carry adder design can support both signed and unsigned computations, reducing hardware complexity and enhancing reusability in digital systems.
-
-In a signed ripple-carry adder, operands are interpreted in two's complement format, allowing both positive and negative numbers to be represented. When one operand is positive and the other is negative, the addition operation effectively performs subtraction. This behavior arises from the properties of two's complement arithmetic, where negating a number involves flipping its bits and adding one, making addition of a negative number equivalent to subtraction. 
+A \textbf{signed ripple-carry adder} works with signed binary numbers, represented in two's complement format. The range of values for an \( n \)-bit signed number is \( -2^{n-1} \) to \( 2^{n-1} - 1 \). Two's complement representation allows the same ripple-carry logic to be used, but special care is needed to detect overflow. Signed overflow occurs when the result of addition is outside the representable range. For example, adding two positive numbers should not yield a negative result, and adding two negative numbers should not yield a positive result. This is detected by comparing the carry into and out of the MSB using an XOR operation: \((\text{Carry-In} \oplus \text{Carry-Out})\). In signed addition, the carry-out from the MSB is not relevant, as it does not necessarily indicate overflow in two's complement representation.
 
 Consider a 4-bit signed ripple-carry adder. The range of representable numbers is \( -8 \) to \( 7 \). Let the first operand \( A \) be \( 5 \), represented as \( 0101 \), and the second operand \( B \) be \( -3 \), represented as \( 1101 \) in two's complement format. Adding these two values produces the expected result of \( A - |B| = 5 - 3 = 2 \).
 
@@ -1446,12 +1439,7 @@ Consider a 4-bit signed ripple-carry adder. The range of representable numbers i
 \end{aligned}
 \]
 
-In the example, the adder computes \( 0101 + 1101 = 10010 \), and the result is truncated to 4 bits, yielding \( 0010 \), which corresponds to \( 2 \) in signed representation. Note that the carry-out from the MSB is discarded as it is not relevant in two's complement arithmetic. This demonstrates how the ripple-carry adder inherently performs subtraction when one operand is negative, without requiring any additional logic or special handling.
-
-This example illustrates the power of two's complement representation, where a single ripple-carry adder can handle both addition and subtraction seamlessly. The same hardware is used to process all operations, simplifying the design while supporting a wide range of arithmetic computations.
-
-
-Note that we do not inherit from the base class \texttt{Adder}. This could be done but then an implementer would be left to wonder where signals \texttt{a}, \texttt{b}, and \texttt{sum} are defined.  Instead, we prefer listing all I/O in the class as shown in Listing \ref{lst:chisel_adder_ripple} line 9.
+In the example, the adder computes \( 0101 + 1101 = 10010 \), and the result is truncated to 4 bits, yielding \( 0010 \), which corresponds to \( 2 \) in signed representation. Note that the carry-out from the MSB is discarded as it is not relevant in two's complement arithmetic. 
 
 }% End Chisel Code
 
@@ -1468,6 +1456,8 @@ An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and 
 
 
 \placedrawing[H]{figures/02_19_8function_alu.lp}{The generic form of a 8-function Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig15}
+
+\ifthenelse{\boolean{verilogversion}}{
 
 \includeverilogcode[caption={Arithmetic and Logic Unit.   File: A08\_alu.sv  (SystemVerilog)}, 
                     label={lst:A08_alu.sv}, 
@@ -1517,9 +1507,37 @@ Actual implementations are sometimes optimized by implementing two ore more modu
 \end{itemize}
 }
 
+}% End Verilog
+
 \placedrawing[H]{figures/02_20_nbit_alu.lp}{A simple Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig7}
 
 The implementation takes into account the fact that a HA is implemented using an AND gate and a XOR gate (see Figure \ref{fig3}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, a XOR is added for the subtract function and for the two logic functions the outputs of the first HA are directly used.
+
+\ifthenelse{\boolean{chiselversion}}{
+
+\includechiselcode[caption={64-bit ALU (Chisel: ALU64.scala)}, label={lst:chisel_ALU64}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/ALUs/ALU64.scala}
+
+Listing \ref{lst:chisel_ALU64} shows the \texttt{ALU64} class implements a 64-bit Arithmetic Logic Unit (ALU) using Chisel, designed to perform both arithmetic and logical operations. The operations are controlled by a 6-bit opcode, with modularity and reuse of the \texttt{MultifunctionAdderSubtractor64} module to handle arithmetic functionality. 
+
+The opcode is a 6-bit signal that specifies the operation type and operand size. The most significant bit (\texttt{b5}) distinguishes between arithmetic (\texttt{b5 = 0}) and logical (\texttt{b5 = 1}) operations. For arithmetic operations, bits \texttt{b4}, \texttt{b3}, and \texttt{b2} specify addition or subtraction, signed or unsigned computation, and unused functionality. Logical operations are further distinguished by a combination of bits \texttt{b4}, \texttt{b3}, and \texttt{b2}. The operand size is encoded in the two least significant bits (\texttt{b1b0}), allowing operations on 8, 16, 32, or 64-bit data.
+
+The module defines an input-output interface through a Chisel \texttt{Bundle}. It accepts two 64-bit operands (\texttt{a} and \texttt{b}), the 6-bit \texttt{opcode}, and produces a 64-bit \texttt{result}. Additionally, it outputs flags for carry or borrow (\texttt{carryOutFlag}), overflow (\texttt{overflowFlag}), zero result (\texttt{zeroFlag}), and negative result (\texttt{negativeFlag}).
+
+The ALU decodes the opcode to distinguish between arithmetic and logical operations. For arithmetic operations, it passes bits \texttt{b3b2b1b0} the the MultifunctionAdderSubtracter. No pre-decoding of the opcode is required. The ALU also identifies whether the operation is addition or subtraction (\texttt{isSub}) and whether it is signed or unsigned (\texttt{isSigned}). The operand size is extracted from the opcode (\texttt{operandSize}), which determines the effective width of the operation and the corresponding mask to limit the operands.
+
+Operands \texttt{a} and \texttt{b} are masked to their effective width, ensuring the operation respects the specified bit size. For subtraction, operand \texttt{b} is adjusted using two's complement logic (\texttt{\textasciitilde b + 1}).
+
+Arithmetic operations are implemented by instantiating the \texttt{MultifunctionAdderSubtractor64} module. This modular design allows the ALU to reuse the functionality of the adder-subtractor module, which includes handling various operand sizes and signed or unsigned computations. Inputs such as \texttt{a}, \texttt{b}, and \texttt{opcode} are connected to the corresponding inputs of the \texttt{MultifunctionAdderSubtractor64}, and its outputs are mapped to the ALU outputs.
+
+
+Logical operations, such as \texttt{AND}, \texttt{OR}, \texttt{XOR}, \texttt{SLL} (shift left logical), \texttt{SRL} (shift right logical), and \texttt{SRA} (shift right arithmetic), are implemented using a multiplexer (\texttt{MuxCase}). The operation is selected based on the opcode bits \texttt{b4}, \texttt{b3}, and \texttt{b2}, and the result is masked to the effective operand width.
+
+The ALU combines arithmetic and logical functionalities by selecting the result based on the operation type (\texttt{isArithmetic} or \texttt{isLogical}). For arithmetic operations, the result and flags are directly obtained from the \texttt{MultifunctionAdderSubtractor64}. Logical operations, on the other hand, do not produce flags such as carry or overflow; these outputs are set to zero when a logical operation is performed.
+
+The ALU includes optional debugging functionality, controlled by the \texttt{printDebugInfo} flag. When enabled, it prints intermediate values such as operand adjustments, masks, and results, aiding in testing and verification.
+
+}% End Chisel
+
 
 \section{Problems}
 

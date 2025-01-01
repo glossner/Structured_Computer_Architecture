@@ -388,6 +388,53 @@ The system architecture is completed by adding the second global loop, with  spe
     \end{verbatim}
 \end{description}
 
+
+\section{The mathematical model of partially recursive functions}
+
+When we closed the fourth loop, starting from combinational circuits, we had the pleasant encounter with the mathematical model of the Turing Machine. Does a similar encounter await us with the closing of the two loops over a cellular automaton? Yes. It is a mathematical model proposed independently in the same year as the Turing Machine: the model of {\bf {\em partially recursive functions}} proposed by Stephen Kleene \cite{Kleene36}.
+
+\begin{definition}\label{parrec}
+Let be the positive integers $x,y,i \in \mathbb{N}$ and the vector $\vec{x} = \langle x_0, x_1, \ldots, x_{n-1} \rangle \in \mathbb{N}^n$. Any partial recursive function $f: \mathbb{N}^n \rightarrow \mathbb{N}$ can be computed using three {\bf {\em initial functions}}:
+\begin{itemize}
+\item $ZERO(x) = 0:$ the variable $x$ takes the value {\bf zero}
+\item $INC(x) = x+1:$ {\bf increment}s the variable $x \in \mathbb{N}$
+\item $SEL(i, \vec{x}) = x_i:$ $i$ {\bf select}s the value of $x_i$ from the vector of positive integers $\vec{x}$
+\end{itemize}
+and the application of the following three {\bf {\em rules}}:
+\begin{itemize}
+\item {\bf Composition:}  $f(\vec{x}) = g(h_0(\vec{x}), \ldots, h_{p-1}(\vec{x}))$,
+    where:  $f: \mathbb{N}^n \rightarrow \mathbb{N}$ is a total function if  $g: \mathbb{N}^p \rightarrow \mathbb{N}$ and  $h_i: \mathbb{N}^n \rightarrow \mathbb{N}$, for $i = 0,1, \ldots p-1$, are total functions
+\item {\bf Primitive recursion:} $f(\vec{x},y) = g(\vec{x}, f(\vec{x}, (y-1)))$,  with $f(\vec{x},0) = h(\vec{x})$
+    where:  $f:  \mathbb{N}^{n+1} \rightarrow  \mathbb{N}$ is a total function if $g:  \mathbb{N}^{n+1} \rightarrow  \mathbb{N}$ and $h:  \mathbb{N}^n \rightarrow  \mathbb{N}$ are total functions.
+\item {\bf Minimization:} $f(\vec{x}) = \mu_y[g(\vec{x},y) = 0]$,
+    which means: the value of the function  $f:  \mathbb{N}^{n} \rightarrow  \mathbb{N}$ is the smallest $y$, {\bf {\em if any}}, for which the function $g:  \mathbb{N}^{n+1} \rightarrow  \mathbb{N}$ takes the value $g(\vec{x},y) = 0$.
+\end{itemize}
+
+$\diamond$
+\end{definition}
+
+If we follow the previous definition, we will identify the initial functions with those directly realized by simple combinational circuits:
+\begin{itemize}
+    \item ZERO: implemented by generating a constant value
+    \item INC: implemented as the increment circuit
+    \item SEL: implemented as the multiplexer circuit
+\end{itemize}
+while the composition rule is implemented by the circuit represented in Figure \ref{compCirc}.
+
+\placedrawing[h]{figures/14_9_compositionCircuit.LP}{{\bf The circuit version of composition.} {\small It is a two-layer construct: the parallel expanded {\em map} layer serially connected with the $log$-dept {\em reduction} layer.}}{compCirc}
+
+The similarity between Figures \ref{firstLoop} and \ref{compCirc} encourages us to hope that both primitive recursion and minimization can find implementations in structures that we can physically realize with cellular constructions. Indeed, by composing {\em map composition} functions (see Figure \ref{compCirc}) one can obtain the purely theoretical construction in Figure \ref{2loops} (for details see \cite{Stefan00}). It is a theoretical one because is extended indefinitely to right for two reasons:
+\begin{enumerate}
+    \item we not know for how big $y$ a primitive recursion  computation is requested
+    \item we not know for how big $y$, if any, the computation of a partial recursive function ends.
+\end{enumerate}
+While for the primitive recursion functions the value of $y$ is known at the beginning of computation, for the partial recursive functions the value of $y$, if any, is the result of the computation. For computing primitive recursive functions only  the map composition with the reduction network are sufficient, while for partial functions adding the scan network is mandatory. The simplest form of  the reduction network is one which provide the Boolean bitwise OR of the input components. For the scan network the minimal function receives a Boolean vector and provides the Boolean vector {\tt FIRST} which highlights only the first 1.
+
+\placedrawing[h]{figures/14_10_partialRecursiveCircuit.lp}{{\bf The circuit version of the enhanced composition}. {\small In the map composition right connections are added considering specific map compositions. The scan circuit, a $log$-layer map compositions, is connected with the generic map composition.}}{2loops}
+
+The theoretical structure in Figure \ref{2loops} can be transformed into an implementable one by adding a sequencer that converts the size of the structure into execution time. This becomes possible due to the local memories in each cell $M_i$. The result is a structure like the one in Figure \ref{secondLoop}, a structure that can be considered an {\bf {\em abstract model for a parallel computing system}}.
+
+
 \section{Heterogeneous Computing}
 
 The main application of the MapScanReduce structure is in heterogeneous computing were the distinction between complex computing and intense computing is meaningful.
@@ -748,15 +795,21 @@ $\diamond$
 
 In Table \ref{prim}
 
-\begin{table}[h]
+\begin{table}[H]
 	\centering                       
 	\caption{Library of primitives}           
 	\label{prim}       % Label
 
-	\begin{tabular}{|p{0.35\textwidth}|p{0.45\textwidth}|} \hline  % Your table
+	\begin{tabular}{|p{0.2\textwidth}|p{0.7\textwidth}|} \hline  % Your table
 		Function & Description  \\ \hline \hline
-		MATRIXVECTMULT(Vi,Vj,s,Vk) & multiply in Vi the s-vector matrix starting with Vj, with vector Vk    \\ \hline
-		INNERPRODUCT(Vi,Vj,s,Vk) & inner product in Vi between Vj and Vk  \\ \hline
+        vLoad(Vi)              & load vector Vi from the HOST's memory   \\ \hline
+        vStore(Vi)             & store vector Vi to the HOST's memory     \\ \hline
+        mLoad(Vi,s)            & load from the HOST's memory the s-line matrix starting with Vi    \\ \hline
+        mStore(Vi,s)           & store to the HOST's memory the s-line matrix starting with Vi     \\ \hline
+        vvMult(Vi,Vj,s,Vk) & inner product in Vi between Vj and Vk  \\ \hline
+		mvMult(Vi,Vj,s,Vk) & multiply in Vi the s-line matrix starting with Vj, with vector Vk    \\ \hline
+        mmMult() &   \\ \hline
+        mTrans() &  \\ \hline
 	\end{tabular}
 
 \end{table}

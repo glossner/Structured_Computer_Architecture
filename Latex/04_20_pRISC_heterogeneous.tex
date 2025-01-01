@@ -6,12 +6,9 @@ This appendix brings together in a heterogeneous configuration (see \ref{hetComp
 The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}. The listed module contains three modules -- HOST, INTERFACES and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the three module in top are:
 
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=1\textwidth]{A08_hetSys.png}
-\caption{Heterogeneous system.}
-\label{imm:hetsys}
-\end{figure}
+\placedrawing[H]{figures/20_1_heterogeneousSystem.lp}{Heterogeneous System ({\tt 1\_hetSys.sv}): HOST computer and many-cell ACCELERATOR interconnected through INTERFACES (three FIFOs: one for commands and programming and two for in and out of data).}{fighetSys}
+
+
 
 \begin{description}
     \item[from HOST to ACCELERATOR:] program \& data 64-bit path and the synchronizing signals:
@@ -33,6 +30,11 @@ The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}.
                     firstnumber=1, 
                     lastline=68]
                     {\verilogSourceDir/A20_hetSys.sv}
+
+\placedrawing[H]{figures/20_2_accelerator.lp}{Accelerator ({\tt 2\_accelerator.sv}): the many-cell engine ARRAY and the sequencer CONTROLLER (a mono-core computer).}{figacc}
+
+\placedrawing[H]{figures/20_3_array.lp}{Array ({\tt 3\_array.sv}): the array of $p$ cells MAP loop connected with two $lor$-depth networks (REDUCE for reduce functions amd SCAN for scan functions).}{figarray}
+
 
 The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
 

@@ -1,1 +1,1 @@
-$ENV{'TEXINPUTS'}='./latexcad//:' . $ENV{'TEXINPUTS'}; 
+$ENV{'TEXINPUTS'} = './Latex//:./latexcad//:' . $ENV{'TEXINPUTS'};
