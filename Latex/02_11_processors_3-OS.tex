@@ -39,7 +39,7 @@ $\diamond$
 \end{exemplu}
 
 
-\section{Processor}
+\section{Processor}\label{toyRISCprocessor}
 
 \subsection{Architecture vs. Organization}
 
@@ -136,7 +136,7 @@ Both types of operations fall into the category of simple ones, the fact that it
 
 
 
-\section{{\bf {\em ToyRISC Processor}}}
+    \section{{\bf {\em ToyRISC Processor}}}\label{toyrisc}
 
 The executing processor is simpler than an interpreting processor.
 The complexity of computation moves almost completely from the
@@ -154,7 +154,7 @@ RALU-type functional automaton, directly interfaced with the data
 memory, is loop-connected with a control automaton designed to
 fetch in each clock cycle a new instruction from the program
 memory. The control automaton does not ``know" the function to be
-performed, it ``knows" how to ``fetch the function" from an external storage
+performed, it ``knows"  only how to ``fetch the function" from an external storage
 support, the program memory.
 
 \placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}} processor in its simulation environment where the program memory and data memory are included.}{fig43}

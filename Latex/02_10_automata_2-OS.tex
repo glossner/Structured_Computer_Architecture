@@ -76,7 +76,7 @@ Turing’s formal model set the stage for understanding how numbers can be syste
 
 In this chapter we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes, that is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
 
-Our final target in this lesson is RALU: {\bf {\em Registers with Arithmetic \& Logic Unit}}.
+The main targets in this chapter are the main components of a small and simple processing unit: {\bf {\em Program Counter (PC)}} and  {\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}.
 
 \section{Definitions}
 
@@ -791,6 +791,90 @@ t=12 clock=0 func=1101 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 
 t=13 clock=1 func=1101 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 10, 8]
 \end{verbatim}
 }
+
+
+\subsection{FIFO}
+
+\subsubsection{Definition}
+
+First-In-First-Out (FIFO) memory is a special memory device represented in Figure \ref{fifo1}. It has the following connections (see Figure \ref{fifo1}a):
+\begin{description}
+    \item[dataIn]: the data entry of $n$ bits to which the word that will be recorded in the rightmost unoccupied location is applied.
+    \item[dataOut]: the $n$ bit data output from which the oldest unextracted record is extracted
+    \item[full]: it signals the fact that the memory is full and will not accept a new write before executing at least one read
+
+\placedrawing[H]{figures/06_10_fifo.lp}{{\bf a.} Block schematic of FIFO. {\bf b.} {\tt write A} operation. {\bf c.} {\tt write D.} {\bf d.} {\tt write F}. {\bf e.} {\tt read}.}{fifo1}
+    
+    \item[write]: if activated when {\tt full = 0}, then {\tt dataIn} is queued
+    \item[empty]: it signals the fact that the memory is empty and will not accept a new read before executing at least one write
+    \item[read]: if activated when {\tt empty = 0}, then {\tt dataOut} is extracted from the  queue
+\end{description}
+
+In Figures from \ref{fifo1}b to \ref{fifo1}e is exemplified the way FIFO works, as follows:
+\begin{description}
+    \item[{\tt write(A)}]: in the empty FIFO A is stored in the rightmost position (see Figure \ref{fifo1}b)
+    \item[{\tt write(D)}]: B is stored in the rightmost free position, immediately after A (see Figure \ref{fifo1}c)
+    \item[{\tt write(F)}]: F is stored in the rightmost free position, immediately after B (see Figure \ref{fifo1}cd)
+    \item[{\tt read}]: A is extracted from FIFO and the queue "advances" one step (see Figure \ref{fifo1}e)
+\end{description}
+
+There are two main types of FIFO:
+\begin{itemize}
+    \item synchronous FIFO: the sending system and the receiving system run with the same clock signal (for those who are interested can consult Appendix \ref{fifoMem})
+    \item asinchronous FIFO: the sending system and the receiving system run with different  clock signals
+\end{itemize}
+Asynchronous FIFO are used to solve the problem of crossing data between systems running in different clock domain. The module BUS Bridge (see Figure \ref{compSys}) contains almost sure an asynchronous FIFO.
+
+\subsubsection{Structure}
+
+In Figure \ref{fifo} is presented a solution for the synchronous
+version, where:
+
+\placedrawing[h]{figures/draw0_28.lp}{{\bf FIFO memory.} {\small Two
+pointers, evolving in the same direction, and a two-port RAM
+implement a LIFO (queue) memory. The limit flags are computed
+combinational from the addresses used to write and to read the
+memory.}}{fifo}
+
+\begin{itemize}
+    \item {\bf RAM} is a $2^{n}$ $m$-bit words two-port asynchronous random access memory, one
+    port for write to the address {\tt w\_addr} and another for
+    read form the address {\tt r\_addr}
+    \item {\bf write counter} is an $(n+1)$-bit resetable counter incremented
+    each time a write is executed; its output is {\tt w\_addr[n:0]}, initially
+    it is reset
+    \item {\bf read counter} is an $(n+1)$-bit resetable counter incremented
+    each time a read is executed; its output is {\tt r\_addr[n:0]}, initially it is reset
+    \item {\bf eq} is a comparator activating its output when
+    the least significant $n$ bits of the two counters are
+    identical.
+\end{itemize}
+
+FIFO works like a circular memory addressed by two pointers ({\tt
+w\_addr[n-1:0]} and {\tt r\_addr[n-1:0]}) running on the same
+direction. If the write pointer {\em after} a write operation
+becomes equal with the read pointer, then the memory is  full and
+the {\tt full} signal is 1. If the read pointer {\em after} a read
+operation becomes equal with the write pointer, then the memory is
+empty and the {\tt empty} signal is 1. The $n+1$-th bit in each
+counter is used to differentiate between empty and full when {\tt
+w\_addr[n-1:0]} and {\tt r\_addr[n-1:0]} are the same. If {\tt
+w\_addr[n]} and {\tt r\_addr[n]} are different, then {\tt
+w\_addr[n-1:0]} = {\tt r\_addr[n-1:0]} means full, else it means
+empty.
+
+The circuit used to compare the two addresses is a combinational
+one. Therefore, its output has a hazardous behavior which affects
+the outputs {\tt full} and {\tt empty}. These two outputs must be
+used carefully in designing the system which includes this FIFO
+memory. The problem can be managed because the system works in the
+same clock domain ({\tt clock} is the same for both ends of FIFO
+and for the entire system). We call this kind of FIFO {\em
+synchronous FIFO}.
+
+
+
+
 
 
 

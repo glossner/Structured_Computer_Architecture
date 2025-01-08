@@ -66,7 +66,7 @@ Imposing the restriction $R=S'$ to an RS latch results the {\bf D
 latch} without non-predictable transitions ($R=S=1$ is not anymore
 possible). {\bf a.} The structure. {\bf b.} The logic symbol. {\bf
 c.} An improved version for the data latch internal
-structure.}}{d_latch}
+structure. {\bf d.} The optimal structure using an elementary multiplexer.}}{d_latch}
 
 For the time interval in which the clock is active, CK = 1, it says that the latch is transparent to the control signal S and R. The latch becomes non-transparent in the time interval in which CK = 0. Indeed, in the period in which the latch is transparent, the decoupling between "when" and "how" is not achieved, and the circuit switches conditioned by the evolution of the S and R inputs. A correct use of the latch assumes that during the transparency period the S and R inputs are stable.
 
@@ -266,8 +266,7 @@ A skilled designer will almost always be able to hide the effect of latency and 
                     lastline=60]
                     {\verilogSourceDir/A09_syncPipeRAM.sv}
 
-\subsection{{\bf {\em Register file}}}\label{registerFile}
-
+\subsection{{\bf {\em Register file}}}\label{registerFile}     
 
 A register file is a battery of registers from which, in each clock cycle, any two registers can be accessed for reading and any register for writing. The implementation of such a circuit is done with a synchronous memory with three ports: two for reading and one for writing (see Figure \ref{file_reg}), where:
 
@@ -301,6 +300,195 @@ The internal structure of a file register is characterized by the two multiplexe
 \end{description}
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
+
+
+\subsection{Content-Addressable Memory}
+
+A normal way to ``question" a memory circuit is to ask for:
+\begin{quote}
+{\bf Q1}: {\em what is the value of the property A of the object B}
+\end{quote}
+For example: {\em How old is George?} The {\em age} is the
+property and the {\em object} is George. The first step to design
+an appropriate device to be questioned as previously is
+exemplified is to define a circuit able to answer the question:
+\begin{quote}
+{\bf Q2}: {\em where is the object B?}
+\end{quote}
+with two possible answers:
+\begin{enumerate}
+    \item {\em the object B is not in the searched space}
+    \item {\em the object B is stored in the cell indexed by X}.
+\end{enumerate}
+The circuit for answering Q2-type questions is called {\em Content
+Addressable Memory}, shortly: {\em CAM}. (About the question Q1 in
+the next subsection.)
+
+The basic cell of a CAM is consists of:
+\begin{itemize}
+    \item the storage elements for binary objects
+    \item the ``questioning" circuits for searching the value
+    applied to the input of the cell.
+\end{itemize}
+
+\placedrawing[H]{figures/06_05_content_addressable_cell.lp}{{\bf Content Addressable Cell.}
+{\small {\bf a.} The structure: data latches whose content is
+compared against the input data using 4 XORs and one NAND. Write
+is performed applying the clock with stable data input. {\bf b.}
+The logic symbol.}}{cam_cell}
+
+In Figure \ref{cam_cell} there are 4 D latches as storage elements
+and four XORs connected to a 4-input NAND used as comparator. The
+cell has two functions:
+
+\placedrawing[H]{figures/06_06_content_addressable_memory.lp}{{\bf The Content Addressable Memory
+({\em CAM}).} {\small {\bf a.} A 4-word CAM is built using 4
+content addressable cells, a demultiplexor to distribute the write
+enable (WE) signal, and a $NAND_{4}$ to generate the match signal
+(M). {\bf b.} The logic symbol.}}{cam}
+
+\begin{itemize}
+    \item {\bf to store}: the active level of the clock modify the content
+    of the cell storing  the 4-bit input data into the four D
+    latches
+    \item {\bf to search}: the input data is continuously compared
+    with the content of the cell generating the signal $AO'=0$ if
+    the input matches the content.
+\end{itemize}
+
+The cell is {\em written} as an $m$-bit latch and is continuously
+{\em interrogated} using a combinational circuit as comparator.
+The resulting circuit is an 1-OS because results serially
+connecting a memory, one-loop circuit with a combinational,
+no-loop circuit. No additional loop is involved.
+
+An $n$-word CAM contains $n$ CAM cells and some additional
+combinational circuits for distributing the clock to the selected
+cell and for generating the global signal M, activated for
+signaling a successful match between the input value and one or
+more cell contents. In Figure \ref{cam}a a 4-word of 4 bits each
+is represented. The write enable, $WE$, signal is demultiplexed as
+clock to the appropriate cell, according to the address codded by
+$A_{1}A_{0}$. The 4-input NAND generate the signal $M$. If, at
+least one address output, $AO_{i}'$ is zero, indicating match in
+the corresponding cell, then $M = 1$ indicating a successful
+search.
+
+
+The {\em input address} $A_{p-1}, \ldots, A_{0}$ is binary codded
+on $p = log_{2} n$ bits. The {\em output address} $AO_{n-1},
+\ldots, AO_{0}$ is an {\em unary code} indicating the place or the
+places where the data input $D_{m-1}, \ldots, D_{0}$ matches the
+content of the cell. The output address must be unary codded
+because there is the possibility of match in more than one cell.
+
+Figure \ref{cam}b represents the logic symbol for a CAM with $n$
+$m$-bit words. The input $WE$ indicate the function performed by
+CAM. Be very careful with the set-up time and hold time of data
+related to the $WE$ signal!
+
+The CAM device is used to locate an object (to answer the question
+{\bf Q2}). Dealing with the properties of an object (answering
+{\bf Q1}-type questions) means to use o more complex devices which
+{\em associate} one or more properties to an object. Thus, the
+{\em associative memory} will be introduced adding some circuits
+to CAM.
+
+
+\subsection{Associative Memory}\label{assocMemory}
+
+A partially used RAM can be an associative memory, but a very
+inefficient one. Indeed, let be a RAM addressed by $A_{n-1} \ldots
+A_{0}$ containing 2-field words $\{V, \; D_{m-1} \ldots D_{0}\}$.
+The {\em objects} are codded using the address, the {\em values}
+of the unique property $P$ are codded by the data field $D_{m-1}
+\ldots D_{0}$. The one-bit field $V$ is used as a validation flag.
+If $V=1$ in a certain location, then there is a match between the
+object designated by the corresponding address and the value of
+property $P$ designated by the associated data field.
+
+\begin{exemplu}
+Let be the 1Mword RAM addressed by $A_{19} \ldots A_{0}$
+containing 2-field 17-bit words $\{V, \; D_{15} \ldots D_{0}\}$.
+The set of objects, $OBJ$, are codded using 20-bit words, the
+property $P$ associated to $OBJ$ is codded using 16-bit words. If
+$$RAM[11110000111100001111] = 1\_0011001111110000$$
+$$RAM[11110000111100001010] = 0\_0011001111110000$$
+then:
+\begin{itemize}
+    \item for the object $11110000111100001111$ the property $P$
+    is defined ($V=1$) and has the value $0011001111110000$
+    \item for the object $11110000111100001010$ the property $P$
+    is not defined ($V=0$) and the data field is meaningless.
+\end{itemize}
+Now, let us consider the 20-bit address codes four-letter names
+using for each letter a 5-bit code. How many locations in this
+memory will contain the field $V$ instantiated to 1?
+Unfortunately, only extremely few of them, because:
+\begin{itemize}
+    \item only 24 from 32 binary configurations of 5 bits will be
+    used to code the 24 letters of Latin alphabet ($24^{4} <
+    2^{20}$)
+    \item but more important: how many different name expressed by 4
+    letters can be involved in a real application? Usually no more
+    than few hundred, meaning almost nothing related to $2^{20}$.
+\end{itemize}
+ $\diamond$
+\end{exemplu}
+
+The previous example teaches us that a RAM used as associative
+memory is a very inefficient solution. In real applications are
+used names codded very inefficiently:
+$$number\_of\_possible\_names >>> number\_of\_actual\_names.$$
+In fact, the natural memory function means almost the same: to
+remember about something immersed in a huge set of possibilities.
+
+One way to implement an efficient associative memory is to take a
+CAM and to use it as a {\em programmable decoder} for a RAM. The
+(extremely) limited subset of the actual objects are stored into a
+CAM, and the address outputs of the CAM are used instead of the
+output of a combinational decoder to select the accessed location
+of a RAM containing the value of the property $P$. In Figure
+\ref{am} this version of an associative memory is presented.
+$CAM_{m \times n}$ is usually dimensioned with $2^{m} >>> n$
+working as a decoder programmed to decode {\bf any} very small
+subset of $n$ addresses expressed by $m$ bits.
+
+\placedrawing[h]{figures/06_07_associative_memory.lp}{{\bf An associative memory ({\em
+AM}).} {\small The structure of an AM can be seen as a RAM with a
+programmable decoder implemented with a CAM. The decoder is
+programmed loading CAM with the considered addresses.}}{am}
+
+Here are the three working mode of the previously described
+associative memory:
+\begin{description}
+    \item[define\_object]: write the name of an object to the
+    selected location in CAM
+    \\ {\tt wa' = 0, address = name\_of\_object, sel = cam\_address
+    \\ wd' = 1, din = don't\_care}
+
+    \item[associate\_value]: write the associated value in the
+    randomly accessed array to the location selected by the active
+    address output of CAM
+    \\ {\tt wa' = 1, address = name\_of\_object, sel = don't\_care
+    \\ wd' = 0, din = value}
+
+    \item[search]: search for the value associated with the name of the object
+    applied to the address input
+    \\ {\tt wa' = 1, address = name\_of\_object, sel = don't\_care
+    \\ wd' = 1, din = don't\_care}
+    \\ {\tt dout} is valid only if {\tt valide\_dout = 1}.
+\end{description}
+
+This associative memory will be dimensioned according to the
+dimension of the actual subset of names, which is significantly
+smaller than the virtual set of the possible names ($2^{p} <<<
+2^{m}$). Thus, for a searching space with the size in $O(2^{m})$ a
+device having the size in $O(2^{p})$ is used.
+
+
+
+
 
 
 %****************************************************************************

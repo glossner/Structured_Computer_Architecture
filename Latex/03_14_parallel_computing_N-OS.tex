@@ -21,67 +21,30 @@ The theoretical concept of a cellular automaton is represented in Figure \ref{ca
 
 \begin{exemplu}
 Let us consider the simplest cellular automaton described by the following modules:
-{\em
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= ,  morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File names:     cellAut.sv
-Circuit name:   One-bit cell cellular automaton
-Description:    The cell is a two-state, two one-bit inputs finite 
-                automaton 
-************************************************************************/
-`define n 1024
-module cellAut 	
-    (   output  logic [`n-1:0]  out ,
-        input   logic [7:0]     func,
-        input   logic [`n-1:0]  init,
-        input   logic           rst , clk );
-    genvar i;
-    generate for (i=0; i<`n; i=i+1) begin: C
-        eCell eCell(.out    (out[i]                         ),
-                    .func   (func                           ),
-                    .init   (init[i]                        ),
-                    .in0    ((i==0) ? out[`n-1] : out[i-1]  ),
-                    .in1    ((i==(`n-1)) ? out[0] : out[i+1]),
-                    .rst    (rst                            ),
-                    .clk    (clk                            ));
-        end
-    endgenerate
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+{\em 
+\includeverilogcode[caption={One-bit cell cellular automaton. The cell is a two-state, two one-bit inputs finite automaton.  File: cellAut.sv.  (SystemVerilog)}, 
+                    label={lst:cellAut}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_cellAut.sv}
 }
 
-{\em
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= ,  morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File names:     eCell.sv
-Circuit name:   One-bit cell for the cellular automaton cellAut.sv
-Description:    The cell of the cellular automatn cellAut.sv is a 
-                two-state, two one-bit inputs finite automaton defined 
-                in the most general form using a 8-bit word applied on 
-                the selected inputs of a multiplexor
-************************************************************************/
-module eCell(   output  logic       out ,
-                input   logic [7:0] func,
-                input   logic       init, in0, in1, rst, clk );
-    always_ff @(posedge clk) if (rst)   out <= init                 ;
-                               else     out <= func[{in1, out, in0}];
-endmodule
-\end{lstlisting}
-\end{shaded*}
+{\em 
+\includeverilogcode[caption={One-bit cell for the cellular automaton. The cell of the cellular automaton cellAut.sv is a  two-state, two one-bit inputs finite automaton defined in the most general form using a 8-bit word applied on the selected inputs of a multiplexer. File: eCell.sv.  (SystemVerilog)}, 
+                    label={lst:eCell}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_eCell.sv}
 }
-}
+
 The size of the definition is constant, which means it does not depend by the number of cells $n$, i.e, the cellular automaton is a simple circuit.  
 
 $\diamond$
 \end{exemplu}
 
-\section{Controlled Cellular Automaton}
+\section{Controlled Cellular Automaton}\label{contrCellAut}
 
 \subsection{Structure}
 
@@ -115,27 +78,20 @@ Results the system represented in Figure \ref{controledCA} where:
 Mapping an operation involves applying a function to each element in a collection (e.g., a list, array). This can be achieved using constructs like the {\tt map(...)} function in many programming languages.
 \begin{exemplu}
 If you have a vector of numbers {\tt [1, 2, 3, 4]} and want to double each number, the code in Python is:
-{\small
-{\em
-\begin{shaded*}
-\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:      vectorDouble.py
-Description:    The operation: multiply by 2
-                The mapping: [1, 2, 3, 4] → [2, 4, 6, 8]    
-*************************************************************************/
-numbers = [1, 2, 3, 4]
-doubled = map(lambda x: x * 2, numbers)
-print(list(doubled))  # Output: [2, 4, 6, 8]
-\end{lstlisting}
-\end{shaded*}
+{\em 
+\includeverilogcode[caption={The map operation of doubling a vector.  File: vectorDouble.py. }, 
+                    label={lst:vectorDouble}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_vectorDouble.py}
 }
-}
+
 The operation multiply, $*$, is mapped, in the previous Python program, to the vector {\tt [1, 2, 3, 4]}.
 
 $\diamond$
 \end{exemplu}
-Our CCA contains an array of cells which can be namer Map because allows applying the same  function to the elemnts of a vector distributed along the cells  it is made of.
+Our CCA contains an array of cells which can be namer Map because allows applying the same  function to the elements of a vector distributed along the cells  it is made of.
 
 \subsection{Architecture}
 
@@ -249,7 +205,7 @@ Global shift/rotate operations are performed on all components of vectors distri
     \end{verbatim}
 \end{description}
 
-\section{First Global Loop in CA}
+\section{{\bf First Global Loop} in CA}
 
 \subsection{Structure}
 
@@ -330,7 +286,7 @@ $\diamond$
 
 In the previous example, $2p-1$ computational results -- $p$ multipliers from Map and $p-1$ adders from Reduce -- are used in $1+log_2 \; p$ cycles to perform $2p-1$ operations. This results, for $p=1024$, in an average of 186 operations/cycle. So, we must be careful! We need algorithms that allow for the most intensive use of hardware resources \cite{antonescu23}.
 
-\section{Second Global Loop in CA}
+\section{{\bf Second Global Loop} in CA}
 
 \subsection{Structure}
 
@@ -701,119 +657,78 @@ $\diamond$
 \end{exemplu}
 
 Let us consider the simplest, most intense computation of multiplying matrices.
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:     matrix_multiplication.py
-Description:       
-*************************************************************************/
-def matrix_multiplication(A, B):
-    # Get the number of rows and columns for matrices A and B
-    rows_A = len(A)
-    cols_A = len(A[0])
-    rows_B = len(B)
-    cols_B = len(B[0])
-
-    # Check if multiplication is possible
-    if cols_A != rows_B:
-        raise ValueError("Number of columns in A must equal of rows in B")
-
-    # Initialize the result matrix with zeros
-    result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]
-
-    # Perform the matrix multiplication
-    for i in range(rows_A):
-        for j in range(cols_B):
-            for k in range(cols_A):
-                result[i][j] += A[i][k] * B[k][j]
-
-    return result
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Matrix multiplication in Python.  File: matrix\_multiplication.py. }, 
+                    label={lst:matrixMultiplication}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_matrix_multiplication.py}
 
 The execution time of this program on a mono-core processor is proportional with the number of clock cycles:
 $$range(cols\_B) \times range(cols\_B) \times range(cols\_A)$$
 which means, for example: if $range(cols\_B) = range(cols\_B) = range(cols\_A) = 1024$, the execution time is proportional with $1024^3 \simeq 10^9$.
 
 However, in high-level languages like Python there are function libraries for frequently used functions like matrix multiplication. In this case the program takes the simplified form below:
-
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:     matrix_multiplication.py
-Description:        
-*************************************************************************/
-# ...
-import numpy as np
-
-A = np.array(...)
-B = np.array(...)
-
-# Perform matrix multiplication
-result = np.dot(A, B)
-
-print("Resultant Matrix:")
-print(result)
-\end{lstlisting}
-\end{shaded*}
-}
-
+\includeverilogcode[caption={Matrix multiplication in Python using a library of function.  File: matrixMultiplication.py. }, 
+                    label={lst:matrixmultiplication}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_matrixMultiplication.py}
 
 The line {\tt result = np.dot(A,B)} access, when the program runs on a mono-core processor, a highly optimized program (usually written in assembly language) for the matrix multiplication operation. In a heterogeneous system, instead of calling a program from library, is accessed a function performed hardware accelerated by the associated accelerator.
 
 \begin{exemplu}
 Let see how looks the algorithm for multiplying two $n \times n$ matrices, {\tt A} and {\tt B}. The transposed matrix of B is {\tt T}. Each matrix is represented by vectors in a Map with $p\geq n$.
-
-{\small
 {\em 
-\begin{shaded*}
-\begin{lstlisting}[language=Python, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name:     matrix_multiplication
-Description:        
-*************************************************************************/
-    A = [V[0] V[1] ... V[n-1]]
-    T = [V[n] V[n+1] ... V[2n-1]]
-    
-    i, j    integers
-    
-    for(j=0; j<n; j=j+1)
-        for(i=0; i<n; n=n+1)
-            SHIFTRIGHT(V[2N+J],ADDRED(MULT(V[n+j],V[i]))
-    
-\end{lstlisting}
-\end{shaded*}
-}}
+\includeverilogcode[caption={Matrix multiplication algorithm using a hardware accelerator.  }, 
+                    label={lst:matrixMult}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_matrixMult}
+}
+
 Because the previous algorithm works with vectors, instead of the three embedded lops in the Python program {\tt matrix\_multiplication.py}, in the {\tt matrix\_multiplication} algorithm {\bf {\em there are only two embedded loops}}. Besides this good news, there is also a bad news: the operation repeated $n^2$ times is executed in time belonging to $O(log \; n)$ cycles. Because the line {\tt result[i][j] += A[i][k] * B[k][j]} in the Python program is executed in constant time, the acceleration provided by the MapScanReduce accelerator is only of $n/log_2 n$. (A well-designed algorithm can avoid this bad news, but this topic goes beyond the level at which we approach parallelism problems.)
 
 $\diamond$
 \end{exemplu}
 
+\begin{exemplu}
+In Table \ref{prim} is listed an example for a library of primitives used to develop in a high level language on HOST a linear algebra library. The library of primitives contains functions defined on data structures, vectors and matrices, limited to the size of the array of cells  Map, i.e., $p$-component vectors and $p \times p$ matrices. Programs developed on HOST adapt linear algebra operations defined on data of any size to linear algebra operations defined on accelerator dimensions. In this way, a speedup is obtained that depends on $p$ even if the order of magnitude of the computation time remains the same, i.e., the execution time of matrix multiplication, for example, remains the same, in $O(n^3)$ for matrices of $n \times n$.
 
-In Table \ref{prim}
-
+{\em
 \begin{table}[H]
+ 
 	\centering                       
-	\caption{Library of primitives}           
+	\caption{Library of linear algebra primitives for $p \times p$ matrices and $p$-component vectors on a $p$-cell MapScanReduce accelerator. }           
 	\label{prim}       % Label
 
-	\begin{tabular}{|p{0.2\textwidth}|p{0.7\textwidth}|} \hline  % Your table
-		Function & Description  \\ \hline \hline
-        vLoad(Vi)              & load vector Vi from the HOST's memory   \\ \hline
-        vStore(Vi)             & store vector Vi to the HOST's memory     \\ \hline
-        mLoad(Vi,s)            & load from the HOST's memory the s-line matrix starting with Vi    \\ \hline
-        mStore(Vi,s)           & store to the HOST's memory the s-line matrix starting with Vi     \\ \hline
-        vvMult(Vi,Vj,s,Vk) & inner product in Vi between Vj and Vk  \\ \hline
-		mvMult(Vi,Vj,s,Vk) & multiply in Vi the s-line matrix starting with Vj, with vector Vk    \\ \hline
-        mmMult() &   \\ \hline
-        mTrans() &  \\ \hline
+	\begin{tabular}{|p{0.2\textwidth}|p{0.6\textwidth}|p{0.1\textwidth}| } \hline  % Your table
+		{\bf Function} & {\bf Description} & {\bf Time}  \\ \hline \hline
+        vLoad(Vi)              & load vector Vi from the HOST's memory &  $O(p)$ \\ \hline
+        vStore(Vi)             & store vector Vi to the HOST's memory &  $O(p)$     \\ \hline
+        mLoad(Vi,s)            & load from the HOST's memory the s-line matrix starting with Vi &  $O(p^2)$    \\ \hline
+        mStore(Vi,s)           & store to the HOST's memory the s-line matrix starting with Vi & $O(p^2)$   \\ \hline
+        vvMult(Vi,Vj,Vk) & inner product in Vi between Vj and Vk & $O(log \; p)$ \\ \hline
+		mvMult(Vi,Vj,Vk) & multiply in Vi the $p \times p$ matrix starting with Vj, with vector Vk  &  $O(p)$   \\ \hline
+        mmMult(Vi,Vj,Vk) &  multiply in the $p \times p$ matrix starting with Vi, the  $p \times p$ matrices starting with Vi and Vk &  $O(p^2)$ \\ \hline
+         mmMac(Vi,Vj,Vk) &  multiply and accumulate in the $p \times p$ matrix starting with Vi, the  $p \times p$ matrices starting with Vi and Vk &  $O(p^2)$ \\ \hline
+        mTrans(Vi,Vj) & transpose in the $p \times p$ matrix starting with Vi the  $p \times p$ matrix starting with Vi &  $O(p)$  \\ \hline
 	\end{tabular}
 
 \end{table}
+}
 
+$\diamond$
+\end{exemplu}
+
+\begin{exemplu}
+Let us consider an accelerator with $p=256$ and the program for multiply $1024 \times 1024$ matrices. Then, the HOST consider the multiplication of matrices of $4 \times 4$ matrices of $256 \times 256$ components. The acceleration compared to the computation without accelerator is:
+$$\alpha = \frac{k_1 \times 1024^3}{k_2 \times 4^3 \times k_3 \times 256^2} = k \times 256 \in O(p)$$
+
+$\diamond$
+\end{exemplu}
 
 \section{Parallel Computing Patterns}
 
@@ -821,11 +736,19 @@ Multiplying matrices is a promising example for the capacity to perform in paral
 
 \placedrawing[h]{figures/09_14_parallelPatterns.lp}{Parallel patterns \cite{McCool12}.}{parallelPatt}
 
-We will analyze in turn how the 17 patterns revealed by McCool and his collaborators can be accelerated using the MapScanReduce structure.
+We will analyze in turn how the 17 patterns revealed by McCool and his collaborators can be accelerated using the MapScanReduce structure. These patterns classifies in three categories:
+\begin{enumerate}
+    \item Map-Only patterns -- executed on {\bf {\em no global loop}} structure
+    \begin{enumerate}
+        \item Map-Reduce patterns -- executed on {\bf {\em one global loop}} structure
+        \item Map-Scan -- executed on {\bf {\em one global loop}} structure
+    \end{enumerate}
+    \item Map-Scan-Reduce -- executed on {\bf {\em two global loops}} structure
+\end{enumerate}
 
-\subsection{Patterns with Direct Correspondence}
+\subsection{Patterns with Map-Only Implemented with No Global Loop}
 
-A first subset of patterns is the one that is directly implementable with the MapScanReduce accelerator.
+A first subset of patterns is the one that are implementable with the Controlled Cellular Automaton (see \ref{contrCellAut}) structure used as accelerator. Many of the patterns we consider are executed exclusively involving the Map section. For them to be executed, a sequence of Map operations is required each time.
 
 \subsubsection{Map Pattern}
 
@@ -855,18 +778,6 @@ $\diamond$
 \end{exemplu}
 
 There are real premises for the acceleration obtained by using a Map array to be in $O(p)$, but more than that there are many cases when the acceleration is  {\bf {\em superlinear}} compared to a single-core structure, due to the control that is performed by SQ, control that in a single-core implementation is also the responsibility of the processor \cite{antonescu24a}.
-
-\subsubsection{Reduction Pattern}
-
-The reduction pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. The usual reduction functions are exemplified in subsection \ref{redEx}. They are executed directly by the hardware.
-
-\subsubsection{Scan Pattern}
-
- The scan pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. In subsection \ref{scanEx} two functions are exemplified. They are executed directly by the hardware.
- 
-\subsection{Patterns Executable on Map-Only}
-
-Many of the patterns we consider are executed exclusively involving the Map section. For them to be executed, a sequence of Map operations is required each time.
 
 \subsubsection{Stencil Pattern}
 
@@ -952,9 +863,13 @@ The output of the computation is the right end of the vector V3.
 
 A possible improvement is to combine the pipeline pattern with the reduce pattern. The loop will be shorted because the multiplication and the addition will be done in parallel in Map section and Reduce section of the MapReduce accelerator. The acceleration provided is in $O(p)$.
 
-\subsection{Pattern Executable on MapReduce Only }
+\subsection{Pattern Executable on MapReduce Only}
 
-In the previous pattern, using the reduction network was optional. But there are applications where it is mandatory.
+A second subset of patterns is that executed by structures containing a global reduction loop.
+
+\subsubsection{Reduction Pattern}
+
+The reduction pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. The usual reduction functions are exemplified in subsection \ref{redEx}. They are executed directly by the hardware.
 
 \subsubsection{Fork-Join  Pattern}
 
@@ -966,34 +881,14 @@ Fork-join is a control pattern that divides (fork)  work and subsequently combin
 Our accelerator can only be used  in the first case, which represents an intense, but simple computation.
 The acceleration that can be obtained is in $O(p/log \; p)$ due to the latencies imposed by distribution, involved in fork, and reduction used to join the results.
 
-\subsection{Patterns Executable on MapScanReduce}
+\subsection{Pattern Executable on MapScan Only}
 
-There follow   patterns that assume the use of the entire structure of the accelerator MapScanReduce.
+A third subset of patterns is that executed by structures containing the global scan loop.
 
-\subsubsection{Category Reduction Pattern}
+\subsubsection{Scan Pattern}
 
-Category reduction pattern selects the set of elements that make up the string stored in a number of horizontal vectors,  is not directly implemented in the structure of the proposed accelerator, but it can be efficiently programmed. We consider that  the ${\bf M_{mp}}$ matrix distributed within the Map section has the capability to store the input stream $S$, which has the  of length $|S|$ in the form of  $N = \lceil |S|/p \rceil$ $p$-component vectors.
-
-Spatial selections are utilized to keep active only cells where the vector Vi, for $i = 1, 2, ...,N$, has no $x$s, a value not included in $S$.  The same operation allows the selection of all cells where the remained active calls contain $F$ the first value different from $X$ which is and substitute it with $X$. The result is the stream $R$ in D, initially empty. The sequence of operations is:
-\begin{verbatim}
-    R = <>
-    for(i=1; i=<N; i=i+1) {
-      do on Vi   WHERE(!== x)
-                 WHERE(first)
-                 v0 <= REDADD(Vi)
-                 R <= <R v0>
-                 for(j=i; j<N; j=J+1) {
-                    do on Vj    WHERE(v0)
-                                VAL(x)     
-                 }
-      until(Vi = <X,X,...,X>)              
-    }
-\end{verbatim}
-
-Because the mono-core execution of the pattern has the time in $O(|S| \times |D|)$, and the execution time in our accelerator is in $O(|S|/p \times |D| \times log \; p)$, the acceleration obtained for this pattern is in $O(p/log \; p)$. The  $log$ part in our evaluation appears due to the latencies of Scan to determine the first occurrence of a symbol different from $X$ in a vector $V_j$ (see line {\tt WHERE(first)}, and due to the latency of Reduce network to read in Controller the value of the first occurrence different from $x$ in the vector Vi) (see line {\tt v0 <= REDADD(Vi)}).
-
-Important note: the scan type network used for this pattern processes a Boolean vector, which is why we can approximate that the size of the system remains in $O(p)$.
-
+ The scan pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. In subsection \ref{scanEx} two functions are exemplified. They are executed directly by the hardware.
+ 
 \subsubsection{Pack Pattern}
 
 The pack pattern is facilitated by the Scan section. The selection of the components to be packed is done using the Boolean vector $B$, which is managed by the spatial selection functions. The pattern is defined by  $B = \langle 0 \; 1\; 1\; 0\; 0\; 1\; 1\; 1 \rangle$. The positions in the destination vector of the components to be packed   are computed using the {\tt ADDPX(B)}. The algorithm is:
@@ -1028,7 +923,7 @@ $\langle (1) \;  (5) \; (0) \; ({\bf 2}) \; ({\bf 2}) \; (4) \rangle  $
 \end{center}
 is represented as a deficient scatter because a destination, 2, has two distinct sources, 3 and 4. It must be considered a sort of ``overflow" and the system must generate an error (exception).
 
-If the definition of scatter is not deficient, the scatter operation is a permute operation operated in the SCAN section of our accelerator with an acceleration in $O(p/log \; p)$, if the permutation is known in advance and control bits can be precomputed. 
+If the definition of scatter is not deficient, the scatter operation is a permute operation operated in the SCAN section of our accelerator with an acceleration in $O(p/log \; p)$, if the permutation is known in advance and control bits can be precomputed.
 
 \subsubsection{Split  Pattern}
 
@@ -1049,6 +944,35 @@ The expand  pattern is implemented in three steps:
 
 Due to the serial transfer of data to the sequencer's memory, this pattern cannot be accelerated on this architecture. This time the complexity is given by the data structure, even if the algorithm is in the category of intense, simple ones.
 
+
+\subsection{Patterns Executable on MapScanReduce}
+
+There follow  a pattern that assume the use of the entire structure of the accelerator MapScanReduce.
+
+\subsubsection{Category Reduction Pattern}
+
+Category reduction pattern selects the set of elements that make up the string stored in a number of horizontal vectors,  is not directly implemented in the structure of the proposed accelerator, but it can be efficiently programmed. We consider that  the ${\bf M_{mp}}$ matrix distributed within the Map section has the capability to store the input stream $S$, which has the  of length $|S|$ in the form of  $N = \lceil |S|/p \rceil$ $p$-component vectors.
+
+Spatial selections are utilized to keep active only cells where the vector Vi, for $i = 1, 2, ...,N$, has no $x$s, a value not included in $S$.  The same operation allows the selection of all cells where the remained active calls contain $F$ the first value different from $X$ which is and substitute it with $X$. The result is the stream $R$ in D, initially empty. The sequence of operations is:
+\begin{verbatim}
+    R = <>
+    for(i=1; i=<N; i=i+1) {
+      do on Vi   WHERE(!== x)
+                 WHERE(first)
+                 v0 <= REDADD(Vi)
+                 R <= <R v0>
+                 for(j=i; j<N; j=J+1) {
+                    do on Vj    WHERE(v0)
+                                VAL(x)     
+                 }
+      until(Vi = <X,X,...,X>)              
+    }
+\end{verbatim}
+
+Because the mono-core execution of the pattern has the time in $O(|S| \times |D|)$, and the execution time in our accelerator is in $O(|S|/p \times |D| \times log \; p)$, the acceleration obtained for this pattern is in $O(p/log \; p)$. The  $log$ part in our evaluation appears due to the latencies of Scan to determine the first occurrence of a symbol different from $X$ in a vector $V_j$ (see line {\tt WHERE(first)}, and due to the latency of Reduce network to read in Controller the value of the first occurrence different from $x$ in the vector Vi) (see line {\tt v0 <= REDADD(Vi)}).
+
+Important note: the scan type network used for this pattern processes a Boolean vector, which is why we can approximate that the size of the system remains in $O(p)$.
+
 \subsection{Super-scalar Sequence Pattern}
 
 The super-scalar pattern describes a complex computation, which is why it requires a special discussion. The content of the square boxes in Figure \ref{parallelPatt} can be:
@@ -1056,6 +980,6 @@ The super-scalar pattern describes a complex computation, which is why it requir
 \item a simple instruction or a complex sequence of instructions
 \item a complex computation performed on a data structure with size in $O(f(N))$.
 \end{enumerate}
-In the first case, the solution is  instruction-level parallelism competence and the implementation is done with a super-scalar pipeline processor. In the second case, the solution can be provided by the recently introduced concept of accelerator-level parallelism (ALP) \cite{Hill}.
+In the first case, the solution is  instruction-level parallelism competence and the implementation is done with a super-scalar pipeline processor. In the second case, the solution can be provided by the recently introduced concept of accelerator-level parallelism (ALP) \cite{HillReddi21} \cite{Malita22}.
 
 A way of implementing ALP can be a MapScanReduce system with cells as MapScanReduce structures. Each cell accelerates an intense function that can be different from the others. We can say that a {\em super-tensorial} computation is ensured. We are dealing with a complex calculation that involves intensive calculations.

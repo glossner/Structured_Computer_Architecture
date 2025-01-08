@@ -3,6 +3,7 @@
 \unitlength 4.5pt
 {\small
 \begin{picture}(106,32)
+\hspace{-3mm}
 \thicklines
 \drawframebox{52.0}{16.0}{20.0}{12.0}{Processor}
 \drawvector{62.0}{20.0}{14.0}{1}{0}

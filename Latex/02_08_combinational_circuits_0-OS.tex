@@ -629,7 +629,7 @@ SystemVerilog, as an enhancement of Verilog, introduces parameterization capabil
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Multiplexer}
+\subsection{Multiplexer}\label{genericMux}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 A \textbf{multiplexer} (often abbreviated as \textit{mux}) is a combinational logic circuit that selects one of several input signals and forwards the selected input to a single output line. The input selection is controlled by a set of control signals or \textit{select lines}, which determine which input to pass to the output. A multiplexer with $n$ select lines can control $2^n$ inputs, making it a highly versatile and compact solution for signal routing in digital systems.
@@ -1444,10 +1444,8 @@ In the example, the adder computes \( 0101 + 1101 = 10010 \), and the result is 
 }% End Chisel Code
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{{\bf {\em Arithmetic \& Logic Unit}}}\label{alu1}
+\section{Arithmetic \& Logic Unit}\label{alu1}  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexer as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
@@ -1537,6 +1535,276 @@ The ALU combines arithmetic and logical functionalities by selecting the result 
 The ALU includes optional debugging functionality, controlled by the \texttt{printDebugInfo} flag. When enabled, it prints intermediate values such as operand adjustments, masks, and results, aiding in testing and verification.
 
 }% End Chisel
+
+
+
+
+
+\section{Combinational Universal Circuit}
+
+Besides the simple, recursively defined circuits there is the huge
+class of the complex or random circuits. Is there a {\em general
+solution} for these category of circuits? A general solution asks
+a general circuit and this circuit surprisingly exists. Now rises
+the problem of how to catch the huge diversity of random in this
+approach. The following theorem will be the first step in solving
+the problem.
+
+\begin{theorem}
+For any $n$, all the functions of $n$ binary-variables have a
+solution  with a combinational logic circuit.
+
+$\diamond$
+\end{theorem}
+
+{\bf Proof}$\;\;$ Any Boolean function of $n$  variables can be
+written as:
+$$f(x_{n-1}, \ldots , x_{0}) = x_{n-1}'g(x_{n-2}, \ldots,x_{0}) + x_{n-1}h(x_{n-2}, \ldots x_{0}).$$
+where:
+$$g(x_{n-2}, \ldots,x_{0}) = f(0, x_{n-2}, \ldots , x_{0})$$
+$$h(x_{n-2}, \ldots,x_{0}) = f(1, x_{n-2}, \ldots , x_{0})$$
+
+\placedrawing[h]{figures/DRAW1_21.LP}{{\bf The universal circuit.} {\small
+For any $CLC_{f}(n)$, where $f(x_{n-1}, \ldots , x_{0})$ this
+recursively defined structure is a solution. EMUX behaves as an
+elementary universal circuit.}}{func_mux}
+
+Therefore, the computation of  any  $n$-variable function can be
+reduced to the computation of two other $(n-1)$-variables
+functions and an EMUX. The circuit, and in the same time the
+algorithm, is represented in Figure \ref{func_mux}. For the
+functions $g$ and $h$ the same rule may applies. And so on until
+the two zero-variable functions: the value 0 and the value 1. The
+solution is an $n$-level binary tree of EMUXs having applied to
+the last level zero-variable functions. Therefore, solution is a
+$MUX_{n}$ and a binary string applied on the $2^{n}$ selected
+inputs. The binary sting has the length $2^{n}$. Thus, for each of
+the $2^{2^{n}}$ functions there is a distinct string defining it.
+
+$\diamond$
+
+The universal circuit is indeed the best example of a big simple
+circuit, because it is described by the following code:
+\includeverilogcode[caption={The behavioral description of the n-input universal logic circuit.   File: A08\_nUcircuit.sv  (SystemVerilog)}, 
+                    label={lst:nUcircuit}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_nUcircuit.sv}
+
+The file {\tt parameter.sv} contains the value for $n$. But,
+attention! The size of the circuit is: $S_{nU\_circuit}(n) \in
+O(2^{n})$.
+
+Thus, {\em circuits are more powerful than Turing Machine} (TM),
+because TM solve only problem having the solution algorithmically
+expressed with a sequence of symbols that does not depend by $n$.
+Beyond the Turing-computable function there are many functions for
+which the solution is a {\em family of circuits}.
+
+The solution imposed by the previous theorem is an universal
+circuit for computing the $n$ binary variable functions. Let us
+call it $n${\bf U-circuit} (see Figure \ref{univ}). The size of
+this circuit is $S_{universal} (n) \in O(2^{n})$ and its
+complexity is $C_{universal}(n) \in O(1)$. The functions is
+specified by the ``program" $P = m_{p-1}, m_{p-2}, \ldots m_{0}$
+which is applied on the selected inputs of the $n$-input
+multiplexer $MUX_{n}$. It is about a huge simple circuit. The
+functional complexity is associated with the ``program" $P$, which
+is a binary string.
+
+\placedrawing[h]{figures/draw1_102.lp}{{\bf The Universal Circuit as a
+tree of EMUXs.} {\small The depth of the circuit is equal with the
+number, $n$, of binary input variables. The size of the circuit
+increases exponentially with $n$.}}{univ}
+
+\subsection{Using the Universal Circuit}
+
+We have a chance to use $MUX_{n}$ to implement $f(x_{n-1}, \ldots
+, x_{0})$ only if one of the following conditions is fulfilled:
+\begin{enumerate}
+    \item $n$ is small enough resulting realizable and efficient
+    circuits
+    \item the ``program" is a string with useful regularities
+    (patterns) allowing strong minimization of the resulting circuit.
+\end{enumerate}
+
+\begin{exemplu}
+Let be the following Verilog code:
+\includeverilogcode[caption={The behavioral description for any 3-input logic function.   File: A08\_threeInputFunctions.sv  (SystemVerilog)}, 
+                    label={lst:nUcircuit}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A08_threeInputFunctions.sv}
+
+ The circuit {\tt three\_input\_functions} can be programmed,
+using the 8-bit string {\tt func} as ``program", to perform anyone
+3-input Boolean function. It is obviously a $MUX_{3}$ performing
+$$out = f(in0, in1, in2)$$
+where the function $f$ is specified (``programmed") by an 8-bit
+word (``program"). 
+
+$\diamond$
+\end{exemplu}
+
+The ``programmable" circuit for any 4-input Boolean function is
+obviously $MUX_{4}$:
+$$out = f(in0, in1, in2, in3)$$
+where $f$ is ``programmed" by a 16-bit word applied on the
+selected inputs of the multiplexer.
+
+The bad news is: we can not go to far on this way because the size
+of the resulting universal circuits increases exponentially. The
+good news is: usually we do not need universal but particular
+solution. The circuits are, in most of cases,  specific not
+universal. They ``execute" a specific ``program". But, when a
+specific binary word is applied on the selected inputs of a
+multiplexer, the actual circuit is minimized using the following
+{\bf removing rules} and {\bf reduction rules}.
+
+An EMUX defined by:
+\begin{verbatim}
+    out = x ? in1 : in0;
+\end{verbatim}
+can be {\em removed}, if on its selected inputs specific 2-bit
+binary words are applied,  according to the following rules:
+\begin{itemize}
+    \item {\bf if} $\{in1, in0\} = 00$ {\bf then} $out = 0$
+    \item {\bf if} $\{in1, in0\} = 01$ {\bf then} $out = x'$
+    \item {\bf if} $\{in1, in0\} = 10$ {\bf then} $out = x$
+    \item {\bf if} $\{in1, in0\} = 11$ {\bf then} $out = 1$
+\end{itemize}
+or, if the same variable, $y$, is applied on both selected inputs:
+\begin{itemize}
+    \item {\bf if} $\{in1, in0\} = yy$ {\bf then} $out = y$
+\end{itemize}
+An EMUX can be {\em reduced}, if on one its selected inputs a
+1-bit binary word are applied, being substituted with a simpler
+circuit according to the following rules:
+\begin{itemize}
+    \item {\bf if} $\{in1, in0\} = y0$ {\bf then} $out = xy$
+    \item {\bf if} $\{in1, in0\} = y1$ {\bf then} $out = y+x'$
+    \item {\bf if} $\{in1, in0\} = 0y$ {\bf then} $out = x'y$
+    \item {\bf if} $\{in1, in0\} = 1y$ {\bf then} $out = x+y$
+\end{itemize}
+
+Results: the first level of $2^{n-1}$ EMUXs of a $MUX_{n}$ is
+reduced, and on the inputs of the second level (of $n^{n-2}$
+EMUXs) is applied a word containing binary values (0s and 1s) and
+binary variables ($x_{0}$s and $x_{0}'$s). For the next levels the
+removing rules or the reducing rules are applied.
+
+\begin{exemplu}
+Let us solve the problem of majority function for three Boolean
+variable. The function $maj(x_{2}, x_{1}, x_{0})$ returns 1 if the
+majority of inputs are 1, and 0 if not. In Figure \ref{maj} a
+``programmable" circuit is used to solve the problem.
+
+\placedrawing[H]{figures/draw1_100.lp}{{\bf The majority function.}
+{\small The majority function for 3 binary variables is solved by
+a 3-level binary tree of EMUXs. The actual ``program" applied on
+the ``leafs" will allow to minimize the tree.}}{maj}
+
+Because we intend to use the circuit only for the function
+$maj(x_{2}, x_{1}, x_{0})$ the first layer of EMUXs can be removed
+resulting the circuit represented in Figure \ref{maj1}a.
+
+\placedrawing[H]{figures/draw1_101.lp}{{\bf The reduction process.}
+{\small {\bf a.} For any function the first level of EMUSs is
+reduced to a binary vector ($(1,0)$ in this example). {\bf b.} For
+the actual ``program" of the 3-input majority function the second
+level is supplementary reduced to simple gates (an $AND_{2}$ and
+an $OR_{2}$).}}{maj1}
+
+On the resulting circuit the reduction rules are applied. The
+result is presented in Figure \ref{maj1}b.
+
+ $\diamond$
+\end{exemplu}
+
+
+
+The next examples refer to big $n$, but ``program" containing
+repetitive patterns.
+
+\begin{exemplu}
+If the "program" is 128-bit string $i_{127} \ldots i_{0} =
+(10)^{64}$, it corresponds to a function of form:
+$$f(x_{6}, \ldots , x_{0})$$
+where: the first bit, $i_{0}$ is the value associated to the input
+configuration $x_{6}, \ldots , x_{0} = 0000000$ and the last bit
+$i_{127}$ is the value associated to input configuration $x_{6},
+\ldots , x_{0} = 1111111$ (according with the representation from
+Figure \ref{rec_mux} which is equivalent with Figure
+\ref{func_mux}).
+
+The obvious regularities of the ``program" leads our mind to see
+what happened with the resulting tree of EMUXs. Indeed, the
+structure collapses under this specific ``program". The upper
+layer of 64 EMUXs are selected by $x_{0}$ and each have on their
+inputs $i_{0} = 1$ and $i_{1} = 0$, generating $x'_{0}$ on their
+outputs. Therefore, the second layer of EMUXs receive on all
+selected inputs the value $x'_{0}$, and so on until the output
+generates $x'_{0}$. Therefore, the circuit performs the function
+$f(x_{0}) = x'_{0}$ and the structure is reduced to a simple
+inverter.
+
+In the same way the ``program" $(0011)^{32}$ programs the 7-input
+MUX to perform the function $f(x_{1}) = x_{1}$ and the structure
+of EMUXs disappears.
+
+For the function $f(x_{1}, x_{0}) = x_{1}x'_{0}$ the ``program" is
+$(0010)^{32}$.
+
+For a 7-input AND the``program" is $0^{127}1$, and the tree of
+MUXs degenerates in 7 EMUXs serially connected each having the
+input $i_{0}$ connected to 0. Therefore, each EMUX become an
+$AND_{2}$ and applying the associativity principle results an
+$AND_{7}$.
+
+In a similar way, the same structure become an $OR_{7}$ if it is
+``programmed" with $01^{127}$.
+
+ $\diamond$
+\end{exemplu}
+
+It is obvious that if the ``program" has some uniformity, these
+uniformity allow to minimize the size of the circuit in
+polynomial limits using {\em removing} and {\em reduction} rules.
+{\em The simple ``programs" lead toward small circuits}.
+
+\subsection{Concluding about Universal Circuit}
+
+This universal solution represents the strongest {\bf segregation}
+between a {\em simple physical structure} - the $n$-input MUX -
+and a {\em complex symbolic structure} - the string of $2^{n}$
+bits applied on the selected inputs which works like a ``program".
+Therefore, this is THE SOLUTION,  MUX is THE CIRCUIT and  can we
+stop here our discussion about digital circuits!? ... {\bf But,
+no}! There are obvious reasons to continue our walk in the world
+of digital circuits:
+\begin{itemize}
+    \item first: the {\em exponential size} of the resulting physical structure
+    \item second: the huge size of the ``programs" which are in a
+    tremendous majority represented by random, incompressible,
+    strings (hard or impossible to be error-free specified).
+\end{itemize}
+
+\begin{quote}
+{\bf The strongest segregation between simple and complex is not
+productive in no-loop circuits. Both resulting structure, the
+simple circuit and the complex binary string, grow exponentially.}
+\end{quote}
+
+The complexity and excessive size of most solutions realized as pure combinational circuits push us towards solutions in which we increase the autonomy of physical structures so that, together with the reduction of physical dimensions,  the control of their functionality can also be simplified. We will practice the use of combinational circuits in two situations:
+\begin{itemize}
+\item accepting (big sized) circuits only if they are simple because of their pattern-based structure
+\item accepting complex circuits only if they are reasonably small, easy to design, verify and test.
+\end{itemize}
+
+We will advance towards circuits with gradually {\bf increased autonomy by adding feedback loops}, through which the input of a circuit also receives signals from some of the circuit outputs, so that the functional behavior is partially self-determined. Operating with and on increasingly autonomous systems we will be able to design structures that acquire increasingly complex functionalities with a control effort maintained within controllable limits.
+
 
 
 \section{Problems}

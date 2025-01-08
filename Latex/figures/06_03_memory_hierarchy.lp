@@ -5,7 +5,7 @@
 \begin{picture}(72,54)
 \thinlines
 \drawcenteredtext{36.0}{10.0}{{\bf Auxiliarly Memories}}
-\drawcenteredtext{36.0}{7.0}{HDD, SSD, Optic Disk, Tape}
+\drawcenteredtext{36.0}{7.0}{HDD, SSD, Optic Disk, Magnetic Tape}
 \thicklines
 \drawcenteredtext{36.0}{29.0}{{\scriptsize 2nd Level Cache}}
 \drawcenteredtext{36.0}{27.0}{{\scriptsize 3rd Level Cache}}
