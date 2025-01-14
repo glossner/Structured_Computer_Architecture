@@ -34,57 +34,10 @@ If the resulting frequency is not high enough, the technique is applied to the d
 
 \subsubsection{Structure}
 
-The operating frequency of the toyRISC processor presented in the previous lesson can be increased by inserting some pipeline registers on the critical path of the combinatorial propagation. A version, adapted to be accelerated, is shown in Figure \ref{fig46} where the two memories are not represented.
-Instead, only the connections to those memories are represented. The program memory is a synchronous memory (see \ref{syncMem}) connected in our system in combinational mode through the output multiplexers. The data memory is a synchronous pipelined memory (see \ref{sybcPipeMem}) which responds with one cycle latency to the read command.
+The operating frequency of the toyRISC processor presented section \ref{toyrisc} can be increased by inserting some pipeline registers on the critical path of the combinatorial propagation. A version, adapted to be accelerated, is shown in Figure \ref{fig46} where the two memories, for data and programs, are also represented. The program memory is a synchronous memory (see \ref{syncMem}) connected in our system  combinationally  through the output multiplexers. The data memory is a synchronous pipelined memory (see \ref{sybcPipeMem}) which responds with one cycle latency to the read command.
 
-\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
+The micro-architecture is described is the same as the one presented in Listing \ref{lst:toyRISCdefines} from the chapter \ref{lect4}. The same for the Instruction Set Architecture which is in Table \ref{tab:riscISA}.
 
-\subsubsection{Micro-architecture}
-
-The micro-architecture is:
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/*************************************************************************
-File name: DEFINES.vh
-                   PIPELINED TOY-RISC MICROARCHITECTURE
-*************************************************************************/
-// CONTROL OPERATIONS
-`define nop     6'b00_0000 // no operation: pc<=pc+1;
-`define rjmp   	6'b00_0001 // relative jump: pc<=pc+v;
-`define zbr    	6'b00_0010 // pc<=(rf[l]=0) ? pc+v:pc+1
-`define nzbr   	6'b00_0011 // pc<=!(rf[l]=0) ? pc+v:pc+1
-`define ret    	6'b00_0101 // return: pc<=rf[l][15:0];
-`define halt   	6'b00_0110 // halt unitil interrupt
-`define eint   	6'b00_1000 // set enable interrupt
-`define dint   	6'b00_1001 // set disable interrupt
-// ARITHMETIC & LOGIC OPERATIONS, for these instructions: pc<=pc+1;
-`define add     6'b11_0000 // rf[d]<=rf[l]+rf[r];
-`define sub     6'b11_0001 // rf[d]<=rf[l]-rf[r];
-`define addv    6'b11_0010 // rf[d]<=rf[l]+v;
-`define mult    6'b11_0011 // rf[d]<=rf[l]*rf[r];
-`define multv   6'b11_0100 // rf[d]<=rf[l]*v;
-`define addc    6'b11_0101 // rf[d]<=(rf[l]+rf[r]}[32];
-`define subc    6'b11_0110 // rf[d]<=(rf[l]-rf[r])[32];
-`define addvc   6'b11_0111 // rf[d]<=(rf[l]+v)[32];
-`define lsh     6'b11_1000 // rf[d]<=rf[l] >> 1;
-`define ash     6'b11_1001 // rf[d]<=
-                      //     <={rf[l][31],rf[l][31:1]};
-`define move    6'b11_1010 // rf[d]<=rf[l];
-`define swap    6'b11_1011 // rf[d]<=
-                      // <={rf[l][15:0],rf[l][31:16]};
-`define bwnot   6'b11_1100 // rf[d]<=~rf[l];
-`define bwand   6'b11_1101 // rf[d]<=rf[l]&rf[r];
-`define bwor    6'b11_1110 // rf[d]<=rf[l]|rf[r];
-`define bwxor   6'b11_1111 // rf[d]<=rf[l]^rf[r];
-// DATA LOAD-STORE OPERATIONS, for these instructions: pc=pc+1;
-`define read   	6'b10_0000 // read from dataMemory[rf[l]];
-`define load   	6'b10_0111 // rf[d]<=dataOut;
-`define store  	6'b10_1000 // dataMemory[rf[l]]<=rf[r];
-`define val    	6'b01_0111 // rf[d]<={{16*{v[15]}},v};
-\end{lstlisting}
-\end{shaded*}
-}
 
 The three pipeline registers introduced in design divide the execution of an instruction in four stages:
 \begin{description}
@@ -93,7 +46,7 @@ The three pipeline registers introduced in design divide the execution of an ins
         In the pipeline register {\bf PipeReg\_1} is loaded the information requested to finish the execution of the fetched instruction
     \item[OPERANDS FETCH (OF)]: from the register are fetched the two operands of the instruction using the fields {\tt leftAddr} and {\tt rightAddr} fetched in the previous cycle from the program memory. In {\bf pipeReg\_2} are loaded the two fetched operands and the information needed in the next cycles to end the execution of the instruction. The execution time for this stage is:
         $$t_{OF} = t_{PipeReg1} + t_{regFile} + t_{suPipeReg2}$$
-    \item[EXECUTION (EX)]: ALU performs the operation according to the code {\tt opCode}, propagated to this stage through the two previous  pipeline registers,  generate {\tt result} and the predicate {\tt zero = (rezult == 0)}; the {\tt add} module adds to the program counter the signed value of {\tt value} to perform the branch operation.  The execution time for this stage is:
+    \item[EXECUTION (EX)]: ALU performs the operation according to the code {\tt opCode}, propagated to this stage through the two previous  pipeline registers,  generate {\tt result} and the predicate {\tt zero = (result == 0)}; the {\tt add} module adds to the program counter the signed value of {\tt value} to perform the branch operation.  The execution time for this stage is:
         $$t_{EX} = t_{PipeReg2} + max((t_{mux}+t_{alu}),  (t_{add}+t_{mux}), t_{dataMemPipeReg}) + t_{suPipeReg3}$$
     \item[WRITE BACK (WB)]: acts on the first two levels in the pipeline: it allows the modification of the {\tt pc} to perform jumps and writes the result of the current operation in the register file. The execution time for this stage is:
         $$t_{WB} = t_{PipeReg3} +  max(t_{suRegFile}, (t_{next} + t_{suPC}))$$
@@ -101,45 +54,8 @@ The three pipeline registers introduced in design divide the execution of an ins
 The maximum clock frequency is limited by:
 $$T_{clock} = max(t_{IF}, t_{OF}, t_{EX}, t_{WB})$$
 
-\subsubsection{Architecture}
+\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
 
-
-The Instruction Set Architecture is:
-
-\begin{verbatim}
-/******************************************************************************
-                    toyRISC'S ARCHITECTURE
-******************************************************************************/
-    NOP         // no operation
-    RJMP(lb)    // relative jumpto label 'lb'
-    BRZ(l,lb)   // branch if rf[l]=zero at label 'lb'
-    BRNZ(l,lb)  // branch if rf[l]!=zero at label 'lb'
-    RET(l)      // return from subroutine: pc<=rf[l]
-    HALT        // halt until interrupt is received, pc = pc
- // for the following instructions: pc<=pc+1;
-    EINT        // set enable interrupt
-    DINT        // set disable interrupt
-    ADD(d,l,r)  // rf[d]<=rf[l]+rf[r];
-    SUB(d,l,r)  // rf[d]<=rf[l]-rf[r];
-    ADDV(d,l,v)	// rf[d]<=rf[l]+v;
-    MULT(d,l,r)	// rf[d]<=rf[l]*rf[r];
-    MULTV(d,l,v)// rf[d]<=rf[l]*v;
-    ADDC(d,l,r)	// rf[d]<=(rf[l]+rf[r]}[32];
-    SUBC(d,l,r)	// rf[d]<=(rf[l]-rf[r])[32];
-    ADDVC(d,l,v)// rf[d]<=(rf[l]+v)[32];
-    LSH(d,l)    // rf[d]<=rf[l] >> 1;
-    ASH(d,l)    // rf[d]<={rf[l][31],rf[l][31:1]};
-    MOVE(d,l)   // rf[d]<=rf[l];
-    SWAP(d,l)   // rf[d]<={rf[l][15:0],rf[l][31:16]};
-    NOT(d,l)    // rf[d]<=~rf[l];
-    AND(d,l,r)  // rf[d]<=rf[l]&rf[r];
-    OR(d,l,r)   // rf[d]<=rf[l]|rf[r];
-    XOR(d,l,r)  // rf[d]<=rf[l]^rf[r];
-    READ(l)     // read from dataMemory[rf[l]];
-    LOAD(d)     // rf[d]<=dataOut;
-    STORE(l,r)  // dataMemory[rf[l]]<=rf[r];
-    VAL(d,v)    // rf[d]<={{16*{v[15]}},v};
-\end{verbatim}
 
 \subsection{Latency}
 
@@ -260,21 +176,19 @@ Data dependency is illustrated also by running on our simulator the  program run
 The result is correct because of the two {\tt NOP}s inserted in the program from Example \ref{exADD} before the {\tt ADD} instruction:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=1  pc=1023  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=5  pc=   0  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=7  pc=   1  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=9  pc=   2  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=11 pc=   3  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=13 pc=   4  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=1
-t=15 pc=   5  RF=[1, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=2
-t=17 pc=   6  RF=[1, 2, x, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=3
-t=19 pc=   7  RF=[1, 2, 3, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=4
-t=21 pc=   8  RF=[1, 2, 3, 4, x, x, x, x] leftOp2=1 rightOp2=1 result3=5
-t=23 pc=   9  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=1
-t=25 pc=  10  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=5 rightOp2=4 result3=1
-t=27 pc=  10  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=9
-t=29 pc=  10  RF=[1, 2, 3, 4, 5, 9, x, x] leftOp2=1 rightOp2=1 result3=1
+pc=  0  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=  1  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=  2  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=  3  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=  4  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=1
+pc=  5  RF=[1, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=2
+pc=  6  RF=[1, 2, x, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=3
+pc=  7  RF=[1, 2, 3, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=4
+pc=  8  RF=[1, 2, 3, 4, x, x, x, x] leftOp2=1 rightOp2=1 result3=5
+pc=  9  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=1
+pc= 10  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=5 rightOp2=4 result3=1
+pc= 10  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=9
+pc= 10  RF=[1, 2, 3, 4, 5, 9, x, x] leftOp2=1 rightOp2=1 result3=1
 \end{verbatim}
 }
 If the two {\tt NOP}s are omitted,
@@ -291,19 +205,17 @@ If the two {\tt NOP}s are omitted,
 \end{verbatim}
 then the processor behaves incorrectly, as follows:
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=1  pc=1023  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=5  pc=   0  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=7  pc=   1  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=9  pc=   2  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=11 pc=   3  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
-t=13 pc=   4  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=1
-t=15 pc=   5  RF=[1, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=2
-t=17 pc=   6  RF=[1, 2, x, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=3
-t=19 pc=   7  RF=[1, 2, 3, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=4
-t=21 pc=   8  RF=[1, 2, 3, 4, x, x, x, x] leftOp2=x rightOp2=x result3=5
-t=23 pc=   8  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=x
-t=25 pc=   8  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=1
+pc=   0  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=   1  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=   2  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=   3  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=x
+pc=   4  RF=[x, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=1
+pc=   5  RF=[1, x, x, x, x, x, x, x] leftOp2=x rightOp2=x result3=2
+pc=   6  RF=[1, 2, x, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=3
+pc=   7  RF=[1, 2, 3, x, x, x, x, x] leftOp2=1 rightOp2=1 result3=4
+pc=   8  RF=[1, 2, 3, 4, x, x, x, x] leftOp2=x rightOp2=x result3=5
+pc=   8  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=x
+pc=   8  RF=[1, 2, 3, 4, 5, x, x, x] leftOp2=1 rightOp2=1 result3=1
 \end{verbatim}
 because the operands for the arithmetic operations are not yet in place being delayed on the execution pipe.
 
@@ -363,7 +275,7 @@ Thus, the {\tt XOR} instruction is used for stalling instead of the {\tt NOP} in
 
 By adding hardware, the data dependency can be resolved, {\bf in all cases}, with no time penalty. The solution is to connect {\tt result} not only to the register file input, but also directly to the ALU input when the value just computed is needed for the next instruction. The mechanism is called {\em forwarding} and requires the addition of one input to the  ALU input as left operand or as right operand. But, because there are binary operations (operations with two operands) sometimes both operands arrive to late in the register file to be fetched for the current instruction.
 
-Thus, forwarding control is done by a circuit which analyse the binary code of three successive instructions. Three situations can occur:
+Thus, forwarding control is done by a circuit which analyses the binary code of three successive instructions. Three situations can occur:
 \begin{verbatim}
     xxxxxx_00001_xxx...x                // identified in PipeReg_3
     xxxxxx_yyyyy_00001_xxx...x          // identified in PipeReg_2
@@ -393,9 +305,7 @@ or
 
 \placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
 
-
-
-The structure of the processor is modified as it is shown in Figure \ref{brDelRed}, where a new level in pipe is added and the operands at  ALU inputs are selected using multiplexors with additional inputs. The selection for the augmented multiplexors are computed combinational as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as operand in the EXECUTE state of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected the  inputs 1  or as {\tt result4} to the inputs 2 to the selection multiplexors at ALU operand inputs. The value of {\tt result3} is used to be forwarded when the dependency is identified with the result of the instructions issued in one clock cycle before the current one. The value of {\tt result4} is used to be forwarded when the dependency is identified with the result of the instructions issued in two clock cycles before the current one.
+The structure of the processor is modified as it is shown in Figure \ref{brDelRed}, where a new level in pipe is added and the operands at  ALU inputs are selected using multiplexers with additional inputs. The selection for the augmented multiplexors are computed combinational as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as operand in the EXECUTE state of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected the  inputs 1  or as {\tt result4} to the inputs 2 to the selection multiplexors at ALU operand inputs. The value of {\tt result3} is used to be forwarded when the dependency is identified with the result of the instructions issued in one clock cycle before the current one. The value of {\tt result4} is used to be forwarded when the dependency is identified with the result of the instructions issued in two clock cycles before the current one.
 
 \begin{exemplu}\label{dataDepSim}
 Data dependency  solved by using forwarding is exemplified starting from Example \ref{dataDepSim}:
@@ -412,20 +322,18 @@ Data dependency  solved by using forwarding is exemplified starting from Example
 \end{verbatim}
 Now the processor behaves incorrectly without the aditional {\tt NOP}s, as follows:
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x, x, x, x, x]
-t=1  pc=1023  RF=[x, x, x, x, x, x, x, x]
-t=5  pc=   0  RF=[x, x, x, x, x, x, x, x]
-t=7  pc=   1  RF=[x, x, x, x, x, x, x, x]
-t=9  pc=   2  RF=[x, x, x, x, x, x, x, x]
-t=11 pc=   3  RF=[x, x, x, x, x, x, x, x]
-t=13 pc=   4  RF=[x, x, x, x, x, x, x, x]
-t=15 pc=   5  RF=[x, x, x, x, x, x, x, x]
-t=17 pc=   6  RF=[1, x, x, x, x, x, x, x]
-t=19 pc=   7  RF=[1, 2, x, x, x, x, x, x]
-t=21 pc=   8  RF=[1, 2, 3, x, x, x, x, x]
-t=23 pc=   8  RF=[1, 2, 3, 4, x, x, x, x]
-t=25 pc=   8  RF=[1, 2, 3, 4, 5, x, x, x]
-t=27 pc=   8  RF=[1, 2, 3, 4, 5, 9, x, x]
+pc=   0  RF=[x, x, x, x, x, x, x, x]
+pc=   1  RF=[x, x, x, x, x, x, x, x]
+pc=   2  RF=[x, x, x, x, x, x, x, x]
+pc=   3  RF=[x, x, x, x, x, x, x, x]
+pc=   4  RF=[x, x, x, x, x, x, x, x]
+pc=   5  RF=[x, x, x, x, x, x, x, x]
+pc=   6  RF=[1, x, x, x, x, x, x, x]
+pc=   7  RF=[1, 2, x, x, x, x, x, x]
+pc=   8  RF=[1, 2, 3, x, x, x, x, x]
+pc=   8  RF=[1, 2, 3, 4, x, x, x, x]
+pc=   8  RF=[1, 2, 3, 4, 5, x, x, x]
+pc=   8  RF=[1, 2, 3, 4, 5, 9, x, x]
 \end{verbatim}
 because the operands for the arithmetic operations are now forwarded  using the two multiplexors to the ALU's inputs.
 
@@ -514,46 +422,39 @@ In the following example the effect of interrupt is illustrated together with  t
 The result of simulation is:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x, x, x, x, x]       intState=xxx inta=x
-t=1  pc=1023  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
-t=5  pc=   0  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
-t=7  pc=   1  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
-t=9  pc=   2  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
-t=11 pc=   3  RF=[x, x, x, x, x, x, x, x]       intState=000 inta=0
-t=13 pc=   4  RF=[x, x, x, x, x, x, x, 13]      intState=000 inta=0
-t=15 pc=   5  RF=[x, x, 23, x, x, x, x, 13]     intState=000 inta=0
-t=17 pc=   6  RF=[13, x, 23, x, x, x, x, 13]    intState=001 inta=0
-t=19 pc=   7  RF=[13, 13, 23, x, x, x, x, 13]   intState=010 inta=1
-t=21 pc=  13  RF=[13, 13, 23, x, x, x, 6, 13]   intState=011 inta=0
-t=23 pc=  13  RF=[13, 13, 23, x, x, x, 6, 13]   intState=100 inta=0
-t=25 pc=  13  RF=[13, 13, 23, x, x, x, 6, 13]   intState=000 inta=0
-t=27 pc=  14  RF=[13, 13, 23, x, x, x, 6, 13]   intState=000 inta=0
-t=29 pc=  15  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=31 pc=  16  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=33 pc=  17  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=35 pc=  18  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=37 pc=   5  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=39 pc=   6  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=41 pc=   7  RF=[13, 13, 23, x, x, x, 5, 13]   intState=000 inta=0
-t=43 pc=   8  RF=[13, 13, 23, x, 33, x, 5, 13] 	intState=000 inta=0
-t=45 pc=   9  RF=[14, 13, 23, x, 33, x, 5, 13] 	intState=000 inta=0
-t=47 pc=  10  RF=[14, 1, 23, x, 33, x, 5, 13]   intState=000 inta=0
-t=49 pc=  11  RF=[14, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
-t=51 pc=  11  RF=[14, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
-t=53 pc=  11  RF=[18, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
-t=55 pc=  11  RF=[18, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
-t=57 pc=  11  RF=[18, 1, 222, x, 33, x, 5, 13] 	intState=000 inta=0
+pc=  0  RF=[ x,  x,   x, x,  x, x, x,  x] intState=000 inta=0
+pc=  1  RF=[ x,  x,   x, x,  x, x, x,  x] intState=000 inta=0
+pc=  2  RF=[ x,  x,   x, x,  x, x, x,  x] intState=000 inta=0
+pc=  3  RF=[ x,  x,   x, x,  x, x, x,  x] intState=000 inta=0
+pc=  4  RF=[ x,  x,   x, x,  x, x, x, 13] intState=000 inta=0
+pc=  5  RF=[ x,  x,  23, x,  x, x, x, 13] intState=000 inta=0
+pc=  6  RF=[13,  x,  23, x,  x, x, x, 13] intState=001 inta=0
+pc=  7  RF=[13, 13,  23, x,  x, x, x, 13] intState=010 inta=1
+pc= 13  RF=[13, 13,  23, x,  x, x, 6, 13] intState=011 inta=0
+pc= 13  RF=[13, 13,  23, x,  x, x, 6, 13] intState=100 inta=0
+pc= 13  RF=[13, 13,  23, x,  x, x, 6, 13] intState=000 inta=0
+pc= 14  RF=[13, 13,  23, x,  x, x, 6, 13] intState=000 inta=0
+pc= 15  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc= 16  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc= 17  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc= 18  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc=  5  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc=  6  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc=  7  RF=[13, 13,  23, x,  x, x, 5, 13] intState=000 inta=0
+pc=  8  RF=[13, 13,  23, x, 33, x, 5, 13] intState=000 inta=0
+pc=  9  RF=[14, 13,  23, x, 33, x, 5, 13] intState=000 inta=0
+pc= 10  RF=[14,  1,  23, x, 33, x, 5, 13] intState=000 inta=0
+pc= 11  RF=[14,  1, 222, x, 33, x, 5, 13] intState=000 inta=0
+pc= 11  RF=[14,  1, 222, x, 33, x, 5, 13] intState=000 inta=0
+pc= 11  RF=[18,  1, 222, x, 33, x, 5, 13] intState=000 inta=0
+pc= 11  RF=[18,  1, 222, x, 33, x, 5, 13] intState=000 inta=0
+pc= 11  RF=[18,  1, 222, x, 33, x, 5, 13] intState=000 inta=0
 \end{verbatim}
 }
 The execution of {\tt VAL(4,33)} is obvious at {\tt t=43}. The program syntax does not assume this.
 
 $\diamond$
 \end{exemplu}
-
-
-
-
-
 
 There are few solutions for solving the previously emphasized hazard.
 
@@ -647,37 +548,35 @@ where the increment of the register 0 is specified out of loop, but is executed 
 The result of simulation is:
 {\small
 \begin{verbatim}
-t=0  pc=   x  RF=[x, x, x, x, x, x, x, x]
-t=1  pc=1023  RF=[x, x, x, x, x, x, x, x]
-t=5  pc=   0  RF=[x, x, x, x, x, x, x, x]
-t=7  pc=   1  RF=[x, x, x, x, x, x, x, x]
-t=9  pc=   2  RF=[x, x, x, x, x, x, x, x]
-t=11 pc=   3  RF=[x, x, x, x, x, x, x, x]
-t=13 pc=   4  RF=[x, x, x, x, x, x, x, x]
-t=15 pc=   5  RF=[4294967293, x, x, x, x, x, x, x] 	
-t=17 pc=   6  RF=[4294967293, x, x, x, x, x, x, x] 	
-t=19 pc=   7  RF=[4294967293, x, x, x, x, x, x, x] 	
-t=21 pc=   4  RF=[4294967293, x, x, x, x, x, x, x] 	
-t=23 pc=   5  RF=[4294967293, x, x, x, x, x, x, x] 	
-t=25 pc=   6  RF=[4294967293, x, x, x, x, x, x, x] 	
-t=27 pc=   7  RF=[4294967294, x, x, x, x, x, x, x] 	
-t=29 pc=   4  RF=[4294967294, x, x, x, x, x, x, x] 	
-t=31 pc=   5  RF=[4294967294, x, x, x, x, x, x, x] 	
-t=33 pc=   6  RF=[4294967294, x, x, x, x, x, x, x] 	
-t=35 pc=   7  RF=[4294967295, x, x, x, x, x, x, x] 	
-t=37 pc=   4  RF=[4294967295, x, x, x, x, x, x, x] 	
-t=39 pc=   5  RF=[4294967295, x, x, x, x, x, x, x] 	
-t=41 pc=   6  RF=[4294967295, x, x, x, x, x, x, x] 	
-t=43 pc=   7  RF=[0, x, x, x, x, x, x, x]
-t=45 pc=   8  RF=[0, x, x, x, x, x, x, x]
-t=47 pc=   9  RF=[0, x, x, x, x, x, x, x]
-t=49 pc=   9  RF=[0, x, x, x, x, x, x, x]
-t=51 pc=   9  RF=[1, x, x, x, x, x, x, x]
-t=53 pc=   9  RF=[1, x, x, x, x, x, x, x]
-t=55 pc=   9  RF=[1, x, x, x, x, x, x, x]
+pc= 0  RF=[         x, x, x, x, x, x, x, x]
+pc= 1  RF=[         x, x, x, x, x, x, x, x]
+pc= 2  RF=[         x, x, x, x, x, x, x, x]
+pc= 3  RF=[         x, x, x, x, x, x, x, x]
+pc= 4  RF=[         x, x, x, x, x, x, x, x]
+pc= 5  RF=[4294967293, x, x, x, x, x, x, x] 	
+pc= 6  RF=[4294967293, x, x, x, x, x, x, x] 	
+pc= 7  RF=[4294967293, x, x, x, x, x, x, x] 	
+pc= 4  RF=[4294967293, x, x, x, x, x, x, x] 	
+pc= 5  RF=[4294967293, x, x, x, x, x, x, x] 	
+pc= 6  RF=[4294967293, x, x, x, x, x, x, x] 	
+pc= 7  RF=[4294967294, x, x, x, x, x, x, x] 	
+pc= 4  RF=[4294967294, x, x, x, x, x, x, x] 	
+pc= 5  RF=[4294967294, x, x, x, x, x, x, x] 	
+pc= 6  RF=[4294967294, x, x, x, x, x, x, x] 	
+pc= 7  RF=[4294967295, x, x, x, x, x, x, x] 	
+pc= 4  RF=[4294967295, x, x, x, x, x, x, x] 	
+pc= 5  RF=[4294967295, x, x, x, x, x, x, x] 	
+pc= 6  RF=[4294967295, x, x, x, x, x, x, x] 	
+pc= 7  RF=[         0, x, x, x, x, x, x, x]
+pc= 8  RF=[         0, x, x, x, x, x, x, x]
+pc= 9  RF=[         0, x, x, x, x, x, x, x]
+pc= 9  RF=[         0, x, x, x, x, x, x, x]
+pc= 9  RF=[         1, x, x, x, x, x, x, x]
+pc= 9  RF=[         1, x, x, x, x, x, x, x]
+pc= 9  RF=[         1, x, x, x, x, x, x, x]
 \end{verbatim}
 }
-
+Note: 4294967293 = -3.
 
 $\diamond$
 \end{exemplu}
@@ -939,6 +838,7 @@ $\diamond$
 
 The hardware added for out-of-order execution is big sized and complex. With the increase in the number of pipeline levels, the costs (area plus complexity in use) increase. Multiprocessing and multithreading will allow more efficient alternative solutions.
 
+\begin{comment}
 \subsubsection{Floating-point representation of real numbers}
 
 To expand the range in which the numbers are represented, the following form is used:
@@ -956,10 +856,11 @@ represents the number: $+ (1+0.5) \times 2^{129-127} = 6$
 More at: \url{https://www.geeksforgeeks.org/ieee-standard-754-floating-point-numbers/}
 
 For the purpose we are pursuing, it is enough to understand that the operation with represented floating-point numbers involves a pipeline or a sequence of elementary operations of one clock cycle. The number of cycles will be different depending on the operation, minimum for addition and maximum for division.
+\end{comment}
 
 \subsubsection{Tomasulo's Algorithm}
 
-The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers. For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for whole or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \citep{Patterson19}:
+The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers (see Chapter \ref{floarReprezentation} in this book). For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for whole or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \citep{Patterson19}:
 \begin{itemize}
     \item Op—The operation to perform on source operands S1 and S2.
 \item Qj, Qk—The reservation stations that will produce the corresponding source

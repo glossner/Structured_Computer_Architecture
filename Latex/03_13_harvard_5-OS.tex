@@ -23,7 +23,6 @@ Consequently, we distinguish two ways of acting on an instruction read from prog
 It is obvious that, for an executive structure, we consider the suggestion offered by a UTM with two tapes and a processing system originating in a UTM with zero internal states.
 
 
-
 \section{Harvard Computer Version}
 
 The Harvard abstract model assumes a fifth loop. The processor together with the program memory forms a 4-OS, and by closing another loop through the data memory, a 5-OS is obtained (see Figure \ref{fig45}).
@@ -42,9 +41,9 @@ When computer scientists become armed with huge amounts of performance data, the
 
 A reduction instruction set maintains only the simplest and  the most frequently used instructions from a large instruction set, provided that all rejected instructions can be implemented with the sequences of the remaining ones.
 
-\subsection{Segregation Between the Simple and the Complex Program}
+\subsection{Segregation Between the Simple Hardware and the Complex Program}
 
-The Harvard version of the computer allows for a clear segregation of the simple hardware structure from the complex program structure. Hardware is build mainly from simple circuits. See the hardware components of the toyRISC (see \ref{toyrisc} in this book) processor where only few gates in the decoder section (see \ref{interrupt}) can be considered complex circuits (with the size in the same range with the description size)
+The Harvard version of the computer allows for a clear segregation of the simple hardware structure from the complex program structure. Hardware is build mainly from simple circuits. See the hardware components of the toyRISC (see \ref{toyrisc} in this book) processor where only few gates in the decoder section (see \ref{interrupt}) can be considered complex circuits, i.e., with the size in the same range with the description size.
 
 
 \section{Cache Memories}
@@ -61,4 +60,39 @@ The third level, L3, is  larger and slower than L2, but it's still faster than m
 
 In summary, the different levels of cache memory serve to bridge the gap between the high speed of processor  and the main memory's lower speed. They store, according to the {\em locality principle} (see \ref{locprinc} in this book), frequently used data and instructions, which helps to speed up data access and overall system performance. The levels, according to the {\em memory hierarchy} (see \ref{memhier} in this book), differ in size, speed, and location, with each level being larger, slower, and generally further from the CPU than the previous one.
 
-\section{Programming Stack}
+\section{A Little History: Abstract Models for Computers}
+
+The following formulations have become established for abstract computer models: von Neumann architecture and Harvard architecture. First, let's see what the established descriptions are.
+
+\paragraph{Harvard Architecture} was implicitly introduced in the design of the Harvard Mark I, a relay-based computer developed at Harvard University in 1944. The Harvard architecture was not formally named as such at the time but referred to a system where separate memory units were used for program instructions and data. This concept was largely attributed to the work of Howard Aiken, who led the development of the Harvard Mark I. The architecture became formally recognized as a distinct model in computing later, particularly in the 1970s-1980s, especially in contexts involving RISC processors.
+
+\paragraph{Von Neumann Architecture} gained common usage in the 1960s-1970s and was introduced by John von Neumann in the 1945 report titled "First Draft of a Report on the EDVAC" \cite{vonNeumann1945} \cite{vonNeumann45}. This document outlined the fundamental principles of a stored-program computer, where program instructions and data share the same memory. The report was written as part of a collaborative effort during the development of the EDVAC (Electronic Discrete Variable Automatic Computer) at the Moore School of Electrical Engineering, University of Pennsylvania. Although von Neumann's name is most associated with the architecture, the theoretical contributions of Alan Turing, and the contributions of J. Presper Eckert, John Mauchly, and others on the the ENIAC and EDVAC projects were also significant.
+
+\bigskip
+
+The two models cannot be considered architectures in the sense in which the concept of architecture is commonly used in computer science and technology. We believe that a correct name, instead of architecture, is {\bf {\em abstract model}}. An abstract model establishes the connection between a mathematical model and a concrete realization, a physical structure. So: the {\bf Harvard abstract model} and the {\bf von Neumann abstract model}.
+
+\subsection{Facts about Harvard Mark I Computer}
+
+The Harvard Mark I, or IBM Automatic Sequence Controlled Calculator (ASCC), was a general-purpose electromechanical computers whose original concept was presented to IBM by Howard Aiken in November 1937. He developed the concept during his master's and doctoral studies at Harvard when he was faced with solving differential equations that could only be solved numerically. The project was approved to be founded by the company chairman Thomas Watson Sr. in February 1939. The ASCC was developed and built by IBM at their Endicott plant, in the state of New York, and shipped to Harvard in February 1944.
+
+We can conclude that it is a computer made by IBM based on the project of Howard Aiken, a doctoral student at Harvard University. {\em Aiken -- IBM -- Harvard} is the chain linked to the Mark I computer that draws our attention in the attempt to use a name for the abstract model in question. We cannot help but notice that "Harvard" appears at the end of the aforementioned series.
+
+
+\subsection{Facts about "First Draft"}
+
+At the Moore School of Electrical Engineering at the University of Pennsylvania, Herman Goldstine, John Mauchly, J. Presper Eckert and Arthur Burks began to study the development of the EDVAC, a computing machine thought as the follower of the ENIAC. A serendipitous encounter of Goldstine with von Neumann led to the "First Draft" memo hand written by von Neumenn and sent by mail to Goldstine, who typed in 24 copies and distributed it with John von Neumann as the sole author.  
+
+It should be noted that the material was not considered by von Neumann to be finalized. The title and author were given by Goldstine. The text does not contain any bibliographical references, which could have been the author's unfinished intention. Let's credit the author with good intentions, as these references were perhaps intended to be inserted into the text. So, {\em we cannot accuse the author} of omitting certain contributions, because no reference was actually made to the origin of the ideas contained in the report. But, at the same time, we cannot avoid mentioning the contributions of von Neumann's direct collaborators, to which must be added the theoretical contribution of Alan Turing, whom von Neumann knew and appreciated because he proposed him to be an assistant in one of his courses.
+
+\subsection{Renamings}
+
+We believe that the current use of the terms "Harvard architecture" and "von Neuman architecture" is inappropriate for several reasons.
+
+First, the concept of architecture (see \ref{archOrg} in this book) has a definition, imposed in the 1960s \cite{Amdahl64}, with a well-defined meaning related to the functional interface between hardware and software. For this reason, it is much more appropriate to use the term "abstract model" instead of "architecture".
+
+Second, the association of the abstract model with the name of a famous university or a renowned mathematician is not appropriate according to what has been described above. It can always be proven that other names are more appropriate.
+
+We believe that we will be able to use more appropriate names if we also take into consideration aspects related to the internal structure of the processors involved in structures with a single external memory as opposed to those with two external memories. The distinction made in \ref{archOrg} between {\em interpreting processor} and {\em executing processor} is significant for the difference between the two types of abstract models. The interpreting processor (CISC) is controlled by a complex automaton that allows and requires the expansion of each instruction read from memory into a {\em micro-program}, while the executive processor (RISC) can use a single execution cycle for each instruction because it can simultaneously access two memories, the program and the data.
+
+From the perspective of the above, we allow ourselves to propose the substitution of the phrase "Harvard architecture" with that of "{\em executive abstract model}", and the phrase "von Neumann architecture" with that of "{\em interpretive abstract model}". We thus obtain names that reflect more significant structural aspects than those related only to the organization of memory external to the processor.

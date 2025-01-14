@@ -221,7 +221,7 @@
 \drawvector{46.0}{128.0}{6.0}{0}{-1}
 \drawarc{112.0}{80.0}{8.0}{3.14}{4.71}
 \drawarc{124.0}{80.0}{8.0}{4.71}{6.28}
-\drawcenteredtext{140.0}{40.0}{DATA}
+\drawcenteredtext{140.0}{40.5}{DATA}
 \thinlines
 \drawcenteredtext{140.0}{38.0}{MEMORY}
 \thicklines
@@ -231,7 +231,7 @@
 \drawthickdot{44.0}{72.0}
 \drawcenteredtext{39.0}{90.0}{rightAddr}
 \drawcenteredtext{52.0}{88.0}{we}
-\drawcenteredtext{44.0}{81.0}{REGISTER}
+\drawcenteredtext{44.0}{81.5}{REGISTER}
 \drawcenteredtext{44.0}{79.0}{FILE}
 \drawcenteredtext{38.0}{77.0}{leftOp}
 \drawcenteredtext{50.0}{77.0}{rightOp}
@@ -254,7 +254,7 @@
 \drawvector{106.0}{90.0}{30.0}{1}{0}
 \thicklines
 \drawcenteredtext{60.0}{98.0}{{\bf PipeReg1}:\{instruction1, PC1\}}
-\drawcenteredtext{140.0}{98.0}{PROGRAM}
+\drawcenteredtext{140.0}{98.5}{PROGRAM}
 \thinlines
 \drawdotline{24.0}{16.0}{30.0}{16.0}
 \drawdotline{24.0}{54.0}{30.0}{54.0}

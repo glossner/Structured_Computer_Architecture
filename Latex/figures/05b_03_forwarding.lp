@@ -214,7 +214,7 @@
 \drawthickdot{44.0}{96.0}
 \drawcenteredtext{39.0}{114.0}{rightAddr}
 \drawcenteredtext{52.0}{112.0}{we}
-\drawcenteredtext{44.0}{105.0}{REGISTER}
+\drawcenteredtext{44.0}{105.5}{REGISTER}
 \drawcenteredtext{44.0}{103.0}{FILE}
 \drawcenteredtext{38.0}{101.0}{leftOp}
 \drawcenteredtext{50.0}{101.0}{rightOp}

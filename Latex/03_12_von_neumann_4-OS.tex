@@ -174,7 +174,7 @@ The memory hierarchy is distributed in the version represented in Figure \ref{co
 
 The evolution of the performance of the three components of a computer system (see Figure \ref{pmio}) occurred at a very different rate due to strictly technological aspects. The most disturbing difference, with major structural consequences, occurred in the case of processor and memory speed performances. The frequency of the processor clock increased  much faster than the memory access time (see Figure \ref{pmPGap}. Processor clock frequency increased with 60\% per year, while the access time for memories with only 10\% per year.
 
-\placedrawing[H]{figures/06_02_processor_memory_gap.lp}{Processor-Memory Performance Gap \citep{Patterson97}.}{pmPGap}
+\placedrawing[H]{figures/06_02_processor_memory_gap.lp}{Processor-Memory Performance Gap  \cite{Patterson97}.}{pmPGap}
 
 Due to this difference, what we now call a memory gap occurred. The fast processor cannot wait for the slow memory to deliver or receive its data. And the memory gap imposed the memory hierarchy of the computing system based on the locality principle.
 
@@ -206,14 +206,12 @@ How relate two successive levels in the hierarchy? Let us consider two levels in
 
 \placedrawing[H]{figures/06_04_virtual_memory.lp}{Virtual memory mechanism. {\bf a.} Page correspondence. {\bf b.} Translation mechanism.  }{vmm}
 
-
 The addressing mechanism is represented in Figure \ref{vmm}b, where the access to the physical memory is done mediated by a translation mechanism performed by the {\em Page translate} block.  The "user" issues a virtual address having two parts:
 \begin{itemize}
     \item virtual page address
     \item offset in the page
 \end{itemize}
 When a new page is loaded into physical memory, the content of this translator is updated according to the correspondence shown in the figure \ref{vmm}a.
-
 
 Page translation mechanism is implemented in various form.
 
@@ -243,7 +241,7 @@ It should not be neglected that the smaller size of the associative memory allow
 
 With a minimal number of differences, the described virtualization mechanism is applied in managing the relationship between all the hierarchical levels in the memory of the computer system.
 
-In what follows, we will consider the simple example in which the hierarchy contains a single cache level, the main memory and the hard disk (see Figure \ref{compSys}. We will compare the main parameters that characterize the  cache-main memory relationship and the main memory-hard disk relationship.
+In what follows, we will consider the simple example in which the hierarchy contains a single cache level, the main memory and the hard disk (see Figure \ref{compSys}). We will compare the main parameters that characterize the  cache-main memory relationship and the main memory-hard disk relationship\footnote{In what follows, the numerical values ​​evolve very dynamically over time. Which is why they must be considered only through the relative aspects they highlight.}.
 \begin{itemize}
     \item the typical amount of data moved when physical memory is actualized from the virtual memory
         \begin{itemize}
@@ -277,6 +275,8 @@ The input-output system includes certain specific mechanisms that we will briefl
 
 A {\bf {\em Bus}} is a communication system that transfers data between components inside a computer, or between computers. There are two types of buses: serial (those that transfer data bib by bit) and parallel (those that transfer data word by word of n bits). The main problem that arises is that of the synchronization of the transfer. We will discuss it under its essential aspects for the synchronous transfer of n-bit words.
 
+\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
+
 In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Figure \ref{compSys}) between Main Memory and 2nd Level Cache are presented. Three important moments are marked in the mentioned waveforms:
 \begin{description}
     \item[$t_1$]: the active edge of clock takes a read command (Read = 0) from the address Read Address. Both Read and Read Address must be stable at least minimum {\bf {\em  set-up time}} before the active edge of clock (the positive one) and {\bf {\em hold time}} after the positive edge of clock
@@ -284,7 +284,6 @@ In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Fi
     \item[$t_3$]: the active edge of clock takes Valid Input Data to write it at Write Address because Write signal is active (Write' = 0).
 \end{description}
 
-\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
 
 The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 clock cycles in the example illustrated by Figure \ref{bus}. Usually, this latency is very high, reaching hundreds of cycles.
 

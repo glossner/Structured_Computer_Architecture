@@ -2,1035 +2,128 @@
 
 \section{Pipelined toyRISC}
 
+The pipelined toyRISC processor design is developed in the context of a system that contains both program and data memory. Consequently, the top module contains a memory module connected to the module we are investigating, that of the pipelinedToyRISC processor.
+
 \subsection{Structure}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: toyRISCsystem.sv
-Circuit name:
-Description:
-************************************************************************/
-`include "0_DEFINES.vh"
-module toyRISCsystem(   output  logic   inta    ,
-                        input   logic   intIn   ,
-                                        reset   ,
-                                        clk     );
-    logic   [31:0]  instruction ;
-    logic   [9:0]   PC          ;
-    logic   [31:0]  dataIn      ;
-    logic   [31:0]  dataOut     ;
-    logic   [9:0]   dataAddr    ;
-    logic           dataRead    ;
-    logic           dataWrite   ;
+\subsubsection{System level}
 
-    toyRISC processor(  instruction ,
-                        PC          ,
-                        intIn       ,
-                        inta        ,
-                        dataIn      ,
-                        dataOut     ,
-                        dataAddr    ,
-                        dataRead    ,
-                        dataWrite   ,
-                        reset       ,
-                        clk         );
-    memorySystem memSys(instruction ,
-                        PC          ,
-                        dataIn      ,
-                        dataOut     ,
-                        dataAddr    ,
-                        dataRead    ,
-                        dataWrite   ,
-                        clk         );
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={toyRISC-based computing system. File: toyRISCsystem.sv.  (SystemVerilog)}, 
+                    label={lst:toyRISCsystem}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_toyRISCsystem.sv}
 
+The program memory is simulated without the hardware program loading mechanism, because during the simulation process it is initialized with the user-written program in the file {\tt program.sv}, a program that is translated into binary form by the code {\tt RISCcodeGenerator.sv} which is included in the simulation program {\tt testPipelinedRISC}.
 
+\includeverilogcode[caption={Memory system. File: memorySystem.sv.  (SystemVerilog)}, 
+                    label={lst:memorySystem}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_memorySystem.sv}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: memorySystem.sv
-Circuit name:
-Description:
-************************************************************************/
-module memorySystem(output  logic   [31:0]  instruction ,
-                    input   logic   [9:0]   PC          ,
-                    output  logic   [31:0]  dataIn      ,
-                    input   logic   [31:0]  dataOut     ,
-                    input   logic   [9:0]   dataAddr    ,
-                    input   logic           dataRead    ,
-                    input   logic           dataWrite   ,
-                    input   logic           clk         );
+The pipelined version of toyRISC represented in Figure \ref{fig46} is coded in the following module, where the three hardware structural stages (INSTRFETCH, OPFETCH, EXECUTE) of the four functional stages (INSTRFETCH, OPFETCH \& WRITEBACK, EXECUTE) of the pipeline are described. 
 
-    logic   [31:0]  dataMemory[0:1023]  ;
-    logic   [31:0]  progMemory[0:1023]  ;
+\includeverilogcode[caption={Pipelined toyRISC processor. File: toyRISCpipelined.sv.  (SystemVerilog)}, 
+                    label={lst:toyRISCpipelined}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_toyRISCpipelined.sv}
 
-    assign instruction = progMemory[PC] ;
+\subsubsection{Decoder}
 
-    always_ff @(posedge clk) begin
-        if (dataWrite) dataMemory[dataAddr] <= dataOut  ;
-    end
+Decoder module works for all pipe levels providing selection signals and decoded signals. In addition to these, it also contains the automaton that manages the interrupt signal.
 
-    assign dataIn   = dataMemory[dataAddr];
+\includeverilogcode[caption={Decode  module in  toyRISC processor. File: 3\_DECODE.sv.  (SystemVerilog)}, 
+                    label={lst:DECODE}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_DECODE.sv}
 
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\subsubsection{First Pipe Level: Instruction Fetch}
 
+In each clock cycle a new instruction is fetched from the program memory and inserted in the pipe. The next program address is generated according to the selection code provided by the decoder module.
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: toyRISC.sv
-Circuit name:
-Description:
-************************************************************************/
-`include "0_DEFINES.vh"
-module toyRISC( input   logic [31:0]  instruction   ,
-                output  logic [9:0]   PC            ,
-                input   logic         intIn         ,
-                output  logic         inta          ,
-                input   logic [31:0]  dataIn        ,
-                output  logic [31:0]  dataOut       ,
-                output  logic [9:0]   dataAddr      ,
-                output  logic         dataRead      ,
-                output  logic         dataWrite     ,
-                input   logic         reset         ,
-                input   logic         clk           );
-    logic [31:0]    instruction1;
-    logic [9:0]     PC1         ;
-    logic [31:0]    leftOp      ;
-    logic [1:0]     nextPCsel   ;
-    logic [31:0]    results     ;
-    logic [5:0]     opCode1     ;
-    logic [31:0]    leftOp2     ;
-    logic [31:0]    rightOp2    ;
-    logic [31:0]    value2      ;
-    logic [5:0]     opCode2     ;
-    logic [4:0]     destAddr2   ;
-    logic           we3         ;
-    logic [4:0]     destAddr3   ;
-    logic [31:0]    result3     ;
-    logic [5:0]     decode      ;
-    logic           we          ;
-    logic [1:0]     opSel       ;
-    logic [1:0]     opSel2      ;
-    logic           zero        ;
-    logic [5:0]     opCode3     ;
+\includeverilogcode[caption={Instruction fetch pipeline stage in  toyRISC processor. File: 3\_INSTRFETCH.sv.  (SystemVerilog)}, 
+                    label={lst:INSTRFETCH}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_INSTRFETCH.sv}
 
-    DECODE dcd( .opCode1    (instruction1[31:26]),
-                .zero       (zero               ),
-                .opCode2    (opCode2            ),
-                .intIn      (intIn              ),
-                .inta       (inta               ),
-                .nextPCsel  (nextPCsel          ),
-                .opSel      (opSel              ),
-                .we         (we                 ),
-                .dataRead   (dataRead           ),
-                .dataWrite  (dataWrite          ),
-                .reset      (reset              ),
-                .clk        (clk                ));
+\subsubsection{Second Pipe Level: Operands Fetch}
 
-    INSTRFETCH progCount(   instruction ,
-                            PC          ,
-                            instruction1,
-                            PC1         ,
-                            leftOp      ,
-                            nextPCsel   ,
-                            reset       ,
-                            clk         );
+The second hardware level in pipe works for two functional levels in the pipe:
+\begin{itemize}
+    \item the second functional level of fetching the two operands from the register file, {\tt rf[0:31]}
+    \item the fourth functional level of writing back the result of the operation performed by ALU in the third pipe level.
+\end{itemize}
 
-    OPSFETCH regFile(   instruction1,
-                        PC1         ,
-                        inta        ,
-                        we3         ,
-                        destAddr3   ,
-                        result3     ,
-                        opSel       ,
-                        opSel2      ,
-                        zero        ,
-                        leftOp      ,
-                        leftOp2     ,
-                        rightOp2    ,
-                        value2      ,
-                        opCode2     ,
-                        destAddr2   ,
-                        clk         );
+\includeverilogcode[caption={Operands fetch pipeline stage in  toyRISC processor. File: 3\_OPSFETCH.sv.  (SystemVerilog)}, 
+                    label={lst:OPSFETCH}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_OPSFETCH.sv}
 
-    EXECUTE execute(leftOp2     ,
-                    rightOp2    ,
-                    value2      ,
-                    opCode2     ,
-                    destAddr2   ,
-                    dataIn      ,
-                    we          ,
-                    opSel2      ,
-                    dataAddr    ,
-                    dataOut     ,
-                    we3         ,
-                    destAddr3   ,
-                    result3     ,
-                    opCode3     ,
-                    clk         );
-endmodule // Synthesis results: #LUT=335, #FF=204, #DSP=3
-\end{lstlisting}
-\end{shaded*}
-}
+\paragraph{Interrupt unit} activated by the acknowledged interrupt signal, {\tt inta}. This small module of multiplexers manage to read the subroutine address and to write the return address when the processor acknowledge the interrupt signal, {\tt intIn}.
 
+\includeverilogcode[caption={Interrupt unit in pipelined toyRISC processor. File: 4\_intUnit.sv.  (SystemVerilog)}, 
+                    label={lst:intUnit}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_intUnit.sv}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: DECODE.sv
-Circuit name:
-Description:
-************************************************************************/
-`include "0_DEFINES.vh"
-module DECODE(  input   logic [5:0] opCode1     ,
-                input   logic       zero        ,
-                input   logic [5:0] opCode2     ,
-                input   logic       intIn       ,
-                output  logic       inta        ,
-                output  logic [1:0] nextPCsel   ,
-                output  logic [1:0] opSel       ,
-                output  logic       we          ,
-                output  logic       dataRead    ,
-                output  logic       dataWrite   ,
-                input   logic       reset       ,
-                input   logic       clk         );
-    logic [2:0] intState    ;
+\subsubsection{Third Pipe Level: Execute}
 
-/*
-    intState = 000: intDisable
-    intState = 001: intEnable
-    intState = 010: intExec1
-    intState = 011: intExec2
-    intState = 100: intExec3
-*/
-// Interrupt automaton
-    always_ff @(posedge clk)
-     if (reset)                                 intState <= 3'b000  ;
-      else  begin
-            if (opCode1 == `eint)               intState <= 3'b001  ;
-            if (opCode1 == `dint)               intState <= 3'b000  ;
-            if (intIn && (intState == 3'b001))  intState <= 3'b010  ;
-            if (intState == 3'b010)             intState <= 3'b011  ;
-            if (intState == 3'b011)             intState <= 3'b100  ;
-            if (intState == 3'b100)             intState <= 3'b000  ;
-        end
-    //assign intr = intState == 2'b10   ;
-    assign inta = intState == 3'b010    ;
+The third level of the hardware pipe executes the third level of the functional pipe which is the execution step. This hardware level contains ALU and the multiplexer which selects the right operand for ALU.
 
-    logic [5:0] jmpSel  ;
+\includeverilogcode[caption={Execute pipeline stage in toyRISC processor. File: 3\_EXECUTE.sv.  (SystemVerilog)}, 
+                    label={lst:EXECUTE}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_EXECUTE.sv}
 
-    assign jmpSel = (intState > 3'b001) ? `halt : opCode1   ;
+\paragraph{ALU} is part of the execution level in the pipeline organization of the system.
 
-    always_comb
-        if (inta)             nextPCsel = 2'b11                 ;
-         else   case(jmpSel)
-                    `halt   : nextPCsel = 2'b00                 ;
-                    `rjmp   : nextPCsel = 2'b10                 ;
-                    `zbr    : nextPCsel = zero ? 2'b10 : 2'b01  ;
-                    `nzbr   : nextPCsel = zero ? 2'b01 : 2'b10  ;
-                    `ret    : nextPCsel = 2'b11                 ;
-                    default : nextPCsel = 2'b01                 ;
-                endcase
-
-    always_comb case(opCode1)
-                    `load   : opSel = 2'b10 ;
-                    `addv   : opSel = 2'b01 ;
-                    `multv  : opSel = 2'b01 ;
-                    `addvc  : opSel = 2'b01 ;
-                    `val    : opSel = 2'b01 ;
-                    default : opSel = 2'b00 ;
-                endcase
-
-
-    assign dataWrite    = opCode2 == `store                         ;
-    assign dataRead     = opCode2 == `read                          ;
-    assign we           = ((opCode2[5:4] == 2'b11)  |
-                          (opCode2 == `load)        |
-                          (opCode2 == `val)) & !(intState > 3'b001) ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
-
-
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: INSTRFETCH.sv
-Circuit name:
-Description:
-************************************************************************/
-module INSTRFETCH(  input   logic [31:0]    instruction ,
-                    output  logic [9:0]     PC          ,
-                    output  logic [31:0]    instruction1,
-                    output  logic [9:0]     PC1         ,
-                    input   logic [31:0]    leftOut     ,
-                    input   logic [1:0]     nextPCsel   ,
-                    input   logic           reset       ,
-                    input   logic           clk         );
-
-    // PipeReg0
-    always @(posedge clk)
-        if (reset)  begin           PC <= -1                        ;
-                                    instruction1 <= 0               ;
-                                    //PC1        <= 0               ;
-                    end
-        else    begin   case(nextPCsel)
-                            2'b00:  PC <= PC                        ;
-                            2'b01:  PC <= PC + 1                    ;
-                            2'b10:  PC <= instruction1[9:0] + PC1   ;
-                            2'b11:  PC <= leftOut                   ;
-                        endcase
-    // PipeReg1
-                        instruction1 <= instruction ;
-                        PC1          <= PC          ;
-                end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
-
-
-
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: OPSFETCH.sv
-Circuit name:
-Description:
-************************************************************************/
-module OPSFETCH(input   logic [31:0]    instruction1,
-                input   logic [9:0]     PC1         ,
-                input   logic           inta        ,
-                input   logic           we3         ,
-                input   logic [4:0]     destAddr3   ,
-                input   logic [31:0]    result3     ,
-                input   logic [1:0]     opSel       ,
-                output  logic [1:0]     opSel2      ,
-                output  logic           zero        ,
-                output  logic [31:0]    leftOp      ,
-                output  logic [31:0]    leftOp2     ,
-                output  logic [31:0]    rightOp2    ,
-                output  logic [31:0]    value2      ,
-                output  logic [5:0]     opCode2     ,
-                output  logic [4:0]     destAddr2   ,
-                input   logic           clk         );
-    logic   [31:0]  rf[0:31]    ;
-    logic   [31:0]  rightOp     ;
-    logic           we          ;
-    logic   [4:0]   destAddr    ;
-    logic   [31:0]  result      ;
-    logic   [4:0]   leftAddr    ;
-    logic   [4:0]   rightAddr   ;
-
-
-    always_ff @(posedge clk) if (we) rf[destAddr] <= result ;
-
-    assign leftOp       = rf[leftAddr]          ;
-    assign rightOp      = rf[rightAddr]         ;
-    assign zero         = leftOp == 0           ;
-    assign rightAddr    = instruction1[15:11]   ;
-// PipeReg2:
-    always_ff @(posedge clk) begin
-        leftOp2     <=  leftOp                                      ;
-        rightOp2    <=  rightOp                                     ;
-        value2      <=  {{16{instruction1[15]}}, instruction1[15:0]};
-        opSel2      <=  opSel                                       ;
-        opCode2     <=  instruction1[31:26]                         ;
-        destAddr2   <=  instruction1[25:21]                         ;
-    end
-
-    intUnit intunit(.we         (we                     ),
-                    .destAddr   (destAddr               ),
-                    .result     (result                 ),
-                    .leftAddr   (leftAddr               ),
-                    .we3        (we3                    ),
-                    .destAddr3  (destAddr3              ),
-                    .result3    (result3                ),
-                    .leftAddr1  (instruction1[20:16]    ),
-                    .PC1        (PC1                    ),
-                    .inta       (inta                   ));
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: EXECUTE.sv
-Circuit name:
-Description:
-************************************************************************/
-`include "0_DEFINES.vh"
-module EXECUTE( input   logic [31:0]    leftOp2     ,
-                input   logic [31:0]    rightOp2    ,
-                input   logic [31:0]    value2      ,
-                input   logic [5:0]     opCode2     ,
-                input   logic [4:0]     destAddr2   ,
-                input   logic [31:0]    dataIn      ,
-                input   logic           we          ,
-                input   logic [1:0]     opSel2      ,
-                output  logic [9:0]     dataAddr    ,
-                output  logic [31:0]    dataOut     ,
-                output  logic           we3         ,
-                output  logic [4:0]     destAddr3   ,
-                output  logic [31:0]    result3     ,
-                output  logic [5:0]     opCode3     ,
-                input   logic           clk         );
-
-    logic [31:0]    rightIn ;
-    logic [31:0]    out     ;
-    logic [31:0]    dataIn3 ;
-
-    assign dataAddr = leftOp2[9:0]  ;
-    assign dataOut  = rightOp2      ;
-
-    always_comb case(opSel2)
-                    2'b00: rightIn = rightOp2   ;
-                    2'b01: rightIn = value2     ;
-                    2'b10: rightIn = dataIn3    ;
-                    2'b11: rightIn = 31'b0      ;
-                endcase
-
-    ALU alu(.out    (out    ),
-            .leftIn (leftOp2),
-            .rightIn(rightIn),
-            .opCode (opCode2));
-
-    // PipeReg3
-    always_ff @(posedge clk)    begin   we3         <= we       ;
-                                        destAddr3   <= destAddr2;
-                                        result3     <= out      ;
-                                        opCode3     <= opCode2  ;
-                                        dataIn3     <= dataIn   ;
-                                end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
-
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: ALU.sv
-Circuit name:
-Description:
-************************************************************************/
-`include "0_DEFINES.vh"
-module ALU( output  logic   [31:0]  out     ,
-            input   logic   [31:0]  leftIn  ,
-                                    rightIn ,
-            input   logic   [5:0]   opCode  );
-
-    logic [32:0]    sum ;
-    logic [32:0]    dif ;
-
-    assign sum = leftIn + rightIn   ;
-    assign dif = leftIn - rightIn   ;
-
-    always_comb case(opCode)
-                    `add    : out = sum[31:0]                       ;
-                    `sub    : out = dif[31:0]                       ;
-                    `addv   : out = sum[31:0]                       ;
-                    `mult   : out = leftIn * rightIn                ;
-                    `multv  : out = leftIn * rightIn                ;
-                    `addc   : out = sum[32]                         ;
-                    `subc   : out = dif[32]                         ;
-                    `addvc  : out = sum[32]                         ;
-                    `lsh    : out = leftIn >> 1                     ;
-                    `ash    : out = {leftIn[31], leftIn[31:1]}      ;
-                    `move   : out = leftIn                          ;
-                    `swap   : out = {leftIn[15:0], leftIn[31:16]}   ;
-                    `bwnot  : out = ~leftIn                         ;
-                    `bwand  : out = leftIn & rightIn                ;
-                    `bwor   : out = leftIn | rightIn                ;
-                    `bwxor  : out = leftIn ^ rightIn                ;
-                    `load   : out = rightIn                         ;
-                    `val    : out = rightIn                         ;
-                    default : out = leftIn                          ;
-                endcase
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
-
-
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: intUnit.sv
-Circuit name:
-Description:
-************************************************************************/
-module intUnit( output  logic           we          ,
-                output  logic   [4:0]   destAddr    ,
-                output  logic   [31:0]  result      ,
-                output  logic   [4:0]   leftAddr    ,
-                input   logic           we3         ,
-                input   logic   [4:0]   destAddr3   ,
-                input   logic   [31:0]  result3     ,
-                input   logic   [4:0]   leftAddr1   ,
-                input   logic   [9:0]   PC1         ,
-                input   logic           inta        );
-
-    assign we       = inta ? 1'b1           : we3       ;
-    assign destAddr = inta ? 5'b11110       : destAddr3 ;
-    assign result   = inta ? {21'b0, PC1}   : result3   ;
-    assign leftAddr = inta ? 5'b11111       : leftAddr1 ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={ALU in pipelined toyRISC processor. File: 4\_ALUp.sv.  (SystemVerilog)}, 
+                    label={lst:ALUp}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_ALUp.sv}
 
 \subsection{Code generator}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: RISCcodeGenerator.sv
-Circuit name:
-Description:
-************************************************************************/
-    reg [5:0]   opCode          ;
-    reg [4:0]   d               ;
-    reg [4:0]   l               ;
-    reg [4:0]   r               ;
-    reg [15:0]  v               ;
-    reg [9:0]   addrCounter     ;
-    reg [9:0]   labelTab[0:1023];
+For the code generator see Listing \ref{lst:RISCcodeGenerator} where the lines 377-381 must be selected and and the lines 369-373 deselected.
 
-    `include "0_DEFINES.vh"
-
-    task endLine;
-     begin
-        dut.memSys.progMemory[addrCounter][31:0] =
-            {   opCode  ,
-                d       ,
-                l       ,
-                v       }                   ;
-            addrCounter = addrCounter + 1   ;
-     end
-    endtask
-
-    // sets labelTab in the first pass
-    // associating 'counter' with 'labelIndex'
-    task LB ;
-        input [5:0] labelIndex;
-
-        labelTab[labelIndex] = addrCounter;
-    endtask
-    // uses the content of labelTab in the second pass
-    task ULB;
-        input [5:0] labelIndex;
-
-        v = labelTab[labelIndex] - addrCounter  ;
-        endtask
-
-// CONTROL INSTRUCTIONS
-    task NOP; // no operation
-        begin   opCode  = `nop  ;
-                {d,l,v} = 26'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task RJMP; // relative jump
-        input   [15:0]  label   ;
-
-        begin   opCode  = `rjmp ;
-                d       = 5'b0  ;
-                l       = 5'b0  ;
-                ULB(label)      ;
-                endLine         ;
-        end
-    endtask
-
-    task BRZ; // branch if zero
-        input   [4:0]   left    ;
-        input   [15:0]  label   ;
-
-        begin   opCode  = `zbr  ;
-                d       = 5'b0  ;
-                l       = left  ;
-                ULB(label)      ;
-                endLine         ;
-        end
-    endtask
-
-    task BRNZ; // branch if not zero
-        input   [4:0]   left    ;
-        input   [15:0]  label   ;
-
-        begin   opCode  = `nzbr ;
-                d       = 5'b0  ;
-                l       = left  ;
-                ULB(label)      ;
-                endLine         ;
-        end
-    endtask
-
-    task RET; // return from subroutine
-        input   [4:0] left  ;
-
-        begin   opCode  = `ret  ;
-                d       = 5'b0  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task HALT; // halt running
-        begin   opCode  = `halt ;
-                {d,l,v} = 26'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task EI; // enable interrupt
-        begin   opCode  = `eint ;
-                {d,l,v} = 26'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task DI; // disable interrupt
-        begin   opCode  = `dint ;
-                {d,l,v} = 26'b0 ;
-                endLine         ;
-        end
-    endtask
-
-// ARITHMETIC & LOGIC INSTRUCTIONS
-    task ADD; // addition
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `add          ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task SUB; // subtract
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `sub          ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task ADDV; // addition with value
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `addv ;
-                d       = dest  ;
-                l       = left  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
-    task MULT; // multiplication
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `mult         ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task MULTV; // multiplication with value
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `multv;
-                d       = dest  ;
-                l       = left  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
-    task ADDC; // carry from addition
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `addc         ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task SUBC; // carry from subtract
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `subc         ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task ADDVC; // carry from addition with value
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `addvc;
-                d       = dest  ;
-                l       = left  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
-    task LSH; // logic shift with one position
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `lsh  ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task ASH; // arithmetic shift with one porition
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `ash  ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task MOVE; // data move inside register file
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `move ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task SWAP; // swap in register
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `swap ;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task NOT; // bitwise NOT
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-
-        begin   opCode  = `bwnot;
-                d       = dest  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task AND; // bitwise AND
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `bwand        ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task OR; // bitwise OR
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `bwor     ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task XOR; // bitwise XOR
-        input   [4:0]   dest    ;
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `bwxor        ;
-                d       = dest          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-// DATA TRANSFER INSTRUCTIONS
-    task READ; // data read
-        input   [4:0]   left    ;
-
-        begin   opCode  = `read ;
-                d       = 5'b0  ;
-                l       = left  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task LOAD; // data load
-        input   [4:0]   dest    ;
-
-        begin   opCode  = `load ;
-                d       = dest  ;
-                l       = 5'b0  ;
-                v       = 16'b0 ;
-                endLine         ;
-        end
-    endtask
-
-    task STORE; // data store
-        input   [4:0]   left    ;
-        input   [4:0]   right   ;
-
-        begin   opCode  = `store        ;
-                d       = 5'b0          ;
-                l       = left          ;
-                v       = {right, 11'b0};
-                endLine                 ;
-        end
-    endtask
-
-    task VAL; // value load
-        input   [4:0]   dest    ;
-        input   [15:0]  value   ;
-
-        begin   opCode  = `val  ;
-                d       = dest  ;
-                l       = 5'b0  ;
-                v       = value ;
-                endLine         ;
-        end
-    endtask
-
-    // RUNNING
-    initial begin   addrCounter = 0;
-                    `include "0_program.sv" // first pass
-                    addrCounter = 0;
-                    `include "0_program.sv" // second pass
-            end
-\end{lstlisting}
-\end{shaded*}
-}
 
 \subsection{Simulator}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: testRISC.sv
-Circuit name:
-Description:
-************************************************************************/
-`include "0_DEFINES.vh"
-module testRISC;
-    logic   inta    ;
-    logic   intIn   ;
-    logic   reset   ;
-    logic   clk     ;
-
-    integer i   ;
-
-    `include "0_RISCcodeGenerator.sv"
-
-    initial begin               clk = 0     ;
-                    forever #1  clk = ~clk  ;
-            end
-
-    initial
-        begin           intIn       = 1 ;
-                        reset       = 1 ;
-                        // DISPLAY THE CONTENT OF PROGRAM MEMORY
-                        for (i=0; i<16; i=i+1)
-                            $display("progMemory[%0d] \t = %b", i,
-                                    dut.memSys.progMemory[i])   ;
-                #4      reset       = 0 ;
-                #100    $finish     ;
-        end
-
-    toyRISCsystem dut(  inta    ,
-                        intIn   ,
-                        reset   ,
-                        clk     );
-
-    // MONITOR FOR PROGRAM LAOD & CONTROLLER
-    initial begin
-     $monitor("t=%0d pc=%d  RF=[%0d, %0d, %0d, %0d, %0d, %0d, %0d, %0d]
-            leftOp2=%0d rightOp2=%0d result3=%0d   intState=%b inta=%b",
-                $time,
-                dut.processor.PC,
-                dut.processor.regFile.rf[0],
-                dut.processor.regFile.rf[1],
-                dut.processor.regFile.rf[2],
-                dut.processor.regFile.rf[3],
-                dut.processor.regFile.rf[4],
-                dut.processor.regFile.rf[5],
-                dut.processor.regFile.rf[30],
-                dut.processor.regFile.rf[31],
-                dut.processor.leftOp2,
-                dut.processor.rightOp2,
-                dut.processor.result3,
-                dut.processor.dcd.intState,
-                dut.processor.dcd.inta);
-    end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Test pipelined toyRISC processor. File: 0\_testPipelinedRISC.sv.  (SystemVerilog)}, 
+                    label={lst:testPipelinedRISC}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_testPipelinedRISC.sv}
 
 
 \subsection{Testing}
 
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog, caption= , morekeywords={always_comb, always_ff, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
-File name: program.sv
-Circuit name:
-Description:
-************************************************************************/
-/*
-            NOP         ;
-            VAL(0,1)    ;
-            VAL(1,2)    ;
-            VAL(2,3)    ;
-            VAL(3,4)    ;
-            VAL(4,5)    ;
-            NOP         ;
-            NOP         ;
-            ADD(5,4,3)  ;
-            HALT        ;
-            HALT        ;
-//*/
+For testing procedure see \ref{testProcedure}.
 
-
-/*
-            VAL(0,2)    ;
-            VAL(1,4)    ;
-            VAL(2,8)    ;
-            NOP         ;
-            MULT(3,1,2) ;
-            NOP         ;
-            HALT        ;
-//*/
-//*
-            VAL(31,13)  ;
-            VAL(2,23)   ;
-            VAL(0,13)   ;
-            VAL(1,13)   ;
-            EI          ;
-            ADDV(0,0,1) ;
-            VAL(1,1)    ;
-            VAL(2,222)  ;
-            NOP         ;
-            ADDV(0,0,4) ;
-            HALT        ;
-            HALT        ;
-            NOP         ;
-        // subroutine triggered by interrupt
-            ADDV(30,30,-1)  ;
-            NOP             ;
-            NOP             ;
-            NOP             ;
-            RET(30)         ;
-//*/
-/*
-            NOP         ;
-            VAL(0,-3)   ;
-            NOP         ;
-            NOP         ;
-    LB(1);  ADDV(0,0,1);
-            NOP         ;
-            BRNZ(0,1)   ;
-            NOP         ;
-            HALT        ;
-            HALT        ;
-//*/
-/*
-            VAL(0,1)    ;
-            VAL(1,55)   ;
-            STORE(0,1)  ;
-            READ(0)     ;
-            LOAD(2)     ;
-            HALT        ;
-//*/
-\end{lstlisting}
-\end{shaded*}
-}
+\includeverilogcode[caption={Programs for pipelined toyRISC processor. File: 0\_program.sv.  (SystemVerilog)}, 
+                    label={lst:0_program}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=450]
+                    {\verilogSourceDir/A17_0_program.sv}
 
 
 

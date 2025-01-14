@@ -364,10 +364,19 @@
                 endLine         ;
         end
     endtask
-
-    // RUNNING
+//*
+    // RUNNING FOR GENERIC toyRISC
     initial begin   addrCounter = 0;
                     `include "program.sv" // first pass
                     addrCounter = 0;
                     `include "program.sv" // second pass
             end
+//*/
+/*
+     // RUNNING FOR PIPELINED toyRISC
+    initial begin   addrCounter = 0;
+                    `include "0_program.sv" // first pass
+                    addrCounter = 0;
+                    `include "0_program.sv" // second pass
+            end
+//*/

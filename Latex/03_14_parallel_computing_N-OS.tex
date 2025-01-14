@@ -146,36 +146,33 @@ Arithmetic \& Logic vector operations are performed on active components of vect
     $b_i \; ? \; bOp(s_{l i}, s_{r i})$, for $i = 0, \ldots, p-1$;\\
     {\bf Example} of use: \\ {\tt V2 <= ADD(V0,V5)} : in each active cell, $b_i=1$, the components of the vectors V0 and V5 are summed end stored as corresponding components in vector V2;
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V0 = [2 3 1 4 3 5 2 0]
-        V5 = [3 5 4 1 2 2 6 8]
-        V2 = [9 8 9 8 9 8 9 8]
-    applying V2 <= ADD(V0,V5) results:
-        V2 = [5 8 5 8 9 7 9 8]
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V0 = [2 3 1 4 3 5 2 0]
+                V5 = [3 5 4 1 2 2 6 8]
+                V2 = [9 8 9 8 9 8 9 8]
+    applying:   V2 <= ADD(V0,V5) 
+    results:    V2 = [5 8 5 8 9 7 9 8]
     \end{verbatim}
     \item[{\tt UOP(Vl)}:] defines a unary operation  \\ 
     $b_i \; ? \; uOp(s_{l i})$, for $i = 0, \ldots, p-1$; \\
-    {\bf Example} of use:  {\tt V0 <= INC(V1)} means increment in active cells the component of {\tt V1} and send the result in V0  \\
+    {\bf Example} of use:  {\tt V0 <= INC(V1)} means increment in active cells the component of {\tt V1} and send the result in V0  
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-        V0 = [8 8 8 8 8 8 8 8]
-    applying {\tt V0 <= INC(V1)} results:
-        V0 = [3 4 2 8 8 6 8 8]
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+                V0 = [8 8 8 8 8 8 8 8]
+    applying:   V0 <= INC(V1) 
+    results:    V0 = [3 4 2 8 8 6 8 8]
     \end{verbatim}
     \item[{\tt MAPOP(Va,Vb,Vc,...)}:] sequence of BOPs and UOPs on vectors {\tt Va,Vb,Vc,...} in Map section. \\
     {\bf Example} of use:  {\tt V3 <= MAPOP(V0,V2,V5) = MULT(ADD(V2,V5),V0)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V0 = [2 3 1 4 3 5 2 0]
-        V5 = [3 5 4 1 2 2 6 8]
-        V2 = [9 8 9 8 9 8 9 8]
-        V3 = [0 0 0 0 0 0 0 0]
-    applying V3 <= MAPOP(V0,V2,V5) results:
-        V3 = [24 39 13 0 0 50 0 0]
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V0 = [2 3 1 4 3 5 2 0]
+                V5 = [3 5 4 1 2 2 6 8]
+                V2 = [9 8 9 8 9 8 9 8]
+                V3 = [0 0 0 0 0 0 0 0]
+    applying:   V3 <= MAPOP(V0,V2,V5) 
+    results:    V3 = [24 39 13 0 0 50 0 0]
     \end{verbatim}
 \end{description}
 
@@ -185,23 +182,19 @@ Global shift/rotate operations are performed on all components of vectors distri
 \begin{description}
     \item[{\tt SHIFTRIGHT(Vl,leftIn)}:]:   \\
     $ (i=0) \; ? \; leftIn : s_{l(i-1)}$, for $i = 0, \ldots, p-1$\\
-    {\bf Example} of use: {\tt V0 <= SHIFTRIGHT(Vl,23)} \\
+    {\bf Example} of use: {\tt V0 <= SHIFTRIGHT(Vl,23)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        V0 = [23 2 3 1 4 3 5 2]
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    V0 = [23 2 3 1 4 3 5 2]
     \end{verbatim}
     \item[{\tt ROTATERIGHT(Vl)}:]:  \\
     $ (i=0) \; ? \; s_{p-1} : s_{l(i-1)}$, for $i = 0, \ldots, p-1$\\
-    {\bf Example} of use: {\tt V0 <= ROTATERIGHT(V1)} \\
+    {\bf Example} of use: {\tt V0 <= ROTATERIGHT(V1)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        V0 = [0 2 3 1 4 3 5 2]
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    V0 = [0 2 3 1 4 3 5 2]
     \end{verbatim}
 \end{description}
 
@@ -234,50 +227,42 @@ The system architecture is completed by adding the first global loop, with the f
     \begin{description}
         \item[{\tt ADDRED(Vi)}:] reduction add \\
         $\sum_{j=0}^{p-1} (b_j ? s_{ij} : 0)$ \\
-         {\bf Example} of use: {\tt v0 <= ADDRED(V1)} \\
+         {\bf Example} of use: {\tt v0 <= ADDRED(V1)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        v0 = 11
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    v0 = 11
     \end{verbatim}
         \item[{\tt MINRED(Vi)}:] reduction minimum \\
         $MIN_{j=0}^{p-1}  (b_j ? s_{ij} : \infty)$ \\
-        {\bf Example} of use: {\tt v0 <= MINRED(V1)} \\
+        {\bf Example} of use: {\tt v0 <= MINRED(V1)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        v0 = 1
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    v0 = 1
          \end{verbatim}
         \item[{\tt MAXRED(Vi)}:] reduction maximum\\
         $MAX_{j=0}^{p-1} (b_j ? s_{ij} : 0)$ \\
-         {\bf Example} of use: {\tt v0 <= MAXRED(V1)} \\
+         {\bf Example} of use: {\tt v0 <= MAXRED(V1)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        v0 = 5
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    v0 = 5
          \end{verbatim}
         \item[{\tt ORRED(Vi)}:] reduction or\\
         $OR_{j=0}^{p-1} (b_j ? s_{ij} : 0)$ \\
-         {\bf Example} of use: {\tt v0 <= ORRED(V1)} \\
+         {\bf Example} of use: {\tt v0 <= ORRED(V1)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 9 3 5 2 0]
-    results:
-        v0 = 7
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 9 3 5 2 0]
+    results:    v0 = 7
          \end{verbatim}
 \end{description}
 
 \begin{exemplu}
 To calculate the scalar product of two vectors, {\tt Vi} and {\tt Vj}, in such a system, the following is performed, under the SQ command:
 \begin{verbatim} 
-                     v1 <= ADDRED(MULT(Vi,Vj))  
+                v1 <= ADDRED(MULT(Vi,Vj))  
 \end{verbatim}
 where the vector product, $V_i \times V_j$, is performed in Map in constant time and is transmitted to the Reduce network which performs the sum in time $log_2 \; p$ and sends it to SQ in {\tt v1}. Thus, $2p-1$ operations -- $p$ multiplications and $p-1$ additions -- are performed in $1 + log_2 \; p$ clock cycles. 
 
@@ -325,22 +310,18 @@ The system architecture is completed by adding the second global loop, with  spe
 \begin{description}
     \item[{\tt ADDPX(Vi)}:] add prefix returns a vector whose components are:\\
         $addPx_j \Leftarrow \sum_{j=0}^{j} (b_j ? s_{ij} : 0)$ for $j = 0, \ldots, p-1$ \\
-         {\bf Example} of use: {\tt V2 <= ADDPX(V1)} \\
+         {\bf Example} of use: {\tt V2 <= ADDPX(V1)} 
     \begin{verbatim}
-    For:
-        B  = [1 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        V2 = [2 5 6 6 6 11 11 11]
+    For:        B  = [1 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    V2 = [2 5 6 6 6 11 11 11]
     \end{verbatim}
     \item[{\tt SPLIT(Vi)}:] return a vector with the selected components left aligned and the unselected component right aligned  \\
-     {\bf Example} of use: {\tt V2 <= SPLIT(V1)} \\
+     {\bf Example} of use: {\tt V2 <= SPLIT(V1)} 
     \begin{verbatim}
-    For:
-        B  = [0 1 1 0 0 1 0 0]
-        V1 = [2 3 1 4 3 5 2 0]
-    results:
-        V2 = [3 1 5 2 4 3 2 0]
+    For:        B  = [0 1 1 0 0 1 0 0]
+                V1 = [2 3 1 4 3 5 2 0]
+    results:    V2 = [3 1 5 2 4 3 2 0]
     \end{verbatim}
 \end{description}
 
@@ -519,26 +500,100 @@ In Table \ref{ops} is listed partially the set of operations performed at the ac
 
 \subsubsection{Library of primitives: an example}
 
-One of the most used library of function contains linear algebra functions. In the following few of the most used linear algebra functions are described to exemplify the intense functions appropriate to implemented on a MapScanReduce architecture.
+One of the most used library of function contains linear algebra functions. In the following few of the most used linear algebra functions are described to exemplify the intense functions appropriate to be implemented on a MapScanReduce architecture.
+
+\paragraph{Matrix} is a rectangular array of $n$ lines and $m$ columns scalar components, as follows:
+\[
+{\bf M} = \begin{bmatrix}
+    s_{11} & s_{12} & s_{13} & \ldots & s_{1n} \\
+    s_{21} & s_{22} & s_{23} & \ldots & s_{2n} \\
+    \ldots & \ldots & \ldots & \ldots & \ldots \\
+    s_{m1} & s_{m2} & s_[m3] & \dots  & s_{mn}
+    \end{bmatrix}
+\]
 
 \paragraph{Identity matrix} is a matrix working as the scalar 1 in the arithmetic multiplication and division; it has 1s on the main diagonal as follows:
 \[
-I = \begin{bmatrix}
+{\bf I} = \begin{bmatrix}
     1 & 0 & 0 & \ldots & 0 \\
     0 & 1 & 0 & \ldots & 0 \\
-    \ldots & \ldots & \ldots & \ldots & 0               \\
+    \ldots & \ldots & \ldots & \ldots & 0 \\
     0 & 0 & 0 & \dots  & 1
     \end{bmatrix}
 \]
 
+\paragraph{Row Vector} is a linear array of $n$ scalars, as follows:
+\[
+V = \begin{bmatrix}
+    s_{1} & s_{2} & s_{3} & \ldots & s_{n} 
+    \end{bmatrix}
+\]
 
-\paragraph{Inner (dot or scalar) product} of two vector provides a scalar as the sum of matching members products.
+\paragraph{Column Vector} is a linear array of $m$ scalars, as follows:
+\[
+W = \begin{bmatrix}
+    s_{1} \\
+    s_{2} \\
+    \ldots \\
+    s_{m} 
+    \end{bmatrix}
+\]
+
+\paragraph{Inner or dot product} of two vector provides a scalar as the sum of matching members products, as follows:
+\[
+V \cdot W = \begin{bmatrix}
+    s_{1} & s_{2} & s_{3} & \ldots & s_{n} 
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+    t_{1} \\
+    t_{2} \\
+    \ldots \\
+    t_{n} 
+    \end{bmatrix}
+    = \sum_{1}^{n} s_i \times t_i
+\]
+
+
+
 \begin{exemplu} Let be the vectors {\tt V1 = [1 2 3 4]} and {\tt V2 = [5 6 7 8]}. Their inner, dot or scalar product is: $$V1 \cdot V2 = 1 \times 5 + 2 \times 6 + 3 \times 7 + 4 \times 8 = 70$$
 
 $\diamond$
 \end{exemplu}
 
-\paragraph{Matrix-vector multiply} provide a vector of the dot products between the lines of the matrix and the vector.
+\paragraph{Matrix-vector multiply} provide a vector of the dot products between the lines of the matrix and the vector, as follows:
+
+\[
+{\bf M} \cdot W = \begin{bmatrix}
+    s_{11} & s_{12} & s_{13} & \ldots & s_{1n} \\
+    s_{21} & s_{22} & s_{23} & \ldots & s_{2n} \\
+    \ldots & \ldots & \ldots & \ldots & \ldots \\
+    s_{m1} & s_{m2} & s_[m3] & \dots  & s_{mn}
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+    t_{1} \\
+    t_{2} \\
+    \ldots \\
+    t_{n} 
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+    V_{1} \\
+    V_{2} \\
+    \ldots \\
+    V_{m} 
+    \end{bmatrix}
+    \cdot W
+    = 
+    \begin{bmatrix}
+    V_{1} \cdot W \\
+    V_{2} \cdot W \\
+    \ldots \\
+    V_{m} \cdot W
+    \end{bmatrix}
+\]
+
 
 \begin{exemplu}
 Let be the matrix
@@ -564,7 +619,7 @@ M \times V = \begin{bmatrix}
     4 & 5 & 6\\
     7 & 8 & 9
     \end{bmatrix}
-    \times
+    \cdot
     \begin{bmatrix}
     10 \\
     11 \\
@@ -587,19 +642,57 @@ M \times V = \begin{bmatrix}
 $\diamond$
 \end{exemplu}
 
-\paragraph{Matrix multiplication} of two matrices {\tt M1} and {\tt M2} provides a matrix {\tt M} whose lines a contains the dot products of a column, starting with the first column, form {\tt M2}with each lines from {\tt M1} starting with the first line in {\tt M1}. The number of lines in {\tt M1} must be the same with the number of columns in {\tt M2}.
+\paragraph{Matrix multiplication} of two matrices ${\bf M_1}$ and ${\bf M_2}$ provides a matrix ${\bf M}$ whose lines a contains the dot products of a column, starting with the first column, form ${\bf M_2}$ with each lines from ${\bf M_1}$ starting with the first line in ${\bf M_1}$. The number of lines in ${\bf M_1}$ must be the same with the number of columns in ${\bf M_2}$. The general form is:
+
+\[
+{\bf M_1} \cdot {\bf M_2} = 
+    \begin{bmatrix}
+    s_{11} & s_{12} & s_{13} & \ldots & s_{1k} \\
+    s_{21} & s_{22} & s_{23} & \ldots & s_{2k} \\
+    \ldots & \ldots & \ldots & \ldots & \ldots \\
+    s_{m1} & s_{m2} & s_[m3] & \dots  & s_{mk}
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+    t_{11} & t_{12} & t_{13} & \ldots & t_{1n} \\
+    t_{21} & t_{22} & t_{23} & \ldots & t_{2n} \\
+    \ldots & \ldots & \ldots & \ldots & \ldots \\
+    t_{k1} & t_{k2} & t_[k3] & \dots  & t_{kn}
+    \end{bmatrix}
+    =
+\]
+\[
+    =
+    \begin{bmatrix}
+    V_{1} \\
+    V_{2} \\
+    \ldots \\
+    V_{m} 
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+    W_{1} & W_{2} & W_{3} & \ldots & W_{n} 
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    V_{1} \cdot W_{1} & V_{1} \cdot W_{2} & V_{1} \cdot W_{3} & \ldots & V_{1} \cdot W_{n} \\
+    V_{2} \cdot W_{1} & V_{2} \cdot W_{2} & V_{2} \cdot W_{3} & \ldots & V_{n} \cdot W_{n} \\
+    \ldots & \ldots & \ldots & \ldots & \ldots \\
+    V_{m} \cdot W_{1} & V_{m} \cdot W_{2} & V_{m} \cdot W_{3} & \ldots & V_{m} \cdot W_{n} 
+    \end{bmatrix}
+\]
 
 \begin{exemplu}
 Let be two matrices:
 \[
-M1 = \begin{bmatrix}
+{\bf M_1} = \begin{bmatrix}
     1 & 2 & 3 \\
     4 & 5 & 6
     \end{bmatrix}
 \] 
 and
 \[
-M2 = \begin{bmatrix}
+{\bf M_2} = \begin{bmatrix}
     1 & 2  \\
     3 & 4 \\
     5 & 6 
@@ -607,12 +700,12 @@ M2 = \begin{bmatrix}
 \]
 Their product is computed as follow:
 \[
-M = M1 \times M2 = 
+M = {\bf M_1} \cdot  {\bf M_2} = 
     \begin{bmatrix}
     1 & 2 & 3 \\
     4 & 5 & 6
     \end{bmatrix}
-    \times
+    \cdot
     \begin{bmatrix}
     1 & 2  \\
     3 & 4 \\
@@ -655,6 +748,14 @@ M^T = \begin{bmatrix}
 
 $\diamond$
 \end{exemplu}
+
+
+
+
+
+
+
+
 
 Let us consider the simplest, most intense computation of multiplying matrices.
 \includeverilogcode[caption={Matrix multiplication in Python.  File: matrix\_multiplication.py. }, 

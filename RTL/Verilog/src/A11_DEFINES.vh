@@ -1,7 +1,3 @@
-/*********************************************************************
-File name: DEFINES.vh
-                MICROARCHITECTURE
-*********************************************************************/
 // CONTROL
 `define nop     6'b00_0000 // no operation: pc<=pc+1;
 `define rjmp   	6'b00_0001 // relative jump: pc<=pc+v;
@@ -21,16 +17,14 @@ File name: DEFINES.vh
 `define subc    6'b11_0110 // rf[d]<=(rf[l]-rf[r])[32];
 `define addvc   6'b11_0111 // rf[d]<=(rf[l]+v)[32];
 `define lsh     6'b11_1000 // rf[d]<=rf[l] >> 1;
-`define ash     6'b11_1001 // rf[d]<=
-                      //     <={rf[l][31],rf[l][31:1]};
+`define ash     6'b11_1001 // rf[d]<={rf[l][31],rf[l][31:1]};
 `define move    6'b11_1010 // rf[d]<=rf[l];
-`define swap    6'b11_1011 // rf[d]<=
-                      // <={rf[l][15:0],rf[l][31:16]};
+`define swap    6'b11_1011 // rf[d]<={rf[l][15:0],rf[l][31:16]};
 `define bwnot   6'b11_1100 // rf[d]<=~rf[l];
 `define bwand   6'b11_1101 // rf[d]<=rf[l]&rf[r];
 `define bwor    6'b11_1110 // rf[d]<=rf[l]|rf[r];
 `define bwxor   6'b11_1111 // rf[d]<=rf[l]^rf[r];
-// MEMORY, for these instructions: pc=pc+1;
+// DATA MOVE, for these instructions: pc=pc+1;
 `define read   	6'b10_0000 // read from dataMemory[rf[l]];
 `define load   	6'b10_0111 // rf[d]<=dataOut;
 `define store  	6'b10_1000 // dataMemory[rf[l]]<=rf[r];

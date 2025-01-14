@@ -41,7 +41,7 @@ $\diamond$
 
 \section{Processor}\label{toyRISCprocessor}
 
-\subsection{Architecture vs. Organization}
+\subsection{Architecture vs. Organization}\label{archOrg}
 
 {\small
  \hfill{
@@ -134,9 +134,7 @@ How did you get to this way of designing a processor that executes only simple, 
 Thus, a RISC processor executes instead of interpreting. Programs represent sequences of simple instructions, which are executed in parallel with the control of their evolution. Indeed, the functional automaton operates on the data while the control automaton calculates the address from which the next instruction will be read.
 Both types of operations fall into the category of simple ones, the fact that it allows us to consider a RISC processor as simple to distinguish it from a CISC one which is complex due to the control automaton.
 
-
-
-    \section{{\bf {\em ToyRISC Processor}}}\label{toyrisc}
+\section{{\bf {\em ToyRISC Processor}}}\label{toyrisc}
 
 The executing processor is simpler than an interpreting processor.
 The complexity of computation moves almost completely from the
@@ -250,7 +248,7 @@ The storage resources on which the ISA definition is based are the following:
 \end{verbatim}
 
 Instruction Set Architecture, ISA, of the {\bf {\em toyRISC}} processor is described in
-the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing system includes at least the following types of instructions:
+the Listing \ref{lst:toyRISCdefines}. ISA, in short the architecture of a computing system includes at least the following types of instructions:
 \begin{enumerate}
     \item control instructions
     \item arithmetic and logic instructions
@@ -258,7 +256,7 @@ the Figure \ref{toyriscisa}. ISA, in short the architecture of a computing syste
     \item interrupt control instructions
 \end{enumerate}
 
-\includeverilogcode[caption={toyRISC ISA.  File: 0\_DEFINES.vh  (SystemVerilog)}, 
+\includeverilogcode[caption={toyRISC ISA.  File: DEFINES.vh  (SystemVerilog)}, 
                     label={lst:toyRISCdefines}, 
                     firstline=1, 
                     firstnumber=1, 
