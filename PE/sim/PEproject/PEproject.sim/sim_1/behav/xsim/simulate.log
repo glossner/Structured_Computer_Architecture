@@ -1,0 +1,41 @@
+Time resolution is 1 ps
+epROM[0] 	 = 0000000000000000000000000000011101000
+epROM[1] 	 = 0000000000000000000000000010111101000
+epROM[2] 	 = 0000000000000000000000000011011101000
+epROM[3] 	 = 0000000000000000000000000000101001000
+epROM[4] 	 = 0000000000000000010000100001001001000
+epROM[5] 	 = 0000000000000000100001000001101001000
+epROM[6] 	 = 0000000000000000110000000000001101000
+epROM[7] 	 = 0000010010100001100010100011001001100
+epROM[8] 	 = 1000000110000000000000000000000000000
+epROM[9] 	 = 1000010010000000000000000000000000000
+epROM[10] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+epROM[11] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+epROM[12] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+epROM[13] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+epROM[14] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+epROM[15] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0 Func=0 Init=1 stateReg=x DataOut=x test=x RF=[x x x x x x x x x]
+t=1 Func=0 Init=1 stateReg=0 DataOut=x test=0 RF=[x x x x x x x x x]
+t=2 Func=0 Init=0 stateReg=0 DataOut=x test=0 RF=[x x x x x x x x x]
+t=3 Func=0 Init=0 stateReg=1 DataOut=3 test=0 RF=[3 x x x x x x x x]
+t=5 Func=0 Init=0 stateReg=2 DataOut=3 test=0 RF=[3 x x x x 1 x x x]
+t=7 Func=0 Init=0 stateReg=3 DataOut=3 test=0 RF=[3 x x x x 1 2 x x]
+t=9 Func=0 Init=0 stateReg=4 DataOut=6 test=0 RF=[3 6 x x x 1 2 x x]
+t=11 Func=0 Init=0 stateReg=5 DataOut=12 test=0 RF=[3 6 12 x x 1 2 x x]
+t=13 Func=0 Init=0 stateReg=6 DataOut=24 test=0 RF=[3 6 12 24 x 1 2 x x]
+t=15 Func=0 Init=0 stateReg=7 DataOut=2 test=0 RF=[24 6 12 24 x 1 2 x x]
+t=17 Func=0 Init=0 stateReg=8 DataOut=24 test=1 RF=[24 6 12 24 x 1 1 x x]
+t=19 Func=0 Init=0 stateReg=3 DataOut=24 test=0 RF=[24 6 12 24 x 1 1 x x]
+t=21 Func=0 Init=0 stateReg=4 DataOut=48 test=0 RF=[24 48 12 24 x 1 1 x x]
+t=23 Func=0 Init=0 stateReg=5 DataOut=96 test=0 RF=[24 48 96 24 x 1 1 x x]
+t=25 Func=0 Init=0 stateReg=6 DataOut=192 test=0 RF=[24 48 96 192 x 1 1 x x]
+t=27 Func=0 Init=0 stateReg=7 DataOut=1 test=0 RF=[192 48 96 192 x 1 1 x x]
+t=29 Func=0 Init=0 stateReg=8 DataOut=192 test=1 RF=[192 48 96 192 x 1 0 x x]
+t=31 Func=0 Init=0 stateReg=3 DataOut=192 test=0 RF=[192 48 96 192 x 1 0 x x]
+t=33 Func=0 Init=0 stateReg=4 DataOut=384 test=0 RF=[192 384 96 192 x 1 0 x x]
+t=35 Func=0 Init=0 stateReg=5 DataOut=768 test=0 RF=[192 384 768 192 x 1 0 x x]
+t=37 Func=0 Init=0 stateReg=6 DataOut=1536 test=0 RF=[192 384 768 1536 x 1 0 x x]
+t=39 Func=0 Init=0 stateReg=7 DataOut=0 test=1 RF=[1536 384 768 1536 x 1 0 x x]
+t=41 Func=0 Init=0 stateReg=9 DataOut=1536 test=1 RF=[1536 384 768 1536 x 1 4294967295 x x]
+$stop called at time : 170 ns : File "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/0_epTest.sv" Line 42

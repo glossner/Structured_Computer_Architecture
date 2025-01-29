@@ -1,0 +1,32 @@
+Vivado Simulator v2023.1
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: C:/Xilinx/Vivado/2023.1/bin/unwrapped/win64.o/xelab.exe --incr --debug typical --relax --mt 2 -L xil_defaultlib -L uvm -L unisims_ver -L unimacro_ver -L secureip --snapshot epTest_behav xil_defaultlib.epTest xil_defaultlib.glbl -log elaborate.log 
+Using 2 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:1]
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:2]
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:3]
+WARNING: [VRFC 10-3597] non-void function 'LB' called as a task without void casting [../../../../../../0_microProgram.sv:4]
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:5]
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:6]
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:7]
+WARNING: [VRFC 10-3597] non-void function 'D' called as a task without void casting [../../../../../../0_microProgram.sv:8]
+WARNING: [VRFC 10-3597] non-void function 'JMP' called as a task without void casting [../../../../../../0_microProgram.sv:10]
+WARNING: [VRFC 10-3597] non-void function 'LB' called as a task without void casting [../../../../../../0_microProgram.sv:11]
+Completed static elaboration
+Starting simulation data flow analysis
+WARNING: [XSIM 43-4100] "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/sim/PEproject/PEproject.sim/sim_1/behav/xsim/glbl.v" Line 6. Module glbl has a timescale but at least one module in design doesn't have timescale.
+WARNING: [XSIM 43-4100] "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/sim/PEproject/PEproject.sim/sim_1/behav/xsim/glbl.v" Line 6. Module glbl has a timescale but at least one module in design doesn't have timescale.
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module xil_defaultlib.regFile
+Compiling module xil_defaultlib.ALU
+Compiling module xil_defaultlib.RALU
+Compiling module xil_defaultlib.ROM
+Compiling module xil_defaultlib.CROM
+Compiling module xil_defaultlib.elementaryProcessor
+Compiling module xil_defaultlib.epTest
+Compiling module xil_defaultlib.glbl
+Built simulation snapshot epTest_behav

@@ -1,0 +1,14 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/1_elementaryProcessor.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module elementaryProcessor
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/2_CROM.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module CROM
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/2_RALU.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module RALU
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/3_ALU.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module ALU
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/3_ROM.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module ROM
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/3_regFile.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module regFile
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/george/carti/COMPUTER_ARCHITECTURE_NEXT/PE/0_epTest.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module epTest
