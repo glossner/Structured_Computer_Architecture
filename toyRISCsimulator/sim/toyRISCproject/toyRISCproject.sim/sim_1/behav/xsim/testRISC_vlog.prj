@@ -1,0 +1,16 @@
+# compile verilog/system verilog design source files
+sv xil_defaultlib  --include "../../../../../../" \
+"../../../../../../ALU.sv" \
+"../../../../../../DCDtoyRISC.sv" \
+"../../../../../../PCtoyRISC.sv" \
+"../../../../../../RALUtoyRISC.sv" \
+"../../../../../../bigMux.sv" \
+"../../../../../../registerFile.sv" \
+"../../../../../../toyRISC.sv" \
+"../../../../../../testRISC.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

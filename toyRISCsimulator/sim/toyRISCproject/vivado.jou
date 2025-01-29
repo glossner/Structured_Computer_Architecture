@@ -1,0 +1,28 @@
+#-----------------------------------------------------------
+# Vivado v2023.1 (64-bit)
+# SW Build 3865809 on Sun May  7 15:05:29 MDT 2023
+# IP Build 3864474 on Sun May  7 20:36:21 MDT 2023
+# SharedData Build 3865790 on Sun May 07 13:33:03 MDT 2023
+# Start of session at: Mon Jan  6 20:20:52 2025
+# Process ID: 16548
+# Current directory: C:/george/carti/COMPUTER ARCHITECTURE/toyRISCsimulator/sim/toyRISCproject
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent2948 C:\george\carti\COMPUTER ARCHITECTURE\toyRISCsimulator\sim\toyRISCproject\toyRISCproject.xpr
+# Log file: C:/george/carti/COMPUTER ARCHITECTURE/toyRISCsimulator/sim/toyRISCproject/vivado.log
+# Journal file: C:/george/carti/COMPUTER ARCHITECTURE/toyRISCsimulator/sim/toyRISCproject\vivado.jou
+# Running On: DESKTOP-AFM4MLR, OS: Windows, CPU Frequency: 2112 MHz, CPU Physical cores: 4, Host memory: 17092 MB
+#-----------------------------------------------------------
+start_gui
+open_project {C:/george/carti/COMPUTER ARCHITECTURE/toyRISCsimulator/sim/toyRISCproject/toyRISCproject.xpr}
+update_compile_order -fileset sources_1
+launch_simulation
+source testRISC.tcl
+close_sim
+launch_simulation
+source testRISC.tcl
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+set_property top toyRISC [current_fileset]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode All [current_project]
+update_compile_order -fileset sources_1
+synth_design -rtl -rtl_skip_mlo -name rtl_1
