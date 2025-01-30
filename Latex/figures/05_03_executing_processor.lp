@@ -29,7 +29,7 @@
 \drawframebox{20.0}{36.0}{24.0}{12.0}{Data Memory}
 \thinlines
 \drawdashbox{43.0}{13.0}{78.0}{18.0}{}
-\drawcenteredtext{42.0}{20.0}{Processor}
+\drawcenteredtext{42.0}{20.0}{{\bf Executing Processor}}
 \drawthickdot{60.0}{26.0}
 \thicklines
 \drawvector{12.0}{24.0}{6.0}{0}{-1}

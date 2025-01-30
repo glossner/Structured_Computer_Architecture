@@ -1,22 +1,20 @@
-/*********************************************************************
-File name: 00_theKernel.v
-Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
-*********************************************************************/
             cHALT;      NOP;
             cJMP(1);    NOP; // hSTART
             cJMP(2);    NOP; // hSTOP
             cJMP(3);    NOP; // hINTRQ
-            cJMP(4);    NOP; // hSQGENX
+            cJMP(4);    NOP; // hSQGENX(d)
             cJMP(5);    NOP; // hSQGENN
             cJMP(6);    NOP; // hMSEND(addr-1,size)
             cJMP(7);    NOP; // hMGET(addr-1,size)
-            cJMP(8);    NOP; // hUNIT(addr-1)
+            cJMP(8);    NOP; // hMAIN(addr-1)
             cJMP(9);    NOP; // hSQADD(dest,left,right)
             cJMP(10);   NOP; // hVGENX(addr)
             cJMP(11);   NOP; // hVGENN(addr,value)
-            cJMP(12);   NOP; // hSQMVMULT(dest,left,right)
+            cJMP(12);   NOP; // hSQMVMULT(matrix,vectror,dest)
             cJMP(13);   NOP; // hSQMMULT(dest,left,right)
             cJMP(14);   NOP; // hSQMMAC(dest,left,right)
+            cJMP(15);   NOP; // hTRANS(dest,left)
+            cJMP(16);   NOP; // hPRANDOM(dest)
 //********** START COUNTER *******************************************
     LB(1);  cSTART;         VLOAD(22);
             cJMP(32);       NOP;
@@ -27,14 +25,18 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
     LB(3);  cSETINT;        VLOAD(44);
             cJMP(32);       NOP;
 //********** SQUARE MATRIX X GENERATE ********************************
-    LB(4);  cVLOAD(`p);     VLOAD(-1);
+    LB(4);  cPARAM;         NOP;
+            cNOP;           CLOAD;
+            cVLOAD(`p-1);   VSUB(1);
             cNOP;           ADDRLD;
             cNOP;           IXLOAD;
     LB(17); cNOP;           RISTORE(1);
             cBRNZDEC(17);   VADD(1);
             cJMP(32);       NOP;
 //********** SQUARE MATRIX N GENERATE ********************************
-    LB(5);  cVLOAD(`p-1);   VLOAD(-1);
+    LB(5);  cPARAM;         NOP;
+            cNOP;           CLOAD;
+            cVLOAD(`p-1);   VSUB(1);
             cNOP;           ADDRLD;
             cNOP;           VLOAD(0);
     LB(18); cNOP;           RISTORE(1);
@@ -45,7 +47,7 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cPARAM;         CLOAD;
             cNOP;           ADDRLD;
             cNOP;           NOP;
-            NOP;            RISENDIO(1);
+            cNOP;           RISENDIO(1);
     LB(19); cNOP;           NOP;
             cBRZDEC(32);    NOP;
             cNOP;           NOP;
@@ -67,24 +69,18 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cNOP;           NOP;
             cNOP;           NOP;
             cJMP(20);       NOP;
-//********** UNIT MATRIX GENERATE ************************************
+//********** MAIN MATRIX GENERATE ************************************
     LB(8);  cPARAM;         NOP;
             cNOP;           CLOAD;
-            cSTORE(1);      ADDRLD;
-            cVLOAD(`p);     VLOAD(0);
-    LB(21); cNOP;           RISTORE(1);
-            cBRNZDEC(21);   NOP;
-            cLOAD(1);       NOP;
-            cVADD(1);       CLOAD;
-            cNOP;           ADDRLD;
+            cPARAM;         ADDRLD;
             cNOP;           IXLOAD;
             cNOP;           WHEREZERO;
-            cNOP;           VLOAD(1);  // N on diagonal
+            cNOP;           CLOAD;
             cNOP;           ELSEWHERE;
             cNOP;           VLOAD(0);
-            cNOP;           SENDSR;
             cNOP;           ENDWHERE;
-            cNOP;           VLOAD(23);
+            cVLOAD(`p-2);   SENDSR;
+            cGRSHIFT;       RSTORE(0);
     LB(22); cNOP;           GETSR;
             cGRSHIFT;       RISTORE(1);
             cBRNZDEC(22);   NOP;
@@ -126,11 +122,12 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cJMP(32);       CSTORE;
 //************ MATRIX-VECTOR MULTIPLY ********************************
     LB(12); cPARAM;                 NOP;
+            cVADD(`p-1);            NOP;
             cPARAM;                 CLOAD;
             cSTORE(0);              VADD(1);    // mem[0] = right addr
             cPARAM;                 ADDRLD;     // matrix end addr + 1
             cSTORE(1);              REDADD;     // mem[1] = dest addr
-            cVLOAD(`p);             RILOAD(-1);
+            cVLOAD(`p-1);           RILOAD(-1);
     LB(24); cLREDINS;               MULT(`p);
             cBRNZDEC(24);           RILOAD(-1);
             cVLOAD($clog2(`p)-2);   NOP;
@@ -142,6 +139,7 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cVSUB(1);               NOP;
             cSTORE(3);              NOP;    // dest => 3
             cPARAM;                 NOP;
+            cVADD(`p-1);            NOP;
             cSTORE(0);              NOP;    // left => 0
             cPARAM;                 CLOAD;
             cSTORE(2);              ADDRLD; // right => 2
@@ -150,7 +148,7 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cLOAD(2);               NOP;
             cVADD(1);               CALOAD;
             cSTORE(2);              STORE(3*`p);
-            cVLOAD(`p);             RILOAD(0);
+            cVLOAD(`p-1);           RILOAD(0);
     LB(25); cLREDINS;               MULT(3*`p);
             cBRNZDEC(25);           RILOAD(-1);
             cVLOAD($clog2(`p)-3);   NOP;
@@ -166,13 +164,14 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cVSUB(1);               NOP;
             cBRZ(32);               ADDRLD;
             cSTORE(1);              NOP;
-            cVLOAD(`p);             RILOAD(0);
+            cVLOAD(`p-1);           RILOAD(0);
             cJMP(25);               NOP;
 //********** MULTIPLY & ACCUMULATE SQUARE MATRICES *******************
     LB(14); cPARAM;                 REDADD;
             cVSUB(1);               NOP;
             cSTORE(3);              NOP;    // dest => 3
             cPARAM;                 NOP;
+            cVADD(`p-1);            NOP;
             cSTORE(0);              NOP;    // left => 0
             cPARAM;                 CLOAD;
             cSTORE(2);              ADDRLD; // right => 2
@@ -181,7 +180,7 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cLOAD(2);               NOP;
             cVADD(1);               CALOAD;
             cSTORE(2);              STORE(3*`p);
-            cVLOAD(`p);             RILOAD(0);
+            cVLOAD(`p-1);           RILOAD(0);
     LB(26); cLREDINS;               MULT(3*`p);
             cBRNZDEC(26);           RILOAD(-1);
             cVLOAD($clog2(`p)-3);   NOP;
@@ -198,5 +197,68 @@ Description: LINEAR ALGEBRA KERNEL LIBRARY FUNCTIONS
             cVSUB(1);               NOP;
             cBRZ(32);               ADDRLD;
             cSTORE(1);              NOP;
-            cVLOAD(`p);             RILOAD(0);
+            cVLOAD(`p-1);           RILOAD(0);
             cJMP(26);               NOP;
+//********** TRANSPOSE ***********************************************
+    LB(15); //cSTART;                   NOP;
+            cPARAM;                 IXLOAD;
+            cSTORE(0);              SENDSR; // mem[0]=dest
+            cPARAM;                 NOP;
+            cSTORE(1);              NOP;    // mem[1]= source
+            cVLOAD(2*`p);           NOP;
+            cSTORE(2);              NOP;    // mem[2]=temp
+            cVLOAD(`p+1);           NOP;    // counter
+            cSTORE(3);              NOP;
+// READ ALL
+    LB(33); cLOAD(1);               GETSR;
+            cGRROTATE;              CADD;
+            cLOAD(3);               ADDRLD;
+            cVSUB(1);               NOP;
+            cNOP;                   NOP;
+            cBRZ(34);               NOP;
+            cSTORE(3);              NOP;
+            cLOAD(2);               RLOAD(0);
+            cVADD(1);               CSTORE;
+            cSTORE(2);              NOP;
+            cJMP(33);               NOP;
+// ROTATE ALL
+    LB(34); cVLOAD(`p);             VLOAD(3*`p);
+            cSTORE(3);              ADDRLD;
+            cNOP;                   NOP;
+    LB(35); cVSUB(1);               RILOAD(-1);
+            cNOP;                   NOP;
+            cBRZ(37);               SENDSR;
+            cSTORE(3);              NOP;
+    LB(36); cGLROTATE;              GETSR;
+            cBRNZDEC(36);           NOP;
+            cLOAD(3);               NOP;
+            cJMP(35);               RSTORE(0);
+// STORE ALL
+    LB(37); cVLOAD(`p-1);           IXLOAD;
+            cSTORE(3);              SENDSR;
+            cGRROTATE;              NOP;
+    LB(38); cLOAD(0);               GETSR;
+            cLOAD(3);               CADD;
+            cVADD(2*`p);            ADDRLD;
+            cGRROTATE;              CALOAD;
+            cLOAD(3);               RSTORE(0);
+            cNOP;                   NOP;
+            cBRZDEC(32);            NOP;
+            cSTORE(3);              NOP;
+            cJMP(38);               NOP;
+//********** PSEUDO-RANDOM MATRIX ************************************
+    LB(16); cPARAM;                 ACTIVATE;
+            cNOP;                   CLOAD;
+            cNOP;                   ADDRLD;
+            cVLOAD(`p-1);           IXLOAD;
+    LB(33); cNOP;                   VADD(29);
+            cNOP;                   VMULT(98765);
+            cNOP;                   SHR;
+            cNOP;                   SHR;
+            cNOP;                   SHR;
+            cNOP;                   SHR;
+            cNOP;                   SHR;
+            cNOP;                   VAND(31);
+            cNOP;                   CRSTORE;
+            cBRNZDEC(33);           NOP;
+            cJMP(32);               NOP;

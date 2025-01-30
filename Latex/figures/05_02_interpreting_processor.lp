@@ -29,7 +29,7 @@
 \drawvector{72.0}{24.0}{4.0}{0}{1}
 \thinlines
 \drawdashbox{43.0}{13.0}{78.0}{18.0}{}
-\drawcenteredtext{42.0}{20.0}{Processor}
+\drawcenteredtext{42.0}{20.0}{{\bf Interpreting Processor}}
 \thicklines
 \drawpath{42.0}{24.0}{42.0}{28.0}
 \thinlines

@@ -498,7 +498,7 @@ In Table \ref{ops} is listed partially the set of operations performed at the ac
 \end{table}
 
 
-\subsubsection{Library of primitives: an example}
+\subsubsection{Library of primitives: an example}\label{library}
 
 One of the most used library of function contains linear algebra functions. In the following few of the most used linear algebra functions are described to exemplify the intense functions appropriate to be implemented on a MapScanReduce architecture.
 
@@ -682,80 +682,6 @@ $\diamond$
     \end{bmatrix}
 \]
 
-\begin{exemplu}
-Let be two matrices:
-\[
-{\bf M_1} = \begin{bmatrix}
-    1 & 2 & 3 \\
-    4 & 5 & 6
-    \end{bmatrix}
-\] 
-and
-\[
-{\bf M_2} = \begin{bmatrix}
-    1 & 2  \\
-    3 & 4 \\
-    5 & 6 
-    \end{bmatrix}
-\]
-Their product is computed as follow:
-\[
-M = {\bf M_1} \cdot  {\bf M_2} = 
-    \begin{bmatrix}
-    1 & 2 & 3 \\
-    4 & 5 & 6
-    \end{bmatrix}
-    \cdot
-    \begin{bmatrix}
-    1 & 2  \\
-    3 & 4 \\
-    5 & 6
-    \end{bmatrix}
-    = 
-    \begin{bmatrix}
-    1 \times 1 + 2 \times 3 + 3 \times 5 & 1 \times 2 + 2 \times 4 + 3 \times 6  \\
-    4 \times 1 + 5 \times 3 + 6 \times 5 & 4 \times 2 + 5 \times 4 + 6 \times 6  
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-    22 & 28  \\
-    49 & 64 
-    \end{bmatrix}
-\]
-
-$\diamond$
-\end{exemplu}
-
-\paragraph{Matrix transpose} applied to the matrix $M$ is $M^T$ with the lines equal with the columns of $M$.
-
-\begin{exemplu}
-Let be the matrix:
-\[
-M = \begin{bmatrix}
-    1 & 2 & 3 \\
-    4 & 5 & 6\\
-    7 & 8 & 9
-    \end{bmatrix}
-\]
-Its transpose is:
-\[
-M^T = \begin{bmatrix}
-    1 & 4 & 7 \\
-    3 & 5 & 8\\
-    3 & 6 & 9
-    \end{bmatrix}
-\]
-
-$\diamond$
-\end{exemplu}
-
-
-
-
-
-
-
-
 
 Let us consider the simplest, most intense computation of multiplying matrices.
 \includeverilogcode[caption={Matrix multiplication in Python.  File: matrix\_multiplication.py. }, 
@@ -795,29 +721,121 @@ Because the previous algorithm works with vectors, instead of the three embedded
 $\diamond$
 \end{exemplu}
 
+\paragraph{Matrix transpose} applied to the matrix $M$ is $M^T$ with the lines equal with the columns of $M$.
+
 \begin{exemplu}
-In Table \ref{prim} is listed an example for a library of primitives used to develop in a high level language on HOST a linear algebra library. The library of primitives contains functions defined on data structures, vectors and matrices, limited to the size of the array of cells  Map, i.e., $p$-component vectors and $p \times p$ matrices. Programs developed on HOST adapt linear algebra operations defined on data of any size to linear algebra operations defined on accelerator dimensions. In this way, a speedup is obtained that depends on $p$ even if the order of magnitude of the computation time remains the same, i.e., the execution time of matrix multiplication, for example, remains the same, in $O(n^3)$ for matrices of $n \times n$.
+Let be the matrix:
+\[
+M = \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6\\
+    7 & 8 & 9
+    \end{bmatrix}
+\]
+Its transpose is:
+\[
+M^T = \begin{bmatrix}
+    1 & 4 & 7 \\
+    3 & 5 & 8\\
+    3 & 6 & 9
+    \end{bmatrix}
+\]
+
+$\diamond$
+\end{exemplu}
+
+To describe the algorithm for square matrix transpose, we will define the concept of {\bf {\em pseudo diagonal}} of a square matrix.
+
+\begin{definition}
+{\em
+Let be the square matrix
+\[{\bf M} =
+\begin{bmatrix}
+    v_{00} & v_{01} & \dots  & v_{0 \; m-1}\\
+    v_{10} & v_{11} & \dots  & v_{1 \; m-1}\\
+    \vdots & \vdots & \ddots & \vdots\\
+    v_{m-1 \; 0} & v_{m-1 \; 1} & \dots  & v_{m-1 \; m-1}
+    \end{bmatrix}
+\]
+where $$PD(k,{\bf M}) = [v_{(0+k)_{mod \; m} \; 0} \; v_{(1+k)_{mod \; m} \; 1} \ldots v_{(m-1+k)_{mod \; m} \; m-1}]$$ is the $k$-th {\bf {\em pseudo-diagonal}} in the matrix {\bf M}. (The 0-th pseudo-diagonal is the main diagonal.)
+}
+
+$\diamond$
+\end{definition}
+
+A vector algorithm for matrix transpose uses the pseudo-diagonal concept, as follows:
+
+{\footnotesize
+\begin{shaded*}
+\begin{lstlisting}[language=Verilog, caption= , morekeywords={activate, where, wait, loop, repeat, doInParallel, for}]
+/********************************************************************************
+    Algorithm for matrix transpose
+        Initial matrix, V, with components: v(i,j), for i,j = 0, 1, ... m-1
+        Final matrix, W, with components:   w(i,j), for i,j = 0, 1, ... m-1
+        Working vector: A = [a(0) a(1) ... a(m-1)]
+    Note: addition and subtract operations are modulo m operations
+*********************************************************************************/
+for(k=0; k<m; k=k+1) begin
+  (1) A <= [v(0+k,0) v[1+k,1]...v[m-1+k,m-1] // A <= PD(k.V)
+  (2) A <= [a(0-k) a(1-k) ... a(m-1-k)]      // A <= (A rotate k positions right)
+  (3) for(j=0; j<m; j=j+1) w(j+k,j) <= a(j)  // PD(m-k,W) <= A
+end
+\end{lstlisting}
+\end{shaded*}
+}
+
+
+\begin{exemplu}
+Let's consider the $4 \times 4$ matrix V. Its transposed form is computad as follows:
+
+{\small
+\begin{verbatim}
+     Initial                                                          Final
+                           k = 0    k = 1    k = 2    k = 3
+ V:  0 1 2 3                                                     V:  0 1 2 3
+     4 5 6 7     (step 1) 0 5 A F  4 9 E 3  8 D 2 7  C 1 6 B         4 5 6 7
+     8 9 A B                                                         8 9 A B
+     C D E F     (step 2) 0 5 A F  3 4 9 E  2 7 8 D  1 6 B C         C D E F
+ W:  x x x x     (step 3) 0 x x x  0 4 x x  0 4 8 x  0 4 8 C     W:  0 4 8 C
+     x x x x              x 5 x x  x 5 9 x  x 5 9 D  1 5 9 D         1 5 9 D
+     x x x x              x x A x  x x A E  2 x A E  2 6 A E         2 6 A E
+     x x x x              x x x F  3 x x F  3 7 x F  3 7 B F         3 7 B F
+\end{verbatim}
+ }
+
+$\diamond$
+\end{exemplu}
+
+
+
+
+\begin{exemplu}
+In Table \ref{prim} is listed an example for a library of primitives:  FLA 0.1. It can be used to develop in a high level language on HOST a linear algebra library. The library of primitives contains functions defined on data structures -- vectors and matrices --- limited to the size of the array of cells  Map, i.e., $p$-component vectors and $p \times p$ matrices. Programs developed on HOST adapt linear algebra operations defined on data of any size to linear algebra operations defined on accelerator dimensions. In this way, a speedup is obtained that depends on $p$ even if the order of magnitude of the computation time remains the same, i.e., the execution time of matrix multiplication, for example, remains the same, in $O(n^3)$ for matrices of $n \times n$.
 
 {\em
 \begin{table}[H]
- 
 	\centering                       
-	\caption{Library of linear algebra primitives for $p \times p$ matrices and $p$-component vectors on a $p$-cell MapScanReduce accelerator. }           
+	\caption{Library of linear algebra primitives, FLA 0.1,  for $p \times p$ matrices and $p$-component vectors on a $p$-cell MapScanReduce accelerator. }           
 	\label{prim}       % Label
-
-	\begin{tabular}{|p{0.2\textwidth}|p{0.6\textwidth}|p{0.1\textwidth}| } \hline  % Your table
-		{\bf Function} & {\bf Description} & {\bf Time}  \\ \hline \hline
-        vLoad(Vi)              & load vector Vi from the HOST's memory &  $O(p)$ \\ \hline
-        vStore(Vi)             & store vector Vi to the HOST's memory &  $O(p)$     \\ \hline
-        mLoad(Vi,s)            & load from the HOST's memory the s-line matrix starting with Vi &  $O(p^2)$    \\ \hline
-        mStore(Vi,s)           & store to the HOST's memory the s-line matrix starting with Vi & $O(p^2)$   \\ \hline
-        vvMult(Vi,Vj,Vk) & inner product in Vi between Vj and Vk & $O(log \; p)$ \\ \hline
-		mvMult(Vi,Vj,Vk) & multiply in Vi the $p \times p$ matrix starting with Vj, with vector Vk  &  $O(p)$   \\ \hline
-        mmMult(Vi,Vj,Vk) &  multiply in the $p \times p$ matrix starting with Vi, the  $p \times p$ matrices starting with Vi and Vk &  $O(p^2)$ \\ \hline
-         mmMac(Vi,Vj,Vk) &  multiply and accumulate in the $p \times p$ matrix starting with Vi, the  $p \times p$ matrices starting with Vi and Vk &  $O(p^2)$ \\ \hline
-        mTrans(Vi,Vj) & transpose in the $p \times p$ matrix starting with Vi the  $p \times p$ matrix starting with Vi &  $O(p)$  \\ \hline
+	\begin{tabular}{|p{0.22\textwidth}|p{0.55\textwidth}|p{0.075\textwidth}| } \hline  % Your table
+		{\bf FLA 0.1 functions}    & {\bf Description}                                 & {\bf Time}  \\ \hline \hline
+        hSTART            & start the cycle counter on sequencer's            & $O(1)$ \\ \hline
+        hSTOP             & stop the cycle counter on sequencer's             & $O(1)$ \\ \hline
+        hINTRQ            & interrupt request                                 & $O(1)$ \\ \hline
+        hVGENN(d,v)       & generate in V(d) uniform vector, [v v ... v]                                    & $O(1)$ \\ \hline
+        hVGENX(d)         & generate in V(d) index vector, [0 1 ... p-1]                                    & $O(1)$ \\ \hline
+        hMAIN(d,v)        & generate, starting with V(d), matrix with main diagonal of values v             & $O(p)$ \\ \hline
+        hSQGENN(d)        & generate, starting with V(d) = [0 0 ... 0], matrix with incremental lines       & $O(p)$ \\ \hline
+        hSQGENX(d)        & generate, starting with V(d) = [0 1 ... p-1], matrix with incremental lines     & $O(p)$ \\ \hline
+        hPRANDOM(d)       & generate, starting with V(d), pseudo-random matrix                              & $O(p)$ \\ \hline
+        hMSEND(a,s)       & send to host a s-line matrix starting with V(a)                                 & $O(ps)$ \\ \hline
+        hMGET(a,s)        & get from host a s-line matrix starting with V(a)                                & $O(ps)$ \\ \hline
+        hTRANS(d,l)       & transpose matrix starting at V(l) in matrix starting at V(d)                    & $O(p^2)$ \\ \hline
+        hSQMADD(d,l,r)    & add starting from V(d) the matrices starting from V(l) and V(r)                 & $O(p)$ \\ \hline
+        hSQMVMULT(m,v,d)  & multiply in V(d) the matrix starting at V(m) with the vector V(v)               & $O(p)$ \\ \hline
+        hSQMMULT(d,l,r)   & multiply in matrix starting with V(d) matrices starting with V(l) and V(r)      & $O(p^2)$ \\ \hline
+        hSQMMAC(d,l,r)    & multiply and add in matrix starting with V(d) matrices starting with V(l) and V(r)      & $O(p^2)$ \\ \hline
 	\end{tabular}
-
 \end{table}
 }
 

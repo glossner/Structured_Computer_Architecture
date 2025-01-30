@@ -1,6 +1,17 @@
 \chapter{Computers: Four-Loop, Fourth-Order Systems (4-OS)}\label{lect6}
 \localtoc
 
+
+At the level of the fourth loop, we are at a {\em turning point} where the physical structure of the circuits will meet the informational structure of the programs. The functionality will be determined starting from this point by the circuit-information combination. The interface between structural and informational aspects is provided by the concept of {\bf {\em architecture}} borrowed from the field of construction.
+
+
+
+
+
+
+
+
+
 After the first part of this textbook described the symbolic structures involved in computing, and the second part described the physical structures that can be used to implement computing systems, the time has come to involve the unifying entity represented by {\bf {\em information}}. Indeed, information is the one that takes control once the serendipitous meeting between representations, physical structures, and an acting symbolic structure occurs. The symbolic structure we are referring to is the information that manifests itself in the form of computer programs. Computing systems represent the synthesis between the physical structure of circuits and the symbolic structure of programs. This was made possible by a conceptual clarification -- the emergence of mathematical models of computation -- and a technological evolution -- the structuring of digital systems by increasing their autonomy through the impact of included loops.
 
 
@@ -153,8 +164,6 @@ The way in which the tripartite functionality is distributed in a given system s
 
 How looks the actual structure of a computing system? In Figure \ref{compSys} is exemplified a system where are emphasized two buses: the internal bus and the input-output bus. They are interconnected by two units: Bus Bridge and DMA (Direct Memory Access).
 
-\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a von Neumann version of a computing system.}{compSys}
-
 On Internal Bus are connected fast devices while on the Input-Output Bus are connected devices involving a lot of data transfer.
 
 The memory hierarchy is distributed in the version represented in Figure \ref{compSys}  as follows:
@@ -167,6 +176,8 @@ The memory hierarchy is distributed in the version represented in Figure \ref{co
             \item DMA
         \end{itemize}
 \end{enumerate}
+
+\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a von Neumann version of a computing system.}{compSys}
 
 \section{Memory Management}
 
@@ -275,8 +286,6 @@ The input-output system includes certain specific mechanisms that we will briefl
 
 A {\bf {\em Bus}} is a communication system that transfers data between components inside a computer, or between computers. There are two types of buses: serial (those that transfer data bib by bit) and parallel (those that transfer data word by word of n bits). The main problem that arises is that of the synchronization of the transfer. We will discuss it under its essential aspects for the synchronous transfer of n-bit words.
 
-\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
-
 In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Figure \ref{compSys}) between Main Memory and 2nd Level Cache are presented. Three important moments are marked in the mentioned waveforms:
 \begin{description}
     \item[$t_1$]: the active edge of clock takes a read command (Read = 0) from the address Read Address. Both Read and Read Address must be stable at least minimum {\bf {\em  set-up time}} before the active edge of clock (the positive one) and {\bf {\em hold time}} after the positive edge of clock
@@ -284,9 +293,9 @@ In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Fi
     \item[$t_3$]: the active edge of clock takes Valid Input Data to write it at Write Address because Write signal is active (Write' = 0).
 \end{description}
 
-
 The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 clock cycles in the example illustrated by Figure \ref{bus}. Usually, this latency is very high, reaching hundreds of cycles.
 
+\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
 
 
 \subsection{DMA}

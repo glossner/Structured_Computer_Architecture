@@ -4,7 +4,7 @@
         hSQGENX;
         hVGENN(3,`p);
         hSTART;
-        hSQMVMULT(`p-1, `p, `p+1);
+        hSQMVMULT(0, `p, `p+1);
         hSTOP;
 
         hHALT;
