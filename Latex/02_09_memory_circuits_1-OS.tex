@@ -1,7 +1,7 @@
 \chapter{Memory Circuits: One-Loop, First-Order Systems (1-OS)}
 \localtoc
 
-In the second lesson we will introduce the memory circuits that are obtained through a first loop that brings to the input of a circuit the effect of applying a signal to another input. This reverse connection allows the circuit to maintain a state according to a command. Thus the memory function is obtained.
+In this chapter we will introduce the memory circuits that are obtained through a first loop that brings to the input of a circuit the effect of applying a signal to another input. This reverse connection allows the circuit to maintain a state according to a command. Thus the memory function is obtained.
 
 We will not go into details because we have a precise target: the internal structure of a computing system that includes a processor, with its internal storage resources, and the memories in which data and software are stored.
 
@@ -638,7 +638,7 @@ Mathematicians exclusively use the MSB form due to its consistency with position
 \begin{problem}\label{mean}
 Design a system that receives a signed integer in each clock cycle and outputs the sum of the last four received numbers. When the system is reset, it is considered that the last four received numbers had the value 0.
 
-If $t_{SU_{min}} = \#1$, $t_p = \#5$, $t_{sum} = \#50$, then what is the minimum period of the clock at which the system can present a correct result when entering a register.
+If $t_{SU_{min}} = \#1$, $t_p = \#5$, $t_{sum} = \#50$, then what is the minimum period of the clock at which the system can present a correct result on its output.
 
 $\diamond$
 \end{problem}
@@ -667,7 +667,7 @@ The system consists in 4 registers, {\tt reg0, ..., reg3}, serially connected an
 The minimal period of clock is: $T_{clock} = t_p + 2 \times t_{sum} + t_{SU_{min}} = \#106$
 
 \begin{problem}
-Revisit the Problem \ref{mean} and insert the first two adders and the output adder pipe registers.
+Revisit the Problem \ref{mean} and insert at the output of the first two adders and to the output adder pipe registers.
 \begin{enumerate}
     \item What is the resulting minimal period of clock
     \item Design this pipelined version

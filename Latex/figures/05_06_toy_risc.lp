@@ -2,179 +2,180 @@
 % (c) 1998 John Leis leis@usq.edu.au 
 \unitlength  3pt
 {\scriptsize
-\begin{picture}(160,88)
-\hspace{-0.9cm}
+\begin{picture}(154,92)
 \thicklines
-\drawpath{102.0}{34.0}{102.0}{50.0}
+\drawpath{96.0}{34.0}{96.0}{50.0}
 \thinlines
-\drawvector{110.0}{46.0}{2.0}{1}{0}
-\drawcenteredtext{110.0}{43.5}{{\em 2nd}}
-\drawcenteredtext{110.0}{41.0}{{\em Loop}}
+\drawvector{104.0}{46.0}{2.0}{1}{0}
+\drawcenteredtext{104.0}{43.5}{{\em 2nd}}
+\drawcenteredtext{104.0}{41.0}{{\em Loop}}
 \thicklines
-\drawframebox{130.0}{31.0}{24.0}{14.0}{{\tt regFile}}
-\drawpath{28.0}{60.0}{132.0}{60.0}
+\drawframebox{124.0}{31.0}{24.0}{14.0}{{\tt regFile}}
+\drawpath{22.0}{60.0}{126.0}{60.0}
 \thinlines
-\drawcircle{110.0}{42.0}{8.0}{}
+\drawcircle{104.0}{42.0}{8.0}{}
 \thicklines
-\drawvector{108.0}{14.0}{14.0}{0}{1}
-\drawpath{108.0}{14.0}{146.0}{14.0}
-\drawpath{124.0}{24.0}{124.0}{18.0}
-\drawpath{136.0}{24.0}{136.0}{14.0}
-\drawpath{102.0}{50.0}{124.0}{50.0}
-\drawpath{120.0}{18.0}{120.0}{18.0}
-\drawthickdot{116.0}{18.0}
-\drawpath{66.0}{54.0}{128.0}{54.0}
-\drawcenteredtext{132.0}{44.0}{1}
+\drawvector{102.0}{14.0}{14.0}{0}{1}
+\drawpath{102.0}{14.0}{140.0}{14.0}
+\drawpath{118.0}{24.0}{118.0}{18.0}
+\drawpath{130.0}{24.0}{130.0}{14.0}
+\drawpath{96.0}{50.0}{118.0}{50.0}
+\drawpath{114.0}{18.0}{114.0}{18.0}
+\drawthickdot{110.0}{18.0}
+\drawpath{60.0}{54.0}{122.0}{54.0}
+\drawcenteredtext{126.0}{44.0}{1}
+\drawvector{52.0}{36.0}{38.0}{0}{1}
+\drawpath{126.0}{60.0}{126.0}{46.0}
+\drawvector{110.0}{18.0}{56.0}{0}{1}
+\drawpath{60.0}{18.0}{118.0}{18.0}
+\drawpath{22.0}{18.0}{52.0}{18.0}
+\drawpath{22.0}{40.0}{52.0}{40.0}
 \thinlines
-\drawcenteredtext{115.0}{70.0}{{\tt dataMemIn}}
+\drawdashbox{37.0}{27.0}{54.0}{30.0}{}
+\drawdashbox{30.0}{51.0}{40.0}{14.0}{}
+\drawvector{26.0}{50.0}{6.0}{1}{0}
+\drawpath{28.0}{50.0}{28.0}{70.0}
+\drawvector{28.0}{70.0}{16.0}{-1}{0}
 \thicklines
-\drawpath{132.0}{60.0}{132.0}{46.0}
-\drawvector{58.0}{36.0}{32.0}{0}{1}
-\drawpath{66.0}{18.0}{124.0}{18.0}
-\drawpath{28.0}{18.0}{58.0}{18.0}
-\drawpath{28.0}{40.0}{58.0}{40.0}
+\drawdot{28.0}{50.0}
+\drawcenteredtext{46.0}{56.0}{{\bf DCD}}
 \thinlines
-\drawdashbox{43.0}{27.0}{54.0}{30.0}{}
-\drawdashbox{36.0}{51.0}{40.0}{14.0}{}
-\drawvector{32.0}{50.0}{6.0}{1}{0}
-\drawpath{34.0}{50.0}{34.0}{70.0}
-\drawvector{34.0}{70.0}{16.0}{-1}{0}
+\drawcenteredtext{16.0}{10.0}{{\tt toyRISC}}
 \thicklines
-\drawdot{34.0}{50.0}
-\drawcenteredtext{52.0}{56.0}{{\bf DCD}}
+\drawvector{140.0}{14.0}{60.0}{0}{1}
+\drawpath{68.0}{60.0}{68.0}{74.0}
+\drawpath{130.0}{46.0}{130.0}{74.0}
+\drawpath{134.0}{56.0}{134.0}{56.0}
+\drawthickdot{52.0}{40.0}
+\drawthickdot{68.0}{60.0}
 \thinlines
-\drawcenteredtext{22.0}{10.0}{{\tt toyRISC}}
+\drawcircle{72.0}{46.0}{12.0}{{\em 3rd Loop}}
+\drawdashbox{112.0}{34.0}{60.0}{44.0}{}
 \thicklines
-\drawpath{74.0}{60.0}{74.0}{68.0}
-\drawvector{116.0}{18.0}{50.0}{0}{1}
-\drawpath{136.0}{46.0}{136.0}{68.0}
-\drawpath{140.0}{56.0}{140.0}{56.0}
-\drawthickdot{58.0}{40.0}
-\drawthickdot{74.0}{60.0}
+\drawpath{90.0}{34.0}{102.0}{34.0}
+\drawframebox{56.0}{31.0}{12.0}{10.0}{{\tt nextPC}}
 \thinlines
-\drawcircle{78.0}{46.0}{12.0}{{\em 3rd Loop}}
-\drawdashbox{118.0}{34.0}{60.0}{44.0}{}
+\drawcircle{60.0}{68.0}{8.0}{}
+\drawcircle{120.0}{68.0}{8.0}{}
+\drawvector{60.0}{72.0}{2.0}{1}{0}
+\drawvector{120.0}{72.0}{2.0}{1}{0}
 \thicklines
-\drawpath{96.0}{34.0}{108.0}{34.0}
-\drawframebox{62.0}{31.0}{12.0}{10.0}{{\tt nextPC}}
-\drawvector{146.0}{14.0}{54.0}{0}{1}
-\drawpath{80.0}{78.0}{80.0}{68.0}
-\drawpath{46.0}{68.0}{80.0}{68.0}
-\drawpath{46.0}{78.0}{46.0}{68.0}
-\drawcenteredtext{136.0}{44.0}{2}
-\drawpath{130.0}{38.0}{130.0}{42.0}
-\drawpath{152.0}{68.0}{152.0}{78.0}
-\drawcenteredtext{64.0}{75.0}{{\bf Program Memory}}
-\drawcenteredtext{130.0}{75.0}{{\bf Data Memory}}
-\drawcenteredtext{52.0}{70.0}{{\tt nextPC}}
-\drawcenteredtext{146.0}{70.0}{{\tt addr}}
+\drawcenteredtext{130.0}{44.0}{2}
+\drawpath{124.0}{38.0}{124.0}{42.0}
 \thinlines
-\drawcenteredtext{74.0}{70.0}{{\tt instr}}
+\drawcenteredtext{60.19}{67.50}{{\em Loop}}
+\drawcenteredtext{120.19}{67.50}{{\em Loop}}
 \thicklines
-\drawpath{152.0}{68.0}{152.0}{68.0}
-\drawvector{58.0}{18.0}{8.0}{0}{1}
+\drawcenteredtext{60.0}{69.5}{{\em 4th}}
+\drawcenteredtext{120.0}{69.5}{{\em 5th}}
 \thinlines
-\drawdashbox{99.0}{73.0}{110.0}{18.0}{}
+\drawdashbox{77.0}{46.0}{142.0}{84.0}{}
 \thicklines
-\drawcenteredtext{20.0}{14.0}{{\bf PC}}
+\drawcenteredtext{60.0}{14.0}{{\bf PC}}
 \thinlines
-\drawvector{24.0}{66.0}{12.0}{0}{-1}
+\drawcenteredtext{122.0}{6.0}{{\tt toyRISC-based Computing System}}
 \thicklines
-\drawpath{108.0}{34.0}{114.0}{28.0}
-\drawvector{62.0}{60.0}{24.0}{0}{-1}
+\drawvector{52.0}{18.0}{8.0}{0}{1}
 \thinlines
-\drawvector{78.0}{52.0}{2.0}{1}{0}
+\drawvector{18.0}{66.0}{12.0}{0}{-1}
 \thicklines
-\drawvector{44.0}{60.0}{6.0}{0}{-1}
-\drawpath{114.0}{28.0}{90.0}{28.0}
-\drawpath{90.0}{28.0}{96.0}{34.0}
+\drawpath{102.0}{34.0}{108.0}{28.0}
+\drawvector{56.0}{60.0}{24.0}{0}{-1}
 \thinlines
-\drawcenteredtext{124.0}{26.0}{{\tt leftOp}}
-\drawcenteredtext{136.0}{26.0}{{\tt rightOp}}
+\drawvector{72.0}{52.0}{2.0}{1}{0}
 \thicklines
+\drawvector{38.0}{60.0}{6.0}{0}{-1}
+\drawpath{108.0}{28.0}{84.0}{28.0}
+\drawpath{84.0}{28.0}{90.0}{34.0}
 \thinlines
-\drawcenteredtext{68.5}{52.0}{{\tt pc}}
+\drawcenteredtext{118.0}{26.0}{{\tt leftOp}}
+\drawcenteredtext{130.0}{26.0}{{\tt rightOp}}
+\drawcenteredtext{62.5}{52.0}{{\tt pc}}
 \thicklines
 {\tiny
-\drawcenteredtext{102.0}{33.0}{{\tt out}}
-\drawcenteredtext{96.0}{29.4}{{\tt leftIn}}
-\drawcenteredtext{108.0}{29.2}{{\tt rightIn}}
+\drawcenteredtext{96.0}{33.0}{{\tt out}}
+\drawcenteredtext{90.0}{29.39}{{\tt leftIn}}
+\drawcenteredtext{102.0}{29.2}{{\tt rightIn}}
 }
 \thinlines
-\drawcenteredtext{106.0}{51.5}{{\tt aluOut}}
-\drawcenteredtext{130.5}{58.0}{{\tt v}}
-\drawcenteredtext{140.7}{50.0}{{\tt dataIn}}
-\drawcenteredtext{121.5}{40.0}{{\tt dataOut}}
+\drawcenteredtext{100.0}{51.5}{{\tt aluOut}}
+\drawcenteredtext{124.5}{58.0}{{\tt v}}
+\drawcenteredtext{134.69}{50.0}{{\tt dataIn}}
+\drawcenteredtext{115.5}{40.0}{{\tt dataOut}}
 \thicklines
-\drawvector{66.0}{18.0}{8.0}{0}{1}
+\drawvector{60.0}{18.0}{8.0}{0}{1}
 \thinlines
-\drawpath{46.0}{74.0}{48.0}{72.0}
-\drawpath{48.0}{72.0}{46.0}{70.0}
+\drawcenteredtext{109.0}{76.0}{{\tt dataMemIn}}
+\drawpath{38.0}{82.0}{40.0}{80.0}
 \thicklines
-\drawcenteredtext{128.0}{44.0}{0}
+\drawcenteredtext{122.0}{44.0}{0}
 \thinlines
-\drawcenteredtext{124.0}{44.0}{3}
+\drawcenteredtext{118.0}{44.0}{3}
 \thicklines
-\drawvector{96.0}{18.0}{10.0}{0}{1}
+\drawvector{90.0}{18.0}{10.0}{0}{1}
 \thinlines
-\drawpath{118.0}{36.0}{120.0}{34.0}
-\drawpath{120.0}{34.0}{118.0}{32.0}
-%\drawdashbox{107.0}{32.0}{6.0}{4.0}{}
+\drawpath{112.0}{36.0}{114.0}{34.0}
+\drawpath{114.0}{34.0}{112.0}{32.0}
 \thicklines
-\drawthickdot{62.0}{60.0}
-\drawthickdot{136.0}{14.0}
-\drawpath{124.0}{50.0}{124.0}{46.0}
+\drawthickdot{56.0}{60.0}
+\drawthickdot{130.0}{14.0}
+\drawpath{118.0}{50.0}{118.0}{46.0}
 \thinlines
-\drawcenteredtext{102.0}{31.0}{{\tt alu}}
+\drawcenteredtext{96.0}{31.0}{{\tt alu}}
 \thicklines
-\drawpath{128.0}{54.0}{128.0}{46.0}
-\drawpath{152.0}{68.0}{108.0}{68.0}
-\drawpath{108.0}{78.0}{108.0}{68.0}
+\drawpath{122.0}{54.0}{122.0}{46.0}
+\drawframebox{57.0}{80.0}{38.0}{12.0}{}
+\drawpath{60.0}{36.0}{60.0}{54.0}
 \thinlines
-\drawpath{108.0}{74.0}{110.0}{72.0}
+\drawcenteredtext{87.0}{14.0}{{\bf RALU}}
 \thicklines
-\drawpath{66.0}{36.0}{66.0}{54.0}
+\drawthickdot{38.0}{60.0}
 \thinlines
-\drawcenteredtext{93.0}{14.0}{{\bf RALU}}
+\drawpath{40.0}{80.0}{38.0}{78.0}
 \thicklines
-\drawthickdot{44.0}{60.0}
-\drawcenteredtext{134.0}{70.0}{{\tt dataMemOut}}
+\drawpath{116.0}{42.0}{132.0}{42.0}
+\drawpath{116.0}{46.0}{132.0}{46.0}
+\drawarc{116.0}{44.0}{4.0}{1.57}{4.71}
+\drawarc{132.0}{44.0}{4.0}{4.71}{1.57}
 \thinlines
-\drawpath{110.0}{72.0}{108.0}{70.0}
+\drawdashbox{76.0}{35.0}{136.0}{54.0}{}
 \thicklines
-\drawpath{122.0}{42.0}{138.0}{42.0}
-\drawpath{122.0}{46.0}{138.0}{46.0}
-\drawarc{122.0}{44.0}{4.0}{1.57}{4.71}
-\drawarc{138.0}{44.0}{4.0}{4.71}{1.57}
+\drawpath{146.0}{74.0}{146.0}{84.0}
+\drawcenteredtext{58.0}{81.0}{{\bf Program Memory}}
+\drawframebox{22.0}{30.0}{20.0}{8.0}{{\tt pc}}
 \thinlines
-\drawdashbox{82.0}{35.0}{136.0}{54.0}{}
+\drawpath{18.0}{66.0}{12.0}{66.0}
 \thicklines
-\drawcenteredtext{94.0}{66.0}{{\tt memories}}
+\drawthickdot{90.0}{18.0}
+\drawpath{22.0}{26.0}{22.0}{18.0}
 \thinlines
-\drawdashbox{83.0}{44.0}{146.0}{80.0}{}
+\drawcenteredtext{12.7}{68.0}{inteIn}
+\drawcenteredtext{12.0}{72.0}{inta}
 \thicklines
-\drawframebox{28.0}{30.0}{20.0}{8.0}{{\tt pc}}
+\drawoval{39.0}{50.0}{16.0}{8.0}{{\tt Decode}}
+\drawvector{22.0}{40.0}{6.0}{0}{-1}
+\drawvector{22.0}{60.0}{6.0}{0}{-1}
 \thinlines
-\drawcenteredtext{22.0}{6.0}{{\tt toyRISCsystem}}
-\drawpath{24.0}{66.0}{18.0}{66.0}
+\drawcenteredtext{40.2}{28.04}{{\em Loop}}
+\drawpath{12.0}{32.0}{14.0}{30.0}
+\drawpath{14.0}{30.0}{12.0}{28.0}
+\drawcircle{40.08}{28.95}{8.0}{}
+\drawvector{40.29}{33.04}{2.0}{-1}{0}
+\drawcenteredtext{40.61}{30.12}{{\em 2nd}}
 \thicklines
-\drawthickdot{96.0}{18.0}
-\drawpath{28.0}{26.0}{28.0}{18.0}
+\drawframebox{19.0}{50.0}{14.0}{8.0}{intAut}
+\drawcenteredtext{124.0}{81.0}{{\bf Data Memory}}
+\drawcenteredtext{46.0}{76.0}{{\tt nextPC}}
+\drawcenteredtext{140.0}{76.0}{{\tt addr}}
 \thinlines
-\drawcenteredtext{18.7}{68.0}{inteIn}
-\drawcenteredtext{18.0}{72.0}{inta}
+\drawcenteredtext{68.0}{76.0}{{\tt instr}}
 \thicklines
-\drawoval{45.0}{50.0}{16.0}{8.0}{{\tt Decode}}
-\drawvector{28.0}{40.0}{6.0}{0}{-1}
-\drawvector{28.0}{60.0}{6.0}{0}{-1}
+\drawpath{146.0}{74.0}{146.0}{74.0}
+\drawframebox{123.0}{80.0}{46.0}{12.0}{}
 \thinlines
-\drawcenteredtext{46.2}{28.04}{{\em Loop}}
-\drawpath{18.0}{32.0}{20.0}{30.0}
-\drawpath{20.0}{30.0}{18.0}{28.0}
-\drawcircle{46.08}{28.95}{8.0}{}
-\drawvector{46.29}{33.04}{2.0}{-1}{0}
-\drawcenteredtext{46.61}{30.12}{{\em 2nd}}
+\drawpath{100.0}{82.0}{102.0}{80.0}
+\drawpath{102.0}{80.0}{100.0}{78.0}
 \thicklines
-\drawframebox{25.0}{50.0}{14.0}{8.0}{intAut}
+\drawcenteredtext{128.0}{76.0}{{\tt dataMemOut}}
 \end{picture}
 }

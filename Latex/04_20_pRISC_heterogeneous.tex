@@ -707,14 +707,16 @@ $\diamond$
 
 \subsection{FLA 0.1}
 
+In  Table \ref{prim} (see \ref{library} in this book) is defined the low level library FLA 0.1. Its implementation in assembly language is presented in Listing \ref{lst:theKernel}.
+
 \includeverilogcode[caption={FLA 0.1. File: 00\_theKernel.sv  (SystemVerilog)}, 
                     label={lst:theKernel}, 
                     firstline=1, 
                     firstnumber=1, 
-                    lastline=210]
+                    lastline=310]
                     {\verilogSourceDir/A20_theKernel.sv}
 
-\subsection{Programming using FLA 0.1}
+\subsection{Programming using the library of primitives FLA 0.1}
 
 \begin{exemplu}
 The program multiplying a matrix with a vector written on host calls the components from the library FLA 0.1 which is included in the program running on the accelerator under the name: {\tt 00\_theKernel.sv}. The matrix whose last line is in the vector {\tt V[p-1]} is multiplied with the vector {\tt V[p]} and the result is stored as {\tt V[p+1]}. The multiplied matrix is generated using the function {\tt hSQGENX} which generate the  matrix starting with {\tt V[0] = IX} and continues with vectors with the components incremented with 1. {\tt V[p] = [3 3  ... 3]} is the multiplying vector.  
@@ -930,3 +932,110 @@ The execution time is evaluated by the simulator at {\tt aCC = 1570 clock cycles
 
 $\diamond$
 \end{exemplu}
+
+
+
+\begin{exemplu}
+The transpose function is tested by the following program, running on a $p$-cell accelerator, which uses a pseud-randomly generated matrix, as follows:
+{\em 
+\includeverilogcode[caption={The program on host transposing a pseudo-random square matrix. File: 0\_hProgram4.sv  (SystemVerilog)}, 
+                    label={lst:hProgram4}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=20]
+                    {\verilogSourceDir/A20_hProgram4.sv}
+}
+The result of simulation generated in the Vivado environment is:
+\begin{verbatim}
+vect[0]    21  16  30  13  27  29  24   6  21   3  17   8  21  29  16  13
+vect[1]     8  21  22   3  24  13   6  27   8  29  30  16   8  13  21   3
+vect[2]    16   8  17  29   6   3  27  24  16  13  22  21  16   3   8  29
+vect[3]    21  16  30  13  27  29  24   6  21   3  17   8  21  29  16  13
+vect[4]     8  21  22   3  24  13   6  27   8  29  30  16   8  13  21   3
+vect[5]    16   8  17  29   6   3  27  24  16  13  22  21  16   3   8  29
+vect[6]    21  16  30  13  27  29  24   6  21   3  17   8  21  29  16  13
+vect[7]     8  21  22   3  24  13   6  27   8  29  30  16   8  13  21   3
+vect[8]    16   8  17  29   6   3  27  24  16  13  22  21  16   3   8  29
+vect[9]    21  16  30  13  27  29  24   6  21   3  17   8  21  29  16  13
+vect[10]    8  21  22   3  24  13   6  27   8  29  30  16   8  13  21   3
+vect[11]   16   8  17  29   6   3  27  24  16  13  22  21  16   3   8  29
+vect[12]   21  16  30  13  27  29  24   6  21   3  17   8   1  29  16  13
+vect[13]    8  21  22   3  24  13   6  27   8  29  30  16   0  13   1   3
+vect[14]   16   8  17  29   6   3  27  24  16  13  22   1  11   3   0   9
+vect[15]    1  16  30  13  27   9  24   6  21   3  17   0  14  29  11  25
+
+vect[16]   21   8  16  21   8  16  21   8  16  21   8  16  21   8  16   1
+vect[17]   16  21   8  16  21   8  16  21   8  16  21   8  16  21   8  16
+vect[18]   30  22  17  30  22  17  30  22  17  30  22  17  30  22  17  30
+vect[19]   13   3  29  13   3  29  13   3  29  13   3  29  13   3  29  13
+vect[20]   27  24   6  27  24   6  27  24   6  27  24   6  27  24   6  27
+vect[21]   29  13   3  29  13   3  29  13   3  29  13   3  29  13   3   9
+vect[22]   24   6  27  24   6  27  24   6  27  24   6  27  24   6  27  24
+vect[23]    6  27  24   6  27  24   6  27  24   6  27  24   6  27  24   6
+vect[24]   21   8  16  21   8  16  21   8  16  21   8  16  21   8  16  21
+vect[25]    3  29  13   3  29  13   3  29  13   3  29  13   3  29  13   3
+vect[26]   17  30  22  17  30  22  17  30  22  17  30  22  17  30  22  17
+vect[27]    8  16  21   8  16  21   8  16  21   8  16  21   8  16   1   0
+vect[28]   21   8  16  21   8  16  21   8  16  21   8  16   1   0  11  14
+vect[29]   29  13   3  29  13   3  29  13   3  29  13   3  29  13   3  29
+vect[30]   16  21   8  16  21   8  16  21   8  16  21   8  16   1   0  11
+vect[31]   13   3  29  13   3  29  13   3  29  13   3  29  13   3   9  25
+\end{verbatim}
+The initial matrix is generated starting with {\tt vect[0]}, while the result matrix starts with vector {\tt vect[16]}. 
+
+Measurement made in simulation for different values for $p$ provided the figures form Table \ref{tab:transPerformance}. They corresponds also with the theoretical evaluationa of the execution time:
+$$t_{transpose}(p) = p^2 + 27p + 12 $$
+
+\begin{table}[H]
+\small
+\centering
+\begin{longtable}{|r|r|c|}
+\caption{Transpose evaluation depending on the size of the square matrices.}
+\label{tab:transPerformance} \\
+\hline
+\textbf{\# of Lines} & \textbf{\# of Cycles} & \textbf{\# Cycles/Matrix Element} \\
+\hline
+\endfirsthead
+\hline
+\textbf{\# of Lines} & \textbf{\# of Cycles} & \textbf{\# Cycles/Matrix Element} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+	    16 	&   	700	 &	2.27 		\\ \hline
+	    32 	&      1900  &	1.85       \\ \hline
+	    64 	&      5836  &	1.42       \\ \hline
+	   128 	&     19853  &	1.21       \\ \hline
+	   256 	&     72460	 &	1.10		\\ \hline
+	   512	&    275980	 &	1.05		\\ \hline
+	  1024	&   1076236	 &	1.02		\\ \hline	
+\end{longtable}
+\end{table}
+The resulting acceleration is in $O(1)$.
+
+$\diamond$
+\end{exemplu}
+
+It is very instructive to analyze the last examples from the point of view of the frequency with which the accelerator instructions are used. In Listing \ref{lst:theKernel} we find the following:
+\begin{description}
+\item[matrix-vector multiplication] is calculated by a program that runs 98.5\% of the time the following two-step loop:
+\begin{verbatim}
+131     LB (24);    cLREDINS;       MULT(`p);
+132                 cBRNZDEC(24);   RILOAD(-1);
+\end{verbatim}
+
+\item[matrix multiplication] is calculated by a program that runs 98.5\% of the time the following two-step loop:
+\begin{verbatim}
+152     LB (25);    cLREDINS;       MULT (3*`p);
+153                 cBRNZDEC (25);  RILOAD(-1);
+\end{verbatim}
+
+\item[matrix transpose] is calculated by a program that runs 98.5\% of the time the following two-step loop:
+\begin{verbatim}
+232     LB (36);    cGLROTATE;      GETSR;
+233                 cBRNZDEC(36);   NOP;
+\end{verbatim}
+
+\end{description}

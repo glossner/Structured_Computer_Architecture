@@ -28,7 +28,7 @@
 \drawcenteredtext{20.0}{26.0}{to/from memory}
 \drawcenteredtext{66.0}{26.0}{to/from memory}
 \drawdashbox{43.0}{13.0}{78.0}{18.0}{}
-\drawcenteredtext{42.0}{20.0}{Processor}
+\drawcenteredtext{42.0}{20.0}{{\bf Processor}}
 \end{picture}
 }
 \vspace{-0.5cm}

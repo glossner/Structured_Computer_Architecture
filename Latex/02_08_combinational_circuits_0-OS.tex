@@ -103,7 +103,7 @@ One of the uses of Boolean algebra in digital logic is the simplification of log
 
 \begin{itemize}
     \item \textbf{Boolean identities}: Using the laws of Boolean algebra to rewrite expressions  to convert between AND-OR logic and NAND-NOR logic \cite{rosen2018}.
-    \item \textbf{Karnaugh maps}: A graphical method for simplifying logic functions \cite{karnaugh1953}.
+    \item \textbf{Veitch-Karnaugh maps}: A graphical method for simplifying logic functions \cite{Veitch52, karnaugh1953}.
     \item \textbf{Quine-McCluskey algorithm}: A tabular approach to minimize logic expressions \cite{quine1952}.
 \end{itemize}
 
@@ -775,8 +775,7 @@ The \texttt{DeMux16} class instantiates a parameterized demultiplexer from the \
 %*********************************
 A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled a through g, which can be illuminated to form numerical digits (0–9). The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
 
-% FIXME: Get a 7-segment only drawing
-\placedrawing[H]{figures/01_03_7seg_and_adder.lp}{The version of digital circuits. {\bf a.} Logic circuit: trans-coder for seven-segment display. {\bf b.} Numeric circuit: four-bit numbers adder.}{fig:7_segment_display}
+\placedrawing[H]{figures/01_03_7seg.lp}{Trans-coder for seven-segment display. }{fig:7_segment_display}
 
 Figure \ref{fig:7_segment_display} shows the transcoder for a 7-segment display. It receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{tab:sevenSeg}.
 
@@ -789,6 +788,7 @@ $a =   B'_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B'_3 \cdot B'_2 \cdot B_1\cdot B'
 \end{center}
 or a simpler version by negatin the negated function:
 $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B'_0)' = (B'_3 \cdot B'_1 \cdot (B_2 \oplus B_0))' = B_3 + B_1 + (B_2 \oplus B_0)'$$
+
 
 
 \begin{table}[H]
@@ -1060,16 +1060,18 @@ In this Section, we only provide an overview of the simplest structural adders. 
 %**********************
 \subsubsection{Half Adder}
 %**********************
-\placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig:half_adder}
 
 Figure \ref{fig:half_adder} shows the simplest adder - the \textit{half adder}. It adds two binary digits and produces a sum and a carry bit. To build a half adder we use an XOR circuit. The XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
 
+\placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig:half_adder}
+
 %**********************
 \subsubsection{Increment}
-%**********************
-\placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig:incrementer}
+%*********************
 
 Figure \ref{fig:incrementer} shows the schematic for a 4-bit incrementer that uses only half adders. Incrementing means adding 1 to a number. If {\tt inc = 1} the output $out_0 <= in'_0$  and {\tt cr} of $HA_0$ if it is activated command the increment for $HA_1$, and so on.
+
+\placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig:incrementer}
 
 If each 2-input AND from $HA_i$ has, for example,  a propagation time, $t_{pAND2} = 1ns = 10^{-9}sec$, and the 2-input XOR has the propagation time, $t_{pXOR2} = 1.5ns$, then the total execution time for the INC4 circuit is:
 $$t_{pINC4} = 3 \times t_{pAND2} + t_{pXOR2} = 4.5ns$$
@@ -1445,7 +1447,7 @@ In the example, the adder computes \( 0101 + 1101 = 10010 \), and the result is 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{ \textit{\textbf{Arithmetic \& Logic Unit}}}\label{alu1}  
+\section{ \textit{\textbf{Arithmetic \& Logic Unit (ALU)}}}\label{alu1}  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexer as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
@@ -1774,6 +1776,92 @@ uniformity allow to minimize the size of the circuit in
 polynomial limits using {\em removing} and {\em reduction} rules.
 {\em The simple ``programs" lead toward small circuits}.
 
+
+
+
+
+
+\subsection{{\bf {\em Read Only Memory (ROM)}}}\label{ROM}
+
+The simple solution for the following many-output random circuits
+having the same inputs:
+\begin{quote}
+$f(x_{n-1}, \ldots x_{0})$ \\
+$g(x_{n-1}, \ldots x_{0})$ \\
+$\ldots$ \\
+$s(x_{n-1}, \ldots x_{0})$
+\end{quote}
+
+\placedrawing[h]{figures/draw2_12.lp}{{\bf Many-output random circuit.}
+{\small {\bf a.} One DCD and many AND-OR circuits. {\bf b.} An
+example. {\bf c.} The version using programmable
+connections.}}{mmux} 
+
+\hspace{-5mm}is to connect in parallel many one-output circuits. The
+inefficiency of the solution become obvious when the structure of
+the MUX presented in Figure \ref{mux} is considered. Indeed, if we
+implement many MUXs with the same selection inputs, then the
+decoder $DCD_{n}$ is replicated many time. One DCD is enough for
+many MUXs if the structure from Figure \ref{mmux}a is adopted. The
+DCD circuit is shared for implementing the functions $f, \; g,
+\ldots s$. The shared DCD is used to compute all possible {\em
+minterms} (see {\em Appendix C.4}) needed to compute an
+$n$-variable Boolean function.
+
+\placedrawing[h]{figures/draw2_13.lp}{{\bf The internal structure of a
+Read Only Memory (ROM) used as trans-coder.} {\small {\bf a.} The
+internal structure. {\bf b.} The simplified logic symbol where a
+thick vertical line is used to represent an $m$-input NAND
+gate.}}{rom}
+
+Figure \ref{mmux}b is an example of using the generic structure
+from Figure \ref{mmux}a to implement a specific many-output
+function. Each output is defined by a different binary string. A 0
+removes the associated AND, connecting the corresponding OR input
+to 0, and an 1 connects to the corresponding $i$-th input of each
+OR to the $i$-th DCD output. The equivalent resulting circuit is
+represented in Figure \ref{mmux}c, where some OR inputs are
+connected to {\em ground} and other directly to the DCD's output.
+Therefore, we use a technology allowing us to make ``programmable"
+connections of some wires to other (each vertical line must be
+connected to one horizontal line). The {\em uniform} structure is
+``programmed" with a more or less {\em random} distribution of
+connections.
+
+\placedrawing[h]{figures/draw2_14.lp}{{\bf The truth table for a
+multi-output Boolean function.} {\small The input rows can be
+seen as addresses, from $00 \ldots 0$ to $11 \ldots 1$} and the
+output columns as the content stored at the corresponding
+addresses.}{tab2.1}
+
+If De Morgan transformation is applied, the circuit from Figure
+\ref{mmux}c is transformed in the circuit represented in Figure
+\ref{rom}a, where instead of an active high outputs DCD an active
+low outputs DCD is considered and the OR gates are substituted
+with NAND gates. The DCD's outputs are generated using NAND gates
+to {\em decode} the input binary word, the same as the gates used
+to {\em encode} the output binary word. Thus, a multi-output
+Boolean function works like a {\bf trans-coder}. A trans-coder
+works translating all the binary input words into output binary
+words. The list of input words can by represented as an ordered
+list of sorted binary numbers starting with 0 and ending with
+$2^{n}-1$. The table from Figure \ref{tab2.1} represents the {\bf
+truth table} for the multi-output function used to exemplify our
+approach. The left column contains all binary numbers from 0 (on
+the first line) until $2^{n}-1 = 11 \ldots 1$ (on the last line).
+In the right column the desired function is defined associating to
+each input an output. If the left column is an ordered list, the
+right column has a more or less random content (preferably more
+random for this type of solution).
+
+
+The trans-coder circuit can be interpreted as a {\em fix content
+memory}. Indeed, it works like a memory containing at the location
+00...00 the word 11...0, ... at the location 11...10 the word
+10...0, and at the last location the word 01...1. The name of this
+kind of programmable device is {\bf read only memory}, ROM.
+
+
 \subsection{Concluding about Universal Circuit}
 
 This universal solution represents the strongest {\bf segregation}
@@ -1962,7 +2050,7 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Fill in the missing lines in Table \ref{sevenSeg} and complete the project partially defined by {\tt sevenSegDys.sv}. Test the correct operation.
+Test the correct operation of the circuit defined in Table \ref{tab:sevenSeg} and described in Listing \ref{lst:verilog_sevensegmentdisplay}.
 
 $\diamond$
 \end{problem}
@@ -1974,7 +2062,7 @@ $\diamond$
 \end{problem}
 
 \begin{problem}\label{dcdP}
-Design in System Verilog a 4-input decoder using the recursive definition provided in Figure \ref{fig8}. Test its correct functioning.
+Design in System Verilog a 4-input decoder using the recursive definition illustrated  in Figure \ref{fig:decoder_and_gates}. Test its correct functioning.
 
 $\diamond$
 \end{problem}
