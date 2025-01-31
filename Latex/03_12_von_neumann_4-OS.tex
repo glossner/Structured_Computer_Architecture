@@ -211,7 +211,7 @@ The main memory is managed by the operating system, its size is in the range of 
 
 The disk memory is managed by the operating system or human operator, its size is $> 128GB$, the access time is $\sim 5 ms$.
 
-\subsection{Virtual Memory Mechanism}
+\subsection{Virtual Memory Mechanism}\label{lb:vmm}
 
 How relate two successive levels in the hierarchy? Let us consider two levels in the memory hierarchy, $Level_i$ containing $m$ pages and $Level_{i+1}$ containing $n$ pages, with $n >> m$. Each page in $Level_i$, called {\em physical level} is a copy of a page from $Level_{i+1}$ called {\em virtual level}. In Figure \ref{vmm}a, pages 0, 2, and $m-2$ from the level $i$ were brought from pages 3, 4, and 0 of level $i+1$. Any change in the physical level must actualized in the associated virtual level. The "user"  accesses the virtual level while the virtual mechanism accesses the physical level. It is the job of the virtual memory mechanism to perform transparently the access and to keep coherent the content of the virtual level with the physical level.
 
@@ -518,6 +518,20 @@ Tape data storages are now used mainly for system backup, data archive or data e
 Uncompressed/Native capacity: $\sim$20TB.
 
 Compressed capacity: $\sim$50TB.
+
+\section{Problems}
+
+\begin{problem}
+Design a page translation system based on an associative memory (see \ref{lb:cam} in this book). The principle is describe in section \ref{lb:vmm}. Consider pages of 1KW in a physical space of 1024 pages and a virtual space of $1024^2$ pages.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Let us consider the simple DMA illustrated in Figure \ref{simpleDMA} with the behavior described in Example \ref{minDMA}. Design it in System Verilog and simulate in Vivado environment.
+
+$\diamond$
+\end{problem}
 
 
 

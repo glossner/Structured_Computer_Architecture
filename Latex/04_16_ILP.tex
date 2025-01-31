@@ -1,8 +1,8 @@
 \chapter{Instruction-Level Parallelism}\label{lect5}
 \localtoc
 
-There are various form of instruction-level parallelism. We will consider is this short course only the parallelism introduced by the pipeline mechanism and the multiple execution units.
-Thus, the 5th lesson deals with the pipeline mechanism, used to accelerate the processor's operation, and the implications of its use. But as we will see any gain obtained from the application of an improvement technique comes with a price.
+There are various form of instruction-level parallelism. We will consider  only the parallelism introduced by the pipeline mechanism and the multiple execution units.
+Thus, chapter deals with the pipeline mechanism, used to accelerate the processor's operation, and the implications of its use. But as we will see any gain obtained from the application of an improvement technique comes with a price.
 
 \section{Pipelining}
 
@@ -275,7 +275,10 @@ Thus, the {\tt XOR} instruction is used for stalling instead of the {\tt NOP} in
 
 By adding hardware, the data dependency can be resolved, {\bf in all cases}, with no time penalty. The solution is to connect {\tt result} not only to the register file input, but also directly to the ALU input when the value just computed is needed for the next instruction. The mechanism is called {\em forwarding} and requires the addition of one input to the  ALU input as left operand or as right operand. But, because there are binary operations (operations with two operands) sometimes both operands arrive to late in the register file to be fetched for the current instruction.
 
+\placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
+
 Thus, forwarding control is done by a circuit which analyses the binary code of three successive instructions. Three situations can occur:
+
 \begin{verbatim}
     xxxxxx_00001_xxx...x                // identified in PipeReg_3
     xxxxxx_yyyyy_00001_xxx...x          // identified in PipeReg_2
@@ -303,7 +306,7 @@ or
     xxxxxx_yyyyy_00001_00011_xxx...x    // identified in PipeReg_2
 \end{verbatim}
 
-\placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
+
 
 The structure of the processor is modified as it is shown in Figure \ref{brDelRed}, where a new level in pipe is added and the operands at  ALU inputs are selected using multiplexers with additional inputs. The selection for the augmented multiplexors are computed combinational as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as operand in the EXECUTE state of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected the  inputs 1  or as {\tt result4} to the inputs 2 to the selection multiplexors at ALU operand inputs. The value of {\tt result3} is used to be forwarded when the dependency is identified with the result of the instructions issued in one clock cycle before the current one. The value of {\tt result4} is used to be forwarded when the dependency is identified with the result of the instructions issued in two clock cycles before the current one.
 

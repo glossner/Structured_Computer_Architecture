@@ -19,7 +19,7 @@ Digital systems theory introduces, for the case we are interested in, the concep
 
 The theoretical concept of a cellular automaton is represented in Figure \ref{ca} in its simplest form. It consists of an unlimited number of {\bf {\em identical linearly connected cells}}. Each cell is a automaton. All cells switch synchronously according to their internal states and to the signals received from the left cell and the right cell.
 
-\begin{exemplu}
+\begin{exemplu}\label{lb:cellAut}
 Let us consider the simplest cellular automaton described by the following modules:
 {\em 
 \includeverilogcode[caption={One-bit cell cellular automaton. The cell is a two-state, two one-bit inputs finite automaton.  File: cellAut.sv.  (SystemVerilog)}, 
@@ -275,7 +275,7 @@ In the previous example, $2p-1$ computational results -- $p$ multipliers from Ma
 
 \subsection{Structure}
 
-The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{red}).
+The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{red}.
 
 \placedrawing[h]{figures/09_09_second_global_loop.lp}{MapScanReduce structure obtained  by closing the second global loop over a controlled cellular automaton.}{secondLoop}
 
@@ -290,7 +290,7 @@ $$ p_i = OP_0^i s_i$$
 $\diamond$
 \end{definition}
 \begin{exemplu}
-For OP arithmetic sum we have addPrexix:
+For OP arithmetic sum we have addPrefix:
 $$p_0 = s_0$$
 $$p_1 = p_0 + s_1 = s_0 + s_1$$
 $$p_2 = p_1 + s_2 = s_0 +s_1 + s_2$$
@@ -871,7 +871,7 @@ A first subset of patterns is the one that are implementable with the Controlled
 
 \subsubsection{Map Pattern}
 
-From the list proposed by McCool \& Co., the Map pattern finds a direct counterpart in the accelerator we are evaluating. In Figure \ref{} the Map pattern is represented using green boxes, which represent data, and blue boxes, which represent hardware structure performing sequences of $bOp$s and $uOp$s. Overall the array of blue boxes represents a Map structure performing a {\tt MAPOP(Va,Vb,Vc,...)} on the vectors stored along the cells of the array. Thus, the Map pattern is has a direct correspondent in we can do with arithmetic \& logic vector operations. 
+From the list proposed by McCool \& Co., the Map pattern finds a direct counterpart in the accelerator we are evaluating. In Figure \ref{parallelPatt} the Map pattern is represented using green boxes, which represent data, and blue boxes, which represent hardware structure performing sequences of $bOp$s and $uOp$s. Overall the array of blue boxes represents a Map structure performing a {\tt MAPOP(Va,Vb,Vc,...)} on the vectors stored along the cells of the array. Thus, the Map pattern is has a direct correspondent in we can do with arithmetic \& logic vector operations. 
 
 \begin{exemplu}
 Let be an $8$-cell Map with 
@@ -902,7 +902,7 @@ There are real premises for the acceleration obtained by using a Map array to be
 
 The stencil pattern (depicted in  Figure \ref{parallelPatt}) is not directly implemented in the structure of the proposed accelerator, but can be efficiently programmed taking into account the fact that the input data structure is a matrix that can be loaded as part of the ${\bf M_{mp}}$ matrix. The finite neighborhood of each cell can be involved in the calculation of a new value in each cell very efficiently, because the values from the vertical vectors are in the same cell and a global shift operations allows access to the values from the horizontal vector. In fact, any finite neighborhood can be involved in updating  any value in ${\bf M_{mp}}$.
 
-For example, let us consider the matrix stored in vectors from $V_0$ to $V_{n-1}$. Let us  consider a stencil computation in each cell of vector $V_i$ using as operands values from a type of neighborhood emphasized in Figure \ref{stencil}: $s_{ij}$ as a central value, $s_{i(j-1)}, s_{i(j-2)}$ as values from the same vector positioned left, and $s_{i(j+1)}, s_{i(j+2)}$ positioned right, $s_{(i+1)j}, s_{(i+2)j}, s_{(i-1)j}, s_{(i-2)j}$ positioned in the same cell up two positions and down two positions.  The values to be used as operands are collected  in each cell and then submitted to a pure map sequence of operations which update the horizontal vector $V_i$ as follows:
+For example, let us consider the matrix stored in vectors from $V_0$ to $V_{n-1}$. Let us  consider a stencil computation in each cell of vector $V_i$ using as operands values from a type of neighborhood emphasized in Figure \ref{parallelPatt}: $s_{ij}$ as a central value, $s_{i(j-1)}, s_{i(j-2)}$ as values from the same vector positioned left, and $s_{i(j+1)}, s_{i(j+2)}$ positioned right, $s_{(i+1)j}, s_{(i+2)j}, s_{(i-1)j}, s_{(i-2)j}$ positioned in the same cell up two positions and down two positions.  The values to be used as operands are collected  in each cell and then submitted to a pure map sequence of operations which update the horizontal vector $V_i$ as follows:
 \begin{verbatim}
     Vn     <= SHIFTRIGHT(Vi,0)
     V(n+1) <= SHIFTRIGHT(Vn,0)
@@ -940,7 +940,7 @@ The acceleration obtained for this  pattern is in $O(p)$.
 
 \subsubsection{Recurrence Pattern}
 
-The recurrence pattern represented in the expanded form  represented in  Figure \ref{recurrence}) is characterized by nested loops with data dependencies. These structures can be parallelized by obtaining a dependency graph and creating tasks that can be run in parallel for each layer of the graph (separating hyperplane).
+The recurrence pattern represented in the expanded form   in  Figure \ref{recurrence} is characterized by nested loops with data dependencies. These structures can be parallelized by obtaining a dependency graph and creating tasks that can be run in parallel for each layer of the graph (separating hyperplane).
 
 \placedrawing[h]{figures/09_15_recurrence_pattern.LP}{Recurrence pattern implementation  \cite{McCool12}.}{recurrence}
 
@@ -1102,3 +1102,64 @@ The super-scalar pattern describes a complex computation, which is why it requir
 In the first case, the solution is  instruction-level parallelism competence and the implementation is done with a super-scalar pipeline processor. In the second case, the solution can be provided by the recently introduced concept of accelerator-level parallelism (ALP) \cite{HillReddi21} \cite{Malita22}.
 
 A way of implementing ALP can be a MapScanReduce system with cells as MapScanReduce structures. Each cell accelerates an intense function that can be different from the others. We can say that a {\em super-tensorial} computation is ensured. We are dealing with a complex calculation that involves intensive calculations.
+
+\section{Problems}
+
+\begin{problem}
+Simulate 64 cycles the cellular automaton defined in Example \ref{lb:cellAut} for $n=127$ in three versions:
+\begin{enumerate}
+    \item {\tt func  = 01011010 } and {\tt init = 1'b1 << 63}
+    \item {\tt func  = 00011110 } and {\tt init = 1'b1 << 63}
+    \item {\tt func  = 10100110 } and {\tt init = 4'b1001 << 61}
+\end{enumerate}
+Explain, for the third case, the periodic reappearance of the initial pattern duplicated each time.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Design for $p$ and simulate for $p=16$ the distribution network represented in Figure \ref{distribute}.
+
+$\diamond$
+\end{problem}
+
+
+    
+{\bf Solution}
+
+For the circuit description to be valid for any $p$ we will need to make a recursive description using the {\bf {\em conditional generate}} structure. In Listing \ref{lst:distribute} we use the elementary module defined in Listing \ref{lst:elDistribute} and the distributor with $p$ destinations is defined using the distributor for $p/2$ destinations.
+
+\includeverilogcode[caption={Distribution network.  File: distribute.sv. }, 
+                    label={lst:distribute}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_distribute.sv}
+
+\includeverilogcode[caption={Elementary distribution module.  File: elDistribute.sv. }, 
+                    label={lst:elDistribute}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_elDistribute.sv}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/distribute.png} 
+    \caption{The recursively defined distribution network for $p=16$.}
+    \label{fig:distribute}
+\end{figure}
+$\diamond$
+
+\begin{problem}
+Design for $p$ and simulate for $p=16$ the reduce network represented in Figure \ref{reduceNet}.
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Let us consider a $p$-input scan network with cells defined on two 34-bit inputs, {\tt in1} and {\tt in2}, and two 34-bit outputs, {\tt out1} and {\tt out2}, synchronized by the clock signal. Design a $p$-input scan network and implement it for $p=16$ in a version independent of the actual content of the cells, i.e., consider only the top level of the design. The pattern of a scan network is exemplified in Figure \ref{red}.
+
+$\diamond$
+\end{problem}
+
