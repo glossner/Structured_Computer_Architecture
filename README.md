@@ -53,7 +53,9 @@ January 1st, 2025
 ---
 # Copyright
 
-All text content is copyright © 2025 CC-BY-NC-ND 4.0 by John Glossner and Gheorghe M. Ştefan
+All text content is copyright © 2025 CC-BY-NC-ND 4.0 by John Glossner and Gheorghe M. Ştefan 
+licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
+(CC BY-NC-ND 4.0). https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en
 
 Upon our deaths, the text copyright shall convert to © 2025 by John Glossner and Gheorghe M. Ştefan
 licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License
