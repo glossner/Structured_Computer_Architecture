@@ -275,11 +275,21 @@ In the previous example, $2p-1$ computational results -- $p$ multipliers from Ma
 
 \subsection{Structure}
 
-The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{red}.
+The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{fig:scanRedTop}) \cite{antonescu20} \cite{antonescu24}.
 
 \placedrawing[h]{figures/09_09_second_global_loop.lp}{MapScanReduce structure obtained  by closing the second global loop over a controlled cellular automaton.}{secondLoop}
 
-\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation \cite{antonescu20} \cite{antonescu24}.} {red}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/scanRedTop.png}
+    {\small {\bf a.}}
+    \includegraphics[width=\textwidth]{Images/scanRed.png}
+   {\small  {\bf b.}}
+    \caption{An 8-input scan circuit with the output for the reduction function. {\bf a}. The top module. {\bf b}. Detailed representation to emphasize {\tt reduceOut}. }
+    \label{fig:scanRedTop}
+\end{figure}
+
+%\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation \cite{antonescu20} \cite{antonescu24}.} {red}
 
 We use the term {\em scan} by extension, starting from the already established use for prefix-type networks.
 
@@ -768,17 +778,17 @@ A vector algorithm for matrix transpose uses the pseudo-diagonal concept, as fol
 {\footnotesize
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={activate, where, wait, loop, repeat, doInParallel, for}]
-/********************************************************************************
+/*******************************************************************************
     Algorithm for matrix transpose
         Initial matrix, V, with components: v(i,j), for i,j = 0, 1, ... m-1
         Final matrix, W, with components:   w(i,j), for i,j = 0, 1, ... m-1
         Working vector: A = [a(0) a(1) ... a(m-1)]
     Note: addition and subtract operations are modulo m operations
-*********************************************************************************/
+********************************************************************************/
 for(k=0; k<m; k=k+1) begin
-  (1) A <= [v(0+k,0) v[1+k,1]...v[m-1+k,m-1] // A <= PD(k.V)
-  (2) A <= [a(0-k) a(1-k) ... a(m-1-k)]      // A <= (A rotate k positions right)
-  (3) for(j=0; j<m; j=j+1) w(j+k,j) <= a(j)  // PD(m-k,W) <= A
+  (step 1) A <= [v(0+k,0)v[1+k,1]...v[m-1+k,m-1] // A <= PD(k.V)
+  (step 2) A <= [a(0-k)a(1-k)...a(m-1-k)]        // A <= (A rotate k times right)
+  (step 3) for(j=0; j<m; j=j+1) w(j+k,j) <= a(j) // PD(m-k,W) <= A
 end
 \end{lstlisting}
 \end{shaded*}
@@ -790,16 +800,19 @@ Let's consider the $4 \times 4$ matrix V. Its transposed form is computad as fol
 
 {\small
 \begin{verbatim}
-     Initial                                                          Final
-                           k = 0    k = 1    k = 2    k = 3
- V:  0 1 2 3                                                     V:  0 1 2 3
-     4 5 6 7     (step 1) 0 5 A F  4 9 E 3  8 D 2 7  C 1 6 B         4 5 6 7
-     8 9 A B                                                         8 9 A B
-     C D E F     (step 2) 0 5 A F  3 4 9 E  2 7 8 D  1 6 B C         C D E F
- W:  x x x x     (step 3) 0 x x x  0 4 x x  0 4 8 x  0 4 8 C     W:  0 4 8 C
-     x x x x              x 5 x x  x 5 9 x  x 5 9 D  1 5 9 D         1 5 9 D
-     x x x x              x x A x  x x A E  2 x A E  2 6 A E         2 6 A E
-     x x x x              x x x F  3 x x F  3 7 x F  3 7 B F         3 7 B F
+    Initial                                                        Final
+                          k = 0    k = 1    k = 2    k = 3
+ V: 0 1 2 3     (step 1) 0 5 A F  4 9 E 3  8 D 2 7  C 1 6 B     V: 0 1 2 3
+    4 5 6 7                                                        4 5 6 7
+    8 9 A B                                                        8 9 A B
+    C D E F                                                        C D E F
+
+                (step 2) 0 5 A F  3 4 9 E  2 7 8 D  1 6 B C
+
+ W: x x x x     (step 3) 0 x x x  0 4 x x  0 4 8 x  0 4 8 C     W: 0 4 8 C
+    x x x x              x 5 x x  x 5 9 x  x 5 9 D  1 5 9 D        1 5 9 D
+    x x x x              x x A x  x x A E  2 x A E  2 6 A E        2 6 A E
+    x x x x              x x x F  3 x x F  3 7 x F  3 7 B F        3 7 B F
 \end{verbatim}
  }
 
@@ -1157,9 +1170,14 @@ Design for $p$ and simulate for $p=16$ the reduce network represented in Figure 
 $\diamond$
 \end{problem}
 
-\begin{problem}
-Let us consider a $p$-input scan network with cells defined on two 34-bit inputs, {\tt in1} and {\tt in2}, and two 34-bit outputs, {\tt out1} and {\tt out2}, synchronized by the clock signal. Design a $p$-input scan network and implement it for $p=16$ in a version independent of the actual content of the cells, i.e., consider only the top level of the design. The pattern of a scan network is exemplified in Figure \ref{red}.
+\begin{problem}\label{prob:scan}
+Let us consider a $p$-input scan network with cells defined on two 34-bit inputs, {\tt in1} and {\tt in2}, and two 34-bit outputs, {\tt out1} and {\tt out2}, synchronized by the clock signal. Design a $p$-input scan network and implement it for $p=16$ in a version independent of the actual content of the cells, i.e., consider only the top level of the design. The pattern of a scan network is exemplified in Figure \ref{fig:scanRedTop} (ignore the output {\tt reduceOut}).
 
 $\diamond$
 \end{problem}
 
+\begin{problem}
+Redesign the scan network from Problem \ref{prob:scan} emphasizing the reduction output, {\tt reduceOut}, as in representation from Figure \ref{fig:scanRedTop}.
+
+$\diamond$
+\end{problem}

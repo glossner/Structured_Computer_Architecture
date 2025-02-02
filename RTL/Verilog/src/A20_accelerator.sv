@@ -1,38 +1,51 @@
-module accelerator( input   logic [63:0]    int2accProg ,
-                    output  logic           i2aPread    ,
-                    input   logic           i2aPempty   ,
-                    input   logic [63:0]    int2accData ,
-                    output  logic           i2aDread    ,
-                    input   logic           i2aDempty   ,
-                    output  logic [63:0]    acc2intData ,
-                    output  logic           a2iDwrite   ,
-                    input   logic           a2iDfull    ,
-                    output  logic           acc2hostInt ,
-                    input   logic           host2accInta,
-                    input   logic           reset, clock);
+module accelerator( input   logic           h2iPwrite   ,
+                    output  logic           i2hPfull    ,
+                    input   logic [63:0]    h2i         ,
+                    input   logic           h2iDwrite   ,
+                    output  logic           i2hDfull    ,
+                    output  logic [63:0]    i2h         ,
+                    input   logic           h2iDread    ,
+                    output  logic           i2hDempty   ,
+                    output  logic           a2hInt      ,
+                    input   logic           h2aInta     ,
+                    input   logic           reset       ,
+                    input   logic           clock       );
+    logic [63:0]    i2aData ;
+    logic [63:0]    a2i     ;
+    logic [63:0]    i2aProg ;
 
-    logic [2:0]     dataTransCom;
-    logic [`n+12:0] contr2array ;
-    logic [`n-1:0]  red         ;
-
-    controller controller(  int2accProg ,
-                            i2aPread    ,
+    interfaces INTERFACES(  h2iPwrite   ,
+                            i2hPfull    ,
+                            h2i         ,
+                            h2iDwrite   ,
+                            i2hDfull    ,
+                            i2h         ,
+                            h2iDread    ,
+                            i2hDempty   ,
+                            i2aProg     ,
+                            a2iPread    ,
                             i2aPempty   ,
-                            dataTransCom,
-                            i2aDread    ,
+                            i2aData     ,
+                            a2iDread    ,
                             i2aDempty   ,
+                            a2i         ,
                             a2iDwrite   ,
-                            a2iDfull    ,
-                            contr2array ,
-                            red         ,
-                            acc2hostInt ,
-                            host2accInta,
-                            reset, clock);
+                            i2aDfull    ,
+                            reset       ,
+                            clock       );
 
-    array array(int2accData ,
-                acc2intData ,
-                dataTransCom,
-                contr2array ,
-                red         ,
+    pRISC pRISC(i2aProg     ,
+                a2iPread    ,
+                i2aPempty   ,
+                i2aData     ,
+                a2iDread    ,
+                i2aDempty   ,
+                a2i         ,
+                a2iDwrite   ,
+                i2aDfull    ,
+                a2hInt      ,
+                h2aInta     ,
+                reset       ,
                 clock       );
+
 endmodule

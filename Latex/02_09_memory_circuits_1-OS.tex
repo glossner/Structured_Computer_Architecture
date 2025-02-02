@@ -1,41 +1,53 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Memory Circuits: One-Loop, First-Order Systems (1-OS)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \localtoc
 
-In this chapter we will introduce the memory circuits that are obtained through a first loop that brings to the input of a circuit the effect of applying a signal to another input. This reverse connection allows the circuit to maintain a state according to a command. Thus the memory function is obtained.
+In this chapter we will introduce memory circuits that are obtained through a first loop that brings to the input of a circuit the effect of applying a signal to another input. This reverse connection allows the circuit to maintain a state according to a command. Thus the memory function is obtained.
 
-We will not go into details because we have a precise target: the internal structure of a computing system that includes a processor, with its internal storage resources, and the memories in which data and software are stored.
+In this textbook, we will not cover every possible 1-OS circuit. We cover only those circuits that are used in building a processor. 
 
+%%%%%%%%%%%%%%%%
 \section{Latch}
+%%%%%%%%%%%%%%%%
 
-The simplest circuit will allow the latching of the simplest event: the temporary transition of a digital signal from 1 to 0, or the temporary transition of some circuit from 0 to 1.
-
-\subsection{Closing the first loop}
-
-Closing a feedback loop requires an output of a logic circuit to be connected to one of its inputs. In the Figure \ref{latches}a, the output of an AND gate is connected to one of the inputs, and the (Reset)' pulses are applied to the other input. If the transition to zero lasts long enough so that the signal propagates through the circuit to the second input, then the output is fixed at the zero value and the signal (Reset)' from the input can disappear. The transition event from the input is fixed to the output forever.
+The simplest 1-OS circuit allows for storing the simplest event: the temporary transition of a digital signal from 1 to 0, or the temporary transition of some circuit from 0 to 1. A latch is a circuit that performs this function.
 
 \placedrawing[H]{figures/03_01_latches.lp}{{\bf The elementary latches.}
-{\small Using the  loop, closed from the output to one input, elementary storage elements are built. {\bf a}. {\em AND
+{\small Using the loop, closed from the output to one input, elementary storage elements are built. {\bf a}. {\em AND
 loop} provides a {\em reset-only} latch. {\bf b}. {\em OR loop}
 provides the {\em set-only} version of a storage element. {\bf c}.
 The heterogeneous elementary {\em set-reset} latch results
 combining the {\em reset-only} latch with the {\em set-only}
-latch. {\bf d}. The wave forms describing the behavior of the previous three latch circuits.}}{latches}
+latch. {\bf d}. The waveforms describe the behavior of the previous three latch circuits.}}{latches}
 
-Now let's take an OR gate and connect its output to one of the inputs, and on the other, apply a transition from 0 to 1. If the duration of the input signal allows the propagation of its effect on the reaction loop, the output of the circuit will be permanently fixed on the value 1.
 
-The good news is that we can capture temporary events indefinitely. We say that the two circuits memorize, one the temporary transition to 0, the other the temporary transition to 1. The bad news is that we cannot make these circuits "forget" what they have memorized. But, by combining the two circuits, we manage to obtain a fundamental memory structure that can change its state according to the set command, S, to 1 or according to the reset command, R', to 0. The set command is active on 1, in while the reset command is active on 0.
+%************************************
+\subsection{Closing the first loop}
+%**************************************
+
+Closing a feedback loop requires an output of a logic circuit to be connected to one of its inputs. In Figure \ref{latches}a, the output of an AND gate is connected to one of the inputs, and the (Reset)' pulses are applied to the other input. If the transition to zero lasts long enough so that the signal propagates through the circuit to the second input, then the output is fixed at the zero value and the signal (Reset)' from the input can disappear. The transition event from the input is fixed to the output forever.
+
+Now, let's take an OR gate and connect its output to one of the inputs. Then, we can apply a transition from 0 to 1. If the duration of the input signal allows the propagation of its effect on the reaction loop, the output of the circuit will be permanently fixed on the value 1.
+
+Latches allow us to capture temporary events indefinitely. We say that the two circuits memorize, one the temporary transition to 0, the other the temporary transition to 1. However, for the simple AND and OR loops, we cannot make these circuits "forget" what they have memorized. But, by combining the two circuits, we obtain a fundamental memory structure that can change its state according to the set command, S, to 1 or, according to the reset command, R', to 0. The set command is active on 1, while the reset command is active on 0.
 
 \placedrawing[h]{figures/03_02_symmetric_latches.lp}{{\bf Symmetric elementary latches.}
 {\small {\bf a.} Symmetric elementary {\em NAND latch} with
 low-active commands S' and R'. {\bf b}. Symmetric elementary {\em
 NOR latch} with high-active commands S and R.}}{symLatches}
 
-We obtained a circuit with two states between which it can switch according to asymmetrical commands, one active on zero and the other active on one. For reasons of use, it is preferable that both commands are of the same type. We will use the two forms of Morgan's law to transform the circuit in Figure \ref{latches}c and we will obtain two symmetrical structures ordered with signals of the same type. Using the de Morgan rule  A + B = (A'B')', the latch from Figure \ref{latches}c becomes the latch from Figure \ref{symLatches}a, and using the de Morgan rule AB = (A'+B')', the latch from Figure \ref{latches}c becomes the latch from Figure \ref{symLatches}b.
+Using both an AND and an OR, we obtain a circuit with two states between which it can switch according to asymmetrical commands, one active on zero and the other active on one. Often, it is preferable that both commands are of the same type. We can use the two forms of De Morgan's law to transform the circuit in Figure \ref{latches}c and we will obtain two symmetrical structures ordered with signals of the same type. Using the De Morgan law  A + B = (A'B')', the latch from Figure \ref{latches}c becomes the latch from Figure \ref{symLatches}a, and using the De Morgan law AB = (A'+B')', the latch from Figure \ref{latches}c becomes the latch from Figure \ref{symLatches}b.
 
+%***************************
+\subsection{Clocked Latch}
+%****************************
+In digital electronics, asynchronous SR latches can be problematic.  {\bf The first latch problem}: the inputs for indicating {\em how} the latch switches are the same as the inputs for
+indicating {\em when} the latch switches. This immediate reactivity means they are highly susceptible to noise and glitches, especially when dealing with mechanical switches or noisy signals. A common issue is \textit{bouncing}, where the input rapidly fluctuates between high and low states due to imperfect physical contacts or noisy environments. This can cause an asynchronous SR latch to switch states unpredictably.
 
-\subsection{Clocked latch}
+The first problem is solved in Figure \ref{ck_latch}a by conditioning the application of signals S' and R' to the latch in Figure \ref{symLatches}a by an additional signal that we will call clock, CK. Thus, we will use the S and R inputs to specify how the circuit switches, and the CK input to specify when the circuit switches. In this way, the decoupling of "{\em when}" from "{\em how}" is obtained. By synchronizing state changes with the clock, the system avoids unintended transitions caused by transient inputs or noise. 
 
-For the clocked latch two NAND gate are added (see Figure \ref{ck_latch}) to allow the R and R inputs conditioned by clock>
+For the clocked latch, two NAND gates are added (see Figure \ref{ck_latch}) to allow the S and R inputs to be conditioned by the clock.
 
 \placedrawing[H]{figures/03_03_clocked_latches.lp}{{\bf Elementary clocked latch.}
 {\small The transparent RS clocked latch is sensitive
@@ -43,45 +55,42 @@ For the clocked latch two NAND gate are added (see Figure \ref{ck_latch}) to all
 clock (the high level in this example). {\bf a}. The internal
 structure. {\bf b}. The logic symbol.}}{ck_latch}
 
-{\bf The first latch problem}: the inputs for indicating
-{\em how} the latch switches are the same as the inputs for
-indicating {\em when} the latch switches; we must find a solution
-for declutching the two actions   building a version  with
-distinct inputs for specifying ``how" and ``when".
-
+%***************************
+\subsection{D Latch}
+%****************************
 {\bf The second latch problem}: if we apply synchronously
 S'=0 and R'=0 on the inputs of NAND latch  (or S=1 and R=1 on the
 inputs of OR latch), i.e., the latch is commanded ``to switch in
 both states simultaneously", then we can not predict what is the
 state of the latch after the ending of these two active signals.
 
-The first problem is solved in Figure \ref{ck_latch}a by conditioning the application of signals S' and R' to the latch in Figure \ref{symLatches}a by an additional signal that we will call clock, CK. Thus, we will use the S and R inputs to specify how the circuit switches, and the CK input to specify when the circuit switches. In this way, the decoupling of "{\em when}" from "{\em how}" is obtained.
-
-For the second problem, we have a more "brutal" solution achieved through a restriction. We will connect between the two inputs a NOT that will not allow the simultaneous application of setting and resetting the circuit (see Figure \ref{d_latch}a). The problem is not solved. We avoid doing a wrong use.
-
-
+For the second problem, we have a solution achieved through a restriction. We connect between the two inputs a NOT that will restrict the simultaneous application of setting and resetting the circuit (see Figure \ref{d_latch}a). 
 
 \placedrawing[h]{figures/03_04_data_latch.lp}{{\bf The data latch.} {\small
-Imposing the restriction $R=S'$ to an RS latch results the {\bf D
+Imposing the restriction $R=S'$ to an RS latch results in the {\bf D
 latch} without non-predictable transitions ($R=S=1$ is not anymore
 possible). {\bf a.} The structure. {\bf b.} The logic symbol. {\bf
 c.} An improved version for the data latch internal
 structure. {\bf d.} The optimal structure using an elementary multiplexer.}}{d_latch}
 
-For the time interval in which the clock is active, CK = 1, it says that the latch is transparent to the control signal S and R. The latch becomes non-transparent in the time interval in which CK = 0. Indeed, in the period in which the latch is transparent, the decoupling between "when" and "how" is not achieved, and the circuit switches conditioned by the evolution of the S and R inputs. A correct use of the latch assumes that during the transparency period the S and R inputs are stable.
+In the context of a latch, \textit{transparency} refers to the period during which the output follows the input directly. When the enable signal is active, any change at the input is immediately reflected at the output, making the latch behave like a simple wire. 
 
-We have to admit that we did not separate the "when" from the "how" rigorously enough. We will do it in the following.
+For the time interval in which the clock is active, CK = 1, it means that the latch is transparent to the control signal S and R. The latch becomes non-transparent in the time interval in which CK = 0. In the period in which the latch is transparent, the decoupling between "when" and "how" is not achieved, and the circuit switches are conditioned by any changes in the S and R inputs. A correct use of the latch assumes that during the transparency period, the S and R inputs are stable.
 
-\section{Serial extension: Master-Slave Principle}
 
-The clocked latch, in the SR version as well as in the D version (data latch), allows switching at any time during the transparency. This fact limits the applications of this circuit. Many applications require switching precisely determined by the active, positive or negative transition of the clock signal. Applying the {\em master-slave principle} will allow this behavior.
 
-Figure \ref{m_s}a shows a structure where transparency is blocked by the fact that the two RS latches have the clock applied in antiphase. On the active level of the clock, the positive one, the first latch, the master, is transparent, a fact that allows it to be switched according to the S and R inputs without affecting the output of the circuit because the second latch is not transparent. On the inactive level of the clock, the second latch, the slave, copies the state of the master which can no longer be changed. In this way, the entire circuit switches as a consequence of the negative transition of the clock signal. So, the active edge of the clock applied to the master-slave structure is the negative one. In Figure \ref{m_s}b, the logical symbol of the structure in Figure \ref{m_s}a is represented.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Flip-Flops: Primary-Secondary Principle}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\placedrawing[H]{figures/03_05_master_slave.lp}{{\bf The master-slave principle.}
+The clocked latch, in the SR version as well as in the D version (data latch), allows switching at any time during the transparency. This can result in an instability and/or unwanted changes in the output signal. Many applications require switching at a precise time - typically determined by the active, positive or negative transition of the clock signal. Applying the {\em primary-secondary principle} will allow this behavior.
+
+Figure \ref{m_s}a shows a structure where transparency is blocked by two RS latches that have the clock applied in antiphase. On the active level of the clock, the positive one, the first latch, the primary latch, is transparent. This allows it to be switched according to the S and R inputs without affecting the output of the circuit because the second latch is not transparent. On the inactive level of the clock, the second latch copies the state of the first latch, which can no longer be changed. In this way, the entire circuit switches as a consequence of the negative transition of the clock signal. So, the active edge of the clock applied to the primary-secondary structure is the negative one. In Figure \ref{m_s}b, the logical symbol of the structure in Figure \ref{m_s}a is represented.
+
+\placedrawing[H]{figures/03_05_master_slave.lp}{{\bf The primary-secondary principle.}
 {\small Serially connecting two RS latches, activated with
-different levels of the clock signal, results a non-transparent
-storage element. {\bf a.} The structure of a RS master-slave
+different levels of the clock signal, results in a non-transparent
+storage element. {\bf a.} The structure of an RS primary-secondary
 flip-flop, active on the falling edge of the clock signal. {\bf
 b.} The logic symbol of the RS flip-flop triggered by the {\em negative edge} of clock. {\bf
 c.} The logic symbol of the RS flip-flop triggered by the {\em positive edge} of clock.}}{m_s}
@@ -92,38 +101,45 @@ $D=S=R'$, results an FF with predictable transitions. {\bf a.} The
 structure. {\bf b.} The logic symbol. {\bf c.} The wave forms
 proving the delay effect of the D flip-flop.}}{d_ff}
 
+The second latch problem also propagates at the level of the primary-secondary structure. The solution we can come up with at this level is the one that introduces the limitation by connecting the inputs through an inverter circuit (see Figure \ref{d_ff}a). The result is the \textit{D flip-flop}, D-FF (delay flip-flop) circuit.  A D flip-flop, is edge-triggered, meaning that it captures the input value only at the moment of a clock edge (either rising or falling). Once the clock edge passes, further changes in the input do not affect the output until the next clock edge.  The name is justified by the waveforms represented in Figure \ref{d_ff}c where the output of the circuit follows the evolution of the input with a delay equal to the period of the clock signal.
 
-The second latch problem also propagates at the level of the master-slave structure. The solution we can come up with at this level is the one that introduces the limitation by connecting the inputs through an inverter circuit (see Figure \ref{d_ff}a). The result is the D-FF (delay flip-flop) circuit. The name is justified by the waveforms represented in Figure \ref{d_ff}c where the output of the circuit follows the evolution of the input with a delay equal to the period of the clock signal.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Serial-parallel extension: Register}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%*********************
 \subsection{Structure}
+%*********************
 
-The serial-parallel extension in the field of first-order systems (1-OS) is represented by the register. By connecting in parallel $n$ serially extended  structures (the delay flip-flop type master-slave circuit) is obtained a {\bf {\em register}} by applying the same clock signal on each D-FF (see Figure \ref{reg}a). A register stores an $n$-bit configuration synchronously with the active edge of the clock.
+The serial-parallel extension in first-order systems (1-OS) is represented by the register. By connecting in parallel $n$ serially extended structures (the delay flip-flop type primary-secondary circuit) we obtain a {\bf {\em register}}. By applying the same clock signal on each D-FF (see Figure \ref{reg}a), an $n$-bit input vector is stored simultaneously. 
 
 \placedrawing[h]{figures/03_07_register.lp}{{\bf The $n$-bit register.} {\small
-{\bf a.} The structure: a bunch of DF-F connected in parallel.
+{\bf a.} The structure: $n$ D-FFs connected in parallel.
 {\bf b.} The logic symbol.} }{reg}
 
-The Figure \ref{register} shows the effect of the transfer through a register.
+Figure \ref{register} shows the effect of the transfer through a register.
 
 \placedrawing[h]{figures/03_08_register_operation.lp}{{\bf Register operation.} {\small At each active
-edge of clock (in this example it is the positive edge) the register's
+edge of the clock (in this example, it is the positive edge), the register's
 output takes the value applied on its inputs if {\tt reset = 0} and
 {\tt enable = 1}.}}{register}
 
-The time behavior is mainly characterized by two times interval:
+The time behavior is characterized by two time intervals:
 \begin{description}
     \item[minimal set-up time]: $t_{SU_{min}}$ is the minimum time interval that the input must be kept stable before the active edge of the clock so that the transition of the output corresponds to the input
-    \item[maximal propagation time]: $t_p$ is the propagation time to the output related to the active edge of clock.
+    \item[maximal propagation time]: $t_p$ is the propagation time to the output related to the active edge of the clock.
 \end{description}
 
-\subsection{Applications}
 
-Follows the list of the main applications of the register in digital systems.
+
+
+%**************************
+\subsection{Applications}
+%**************************
+In this Section, we describe applications of the register in digital systems.
 
 \subsubsection{Storing}
-The {\tt enable} input allows us to determine when (i.e., in what
+Adding an {\tt enable} input allows us to determine when (i.e., in what
 clock cycle) the input is loaded into a register. If {\tt enable =
 0}, the registers {\em stores} the data loaded in the last clock
 cycle when the condition {\tt enable = 1} was fulfilled. This
