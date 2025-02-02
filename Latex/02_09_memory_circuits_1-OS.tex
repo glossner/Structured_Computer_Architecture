@@ -130,8 +130,17 @@ The time behavior is characterized by two time intervals:
     \item[maximal propagation time]: $t_p$ is the propagation time to the output related to the active edge of the clock.
 \end{description}
 
+\ifthenelse{\boolean{chiselversion}}{
+\includechiselcode[caption={Parameterized Register (Chisel)}, label={lst:chisel_register}, firstline=8, firstnumber=8, lastline=27]{\chiselSourceDir/memory/Register.scala}
 
+Listing \ref{lst:chisel_register} shows parameterized Chisel code that implements an \textit{n}-bit register with an enable and reset signal. In Chisel, registers are created using the built-in \texttt{Reg} and \texttt{RegInit} classes, which define stateful elements that store values across clock cycles. The \texttt{RegInit(0.U(n.W))} statement initializes a register of width \textit{n} to zero. This ensures that the register has a defined state at power-up or reset.
 
+One key feature of Chisel's register implementation is the \textit{inferred clock signal}. Unlike Verilog, where explicit clock signals must be defined, Chisel modules automatically use the system clock unless specified otherwise. This means that all registers declared within a module implicitly update on the \textit{rising edge} of the global clock. Consequently, the \texttt{reg} variable in this implementation updates its stored value only at the active clock edge when \texttt{io.enable} is high.
+
+The use of \texttt{when(io.reset) { reg := 0.U }} ensures that the register resets to zero when \texttt{io.reset} is asserted. Otherwise, when \texttt{io.enable} is high, the register updates to store the value of \texttt{io.d}. The reset is synchronous, meaning the reset only takes effect on the active clock edge. Unlike asynchronous resets in Verilog, which can immediately change the register’s value when the reset signal is asserted, Chisel’s \texttt{RegInit} ensures that the reset occurs in a clocked manner. In Chisel, to make the reset asynchronous, you need to use reset types explicitly. For example, \texttt{val reg = withReset(io.reset)(RegInit(0.U(n.W)))
+}
+
+} %end Chisel
 
 %**************************
 \subsection{Applications}
@@ -147,41 +156,24 @@ means we can keep the content once stored into the register as
 much time as it is needed.
 
 \subsubsection{Buffering}
-The registers can be used to {\em buffer} (to isolate, to
-separate) two distinct blocks so as some behaviors are not
+A buffer is a circuit element used to strengthen a signal, isolate circuit components, or introduce a delay. It is essentially a single-input, single-output gate that outputs the same value as the input but provides higher current drive and signal integrity. Registers can be used to {\em buffer} two distinct blocks so that some behaviors are not
 transmitted through the register. For example, in Figure
 \ref{register} the transitions from {\tt c} to {\tt d} and from
 {\tt d} to {\tt e} at the input of the register are not
 transmitted to the output.
 
 \subsubsection{Synchronizing}
-For various reasons the digital signals are generated ``unaligned
-in time" to the inputs of a system, but they are needed to be
-received very well controlled in time. We say usually, the signals
-are applied {\em asynchronously} but they must be received {\em
-synchronously}.  For example, in Figure \ref{register} the input
-of the register changes somehow chaotically related to the active
-edge of the clock, but the output of the register switches with a
-constant delay after the positive edge of clock. We say the inputs
-are synchronized to the output of the register. Their behavior is
-``time tempered".
+Digital signals are often generated asynchronously relative to the system inputs, meaning they arrive at unpredictable times. However, for proper system operation, these signals must be received in a well-controlled and time-aligned manner. In such cases, we say the signals are applied \textit{asynchronously} but must be received \textit{synchronously}. 
+
+For example, in Figure \ref{register}, the input to the register changes at arbitrary times with respect to the active edge of the clock. However, the output of the register transitions only with a constant delay after the positive clock edge. This behavior ensures that the input signals are synchronized to the register output, providing a consistent timing relationship. We refer to this process as \textit{time tempering}, as it transforms uncoordinated signal changes into a predictable and controlled timing structure.
 
 \subsubsection{Delaying}
-The input value applied in the clock cycle {\tt n} to the input of
-a register is generated to the output of the register in the clock
-cycle {\tt n+1}. In other words, the input of a register is
-delayed one clock cycle to its output. See in Figure
-\ref{register} how the occurrence of a value in one clock cycle to
-the register's input is followed in the next clock cycle by the
-occurrence of the same value to the register's output.
+When a value is applied to the input of a register during clock cycle {\tt n}, it appears at the output of the register in clock cycle {\tt n+1}. In other words, the register introduces a delay of one clock cycle between its input and output. This behavior ensures that the output always reflects the input from the previous clock cycle. Figure \ref{register} illustrates this concept, showing how a value applied to the register's input in one clock cycle is propagated to its output in the subsequent clock cycle.
+
 
 \subsubsection{Looping}
-Structuring a digital system means to make different kind of
-connections. One of the most special, {\em as we see in what
-follows}, is a connection from some outputs to certain inputs in a
-digital subsystem. This kind of connections are called {\bf
-loops}. The register is an important structural element in closing
-controllable loops inside a complex system.
+Designing a digital system involves creating various types of connections between components. One particularly significant type is a connection where certain outputs are fed back to specific inputs within a digital subsystem. These connections are known as {\bf loops}. Registers play an important role in forming controllable loops within complex systems, ensuring proper sequencing and synchronization of data flow.
+
 
 \subsubsection{Pipelining}
 
@@ -202,12 +194,15 @@ interconnected using the pipeline  register {\tt pipeReg}. The register {\tt sub
 $\diamond$
 \end{exemplu}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parallel extension: Random-Access Memory}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The parallel extension in first-order systems (1-OS) is represented by random access memory (RAM).
 
+%******************************
 \subsection{Generic structure}
+%********************************
 
 The generic structure of a memory with $2^p$ one-bit locations is represented in the Figure \ref{ram}.
 
@@ -249,8 +244,9 @@ How can you build a RAM memory that stores words of $m$ bits? The generic soluti
 
 In Figure \ref{bigword}, $DCD_p$ is shared between the DMUX and the MUX in Figure \ref{ram}. The ANDs associated with the demultiplexing function are selected with the WE signal. The AND-OR structure is repeated $m$ times, once in each $COLUMN_i$ column.
 
+%******************************************
 \subsection{Synchronous RAM}\label{syncMem}
-
+%*******************************************
 At very high speeds, on the order of GHz, the time restrictions illustrated in Figure \ref{wave} are very difficult to fulfill in the already described asynchronous version. To increase the degree of controllability of our projects, synchronous RAM memories are used. In Figure \ref{swave}, the behavior of a synchronous memory (SRAM) is illustrated in the sense that all the time intervals that characterize the behavior of the memory are related to the active edge of a clock signal. In this case, the designer of a system that includes a synchronous memory can more rigorously control the time behavior of the system.
 
 For the memories used by the system designer, {\em memory libraries} are provided by specialized companies in the form of IPs (intellectual property), guaranteeing the correctness of the code used in the description.
@@ -269,8 +265,74 @@ The data output is also related to the same edge.}}{swave}
                     lastline=60]
                     {\verilogSourceDir/A09_syncRAM.sv}
 
-\subsection{Synchronous pipelined RAM}\label{sybcPipeMem}
 
+\ifthenelse{\boolean{chiselversion}}{
+In Chisel, memory can be implemented using built-in constructs such as \texttt{Mem} and \texttt{SyncReadMem}. For SRAM-like behavior, \texttt{SyncReadMem} is preferred since it introduces synchronous reads.
+
+\begin{verbatim}
+import chisel3._
+
+class SRAM(depth: Int, width: Int) extends Module {
+  val io = IO(new Bundle {
+    val addr = Input(UInt(log2Ceil(depth).W))
+    val dataIn = Input(UInt(width.W))
+    val dataOut = Output(UInt(width.W))
+    val writeEnable = Input(Bool())
+  })
+
+  val mem = SyncReadMem(depth, UInt(width.W)) // Create a synchronous memory
+
+  when(io.writeEnable) {
+    mem.write(io.addr, io.dataIn) // Write operation
+  }
+
+  io.dataOut := mem.read(io.addr, !io.writeEnable) // Read operation
+}
+\end{verbatim}
+
+This Chisel module defines an SRAM with:
+\begin{itemize}
+    \item \textbf{Synchronous Read}: Reads occur on the clock edge, ensuring compatibility with real SRAM.
+    \item \textbf{Write Enable Control}: Writes occur only when the \texttt{writeEnable} signal is active.
+    \item \textbf{Efficient Storage}: This memory can be mapped to FPGA Block RAM (BRAM) or ASIC SRAM macros if properly inferred.
+\end{itemize}
+
+However, while \texttt{SyncReadMem} may be inferred as SRAM in FPGA synthesis, ASIC tools require specific steps to ensure correct inference.
+
+\subsubsection{Ensuring ASIC SRAM Inference}
+
+For ASIC synthesis, memory inference depends on the synthesis tool recognizing \texttt{SyncReadMem} as SRAM. However, inference is not always guaranteed. The best approach for large memories is to directly instantiate an SRAM macro provided by the foundry.
+
+\begin{verbatim}
+class HardMacroSRAM extends BlackBox {
+  val io = IO(new Bundle {
+    val CLK  = Input(Clock())
+    val WE   = Input(Bool())
+    val ADDR = Input(UInt(10.W))
+    val DI   = Input(UInt(32.W))
+    val DO   = Output(UInt(32.W))
+  })
+}
+\end{verbatim}
+
+This \texttt{BlackBox} module represents an SRAM hard macro that will be directly mapped to a foundry-provided SRAM block. The instantiation of this module in a system ensures that synthesis tools do not attempt to infer memory behavior but instead use the provided SRAM instance.
+
+\subsubsection{Summary of ASIC SRAM Inference}
+
+\begin{itemize}
+    \item \textbf{Mem:} Not recommended for ASIC as it creates flip-flop-based memory.
+    \item \textbf{SyncReadMem:} Suitable for ASIC synthesis, but requires synthesis tool support for SRAM inference.
+    \item \textbf{BlackBox SRAM:} Best approach for large memories, ensuring the use of foundry-provided SRAM macros.
+\end{itemize}
+
+For ASIC designs, it is recommended to consult the foundry documentation and use provided memory generators to instantiate optimized SRAM blocks rather than relying solely on synthesis inference.
+
+} %End Chisel
+
+
+%**********************************************************
+\subsection{Synchronous pipelined RAM}\label{sybcPipeMem}
+%**********************************************************
 The time $t_{ACC}$ offered by a RAM can sometimes be too high for the speed requirements of the system. To increase the clock frequency, a register is used at the memory output. Thus, the data is obtained at the new output very quickly: $t_{ACC}$ is the propagation time through the register. But there is a price: the {\bf {\em latency}} of one clock cycle (we remember that the register consists of {\em delay} flip-flops).
 
 A skilled designer will almost always be able to hide the effect of latency and take advantage of the increase in system frequency obtained through the pipeline register from the RAM output.
@@ -282,7 +344,16 @@ A skilled designer will almost always be able to hide the effect of latency and 
                     lastline=60]
                     {\verilogSourceDir/A09_syncPipeRAM.sv}
 
-\subsection{{\bf {\em Register file}}}\label{registerFile}     
+
+
+
+
+
+
+
+%**********************************************************
+\subsection{{\bf {\em Register file}}}\label{registerFile} 
+%**********************************************************
 
 A register file is a battery of registers from which, in each clock cycle, any two registers can be accessed for reading and any register for writing. The implementation of such a circuit is done with a synchronous memory with three ports: two for reading and one for writing (see Figure \ref{file_reg}), where:
 
@@ -317,9 +388,9 @@ The internal structure of a file register is characterized by the two multiplexe
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
-
+%****************************************************
 \subsection{Content-Addressable Memory}\label{lb:cam}
-
+%*****************************************************
 A normal way to ``question" a memory circuit is to ask for:
 \begin{quote}
 {\bf Q1}: {\em what is the value of the property A of the object B}
