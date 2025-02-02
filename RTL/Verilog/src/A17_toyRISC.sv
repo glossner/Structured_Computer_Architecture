@@ -1,15 +1,15 @@
 `include "DEFINES.vh"
-module toyRISC( input   logic [31:0]  instr                 ,
-                output  logic [9:0]   nextPC                ,
-                input   logic         intIn                 ,
-                output  logic         inta                  ,
-                input   logic [31:0]  dataIn                ,
-                output  logic [31:0]  dataOut               ,
-                output  logic [9:0]   addr                  ,
-                output  logic         dataRead, dataWrite   ,
-                input   logic         reset, clk            );
+module toyRISC( input   logic [31:0]  instr              ,
+                output  logic [9:0]   nextPC             ,
+                input   logic         intIn              ,
+                output  logic         inta               ,
+                input   logic [31:0]  dataIn             ,
+                output  logic [31:0]  dataOut            ,
+                output  logic [9:0]   addr               ,
+                output  logic         dataRead, dataWrite,
+                input   logic         reset, clk         );
     logic   [5:0]   opCode   ;
-    logic   [4:0]   d, l, r  ; // dest, left, right rf locations 
+    logic   [4:0]   d, l, r  ; // dest, left, right rf locations
     logic   [31:0]  v, leftOp; // immediate value, left operand
     logic   [9:0]   pc       ;
 
@@ -23,16 +23,14 @@ module toyRISC( input   logic [31:0]  instr                 ,
                     inta        ,
                     dataRead    ,
                     dataWrite   ,
-                    reset       ,
-                    clk         );
-    PCtoyRISC   PC( nextPC  ,
-                    pc      ,
-                    leftOp  ,
-                    v[9:0]  ,
-                    opCode  ,
-                    inta    ,
-                    reset   ,
-                    clk     );   
+                    reset, clk  );
+    PCtoyRISC   PC( nextPC      ,
+                    pc          ,
+                    leftOp      ,
+                    v[9:0]      ,
+                    opCode      ,
+                    inta        ,
+                    reset, clk 	);
     RALUtoyRISC RALU(   dataOut ,
                         leftOp  ,
                         pc      ,

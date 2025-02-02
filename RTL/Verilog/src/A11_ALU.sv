@@ -1,12 +1,10 @@
 `include "0_define.vh"
-module ALU( input   logic [3:0]   func  ,
-            input   logic [31:0]  left  ,
-            input   logic [31:0]  right ,
-            input   logic         crIn  ,
-            output  logic         crOut ,
-            output  logic [31:0]  out  	);
-    logic [32:0] sum    ;
-    logic [32:0] dif    ;
+module ALU( input   logic [3:0]   func          ,
+            input   logic [31:0]  left, right   ,
+            input   logic         crIn          ,
+            output  logic         crOut         ,
+            output  logic [31:0]  out           );
+    logic [32:0] sum, dif    ;
 
     assign sum = left + right + crIn    ;
     assign dif = left - right - crIn    ;

@@ -1,12 +1,21 @@
 \chapter{Using the Heterogeneous System hRISC}\label{hrisc}
 \localtoc
 
-This appendix brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core toyRISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. First, the micro-architectures associated with the system components will be described.  The architecture of the entire system is then defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
+This chapter brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core RISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. Then, the micro-architectures associated with the system components will be described.  The architecture of the entire system is then defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
 
-The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}. The listed module contains three modules -- HOST, INTERFACES and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the three module in top are:
+\section{Structure}
+
+The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}. The listed module contains two modules -- HOST and ACCELERATOR -- and their interconnections. Because the description is used only for simulation purpose, the only external connections are: {\tt clock} and {\tt reset}. The interconnections between the two module (see Figure \ref{fig:hetSyst}) in top are:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/hetSystTop.png} 
+    \caption{The heterogeneous system.}
+    \label{fig:hetSyst}
+\end{figure}
 
 
-\placedrawing[H]{figures/20_1_heterogeneousSystem.lp}{Heterogeneous System ({\tt 1\_hetSys.sv}): HOST computer and many-cell ACCELERATOR interconnected through INTERFACES (three FIFOs: one for commands and programming and two for in and out of data).}{fighetSys}
+%\placedrawing[H]{figures/20_1_heterogeneousSystem.lp}{Heterogeneous System ({\tt 1\_hetSys.sv}): HOST computer and many-cell ACCELERATOR interconnected through INTERFACES (three FIFOs: one for commands and programming and two for in and out of data).}{fighetSys}
 
 \begin{description}
     \item[from HOST to ACCELERATOR:] program \& data 64-bit path and the synchronizing signals:
@@ -29,9 +38,91 @@ The top module of the system is listed in Listing \ref{lst:heterogeneousSystem}.
                     lastline=68]
                     {\verilogSourceDir/A20_hetSys.sv}
 
-\placedrawing[H]{figures/20_2_accelerator.lp}{Accelerator ({\tt 2\_accelerator.sv}): the many-cell engine ARRAY and the sequencer CONTROLLER (a mono-core computer).}{figacc}
+%\placedrawing[H]{figures/20_2_accelerator.lp}{Accelerator ({\tt 2\_accelerator.sv}): the many-cell engine ARRAY and the sequencer CONTROLLER (a mono-core computer).}{figacc}
 
-\placedrawing[H]{figures/20_3_array.lp}{Array ({\tt 3\_array.sv}): the array of $p$ cells MAP loop connected with two $lor$-depth networks (REDUCE for reduce functions amd SCAN for scan functions).}{figarray}
+In the second level in the hierarchy, interesting from a parallel computing point of view is the accelerator whose top module is in Listing \ref{lst:accelerator}, while the entire design is on GitHub. The accelerator, see Figure \ref{fig:accelerator}, contains two modules:
+\begin{itemize}
+    \item {\tt interfaces}
+    \item {\tt pRISC}: parallel RISC computational structure able to perform parallel computations
+\end{itemize}
+
+\includeverilogcode[caption={Accelerator. File: 1\_accelerator.sv.  (SystemVerilog)}, 
+                    label={lst:accelerator}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A20_accelerator.sv}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/hetAccelerator.png} 
+    \caption{The accelerator.}
+    \label{fig:accelerator}
+\end{figure}
+
+%\placedrawing[H]{figures/20_3_array.lp}{Array ({\tt 3\_array.sv}): the array of $p$ cells MAP loop connected with two $lor$-depth networks (REDUCE for reduce functions amd SCAN for scan functions).}{figarray}
+
+The role of the interfaces (see Figure \ref{fig:hetInterfaces} and Listing \ref{lst:interfaces}) is to adapt the transfer rates, programs, commands and data, between the system host and the accelerator. The module contains three FIFO memories (see \ref{lb:fifo} in this book). One FIFO ensures the transfer of programs and commands from the host to the accelerator. The other two ensure the transfer of data from the host to the accelerator and vice versa.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/hetInterfaces.png} 
+    \caption{Interfaces.}
+    \label{fig:hetInterfaces}
+\end{figure}
+
+\includeverilogcode[caption={Interfaces. File: 2\_interfaces.sv.  (SystemVerilog)}, 
+                    label={lst:interfaces}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A20_interfaces.sv}
+
+
+
+pRISC, which comes from {\em parallel RISC}\footnote{The name was proposed by Jim Peek \cite{Peek83} who as a master's student led the team of students who, at the initiative of professors David Patterson and Carlo Sequin, designed the first RISC processor in 1980 at Berkeley University (\url{https://www.computerhistory.org/revolution/digital-logic/12/286/1593}).} is the central component of the heterogeneous system we present. It is represented in Figure \ref{fig:pRISC} and codified in Listing \ref{lst:pRISC}, and consists of:
+\begin{itemize}
+    \item {\tt controller}: a RISC-based computer used as sequencer
+    \item {\tt array}: a two-loop linear cellular array of execution units.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/pRISC.png} 
+    \caption{Parallel RISC, pRISC.}
+    \label{fig:pRISC}
+\end{figure}
+
+\includeverilogcode[caption={pRISC. File: 2\_pRISC.sv.  (SystemVerilog)}, 
+                    label={lst:pRISC}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A20_pRISC.sv}
+
+While the controller is a well-established structure, the cellular area deserves explicit detail. It contains, see Figure \ref{fig:hetArray} and Listing \ref{lst:array} three functional components:
+\begin{itemize}
+    \item the linear array of cells, {\tt map}, which includes the $log$-depth distribution network used to send in each clock cycle form controller to each cell an instruction with the associated value
+    \item the first loop which reduces the vector, issued by the linear array of cells, to a scalar sent to the controller
+    \item the second loop which applies to the vector provided by the map section a scan function and sends back the resulting vector to the array.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/hetArray.png} 
+    \caption{Map array.}
+    \label{fig:hetArray}
+\end{figure}
+
+\includeverilogcode[caption={Array. File: 3\_array.sv.  (SystemVerilog)}, 
+                    label={lst:array}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A20_array.sv}
+
+More details about the design of the heterogeneous system on GitHub.
+
 
 
 The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
