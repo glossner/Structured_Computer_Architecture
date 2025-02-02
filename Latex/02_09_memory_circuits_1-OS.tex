@@ -131,7 +131,7 @@ The time behavior is characterized by two time intervals:
 \end{description}
 
 \ifthenelse{\boolean{chiselversion}}{
-\includechiselcode[caption={Parameterized Register (Chisel)}, label={lst:chisel_register}, firstline=8, firstnumber=8, lastline=27]{\chiselSourceDir/memory/Register.scala}
+\includechiselcode[caption={Parameterized Register (Chisel: Register.scala)}, label={lst:chisel_register}, firstline=8, firstnumber=8, lastline=27]{\chiselSourceDir/memory/Register.scala}
 
 Listing \ref{lst:chisel_register} shows parameterized Chisel code that implements an \textit{n}-bit register with an enable and reset signal. In Chisel, registers are created using the built-in \texttt{Reg} and \texttt{RegInit} classes, which define stateful elements that store values across clock cycles. The \texttt{RegInit(0.U(n.W))} statement initializes a register of width \textit{n} to zero. This ensures that the register has a defined state at power-up or reset.
 
@@ -174,9 +174,9 @@ When a value is applied to the input of a register during clock cycle {\tt n}, i
 \subsubsection{Looping}
 Designing a digital system involves creating various types of connections between components. One particularly significant type is a connection where certain outputs are fed back to specific inputs within a digital subsystem. These connections are known as {\bf loops}. Registers play an important role in forming controllable loops within complex systems, ensuring proper sequencing and synchronization of data flow.
 
-
+%*************************
 \subsubsection{Pipelining}
-
+%**************************
 \begin{exemplu}
 The previously exemplified {\tt threeAdder.sv} module performs the addition of three numbers in twice the time of the sum of two numbers. We can reduce the execution time through a pipeline solution that uses two registers. The solution is presented in the following module:
 {\em
@@ -269,64 +269,21 @@ The data output is also related to the same edge.}}{swave}
 \ifthenelse{\boolean{chiselversion}}{
 In Chisel, memory can be implemented using built-in constructs such as \texttt{Mem} and \texttt{SyncReadMem}. For SRAM-like behavior, \texttt{SyncReadMem} is preferred since it introduces synchronous reads.
 
-\begin{verbatim}
-import chisel3._
+\includechiselcode[caption={Parameterized SRAM (Chisel: SRAM.scala)}, label={lst:chisel_sram}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
 
-class SRAM(depth: Int, width: Int) extends Module {
-  val io = IO(new Bundle {
-    val addr = Input(UInt(log2Ceil(depth).W))
-    val dataIn = Input(UInt(width.W))
-    val dataOut = Output(UInt(width.W))
-    val writeEnable = Input(Bool())
-  })
+Listing \ref{lst:chisel_sram} shows a Chisel module that defines a synchronous SRAM (Static Random Access Memory) model, which provides controlled read and write operations using a clocked memory structure. The design consists of an addressable memory space, data input and output ports, and a write-enable control signal.
 
-  val mem = SyncReadMem(depth, UInt(width.W)) // Create a synchronous memory
+The \texttt{addr} input determines the memory location being accessed, and its bit width is computed using \texttt{log2Ceil(depth).W}, ensuring that it has enough bits to address all locations in the memory array. The \texttt{dataIn} and \texttt{dataOut} signals represent the data being written to or read from memory, while \texttt{writeEnable} controls whether a write operation is performed.
 
-  when(io.writeEnable) {
-    mem.write(io.addr, io.dataIn) // Write operation
-  }
+The core memory structure is implemented using \texttt{SyncReadMem}, a Chisel construct that models a synchronous memory block. This ensures that memory reads and writes occur only on clock edges, mimicking the behavior of actual SRAM in hardware.
 
-  io.dataOut := mem.read(io.addr, !io.writeEnable) // Read operation
-}
-\end{verbatim}
+Write operations are controlled using the \texttt{when} condition, which allows data to be written into memory only when \texttt{writeEnable} is asserted. The \texttt{mem.write(io.addr, io.dataIn)} statement stores the value of \texttt{dataIn} at the specified address.
 
-This Chisel module defines an SRAM with:
-\begin{itemize}
-    \item \textbf{Synchronous Read}: Reads occur on the clock edge, ensuring compatibility with real SRAM.
-    \item \textbf{Write Enable Control}: Writes occur only when the \texttt{writeEnable} signal is active.
-    \item \textbf{Efficient Storage}: This memory can be mapped to FPGA Block RAM (BRAM) or ASIC SRAM macros if properly inferred.
-\end{itemize}
+For read operations, the module ensures that data is only retrieved when no write is occurring. The statement \texttt{io.dataOut := mem.read(io.addr, !io.writeEnable)} prevents read-after-write hazards by ensuring that reads do not interfere with ongoing write operations.
 
-However, while \texttt{SyncReadMem} may be inferred as SRAM in FPGA synthesis, ASIC tools require specific steps to ensure correct inference.
+This SRAM model is particularly useful for FPGA-based Block RAM (BRAM) inference and can also be mapped to ASIC memory blocks during synthesis. However, while \texttt{SyncReadMem} may be inferred as SRAM in FPGA synthesis, ASIC tools require specific steps to ensure correct inference.
 
-\subsubsection{Ensuring ASIC SRAM Inference}
-
-For ASIC synthesis, memory inference depends on the synthesis tool recognizing \texttt{SyncReadMem} as SRAM. However, inference is not always guaranteed. The best approach for large memories is to directly instantiate an SRAM macro provided by the foundry.
-
-\begin{verbatim}
-class HardMacroSRAM extends BlackBox {
-  val io = IO(new Bundle {
-    val CLK  = Input(Clock())
-    val WE   = Input(Bool())
-    val ADDR = Input(UInt(10.W))
-    val DI   = Input(UInt(32.W))
-    val DO   = Output(UInt(32.W))
-  })
-}
-\end{verbatim}
-
-This \texttt{BlackBox} module represents an SRAM hard macro that will be directly mapped to a foundry-provided SRAM block. The instantiation of this module in a system ensures that synthesis tools do not attempt to infer memory behavior but instead use the provided SRAM instance.
-
-\subsubsection{Summary of ASIC SRAM Inference}
-
-\begin{itemize}
-    \item \textbf{Mem:} Not recommended for ASIC as it creates flip-flop-based memory.
-    \item \textbf{SyncReadMem:} Suitable for ASIC synthesis, but requires synthesis tool support for SRAM inference.
-    \item \textbf{BlackBox SRAM:} Best approach for large memories, ensuring the use of foundry-provided SRAM macros.
-\end{itemize}
-
-For ASIC designs, it is recommended to consult the foundry documentation and use provided memory generators to instantiate optimized SRAM blocks rather than relying solely on synthesis inference.
-
+For ASIC synthesis, memory inference depends on the synthesis tool recognizing \texttt{SyncReadMem} as SRAM. However, inference is not always guaranteed. The best approach for large ASIC memories is to directly instantiate an SRAM macro provided by the foundry using \texttt{class HardMacroSRAM extends BlackBox }.
 } %End Chisel
 
 
@@ -344,10 +301,21 @@ A skilled designer will almost always be able to hide the effect of latency and 
                     lastline=60]
                     {\verilogSourceDir/A09_syncPipeRAM.sv}
 
+\ifthenelse{\boolean{chiselversion}}{
 
+\includechiselcode[caption={Parameterized Pipelined SRAM (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_sram_pipelined}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
 
+Listing \ref{lst:chisel_sram_pipelined} implements a pipelined synchronous SRAM, where memory read operations have a one-cycle delay before the output is available. This delay is achieved using the \texttt{RegNext} construct, which ensures that the read data is stored in a register before being passed to the output.
 
+The module defines an input-output interface consisting of several key signals. The \texttt{addr} signal specifies the memory address for both read and write operations. The \texttt{dataIn} signal provides the data to be stored in memory, while \texttt{dataOut} represents the registered output data, ensuring a pipelined read operation. The \texttt{writeEnable} signal determines whether a write occurs at the given address.
 
+The memory itself is instantiated using \texttt{SyncReadMem}, a Chisel construct that models a clocked RAM where both read and write operations are synchronized with the clock. A write operation takes place when \texttt{writeEnable} is high, allowing the input data to be written to the specified memory address using \texttt{mem.write(io.addr, io.dataIn)}. Read operations, however, do not directly output data from memory. Instead, the read result is passed through a register before being assigned to the output.
+
+A key aspect of this implementation is the use of \texttt{RegNext}. This introduces a pipeline stage that stores the read data in a register before it is sent to the output. Pipelining read data in this way reduces critical path delays by ensuring that the memory read operation occurs in one clock cycle while allowing the output to be registered in the next cycle. This improves timing closure in high-speed designs, preventing potential setup time violations. Additionally, the registered read output ensures stability by mitigating glitches that could arise from rapid address changes. 
+
+The registered read data is assigned to the output using \texttt{io.dataOut := readReg}. This guarantees that the memory data is presented in a stable and predictable manner. The registered output ensures that data remains valid across clock cycles, making this design beneficial for both ASIC and FPGA implementations that require synchronous memory operations with controlled timing.
+
+} %End Chisel
 
 
 
@@ -578,39 +546,42 @@ device having the size in $O(2^{p})$ is used.
 
 
 
-%****************************************************************************
-\subsection{Representation of \( B_n \) in MSB and LSB Forms with Endianness}
-%****************************************************************************
-The set \( B_n \), representing \( n \)-bit unsigned binary numbers, can be expressed using two common conventions for bit ordering: Most Significant Bit (MSB) first and Least Significant Bit (LSB) first. These conventions are closely tied to the concept of endianness in computer architecture, which determines how binary numbers are stored or transmitted in memory.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Representation of \( B_n \) in MSB and LSB Forms with Endianness}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The set \( B_n \), representing \( n \)-bit unsigned binary numbers, can be expressed using two common conventions for bit ordering: Most Significant Bit (MSB) first and Least Significant Bit (LSB) first. These conventions are closely tied to the concept of endianness in digital systems, particularly when storing or transmitting binary data at the bit level. While endianness is more commonly discussed in terms of byte order in computer architecture, this section focuses on bit-level representation.
 
 %****************************************************
-\subsubsection{MSB Representation (Big-Endian Order)}
+\subsection{MSB Representation (Big-Endian Order)}
 %****************************************************
-In the Most Significant Bit (MSB) representation, the leftmost bit (\( b_{n-1} \)) corresponds to the highest positional value (\( 2^{n-1} \)), and the rightmost bit (\( b_0 \)) corresponds to the lowest positional value (\( 2^0 \)). This is the standard positional notation for binary numbers. 
+In the Most Significant Bit (MSB) representation, the leftmost bit (\( b_{n-1} \)) corresponds to the highest positional value (\( 2^{n-1} \)), and the rightmost bit (\( b_0 \)) corresponds to the lowest positional value (\( 2^0 \)). This notation aligns with standard positional number systems and is widely used in mathematical representations.
 
-For \( B_n \), the value of \( x \) is calculated as:
+For \( B_n \), the value of \( x \) is computed as:
 \[
 x = b_{n-1} \cdot 2^{n-1} + b_{n-2} \cdot 2^{n-2} + \dots + b_1 \cdot 2^1 + b_0 \cdot 2^0, \quad b_i \in \{0, 1\}.
 \]
 
 %*******************************************************
-\subsubsection{LSB Representation (Little-Endian Order)}
+\subsection{LSB Representation (Little-Endian Order)}
 %*******************************************************
-In the Least Significant Bit (LSB) representation, the least significant bit (\( b_0 \)) is stored or transmitted first. However, the numerical value of the number remains the same, as the binary digits are still interpreted using the same positional notation. The formula remains:
+In the Least Significant Bit (LSB) representation, the bit with the lowest weight (\( b_0 \)) is stored or transmitted first. The numerical value of the number remains the same because the bit positions still follow the standard positional notation. However, the physical storage or transmission order differs.
+
+The mathematical formula for computing \( x \) remains:
 \[
 x = b_{n-1} \cdot 2^{n-1} + b_{n-2} \cdot 2^{n-2} + \dots + b_1 \cdot 2^1 + b_0 \cdot 2^0, \quad b_i \in \{0, 1\}.
 \]
 
-The difference lies in the physical storage or transmission order:
-- In big-endian systems, bits are stored or transmitted starting with the most significant bit (\( b_{n-1} \)).
-- In little-endian systems, bits are stored or transmitted starting with the least significant bit (\( b_0 \)).
+The distinction between MSB-first and LSB-first is primarily relevant in:
+\begin{itemize}
+    \item Data transmission: Some serial communication protocols transmit bits LSB-first for efficiency.
+    \item Certain hardware applications: Bit-wise processing in some embedded and FPGA designs uses LSB-first order.
+    \item Instruction set architectures (ISAs): Some bit manipulation instructions favor LSB-first ordering.
+\end{itemize}
 
+\textbf{Example for \( n = 3 \)}  
 
-Example for \( n = 3 \)
+For \( B_3 = \{0, 1, 2, 3, 4, 5, 6, 7\} \), the logical representation (big-endian) follows:
 
-For \( B_3 = \{0, 1, 2, 3, 4, 5, 6, 7\} \), the logical representation (big-endian) is:
-
-\textbf{Logical Representation (Big-Endian)}:
 \[
 \begin{aligned}
 x = 0 & \Rightarrow 000, \\
@@ -624,9 +595,12 @@ x = 7 & \Rightarrow 111.
 \end{aligned}
 \]
 
-In a little-endian system, the storage or transmission order of bits is reversed. For instance:
-- \( x = 1 \) (big-endian: \( 001 \)) is stored as \( 100 \) (little-endian).
-- \( x = 6 \) (big-endian: \( 110 \)) is stored as \( 011 \) (little-endian).
+In a little-endian system that follows bit-order reversal, the storage or transmission order is reversed:
+\begin{itemize}
+    \item \( x = 1 \) (big-endian: \( 001 \)) is stored as \( 100 \) (little-endian).
+    \item \( x = 6 \) (big-endian: \( 110 \)) is stored as \( 011 \) (little-endian).
+\end{itemize}
+
 
 \textbf{Physical Representation in Little-Endian (Stored Order)}:
 \[
@@ -643,78 +617,107 @@ x = 7 & \Rightarrow 111.
 \]
 
 %***************************************
-\subsubsection{Commentary on Endianness}
+\subsection{Commentary on Endianness}
 %***************************************
-- **Big-Endian Systems**:
-  - Big-endian systems store numbers in memory starting with the most significant bit. This is often the default in higher-level representations of binary numbers and is consistent with standard positional notation.
+Big-endian systems store numbers in memory starting with the most significant bit or byte. This is often the default representation in mathematical contexts, as it aligns with traditional positional notation.
 
-- **Little-Endian Systems**:
-  - Little-endian systems store numbers in memory starting with the least significant bit. This convention simplifies certain hardware operations, such as incrementing binary counters, and is widely used in modern processors like x86 architectures.
+Little-endian systems store numbers starting with the least significant bit or byte. This ordering is common in modern architectures such as x86 and is often preferred for hardware operations that involve incremental processing of binary numbers, such as shift operations and carry propagation in arithmetic.
 
-- **Practical Implications**:
-  - While the logical representation of binary numbers is the same regardless of endianness, understanding the storage or transmission order is crucial for tasks like data serialization, memory addressing, and communication protocols.
+It is important to note that little-endian byte order (common in CPUs) does not reverse the bits, only the byte order. However, some hardware systems or serial communication protocols may reverse the bit order as well, depending on the application.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\subsection{Mathematical Preference and Use of MSB and LSB Expansions}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%**********************************************************************
+\subsection{Mathematical Preference and Use of MSB and LSB Expansions}
+%**********************************************************************
 
-The binary expansions of \( x \) differ in the ordering of bits depending on whether the **Most Significant Bit (MSB)** or **Least Significant Bit (LSB)** form is used. These differences arise from practical applications in engineering versus conventions in mathematics.
+The binary expansions of \( x \) differ in the ordering of bits depending on whether the Most Significant Bit (MSB) or Least Significant Bit (LSB) form is used. These differences arise from practical applications in engineering versus conventions in mathematics.
 
-Mathematical Preference: MSB Form
+Mathematicians universally use the MSB expansion to represent binary numbers. The MSB form is consistent with positional arithmetic, where the leftmost digit has the highest weight, and each subsequent digit corresponds to decreasing powers of the base. This notation aligns with the way numbers are taught in grade school.
 
-Mathematicians universally use the **MSB expansion** to represent binary numbers. The MSB form is consistent with the positional arithmetic taught in grade school, where each digit corresponds to a specific positional value. For \( n \)-bit unsigned binary numbers, the MSB expansion is:
+In contrast, the LSB expansion prioritizes hardware efficiency, particularly in digital circuits where binary addition, shifting, and other operations naturally operate from the least significant bit upward. The storage order may change, but the arithmetic interpretation remains the same.
 
-\[
-x = b_{n-1} \cdot 2^{n-1} + b_{n-2} \cdot 2^{n-2} + \dots + b_1 \cdot 2^1 + b_0 \cdot 2^0, \quad b_i \in \{0, 1\}.
-\]
+%*******************************************************
+\subsection{Conclusion: MSB for Mathematics, LSB for Engineering}
+%*******************************************************
+The MSB expansion is the standard in mathematical notation due to its consistency with positional arithmetic. It provides an intuitive representation of numbers and aligns with standard conventions across different numbering systems.
 
-This form aligns naturally with:
-\begin{itemize}[noitemsep, left=1cm, topsep=0pt]
-    \item **Grade school arithmetic**: Positional notation, where the leftmost digit has the highest weight, and each subsequent digit corresponds to decreasing powers of the base.
-    \item **Decimal analogy**: For example, the decimal number \( 345 \) is interpreted as:
-    \[
-    345 = 3 \cdot 10^2 + 4 \cdot 10^1 + 5 \cdot 10^0.
-    \]
-    Similarly, in binary, \( 110 \) is interpreted as:
-    \[
-    110 = 1 \cdot 2^2 + 1 \cdot 2^1 + 0 \cdot 2^0.
-    \]
+The LSB-first convention, while not altering numerical value, is often employed in engineering contexts for computational efficiency, hardware design, and specific communication protocols. While endianness primarily refers to byte order in computer architecture, understanding its implications at the bit level is crucial for specialized applications such as embedded systems, networking, and low-level hardware design.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Little-Endian vs. Big-Endian Byte Order}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In computer architecture, \textbf{endianness} refers to the order in which bytes are stored in memory for multi-byte data types such as integers and floating-point numbers. The two primary conventions for byte ordering are \textbf{big-endian} and \textbf{little-endian}.
+
+%****************************************************
+\subsection{Big-Endian Byte Order}
+%****************************************************
+In a \textbf{big-endian} system, the most significant byte (MSB) is stored at the lowest memory address, and the least significant byte (LSB) is stored at the highest memory address. This ordering aligns with how numbers are typically written in standard positional notation, where the highest-value digit appears first.
+
+For example, consider the 32-bit hexadecimal value \( 0x12345678 \) stored in memory starting at address \texttt{0x1000} in a big-endian system:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Memory Address} & \texttt{0x1000} & \texttt{0x1001} & \texttt{0x1002} & \texttt{0x1003} \\
+\hline
+\textbf{Stored Byte}    & \texttt{0x12}   & \texttt{0x34}   & \texttt{0x56}   & \texttt{0x78}   \\
+\hline
+\end{tabular}
+\end{center}
+
+Big-endian ordering is used in several architectures, including older IBM mainframes, Motorola 68k processors, and certain network protocols such as TCP/IP.
+
+%*******************************************************
+\subsection{Little-Endian Byte Order}
+%*******************************************************
+In a \textbf{little-endian} system, the least significant byte (LSB) is stored at the lowest memory address, and the most significant byte (MSB) is stored at the highest memory address. This means that when accessing memory sequentially, the lowest-value byte appears first.
+
+Using the same example \( 0x12345678 \), a little-endian system stores it as follows:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Memory Address} & \texttt{0x1000} & \texttt{0x1001} & \texttt{0x1002} & \texttt{0x1003} \\
+\hline
+\textbf{Stored Byte}    & \texttt{0x78}   & \texttt{0x56}   & \texttt{0x34}   & \texttt{0x12}   \\
+\hline
+\end{tabular}
+\end{center}
+
+Little-endian ordering is widely used in modern processors, including Intel x86, x86-64, and ARM architectures in some configurations.
+
+%*******************************************************
+\subsection{Endianness and Memory Access}
+%*******************************************************
+Endianness is important when interpreting multi-byte data in memory. When transferring data between systems with different endianness, byte swapping may be necessary to maintain correct values. This is particularly important in:
+\begin{itemize}
+    \item File formats and binary data storage: Certain file formats specify a fixed byte order, requiring conversion when read on systems with a different endianness.
+    \item Networking protocols: The Internet Protocol (IP) uses big-endian byte order, often referred to as \textit{network byte order}. Little-endian systems must convert values to big-endian before transmission.
+    \item Hardware and embedded systems: Some microcontrollers and peripheral devices may use a different byte ordering than the CPU, requiring explicit handling of endianness during data transfers.
 \end{itemize}
 
-Thus, the MSB form is preferred in mathematics for its clarity and compatibility with standard positional arithmetic.
+%*******************************************************
+\subsection{Endianness Conversion}
+%*******************************************************
+When transferring data between little-endian and big-endian systems, swapping byte order is necessary. In software, conversion functions such as \texttt{htonl()} (host-to-network long) and \texttt{ntohl()} (network-to-host long) are commonly used for this purpose. For example, in C:
 
----
+\begin{verbatim}
+uint32_t value = 0x12345678;
+uint32_t swapped = __builtin_bswap32(value); // Converts between endianness
+\end{verbatim}
 
-Use of LSB Form in Engineering and Computing
+For hardware implementations, endianness conversion is often handled using bitwise shift operations or dedicated instructions provided by the processor.
 
-In contrast, the **LSB expansion** reverses the storage or transmission order of bits, prioritizing the least significant bit (\( b_0 \)). The formula remains the same, but the physical ordering differs, reflecting how the bits are handled in memory or transmitted serially. For example:
-\[
-x = b_0 \cdot 2^0 + b_1 \cdot 2^1 + \dots + b_{n-2} \cdot 2^{n-2} + b_{n-1} \cdot 2^{n-1}.
-\]
-
-The LSB form is not used in pure mathematics but is important in:
-\begin{itemize}[noitemsep, left=1cm, topsep=0pt]
-    \item **Computer systems**:
-        - Little-endian architectures (e.g., x86) use LSB-first order for storing and transmitting binary numbers.
-        - This simplifies certain hardware operations, such as incrementing binary counters or performing addition bit-by-bit starting from the least significant bit.
-    \item **Data communication**:
-        - Serial communication protocols often transmit the least significant bit first due to hardware design constraints.
+%*******************************************************
+\subsection{Which Endianness is Better?}
+%*******************************************************
+There is no inherent advantage to either endianness; the choice depends on historical and architectural considerations:
+\begin{itemize}
+    \item Big-endian is more intuitive when viewing hexadecimal dumps and aligns with standard numerical notation.
+    \item Little-endian allows simpler hardware implementations for arithmetic operations and enables efficient incremental memory access.
 \end{itemize}
 
----
-
-Commentary on MSB as Positional Arithmetic
-
-The MSB expansion closely resembles the positional arithmetic taught in elementary education. Each digit (or bit) contributes to the total value based on its position, with weights corresponding to powers of the base (in this case, \( 2 \)). This positional system is universally understood and forms the foundation for number systems across different bases (e.g., decimal, binary, hexadecimal).
-
-In contrast, the LSB form prioritizes computational efficiency in specific applications rather than logical clarity. While it has practical importance in engineering and computing, it is rarely used for manual or theoretical calculations.
-
----
-
-Conclusion
-
-Mathematicians exclusively use the MSB form due to its consistency with positional arithmetic and its alignment with grade school notation. The LSB form is primarily a practical convention in computer architecture and data communication, where hardware efficiency and specific operational needs dictate its use.
-
+Most modern systems, including x86 and ARM, use little-endian ordering due to its hardware efficiency, while big-endian is still found in network protocols and some legacy architectures.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
