@@ -125,11 +125,9 @@ More details about the design of the heterogeneous system on GitHub.
 
 
 
-The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
 
 
 
-This introduction is followed by the description of the micro-architectures, the description of the hardware structure and examples of use in simulation of the designed system.
 
 \section{Micro-architectures}
 
@@ -626,6 +624,8 @@ crela         & \texttt{addr[i] <= acc[i]}                       & ADDRLD       
 
 
 \section{Programming heterogeneous system}
+
+The simulation program ensures the initial loading of the HOST memory with the program it runs as well as with the program that the HOST loads into the ACCELERATOR during the system initialization process. If applicable, the HOST data memory is also initialized by the simulation program using a text file.
 
 The heterogeneous system runs two programs simultaneously. They are assembled independently and are launched together. The program on the host is the one that loads the program into the accelerator. In listing \ref{lst:hProgram}:
 \begin{itemize}

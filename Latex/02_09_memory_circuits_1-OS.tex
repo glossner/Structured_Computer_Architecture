@@ -356,6 +356,22 @@ The internal structure of a file register is characterized by the two multiplexe
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
+\ifthenelse{\boolean{chiselversion}}{
+\includechiselcode[caption={Parameterized Pipelined SRAM (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_sram_pipelined}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
+
+Listing \ref{lst:chisel_sram_pipelined} implements
+
+In Chisel, a register file can be implemented using either a \texttt{Vec} of \texttt{Reg} or an SRAM-based memory structure such as \texttt{SyncReadMem}. The choice between these two implementations depends on multiple factors, including the size of the register file, read and write access patterns, and the target hardware architecture.
+
+A \texttt{Vec} of \texttt{Reg} is a collection of registers, each implemented as a distinct flip-flop. This approach is particularly suitable for small register files, such as general-purpose registers in a CPU core or pipeline buffers. Since each register is directly accessible, read operations are purely combinational, resulting in zero-cycle latency. This makes \texttt{Vec} of \texttt{Reg} ideal when low-latency register access is a requirement. Additionally, this structure allows multiple concurrent reads and writes, making it beneficial for designs where multiple functional units require simultaneous register access. However, as the number of registers increases, the area and power consumption grow significantly due to the need for dedicated flip-flops for every bit in the register file. This makes \texttt{Vec} of \texttt{Reg} inefficient for large-scale register files.
+
+\texttt{SyncReadMem} provides a more scalable approach for implementing register files when the number of registers is large. It models a synchronous memory that stores register values in a memory array instead of individual flip-flops, significantly reducing area and power consumption. This is particularly advantageous when the register file must hold a large number of entries, such as in vector processors, GPU register banks, or out-of-order execution buffers. Since \texttt{SyncReadMem} models SRAM behavior, it typically has a one-cycle read latency, meaning that register values are not immediately available in the same cycle as the read request. This trade-off makes it less suitable for applications requiring immediate read results but is acceptable in architectures that can tolerate pipelined reads. Another limitation of \texttt{SyncReadMem} is that it typically supports only a single read and a single write port per clock cycle unless explicitly instantiated as multi-port memory, which can introduce complexity.
+
+}% End Chisel
+
+
+
+
 %****************************************************
 \subsection{Content-Addressable Memory}\label{lb:cam}
 %*****************************************************
@@ -616,14 +632,7 @@ x = 7 & \Rightarrow 111.
 \end{aligned}
 \]
 
-%***************************************
-\subsection{Commentary on Endianness}
-%***************************************
-Big-endian systems store numbers in memory starting with the most significant bit or byte. This is often the default representation in mathematical contexts, as it aligns with traditional positional notation.
 
-Little-endian systems store numbers starting with the least significant bit or byte. This ordering is common in modern architectures such as x86 and is often preferred for hardware operations that involve incremental processing of binary numbers, such as shift operations and carry propagation in arithmetic.
-
-It is important to note that little-endian byte order (common in CPUs) does not reverse the bits, only the byte order. However, some hardware systems or serial communication protocols may reverse the bit order as well, depending on the application.
 
 %**********************************************************************
 \subsection{Mathematical Preference and Use of MSB and LSB Expansions}
@@ -709,7 +718,7 @@ uint32_t swapped = __builtin_bswap32(value); // Converts between endianness
 For hardware implementations, endianness conversion is often handled using bitwise shift operations or dedicated instructions provided by the processor.
 
 %*******************************************************
-\subsection{Which Endianness is Better?}
+\subsection{Which Byte Endianness is Better?}
 %*******************************************************
 There is no inherent advantage to either endianness; the choice depends on historical and architectural considerations:
 \begin{itemize}
@@ -718,6 +727,15 @@ There is no inherent advantage to either endianness; the choice depends on histo
 \end{itemize}
 
 Most modern systems, including x86 and ARM, use little-endian ordering due to its hardware efficiency, while big-endian is still found in network protocols and some legacy architectures.
+
+%*************************************************
+\subsection{Commentary on Bit and Byte Endianness}
+%*************************************************
+Big-endian systems store numbers in memory starting with the most significant bit or byte. This is often the default representation in mathematical contexts, as it aligns with traditional positional notation.
+
+Little-endian systems store numbers starting with the least significant bit or byte. This ordering is common in modern architectures such as x86 and is often preferred for hardware operations that involve incremental processing of binary numbers, such as shift operations and carry propagation in arithmetic.
+
+It is important to note that little-endian byte order (common in CPUs) does not reverse the bits, only the byte order. However, some hardware systems or serial communication protocols may reverse the bit order as well, depending on the application.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
