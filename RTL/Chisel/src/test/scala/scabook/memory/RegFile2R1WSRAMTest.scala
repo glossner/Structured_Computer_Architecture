@@ -1,6 +1,8 @@
 // Licensed under the BSD 3-Clause License. 
 // See https://opensource.org/licenses/BSD-3-Clause for details.
 
+// sbt 'testOnly scabook.memory.RegFile2R1WSRAMTest'
+
 package scabook.memory
 
 import chisel3._
