@@ -10,7 +10,7 @@ import chisel3.util._
 import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
 
-class MultiPortRegFileTest2R1W extends AnyFlatSpec {
+class RegFileTest2R1W extends AnyFlatSpec {
   "TwoReadOneWriteRegFile" should "correctly write and read values" in {
     val numRegs = 16
     val width = 32
@@ -18,7 +18,7 @@ class MultiPortRegFileTest2R1W extends AnyFlatSpec {
     val numWritePorts = 1
     val numBanks = 1 // Single bank to avoid complex indexing
 
-    simulate(new MultiPortRegFile(numRegs, width, numReadPorts, numWritePorts, numBanks)) { dut =>
+    simulate(new RegFile(numRegs, width, numReadPorts, numWritePorts, numBanks)) { dut =>
 
       def write(addr: Int, data: BigInt, writePort: Int = 0): Unit = {
         dut.io.writeAddr(writePort).poke(addr.U)

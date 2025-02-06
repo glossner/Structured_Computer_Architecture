@@ -10,7 +10,7 @@ import chisel3.util._
 import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
 
-class MultiPortRegFileTest8R4W extends AnyFlatSpec {
+class RegFileTest8R4W extends AnyFlatSpec {
   "EightReadFourWriteRegFile" should "correctly write and read values with multiple ports" in {
     val numRegs = 64
     val width = 64
@@ -18,7 +18,7 @@ class MultiPortRegFileTest8R4W extends AnyFlatSpec {
     val numWritePorts = 4
     val numBanks = 4
 
-    simulate(new MultiPortRegFile(numRegs, width, numReadPorts, numWritePorts, numBanks)) { dut =>
+    simulate(new RegFile(numRegs, width, numReadPorts, numWritePorts, numBanks)) { dut =>
 
       def write(addr: Int, data: BigInt, writePort: Int): Unit = {
         dut.io.writeAddr(writePort).poke(addr.U)

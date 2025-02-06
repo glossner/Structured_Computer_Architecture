@@ -6,7 +6,7 @@ package scabook.memory
 import chisel3._
 import chisel3.util._
 
-class MultiPortRegFile(numRegs: Int, width: Int, numReadPorts: Int, numWritePorts: Int, numBanks: Int) extends Module {
+class RegFile(numRegs: Int, width: Int, numReadPorts: Int, numWritePorts: Int, numBanks: Int) extends Module {
   require(numRegs % numBanks == 0, "Number of registers must be evenly divisible by the number of banks")
 
   val io = IO(new Bundle {
@@ -40,7 +40,7 @@ class MultiPortRegFile(numRegs: Int, width: Int, numReadPorts: Int, numWritePort
 }
 
 // Top-level wrapper instantiating an 8R/4W register file
-class EightReadFourWriteRegFile extends MultiPortRegFile(
+class EightReadFourWriteRegFile extends RegFile(
   numRegs = 64,       // Assume 64 registers
   width = 64,         // 64-bit registers
   numReadPorts = 8,   // 8 read ports
