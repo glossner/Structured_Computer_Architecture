@@ -1,7 +1,7 @@
 module testMean;
     logic [31:0]    out     ;
     logic [31:0]    in      ;
-    logic           reset  	;
+    logic           reset   ;
     logic           clock   ;
 
     initial begin               clock = 0       ;

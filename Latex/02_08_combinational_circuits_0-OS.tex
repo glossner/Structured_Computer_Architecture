@@ -1511,7 +1511,7 @@ Actual implementations are sometimes optimized by implementing two ore more modu
 
 \placedrawing[H]{figures/02_20_nbit_alu.lp}{A simple Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig7}
 
-The implementation takes into account the fact that a HA is implemented using an AND gate and a XOR gate (see Figure \ref{fig3}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, a XOR is added for the subtract function and for the two logic functions the outputs of the first HA are directly used.
+The implementation takes into account the fact that a HA is implemented using an AND gate and a XOR gate (see Figure \ref{fig:half_adder}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, a XOR is added for the subtract function and for the two logic functions the outputs of the first HA are directly used.
 
 \ifthenelse{\boolean{chiselversion}}{
 

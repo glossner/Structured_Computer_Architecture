@@ -357,9 +357,9 @@ The internal structure of a file register is characterized by the two multiplexe
 \end{verisum}
 
 \ifthenelse{\boolean{chiselversion}}{
-\includechiselcode[caption={Parameterized Pipelined SRAM (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_sram_pipelined}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
+\includechiselcode[caption={Register File (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_regfile}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
 
-Listing \ref{lst:chisel_sram_pipelined} implements
+Listing \ref{lst:chisel_regfile} implements
 
 In Chisel, a register file can be implemented using either a \texttt{Vec} of \texttt{Reg} or an SRAM-based memory structure such as \texttt{SyncReadMem}. The choice between these two implementations depends on multiple factors, including the size of the register file, read and write access patterns, and the target hardware architecture.
 
@@ -414,7 +414,7 @@ cell has two functions:
 
 \placedrawing[H]{figures/06_06_content_addressable_memory.lp}{{\bf The Content Addressable Memory
 ({\em CAM}).} {\small {\bf a.} A 4-word CAM is built using 4
-content addressable cells, a demultiplexor to distribute the write
+content addressable cells, a demultiplexer to distribute the write
 enable (WE) signal, and a $NAND_{4}$ to generate the match signal
 (M). {\bf b.} The logic symbol.}}{cam}
 
