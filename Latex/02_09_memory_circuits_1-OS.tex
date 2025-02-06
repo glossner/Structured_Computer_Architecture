@@ -357,15 +357,15 @@ The internal structure of a file register is characterized by the two multiplexe
 \end{verisum}
 
 \ifthenelse{\boolean{chiselversion}}{
-\includechiselcode[caption={Register File (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_regfile}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
+\includechiselcode[caption={Register File (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}, firstline=24, firstnumber=24, lastline=999]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
 
-Listing \ref{lst:chisel_regfile} implements
-
-In Chisel, a register file can be implemented using either a \texttt{Vec} of \texttt{Reg} or an SRAM-based memory structure such as \texttt{SyncReadMem}. The choice between these two implementations depends on multiple factors, including the size of the register file, read and write access patterns, and the target hardware architecture.
+Listing \ref{lst:chisel_regfile} implements a register-based register file. In Chisel, a register file can be implemented using either a \texttt{Vec} of \texttt{Reg} or an SRAM-based memory structure such as \texttt{SyncReadMem}. The choice between these two implementations depends on multiple factors, including the size of the register file, read and write access patterns, and the target hardware architecture.
 
 A \texttt{Vec} of \texttt{Reg} is a collection of registers, each implemented as a distinct flip-flop. This approach is particularly suitable for small register files, such as general-purpose registers in a CPU core or pipeline buffers. Since each register is directly accessible, read operations are purely combinational, resulting in zero-cycle latency. This makes \texttt{Vec} of \texttt{Reg} ideal when low-latency register access is a requirement. Additionally, this structure allows multiple concurrent reads and writes, making it beneficial for designs where multiple functional units require simultaneous register access. However, as the number of registers increases, the area and power consumption grow significantly due to the need for dedicated flip-flops for every bit in the register file. This makes \texttt{Vec} of \texttt{Reg} inefficient for large-scale register files.
 
 \texttt{SyncReadMem} provides a more scalable approach for implementing register files when the number of registers is large. It models a synchronous memory that stores register values in a memory array instead of individual flip-flops, significantly reducing area and power consumption. This is particularly advantageous when the register file must hold a large number of entries, such as in vector processors, GPU register banks, or out-of-order execution buffers. Since \texttt{SyncReadMem} models SRAM behavior, it typically has a one-cycle read latency, meaning that register values are not immediately available in the same cycle as the read request. This trade-off makes it less suitable for applications requiring immediate read results but is acceptable in architectures that can tolerate pipelined reads. Another limitation of \texttt{SyncReadMem} is that it typically supports only a single read and a single write port per clock cycle unless explicitly instantiated as multi-port memory, which can introduce complexity.
+
+Additional designs showing SRAM register files can be found in Section \ref{subsec:regfile_2R1W_SRAM} and \ref{subsec:regfile_MT_2R1W_SRAM}.
 
 }% End Chisel
 

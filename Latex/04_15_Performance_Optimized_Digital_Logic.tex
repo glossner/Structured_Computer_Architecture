@@ -187,9 +187,48 @@ Bypass Networks & Zero-cycle forwarding & Enhances performance & Increases contr
 \end{center}
 
 \ifthenelse{\boolean{chiselversion}}{
-\includechiselcode[caption={Parameterized Multi R/W port Register File (Chisel: MultiPortRegFile.scala)}, label={lst:chisel_multiport_regfile}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/MultiPortRegFile.scala}
+%************************************************
+\subsection{Parameterized 2R/1W SRAM-based Register File} \label{subsec:regfile_2R1W_SRAM}
+%**************************************************
+\includechiselcode[caption={Parameterized 2R/1W SRAM-based Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_2R1W_SRAM_regfile}, firstline=22, firstnumber=22, lastline=999]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
 
-Listing \ref{lst:chisel_multiport_regfile} 
+Listing \ref{lst:chisel_2R1W_SRAM_regfile} shows \texttt{RegFile2R1WSRAM} that implements a register file with two read ports and one write port. It is built using a synchronous memory (\texttt{SyncReadMem}), ensuring that all memory operations are synchronized with the clock signal. The register file stores \texttt{depth} registers, where each register is \texttt{width} bits wide. By default, both \texttt{depth} and \texttt{width} are set to 32, meaning the register file contains 32 registers, each capable of holding a 32-bit value.
+
+To address individual registers within the register file, the code computes the number of address bits required using the function \texttt{log2Ceil(depth)}. This function determines the minimum number of bits necessary to represent an index into a structure of size \texttt{depth}. The computed address width is then used to define input and output signals in the module's interface.
+
+The module interface consists of several input and output ports. The inputs include \texttt{src1} and \texttt{src2}, which specify the addresses of the registers to be read, and \texttt{dst1}, which specifies the address of the register to be written. The \texttt{wen} signal acts as a write enable, determining whether a write operation should take place. The \texttt{dst1data} input carries the data to be written to the register file. The outputs \texttt{src1data} and \texttt{src2data} provide the data read from the registers at addresses \texttt{src1} and \texttt{src2}, respectively.
+
+The register file is implemented using a synchronous memory block \texttt{mem}, instantiated with \texttt{SyncReadMem}. This memory is designed for synchronous reads, meaning that data is retrieved one clock cycle after the corresponding address is provided. The module reads data from the memory using \texttt{mem.read(io.src1)} and \texttt{mem.read(io.src2)}. Since the read operation is synchronous, the outputs must be registered to ensure they align correctly with the processor pipeline. This is achieved using \texttt{RegNext}, which registers the read outputs so that they are available one cycle later. If no previous value exists, the outputs default to zero.
+
+The write operation is controlled by the \texttt{wen} signal. When \texttt{wen} is asserted, the module writes the value of \texttt{dst1data} into the memory at the address specified by \texttt{dst1}. This ensures that the write operation is executed only when explicitly enabled. Because the processor pipeline ensures that write operations do not coincide with reads in the same cycle, there is no need for additional bypass logic to resolve read-after-write hazards.
+
+
+
+%************************************************
+\subsection{Parameterized Multithreaded 2R/1W SRAM-based Register File} \label{subsec:regfile_MT_2R1W_SRAM}
+%**************************************************
+
+
+\includechiselcode[caption={Parameterized Multithreaded 2R/1W SRAM-based Register File (Chisel: RegFileMT2R1WSRAM.scala)}, label={lst:chisel_MT_2R1W_SRAM_regfile}, firstline=29, firstnumber=29, lastline=999]{\chiselSourceDir/memory/RegFileMT2R1WSRAM.scala}
+
+Listing \ref{lst:chisel_MT_2R1W_SRAM_regfile} \texttt{RegFileMT2R1WSRAM} implements a barrel-threaded multithreaded register file with two read ports and one write port. This design utilizes a synchronous memory (\texttt{SyncReadMem}) to store register values while supporting multiple independent threads. Each thread maintains a separate register space, and a thread identifier (\texttt{threadID}) is used to distinguish between the register sets. Instead of storing registers separately for each thread, the module implements a unified SRAM structure, where the total memory depth is equal to the product of the number of threads and the number of registers per thread.
+
+To compute memory addresses for accessing registers, the module concatenates the \texttt{threadID} with the register index. This concatenation effectively partitions the memory into per-thread sections, ensuring that each thread has exclusive access to its own registers. The number of bits required to represent a thread identifier is determined using \texttt{log2Ceil(threads)}, while the number of bits needed to index registers within a thread is computed using \texttt{log2Ceil(depth)}. The resulting memory depth, given by \texttt{threads * depth}, defines the total storage required for the register file.
+
+The module's input and output interface consists of several ports that facilitate register file operations. The \texttt{threadID} input determines the active thread, and all read and write accesses are performed within the address space of this thread. The read ports \texttt{src1} and \texttt{src2} specify the register indices to be read, while their corresponding outputs \texttt{src1data} and \texttt{src2data} return the stored values after a one-cycle delay. The write port \texttt{dst1} specifies the register index for writing data, and \texttt{dst1data} contains the value to be written. The write operation is controlled by the \texttt{wen} signal, which enables writes when asserted.
+
+To perform memory operations, the module first computes the effective memory addresses by concatenating the \texttt{threadID} with the respective register indices. These computed addresses are used for both read and write operations. The read operation is synchronous, meaning that data is not available immediately after providing the address but appears in the next clock cycle. To align with the processor pipeline, the module registers the read outputs using \texttt{RegNext}, ensuring that the read values are properly synchronized with the computation stages.
+
+For write operations, when \texttt{wen} is asserted, the module writes the value of \texttt{dst1data} into memory at the computed effective address \texttt{Cat(io.threadID, io.dst1)}. This guarantees that each thread writes only to its own register space without interfering with other threads. The use of a unified memory structure simplifies the implementation while allowing independent register access for each thread.
+
+
+
+%************************************************
+%\subsection{Parameterized Multiport Register File}
+%**************************************************
+%\includechiselcode[caption={Parameterized Multi R/W port Register File (Chisel: RegFile.scala)}, label={lst:chisel_multiport_regfile}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/RegFile.scala}
+
+%Listing \ref{lst:chisel_multiport_regfile} 
 
 }% End Chisel
 
