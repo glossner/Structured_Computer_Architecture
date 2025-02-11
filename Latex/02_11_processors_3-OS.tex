@@ -43,18 +43,24 @@ Thus, after seeing that regular languages have finite automata as recognition an
 
 \section{Elementary Processor}
 
+The main gain obtained by closing the third feedback loop is given by the fact that the obtained structure can act on a data structure in the sense of modifying or interpreting it. This can be achieved by using an automaton that modifies its state by applying simple functions to its own state. This automaton, let's call it functional, is coordinated by a control automaton that manages the data flows and the way in which they are stored and modified.
+
+We will begin by introducing the concept of an elementary processor, a processor that performs a single process.
+
 \subsection{Elementary Processor Structure}
 
-The typical representative of 3rd order systems, 3-OS, is the elementary processor, EP.
+The simplest representative of 3rd order systems, 3-OS, is the {\bf {\em elementary processor}}, EP.
 
 \begin{definition}
 An {\bf {\em elementary processor}} is obtained by loop connecting a functional simple automaton with a finite automaton used as controller in order to provide on output the result of a function applied on input data.
 
 $\diamond$
 \end{definition}
-In Figure \ref{elemProc} the block schematic of an elementary processor, is represented. A standard implementation is with a RALU as the functional automaton (see \ref{rALU})  and a CROM as the control automaton(see \ref{contrAut}) . An EP performs a function specified on the input {\tt function}, which is applied to the data received on {\tt dataInput}. The result of the processing is provided on the output {\tt dataOutput}. The signals {\tt sync} are used to synchronize data transfer and function acknowledge.
 
 \placedrawing[H]{figures/11_1_elementary_processor.LP}{Elementary Processor (EP) loop connecting a functional automaton, for example a RALU, with a control automaton, for example a CROM.}{elemProc}
+
+In Figure \ref{elemProc} the block schematic of an elementary processor, is represented. A standard implementation is with a RALU as the functional automaton (see \ref{rALU})  and a CROM as the control automaton(see \ref{contrAut}) . An EP performs a function specified on the input {\tt function}, which is applied to the data received on {\tt dataInput}. The result of the processing is provided on the output {\tt dataOutput}. The signals {\tt sync} are used to synchronize data transfer and function acknowledge.
+
 
 The third loop is a control loop which sends commands from CROM to RALU, and sends back from RALU flags used by CROM to guide the evolution of the sequence of micro-instructions.
 
@@ -273,48 +279,48 @@ A micro-instruction is organized in fields, according to the command issued by t
         \end{description}
     \item[{\tt aluFunc[3:0]}]: the arithmetic or logic function selected to be performed by ALU on the operands fetched form the register file; it acts in micro-instruction with the followings mnemonics:
         \begin{description}
-            \item[{\bf BIGVAL}]:
+            \item[{\bf BIGVAL}]: {\tt D(X) <= \{L(Y)[15:0], R(Z)[15:0]\}}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf ADD}]:
+            \item[{\bf ADD}]: {\tt D(X) <= L(Y) + R(Z)}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf SUB}]:
+            \item[{\bf SUB}]: {\tt D(X) <= L(Y) - R(Z)}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf ADDCR}]:
+            \item[{\bf ADDCR}]: {\tt D(X) <= (L(Y) + R(Z))[23]}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf SUBCR}]:
+            \item[{\bf SUBCR}]: {\tt D(X) <= (L(Y) - R(Z))[23]}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf LSH}]:
+            \item[{\bf LSH}]: {\tt D(X) <= \{1'b0, L(Y)[31:1]\}}, where $X,Y \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf ASH}]:
+            \item[{\bf ASH}]: {\tt D(X) <= \{L(Y)[31], L(Y)[31:1]\}}, where $X,Y \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf MOVE}]:
+            \item[{\bf MOVE}]: {\tt D(X) <= L(Y)}
         \end{description}
         \begin{description}
-            \item[{\bf MULT}]:
+            \item[{\bf MULT}]: {\tt D(X) <= L(Y) * R(Z)}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf AND}]:
+            \item[{\bf AND}]: {\tt D(X) <= L(Y) \& R(Z)}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf OR}]:
+            \item[{\bf OR}]: {\tt D(X) <= L(Y) | R(Z)}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf XOR}]:
+            \item[{\bf XOR}]: {\tt D(X) <= L(Y) $\^$ R(Z)}, where $X,Y,Z \in [0,32)$
         \end{description}
     \item[{\tt Read}]: read DataIn; it acts in micro-instruction with the following mnemonic:
         \begin{description}
-            \item[{\bf GET}]
+            \item[{\bf GET}]: {\tt D(X) <= DataIn}
         \end{description}
     \item[{\tt Write}]: write DataOut; it acts in micro-instruction with the following mnemonic:
         \begin{description}
-            \item[{\bf SEND}]
+            \item[{\bf SEND}]: DataOut = L(Y), where $Y \in [0,32)$
         \end{description}
 \end{description}
 

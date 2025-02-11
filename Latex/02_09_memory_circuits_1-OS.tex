@@ -213,6 +213,12 @@ one of the $m$ DLs. Both, DMUX and MUX use as selection code a
 $p$-bit address. The one-bit data DIN can be stored in the clocked
 DL.}}{ram}
 
+The waveforms that define the operation of the structure in Figure \ref{ram} are represented in Figure \ref{wave} where the main restrictions are represented by:
+\begin{description}
+    \item[$t_{ASU}$]: address set-up time represents the time interval in which the address must be stable before the activation of the WE signal to allow the decoder in the DMUX to do its work.
+    \item[$t_{DSU}$]: data set-up time represents the time interval in which DIN must be stable before de-activating the WE signal to allow the correct closing of the reaction loop in the selected latch.
+    \item[$t_{DH}$]: data hold represents the time interval in which DIN must be stable after deactivating the WE signal to allow the correct closing of the reaction loop in the selected latch.
+
 \placedrawing[H]{figures/03_10_async_ram.lp}{{\bf Read and write cycles for an
 asynchronous RAM.} {\small Reading is a combinational process of
 selecting. The access time, $t_{ACC}$, is given by the propagation
@@ -221,28 +227,22 @@ included in the time interval when the address is stable (see
 $t_{ASU}$ and $t_{AH}$). Data must be stable related to the
 positive transition of $WE'$ (see $t_{DSU}$ and $t_{DH}$).}}{wave}
 
-
-The waveforms that define the operation of the structure in Figure \ref{ram} are represented in Figure \ref{wave} where the main restrictions are represented by:
-\begin{description}
-    \item[$t_{ASU}$]: address set-up time represents the time interval in which the address must be stable before the activation of the WE signal to allow the decoder in the DMUX to do its work.
-    \item[$t_{DSU}$]: data set-up time represents the time interval in which DIN must be stable before de-activating the WE signal to allow the correct closing of the reaction loop in the selected latch.
-    \item[$t_{DH}$]: data hold represents the time interval in which DIN must be stable after deactivating the WE signal to allow the correct closing of the reaction loop in the selected latch.
+    
     \item[$t_{W}$]: width of the write enable signal which ensures correct writing in the selected latch
     \item[$t_{AH}$]: address hold time is the time interval in which the address must be maintained after the WE signal is provided
     \item[$t_{ACC}$]: access time is the time interval after which the content of the selected cell is accessible at the output
 \end{description}
 All the previously listed times are minimum values.
 
+How can you build a RAM memory that stores words of $m$ bits? The generic solution is presented in Figure \ref{bigword} where for each bit a column containing $2^p$ latches is defined.
+
+In Figure \ref{bigword}, $DCD_p$ is shared between the DMUX and the MUX in Figure \ref{ram}. The ANDs associated with the demultiplexing function are selected with the WE signal. The AND-OR structure is repeated $m$ times, once in each $COLUMN_i$ column.
+
 \placedrawing[H]{figures/03_11_async_mbit_ram.lp}{{\bf The asynchronous $m$-bit word
 RAM.} {\small Expanding the number of bits per word means to
 connect in parallel one-bit word memories which share the same
 decoder. Each COLUMN contains storing latches and  AND-OR
 circuits for one bit.}}{bigword}\textcolor[rgb]{0.00,0.00,0.00}{}
-
-
-How can you build a RAM memory that stores words of $m$ bits? The generic solution is presented in Figure \ref{bigword} where for each bit a column containing $2^p$ latches is defined.
-
-In Figure \ref{bigword}, $DCD_p$ is shared between the DMUX and the MUX in Figure \ref{ram}. The ANDs associated with the demultiplexing function are selected with the WE signal. The AND-OR structure is repeated $m$ times, once in each $COLUMN_i$ column.
 
 %******************************************
 \subsection{Synchronous RAM}\label{syncMem}
@@ -412,12 +412,6 @@ In Figure \ref{cam_cell} there are 4 D latches as storage elements
 and four XORs connected to a 4-input NAND used as comparator. The
 cell has two functions:
 
-\placedrawing[H]{figures/06_06_content_addressable_memory.lp}{{\bf The Content Addressable Memory
-({\em CAM}).} {\small {\bf a.} A 4-word CAM is built using 4
-content addressable cells, a demultiplexer to distribute the write
-enable (WE) signal, and a $NAND_{4}$ to generate the match signal
-(M). {\bf b.} The logic symbol.}}{cam}
-
 \begin{itemize}
     \item {\bf to store}: the active level of the clock modify the content
     of the cell storing  the 4-bit input data into the four D
@@ -426,6 +420,12 @@ enable (WE) signal, and a $NAND_{4}$ to generate the match signal
     with the content of the cell generating the signal $AO'=0$ if
     the input matches the content.
 \end{itemize}
+
+\placedrawing[H]{figures/06_06_content_addressable_memory.lp}{{\bf The Content Addressable Memory
+({\em CAM}).} {\small {\bf a.} A 4-word CAM is built using 4
+content addressable cells, a demultiplexer to distribute the write
+enable (WE) signal, and a $NAND_{4}$ to generate the match signal
+(M). {\bf b.} The logic symbol.}}{cam}
 
 The cell is {\em written} as an $m$-bit latch and is continuously
 {\em interrogated} using a combinational circuit as comparator.

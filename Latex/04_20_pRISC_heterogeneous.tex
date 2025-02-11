@@ -64,6 +64,13 @@ In the second level in the hierarchy, interesting from a parallel computing poin
 
 The role of the interfaces (see Figure \ref{fig:hetInterfaces} and Listing \ref{lst:interfaces}) is to adapt the transfer rates, programs, commands and data, between the system host and the accelerator. The module contains three FIFO memories (see \ref{lb:fifo} in this book). One FIFO ensures the transfer of programs and commands from the host to the accelerator. The other two ensure the transfer of data from the host to the accelerator and vice versa.
 
+\includeverilogcode[caption={Interfaces. File: 2\_interfaces.sv.  (SystemVerilog)}, 
+                    label={lst:interfaces}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A20_interfaces.sv}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Images/hetInterfaces.png} 
@@ -71,12 +78,6 @@ The role of the interfaces (see Figure \ref{fig:hetInterfaces} and Listing \ref{
     \label{fig:hetInterfaces}
 \end{figure}
 
-\includeverilogcode[caption={Interfaces. File: 2\_interfaces.sv.  (SystemVerilog)}, 
-                    label={lst:interfaces}, 
-                    firstline=1, 
-                    firstnumber=1, 
-                    lastline=68]
-                    {\verilogSourceDir/A20_interfaces.sv}
 
 
 
@@ -328,9 +329,9 @@ The host architecture will be described through the host's instruction set archi
 
 
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|l|l|l|}
 \caption{Host's Instruction Set Architecture.}
 \label{tab:host_isa} \\
@@ -385,7 +386,9 @@ hinsval & \texttt{\{cr, rf[dest]\} <= \{cr, \{rf[left][15:0], val\}\}} & hINSVAL
 hload   & \texttt{\{cr, rf[dest]\} <= \{cr, hDmem[rf[left]]\}}        & hLOAD(d, l)    \\ \hline
 hstore  & \texttt{hDmem[rf[left]] <= rf[right]}                       & hSTORE(l, r)   \\ \hline
 \end{longtable}
-\end{table}
+}
+}
+%\end{table}
 
 
 
@@ -395,9 +398,9 @@ hstore  & \texttt{hDmem[rf[left]] <= rf[right]}                       & hSTORE(l
 
 An assembly program written for the host computer uses the hISA, and a first version of a  library of functions, LFA 0.1 (see Table \ref{tab:lfa01}), where each function is implemented by a program executed by the accelerator. Thus, the library used by host is a hardware implemented library unlike the usual software-designed libraries.
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|l|l|}
 \caption{Host's Function Library Architecture (FLA) defined in file: {\tt 00\_theKernel.sv}.}
 \label{tab:lfa01} \\
@@ -428,7 +431,9 @@ hSQMVMULT(d,l,r) & \texttt{V[d] <= M[l l+p-1] * V[r]} \\ \hline
 hSQMMULT(d,l,r)  & \texttt{M[d d+p-1] <= M[l l-p+1] * M[r r+p-1]} \\ \hline
 hSQMMAC(d,l,r)   & \texttt{M[d d+p-1] <= M[d d+p-1] + (M[l l-p+1] * M[r r+p-1])} \\ \hline
 \end{longtable}
-\end{table}
+}
+}
+%\end{table}
 
 
 \subsection{Accelerator's dual architecture}
@@ -438,9 +443,9 @@ hSQMMAC(d,l,r)   & \texttt{M[d d+p-1] <= M[d d+p-1] + (M[l l-p+1] * M[r r+p-1])}
 Each assembly-level instruction is made by concatenating the operation micro-code (indicated on the first column of the following tables) with the micro-code that selects the operation mode (indicated on the first line in the following table).
 
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|l||l|l|l|l|l|}
 \caption{Instructions with operands from the controller's Instruction Set Architecture.}
 \label{tab:controller_isa} \\
@@ -469,14 +474,15 @@ cbwxor    & cVXOR(s)    & cXOR(s)    & cRXOR(s)    & cRIXOR(s)    & CXOR       \
 cload     & cVLOAD(s)   & cLOAD(s)   & cRLOAD(s)   & cRILOAD(s)   & CLOAD      \\ \hline
 cstore    &             & cSTORE(s)  & cRSTORE(s)  & cRISTORE(s)  & CCSTORE    \\ \hline
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 
 
 
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|l|l|l|}
 \caption{Sequencer's Instruction Set Architecture with no operand.}
 \label{tab:sequencer_isa} \\
@@ -518,7 +524,8 @@ crela          & \texttt{addr <= acc}                         & cADDRLD      \\ 
 start          & Start cycle counter                          & cSTART       \\ \hline
 stop           & Stop cycle counter                           & cSTOP        \\ \hline
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 
 
 
@@ -526,9 +533,9 @@ stop           & Stop cycle counter                           & cSTOP        \\ 
 
 Each assembly-level instruction is made by concatenating the operation micro-code (indicated on the first column of the following tables) with the micro-code that selects the operation mode (indicated on the first line in the following table).
 
-\begin{table}[H]
-\scriptsize
-\centering
+%\begin{table}[H]
+{\scriptsize
+{\centering
 \begin{longtable}{|l||l|l|l|l|l|l|l|l|}
 \caption{Instructions with operands from the Instruction Set Architecture.}
 \label{table:isa_instructions} \\
@@ -562,12 +569,13 @@ search    & VSEARCH(s) &           &            &             & SEARCH  &       
 csearch   & VCSEARCH(s)&           &            &             & CSEARCH &          &          &           \\ \hline
 insert    & VINSERT(s) &           &            &             & INSERT  &          &          &           \\ \hline
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|l|l|l|}
 \caption{Map's Instruction Set Architecture with no operand.}
 \label{tab:map_isa} \\
@@ -619,7 +627,8 @@ delete        &                                                  & DELETE       
 cinsval       & \texttt{acc[i] <= \{(acc[i] << 8), value[7:0]\}}  & INSVAL         \\ \hline
 crela         & \texttt{addr[i] <= acc[i]}                       & ADDRLD         \\ \hline
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 
 
 
@@ -854,9 +863,9 @@ Running the program for $p = 16$ results:
 The execution time resulting form the code listed in Listing \ref{lst:theKernel} is:
 $$t_{mvMult}(p) = 2p + log_2 p + 8 \in O(p)$$
 Table \ref{tab:mvPerformance} summarizes the time performance for matrix-vector multiplication. The constant associated with Big O notation used to indicate execution time tends towards 2 as this table suggests.
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|r|r|c|}
 \caption{Matrix-vector multiplication evaluation depending on the size of the square matrix.}
 \label{tab:mvPerformance} \\
@@ -879,7 +888,8 @@ Table \ref{tab:mvPerformance} summarizes the time performance for matrix-vector 
 256 & 538  & 2.06 \\ \hline
 512 & 1051  & 2.03 \\ \hline
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 
 $\diamond$
 \end{exemplu}
@@ -955,9 +965,9 @@ The execution time resulting form the code listed in Listing \ref{lst:theKernel}
 $$t_{mmMult}(p) = 2p^2 + p \times log_2 p +12p +13 \in O(p^2)$$
 The execution time is evaluated by the simulator at {\tt aCC = 781 clock cycles} for $p = 16$. In Table \ref{tab:mmPerformance} are displayed the number of clock cycles per dot product for $p \times p$ matrices. The constant associated with Big O notation used to indicate execution time tends towards 2 as this table suggests.
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|r|r|c|}
 \caption{Multiplication evaluation depending on the size of the square matrices.}
 \label{tab:mmPerformance} \\
@@ -980,7 +990,8 @@ The execution time is evaluated by the simulator at {\tt aCC = 781 clock cycles}
 256 & 136205  & 2.07 \\ \hline
 512 & 535053  & 2.04 \\ \hline
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 
 As the matrix size increases, the number of clock cycles per dot product converges to 2, the size of the loop that calculates each element of the resulting matrix.
 
@@ -1077,9 +1088,9 @@ The initial matrix is generated starting with {\tt vect[0]}, while the result ma
 Measurement made in simulation for different values for $p$ provided the figures form Table \ref{tab:transPerformance}. They corresponds also with the theoretical evaluation of the execution time:
 $$t_{transpose}(p) = p^2 + 27p + 12 $$
 
-\begin{table}[H]
-\small
-\centering
+%\begin{table}[H]
+{\small
+{\centering
 \begin{longtable}{|r|r|c|}
 \caption{Transpose evaluation depending on the size of the square matrices.}
 \label{tab:transPerformance} \\
@@ -1103,7 +1114,8 @@ $$t_{transpose}(p) = p^2 + 27p + 12 $$
 	   512	&    275980	 &	1.05		\\ \hline
 	  1024	&   1076236	 &	1.02		\\ \hline	
 \end{longtable}
-\end{table}
+}}
+%\end{table}
 The resulting acceleration is in $O(1)$.
 
 $\diamond$

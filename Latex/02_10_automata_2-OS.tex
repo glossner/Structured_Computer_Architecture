@@ -76,7 +76,7 @@ Turing’s formal model set the stage for understanding how numbers can be syste
 
 In this chapter we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes, that is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
 
-The main targets in this chapter are the main components of a small and simple processing unit: {\bf {\em Program Counter (PC)}} and  {\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}.
+The main targets in this chapter are the main components of a small and simple processing unit: {\bf {\em Control Automaton}}, {\bf {\em Program Counter (PC)}} and  {\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}.
 
 \section{Definitions}
 
@@ -122,7 +122,7 @@ specially selected, initial state.
 The huge {\em size} of the actual circuits implemented on a single
 chip imposes a more precise distinction between {\em simple}
 circuits and {\em complex} circuits. When we can integrated on a
-single chip more than $10^{9}$ components, the size of the circuits
+single chip more than $10^{10}$ components, the size of the circuits we design 
 becomes less important than their complexity. Unfortunately we
 don't make a clear distinction between {\em size} and {\em
 complexity}. We say usually: ``the complexity of a computation is
@@ -134,7 +134,7 @@ easy specified, easy described in an HDL, easy tested and so on.
 Otherwise, if the structure is completely random, without any
 repetitive substructure inside, it can be described using only a
 description having a similar dimension with the circuit size. When
-the circuit is small, it is not a problem, but for million of
+the circuit is small, it is not a problem, but for billions of
 components the problem has no solution. Therefore, if the circuit
 is very big, it is not enough to deal only with its size, the most
 important becomes also the degree of uniformity of the circuit.
@@ -181,8 +181,7 @@ $\diamond$
 
 This definition of size offers an almost accurate image about the
 silicon area used to implement the circuit, but the effects of
-lay-out, of fan-out and of speed are not catched by this
-definition.
+lay-out, of fan-out and of speed are not captured by this definition.
 
 \begin{definition}
 The {\bf area size} of a digital circuit, $AS_{digital \;
@@ -310,18 +309,16 @@ representations. The first step to have a circuit is to express
 what it must do in a behavioral description written in a certain
 HDL. If this "definition" is too large, having the magnitude order
 of a huge multi-billion-transistor circuit, we don't have the
-possibility to write the program expressing our desire.
+possibility to write the testable program expressing our desire.
 
 In the domain of circuit design we passed long ago beyond the
 stage of {\em minimizing} the number of gates in a few gates
 circuit. Now, the most important thing, in the
 multi-billion-transistor circuit era, is the {\em ability to
-describe} simple (because we can't
+describe} simple enough (because we can't
 write huge programs), big (because we can produce more circuits on
 the same area) sized circuits. We must take into consideration that the Moore's Law applies to size not
 to complexity.
-
-
 
 
 \subsection{Taxonomy}
@@ -382,7 +379,7 @@ We will exemplify with two typical cases: a recognizing automaton and a control 
 
 \subsection{Recognizing automata}
 
-Theoretical linguist Noam Chomsky introduced the concept of generative grammar \cite{Chomsky56, Chomsky59, Chomsky63}, a concept used in modern computer science to develop compiler theory, a theory used to translate programs written in a high-level language into the machine language used at the lowest level in a computing machine \cite{Hopcroft2001}. The first step in translation is to recognize the sequence to be translated as belonging to a particular language. The simplest possible example concerns the languages defined in the set $\{0,1\}^*$, that of all strings formed with elements from the set $\{0,1\}$. We will consider, in the following example, a language from the category of regular languages, in the sense of the classification made by N. Chomsky. Regular languages, or type 3, are the simplest languages, in the sense that they are generated with the most restrictions: the string is formed by increasing each step independently of the context at a single end. For these languages a finite automaton (a two-loop digital system) can be used to recognize or generate.
+Theoretical linguist Noam Chomsky introduced the concept of generative grammar \cite{Chomsky56, Chomsky59, Chomsky63}, a concept used in modern computer science to develop compiler theory, a theory used to translate programs written in a high-level language into the machine language used at the lowest level in a computing machine \cite{Hopcroft2001}. The first step in translation is to recognize the sequence to be translated as belonging to a particular language. The simplest possible example concerns the languages defined in the set $\{0,1\}^*$, that of all strings formed with elements from the set $\{0,1\}$. We will consider, in the following example, a language from the category of regular languages, in the sense of the classification made by N. Chomsky. Regular languages, or type 3, are the simplest languages, in the sense that they are generated with the most restrictions: the string is formed by increasing each step independently of the context at one end only. For these languages a finite automaton (a two-loop digital system) can be used to recognize or generate.
 
 \begin{exemplu}\label{regLang}
 The binary   to the language $L = \{1^{n}0^{m} | n,m \geq 1\} \in \{0,1\}^*$,
@@ -785,124 +782,28 @@ in the module which describes the ROM of CROM we must include the following line
   `include "codeGenerator.v" // generates ROM's content using 'theDefinition.v'
 \end{verbatim}
 }
-The code generating mechanism is
-a program which has as input a file describing the behavior of the
-automaton using a microprogram. Considering Example \ref{dummyMP}, the file {\tt theDefinition} as an input
-for our code generator, the file {\tt codeGenerator.v} is:
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog]
-/**********************************************************************
-Function: Microprogram assembler
-File name: codeGenerator.v
-Description: generate the binary form of a microprogram starting from
-            the content of the file theDefinition.v
-**********************************************************************/
-// Generate the binary content of the ROM
-    reg [1:0]   mode            ;
-    reg         test            ;
-    reg [1:0]   field1          ;
-    reg {2:0]   field2          ;
-    reg [1:0]   field3          ;
-    reg [7:0]   field4          ;
-    reg [4:0]   address         ;
-    reg [4:0]   counter         ;
-    reg [4:0]   labelTab[0:31]  ;
+The code generating mechanism is a program which has as input a file describing the behavior of the automaton using a microprogram. Let us consider  Example \ref{dummyMP} where the file {\tt theDefinition} is used  as an input for {\tt codeGenerator.sv}  defined inListing \ref{lst:A10_codeGenerator.sv}.
 
-    task eol;   // end of line
-      begin
-        mem[counter] =
-          {mode, address, test, field1, field2, field3, field4};
-        mode    = 0	;
-        test    = 0 ;
-        field1  = 0 ;
-        field2  = 0 ;
-        field3  = 0 ;
-        field4  = 0 ;
-        address = 0 ;
-        counter = counter + 1;
-      end
-    endtask
+\includeverilogcode[caption={Micro-program assembler..   File: A10\_codeGenerator.sv  (SystemVerilog)}, 
+                    label={lst:A10_codeGenerator.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=130]
+                    {\verilogSourceDir/A10_codeGenerator.sv}
 
-    // loads labelTab in the first pass
-    task lb; input [4:0] labelIndex;
-        labelTab[labelIndex] = counter; endtask
 
-    // commands
-    task com11  ; field1   = 2'b01;     endtask
-    task com12  ; field1   = 2'b10;     endtask
-    task com13  ; field1   = 2'b11;     endtask
-    task com21  ; field2   = 3'b001;    endtask
-    task com22  ; field2   = 3'b010;    endtask
-    task com23  ; field2   = 3'b011;    endtask
-    task com24  ; field2   = 3'b100;    endtask
-    task com31  ; field3   = 2'b01;     endtask
-    task com32  ; field3   = 2'b10;     endtask
-    task val; input [7:0] value; field4 = value; endtask
-
-    // transition modes
-    //task inc ; mode = 2'b00; endLine; end endtask
-    task jmp ; input [4:0] label;
-        begin mode = 2'b01; address = labelTab[label]; end
-    endtask
-    task cjmp; input [4:0] label;
-        begin mode = 2'b10; address = labelTab[label]; end
-    endtask
-    task init; mode = 2'b11; endtask
-
-    // flags selection
-    task flag1  ; test = 1'b0; endtask
-    task flag2 	; test = 1'b1; endtask
-
-    initial begin   counter = 0;
-                    mode    = 0 ;
-                    test    = 0 ;
-                    field1  = 0 ;
-                    field2  = 0 ;
-                    field3  = 0 ;
-                    field4  = 0 ;
-                    address = 0 ;
-                    `include "theDefinition.v"; // first assembly pass
-                    `include "theDefinition.v"; // second assembly pass
-            end
-\end{lstlisting}
-\end{shaded*}
-}
 The file {\tt theDefinition} is included twice because if a
 label is used before it is defined, only at the second pass in the
 memory {\tt labelTab} the right value of the jump address is correct.
 
-The code generator is tested using the following module:
+The code generator is tested using the  module for  Listing \ref{lst:A10_simulator.sv}.
 
-{\footnotesize
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog]
-/******************************************************************************
-Function: Simulator for testing codeGenerator.v
-File name: simulator.v
-Description: generate the binary form of the file theDefinition.v
-*******************************************************************************/
-module simulator;
-    `include "codeGenerator.v"
-    reg [22:0]  mem[0:31]   ; // ROM
-    integer i;
-    initial
-    for (i=0; i<16; i=i+1)
-        $display
-        ("ROM[%0d] \t = mode:%b addr:%b test:%b com1:%b com2:%b com3:%b val:%d",
-        i,
-        mem[i][22:21],
-        mem[i][20:16],
-        mem[i][15],
-        mem[i][14:13],
-        mem[i][12:10],
-        mem[i][9:8],
-        mem[i][7:0])    ;
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
+\includeverilogcode[caption={Micro-program assembler..   File: A10\_simulator.sv  (SystemVerilog)}, 
+                    label={lst:A10_simulator.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=130]
+                    {\verilogSourceDir/A10_simulator.sv}
 
 
 Running the simulation on the file {\tt theDefinition.x} results the content of the ROM:
@@ -922,16 +823,6 @@ ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
 }
 
 In the next chapter we will put the code generator to work exemplifying its usefulness for designing an elementary processor.
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1053,7 +944,7 @@ According to the connection list, RALU performs no more than 8 functions, on 32-
 
 In each clock cycle, the function {\tt func} is applied on two operands  selected from the register file and the result, {\tt out}, is loaded back in the register file if {\tt writeEnable = 1}. If {\tt load = 1}, then {\tt leftOp = in}. If {\tt writeEnable = 0}, the content of the register file remains unchanged and the only purpose of the operation is to send toward the external systems the outputs: {\tt carryOut, leftOut, rightOut}.
 
-The code {\tt func} selects the  functions defined in the file {\tt define.vh}:
+The code {\tt func} selects the  functions defined in Listing \ref{lst:A10_defineRALU.vh}.
 
 \includeverilogcode[caption={Defining the functions for a RALU.   File: A10\_defineRALU.vh  (SystemVerilog)}, 
                     label={lst:A10_defineRALU.vh}, 
@@ -1276,7 +1167,7 @@ synchronous FIFO}.
 \subsection{Finite Complex Automata}
 
 \begin{problem}
-Design the finite automaton which recognise the binary strings $a^{n}b^2c^{m}$, for $n \geq 1$ and $m \geq 1$. The input and the output signal are specified in the following file (where the state assignment must be added):
+Design the finite automaton which recognise the binary strings $a^{n}b^2c^{m}$, for $n \geq 1$ and $m \geq 1$. The input and the output signal are specified in Listing \ref{lst:A10_defines1.vh} (where the state assignment must be added):
 {\em
 \includeverilogcode[caption={Binary codes for input, output and state variables.   File: A10\_defines1.vh  (SystemVerilog)}, 
                     label={lst:A10_defines1.vh}, 
@@ -1290,7 +1181,7 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Design the interrupt automaton which manage the interrupt process in a processor. The synchronous interaction of a processor with an external event, in its simplest form, is achieved by accepting an interrupt signal, {\tt int}, to which it responds with {\tt inta} ("interrupt acklognement"). Acceptance of the interruption is conditioned by the state {\tt enableState} state in which the interrupt management automaton can be. At {\tt reset}, the automaton goes into the state {\tt disableState}. The {\tt eint} instruction puts the automaton in the {\tt enableState} state, a state in which {\tt inta} can be issued if {\tt int} is received. After issuing {\tt inta}, the automaton generates the signal {\tt flush} which blocks the update of the processor state for a number of cycles, number that depends on the depth of the execution pipe (3, in the considered case). At the end of {\tt flush} signal the automaton switches in the  {\tt disableState}. Instruction {\tt dint} sends the automaton in the {\tt disableState} state.
+Design the interrupt automaton which manage the interrupt process in a processor. The synchronous interaction of a processor with an external event, in its simplest form, is achieved by accepting an interrupt signal, {\tt int}, to which it responds with {\tt inta} ("interrupt acknowledgment"). Acceptance of the interruption is conditioned by the state {\tt enableState} state in which the interrupt management automaton can be. At {\tt reset}, the automaton goes into the state {\tt disableState}. The {\tt eint} instruction puts the automaton in the {\tt enableState} state, a state in which {\tt inta} can be issued if {\tt int} is received. After issuing {\tt inta}, the automaton generates the signal {\tt flush} which blocks the update of the processor state for a number of cycles, number that depends on the depth of the execution pipe (3, in the considered case). At the end of {\tt flush} signal the automaton switches in the  {\tt disableState}. Instruction {\tt dint} sends the automaton in the {\tt disableState} state.
 
 {\em
 \includeverilogcode[caption={Binary codes for input, output and state variables.   File: A10\_defines2.vh  (SystemVerilog)}, 
@@ -1436,7 +1327,7 @@ $\diamond$
 
 \begin{problem}
 
-Describe in System Verilog and simulate the FIFO represented in Figure \ref{fifo1}.
+Describe in System Verilog and simulate the FIFO represented in Figure \ref{fifo}.
 
 $\diamond$
 \end{problem}

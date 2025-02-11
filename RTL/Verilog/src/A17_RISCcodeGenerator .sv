@@ -8,8 +8,8 @@
 
     function endLine;
      begin
-        // for the pipelineed versions
-        //dut.memSys.progMemory[addrCounter][31:0] =
+		// for the pipelined version
+		//dut.memSys.progMemory[addrCounter][31:0] =
         progMemory[addrCounter][31:0] = // for the generic version
             {   opCode  ,
                 d       ,
