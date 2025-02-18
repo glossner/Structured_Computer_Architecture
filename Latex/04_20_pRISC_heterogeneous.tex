@@ -422,19 +422,21 @@ hINTRQ           & Interrupt request \\ \hline
 hVGENX(addr)     & \texttt{V(addr) <= IX} \\ \hline
 hVGENN(addr,val) & \texttt{V(addr) <= [val val ... val]} \\ \hline
 hSQGENX          & Generate square matrix \texttt{[V[0]=IX V[1]=IX+1 ... V[p-1]=IX+p-1]} \\ \hline
-hSQGENN(val)     & Generate matrix with \texttt{V[i]= [val val ... val]}, for \(i = 0, ..., p-1\) \\ \hline
-hUNIT            & Generate unit matrix starting with \texttt{V[addr]} \\ \hline
-hMSEND(addr,size)& Send matrix of \texttt{size} starting from \texttt{V[addr]} \\ \hline
-hMGET(addr,size) & Get matrix of \texttt{size} and load from \texttt{V[addr]} \\ \hline
-hSQMADD(d,l,r)   & \texttt{M[d d+p-1] <= M[l l+p-1] + M[r r+p-1]} \\ \hline
-hSQMVMULT(d,l,r) & \texttt{V[d] <= M[l l+p-1] * V[r]} \\ \hline
-hSQMMULT(d,l,r)  & \texttt{M[d d+p-1] <= M[l l-p+1] * M[r r+p-1]} \\ \hline
-hSQMMAC(d,l,r)   & \texttt{M[d d+p-1] <= M[d d+p-1] + (M[l l-p+1] * M[r r+p-1])} \\ \hline
+hSQGENN(val)     & Generate square matrix with \texttt{V[i]= [val val ... val]}, for \(i = 0, ..., p-1\) \\ \hline
+hMAIN(d,val)      & Generate diagonal matrix starting with \texttt{V[s]} with value {|tt val}  \\ \hline
+hPRANDOM(d)      & Generate pseudo-random square matrix starting with \texttt{V[d]} \\ \hline
+hMSEND(addr,size)& Send square matrix of \texttt{size} starting from \texttt{V[addr]} \\ \hline
+hMGET(addr,size) & Get square matrix of \texttt{size} and load from \texttt{V[addr]} \\ \hline
+hSQMADD(d,l,r)   & \texttt{Add square matrices: M[d] <= M[l] + M[r]} \\ \hline
+hSQMVMULT(d,l,r) & \texttt{Multiply square matrices with vector: V[d] <= M[l] * V[r]} \\ \hline
+hSQMMULT(d,l,r)  & \texttt{Square matrices multiply: M[d] <= M[l] * M[r]} \\ \hline
+hSQMMAC(d,l,r)   & \texttt{Square matrices multiply and add: M[d] <= M[d] + (M[l] * M[r])} \\ \hline
+hTRANS(d,l)   & \texttt{Transpose square matrix: M[d] <= trans(M[l])} \\ \hline
 \end{longtable}
 }
 }
 %\end{table}
-
+In Table \ref{tab:lfa01}, {\tt M[v]} represents a $p \times p$ square matrix  with the first vector {\tt V[a]} and the last vector {\tt V[a+p-1]}.
 
 \subsection{Accelerator's dual architecture}
 
