@@ -1,93 +1,36 @@
 \chapter{Automata: Two-Loop, Second-Order Systems (2-OS)}\label{lect3}
 \localtoc
 
-\begin{comment}
-\section{PLACE HOLDER TURING} % moved in chapter 12
-\section{Theoretical Foundations of Number Representations in Turing's Work}
-
-Alan Turing’s 1937 paper, “On Computable Numbers, with an Application to the Entscheidungsproblem,” primarily focuses on the concept of computability rather than explicit number representations used in modern computer systems. However, the theoretical groundwork Turing established lays the foundation for how numbers (and more broadly, data) can be represented and manipulated by machines. Here are the key theoretical points from Turing's paper that relate to number representations:
-
-\subsection{Definition of Computable Numbers}
-
-Turing defines a \textbf{computable number} as a real number that can be calculated to any desired precision by a mechanical process. Formally, a number \( x \) is \textbf{computable} if there exists an algorithm (what Turing termed a \textbf{computing machine}, now known as a Turing Machine) that, given an integer \( n \), can compute the \( n \)-th digit of \( x \) in a finite number of steps.
-
-In modern terms:
-\[
-x = \sum_{i=1}^{\infty} d_i \cdot b^{-i}
-\]
-where \( d_i \) are digits (either binary, decimal, or other bases) and \( b \) is the base. Turing’s framework implies that, to represent \( x \) as computable, there must be a recursive procedure for determining \( d_i \) for all \( i \).
-
-\subsection{Representation of Numbers Using Symbols and States}
-
-Turing’s model introduced the concept of a machine that reads, writes, and moves over a tape. The tape holds symbols from a finite alphabet, which can be used to represent numbers in various bases, including binary. Each number can thus be represented by a sequence of symbols on the tape, with the \textbf{state of the machine} directing operations on these symbols.
-
-Formally:
-\begin{itemize}
-    \item Let \( \Sigma = \{0, 1\} \) represent the binary alphabet.
-    \item A \textbf{string} \( w \in \Sigma^* \) on the tape can represent a binary number, where the position and value of each symbol denote its magnitude.
-\end{itemize}
-
-\subsection{Finite State Automaton for Number Manipulation}
-
-Turing proposed that any computable function, including arithmetic operations on numbers, could be executed by a finite set of states. Each state directs the machine to either:
-1. Write a symbol.
-2. Erase a symbol.
-3. Move left or right along the tape.
-4. Transition to another state.
-
-This \textbf{finite state control} is the precursor to binary arithmetic and logical operations on numbers. It implies that any number representation (binary, decimal, or otherwise) can be manipulated using a sequence of state transitions based on the machine's rules.
-
-Formally, for a Turing Machine \( M \), we have:
-\[
-M = (Q, \Sigma, \delta, q_0, F)
-\]
-where:
-\begin{itemize}
-    \item \( Q \) is a finite set of states.
-    \item \( \Sigma \) is the tape alphabet.
-    \item \( \delta: Q \times \Sigma \to Q \times \Sigma \times \{L, R\} \) is the transition function.
-    \item \( q_0 \in Q \) is the initial state.
-    \item \( F \subseteq Q \) is the set of final (or halting) states.
-\end{itemize}
-
-This structure allows Turing Machines to handle number representations in binary or any base by processing symbol strings according to their state rules.
-
-\subsection{Concept of Universal Representation}
-
-Turing’s concept of a \textbf{Universal Turing Machine} suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
-
-If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a Universal Turing Machine capable of simulating \( p \).
-
-\subsection{Summary of Key Theoretical Points in Turing's Paper}
-
-\begin{enumerate}
-    \item \textbf{Computable Numbers}: Defined as numbers that can be calculated to any precision using a finite, mechanical process.
-    \item \textbf{Finite State Control}: Established that a finite set of states could operate on symbols to represent numbers in various bases.
-    \item \textbf{Machine-Based Representation}: Showed that numbers could be represented as sequences of symbols on a tape, manipulated by a machine’s states and transitions.
-    \item \textbf{Universal Representation}: Introduced the idea that numbers (or their representations) could be treated as data or instructions, leading to flexible encoding schemes for number manipulation.
-\end{enumerate}
-
-Turing’s formal model set the stage for understanding how numbers can be systematically represented, stored, and manipulated by computational systems, laying foundational principles that influence number representations in modern computing.
-
-
-\section{GEORGE'S MATERIAL}
-
-\end{comment}
-
-In this chapter we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes, that is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
+In this chapter, we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes. That is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
 
 The main targets in this chapter are the main components of a small and simple processing unit: {\bf {\em Control Automaton}}, {\bf {\em Program Counter (PC)}} and  {\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Historical Development}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Automata have a long history, evolving from ancient myths to modern computational models. Ancient myths featured self-operating machines, such as \textit{Talos}, a bronze automaton from Greek mythology \cite{bedini1964early}. The engineer Hero of Alexandria (10–70 AD) described pneumatic and hydraulic devices capable of motion \cite{hero1899pneumatics}. In China, Su Song (1020–1101 AD) created an elaborate water-powered astronomical clock with mechanical figurines \cite{needham1986science}.
+
+During the Renaissance, Leonardo da Vinci (1452–1519) designed mechanical knights \cite{rosheim2006leonardo}. The 17th century saw Pascal's mechanical calculator \cite{pascal1665arithmetical}. Islamic engineers, such as Al-Jazari (1136–1206 AD), constructed sophisticated water clocks with programmable features \cite{aljazari1974ingenious}.
+
+The Jacquard loom (1804) pioneered programmability \cite{essinger2004jacquard}. Charles Babbage (1791–1871) and Ada Lovelace envisioned the Analytical Engine \cite{menabrea1842sketch}. In the late 19th century, Hermann Hollerith developed the punched card system for data processing \cite{hollerith1890tabulating}.
+
+Turing's work (1936) established the Turing Machine \cite{turing1936computable}, while von Neumann explored self-replicating automata \cite{von1951general}. Chomsky classified formal languages \cite{chomsky1956three}. In the mid-20th century, Shannon's work on Boolean circuits laid the foundation for digital logic \cite{shannon48}.
+
+John Conway’s \textit{Game of Life} (1970) popularized cellular automata \cite{gardner1970mathematical}. Today, automata influence AI, linguistics, robotics, and formal verification \cite{hopcroft2006automata}. Quantum computing and bio-inspired automata are emerging fields extending automata theory’s applications \cite{nielsen2010quantum}.
+
+%%%%%%%%%%%%%%%%%%%%%%
 \section{Definitions}
+%%%%%%%%%%%%%%%%%%%%%%
 
 The typical circuit in 2-OS is the automaton. We will highlight two categories of automata: small \& complex finite automata and large \& simple functional automata.
 
+%*******************************
 \subsection{Generic Definition}
-
-We will start with a generic definition because it applies to all kinds of automata introduced in this lecture.
+%*******************************
+The following definition applies to all kinds of automata.
 
 \begin{definition}
-An automaton, A, is defined by the following 5-uple:
+An automaton, A, is defined by the following 5-tuple:
 $$A=(X, Y, Q, f, g)$$
 where:
 \begin{description}
@@ -102,7 +45,7 @@ one of the  following  definitions:
     \item $g(q)=q$ for $Y \equiv Q$, where $q \in Q$ for the half-automaton, symbolized with $A_{1/2}$.
 \end{itemize}
 \end{description}
-At each clock cycle the state of the automaton  switches and the
+At each clock cycle, the state of the automaton  switches, and the
 output takes the value according to the new state (and the current
 input, in Mealy's approach).
 
@@ -111,58 +54,58 @@ $\diamond$
 
 A strict initial automaton is defined by:
 $$A=(X, Y, Q, f, g; q_{0})$$
-and has a special input, called {\bf reset}, used to led the
-automaton in the initial state $q_{0}$. If the automaton is
+and has a special input, called {\bf reset}, used to set the
+automaton to the initial state $q_{0}$. If the automaton is
 initial, the input reset switches the automaton in one,
 specially selected, initial state.
 
-
+%*******************************
 \subsection{Size vs. complexity}
+%*******************************
 
 The huge {\em size} of the actual circuits implemented on a single
 chip imposes a more precise distinction between {\em simple}
-circuits and {\em complex} circuits. When we can integrated on a
-single chip more than $10^{10}$ components, the size of the circuits we design 
-becomes less important than their complexity. Unfortunately we
-don't make a clear distinction between {\em size} and {\em
-complexity}. We say usually: ``the complexity of a computation is
+circuits and {\em complex} circuits. When we can be integrated on a
+single chip more than a Google ($10^{10}$) of components, 
+the size of the circuits we design 
+becomes less important than their complexity. We will
+make a clear distinction between {\em size} and {\em
+complexity}. We usually see imprecisely: ``the complexity of a computation is
 given by the size of memory and by the CPU time". But, if we have
-to design a circuit of 100 million transistors it is very important
-to distinguish between a circuit having an uniform structure and a
-randomly structured ones. In the first case the circuit can be
-easy specified, easy described in an HDL, easy tested and so on.
+to design a circuit of 100 million transistors, it is very important
+to distinguish between a circuit having a uniform structure and a randomly structured one. 
+In the first case, the circuit can be
+easily specified, easily described in an HDL, easily tested, and so on.
 Otherwise, if the structure is completely random, without any
 repetitive substructure inside, it can be described using only a
-description having a similar dimension with the circuit size. When
+description having a similar dimension to the circuit size. When
 the circuit is small, it is not a problem, but for billions of
-components the problem has no solution. Therefore, if the circuit
-is very big, it is not enough to deal only with its size, the most
+components, the problem has no solution. Therefore, if the circuit
+is very big, it is not enough to deal only with its size. The most
 important becomes also the degree of uniformity of the circuit.
-This degree of uniformity, the degree of order inside the circuit
+This degree of uniformity, the degree of order inside the circuit,
 can be specified by its {\bf complexity}.
 
-As a consequence we must distinguish more carefully the concept of
-{\em size} by the concept of {\em complexity}. Follow the
-definitions of these terms with the meanings we will use in this
-book.
+As a consequence, we distinguish more carefully the concept of
+{\em size} and the concept of {\em complexity}. 
 
 \begin{definition}
 The {\bf size} of a digital circuit, $S_{digital \; circuit}$, is
 given by the dimension of the physical resources used to implement
-it.
 
+it.
 $\diamond$
 \end{definition}
 
-In order to provide a numerical expression for size we need a more
-detailed definition which takes into account technological
+In order to provide a numerical expression for size, we need a more
+detailed definition that takes into account technological
 aspects. In the '40s we counted electronic bulbs, in the '50s we
 counted transistors, in the '60s we counted SSI\footnote{{\em
 Small Size Integrated} circuits} and MSI\footnote{{\em Medium Size
 Integrated} circuits} packages. In the '70s we started to use two
-measures: sometimes the number of transistors or the number of
-2-input gates on the Silicon die and other times the Silicon die
-area. Thus, we propose two numerical measures for the size.
+measures: sometimes the number of transistors (or the number of
+2-input gates on the silicon die) and/or the silicon die
+area. Thus, we adopt two numerical measures for size.
 
 \begin{definition}
 The {\bf gate size} of a digital circuit, $GS_{digital \;
@@ -171,36 +114,32 @@ transistors used for building the gates  used to implement it\footnote{Sometimes
 is expressed in the total number of 2-input gates necessary to
 implement the circuit. We prefer to count CMOS pairs of
 transistors (almost identical with the number of inputs) instead
-of equivalent 2-input gates because is simplest. Anyway, both ways
-are partially inaccurate because, for various reasons, the
-transistors used in implementing a gate have different areas.}.
-
+of equivalent 2-input gates because it is the simplest.}.
 
 $\diamond$
 \end{definition}
 
-This definition of size offers an almost accurate image about the
-silicon area used to implement the circuit, but the effects of
-lay-out, of fan-out and of speed are not captured by this definition.
+This definition of gate size provides a partially accurate estimate of
+the silicon area required to implement the circuit. The effects of
+layout, fan-out, and speed are not captured by this definition.
 
 \begin{definition}
 The {\bf area size} of a digital circuit, $AS_{digital \;
-circuit}$, is given by the dimension of the area on silicon used
+circuit}$, is given by the dimension of the area of silicon used
 to implement it.
 
 $\diamond$
 \end{definition}
 
 The area size is useful to compute the price of the implementation
-because when a circuit is produced we pay for the number of
+because when a circuit is produced, we pay for the number of
 wafers. If the circuit has a big area, the number of the circuits
-per wafer is small and the yield is low\footnote{The same number
+per wafer is small, and the yield is low\footnote{The same number
 of errors make useless  a bigger area of the wafer containing
 large circuits.}.
 
 \begin{definition}\label{circCompl}
-The {\bf algorithmic complexity}  of a  digital circuit, simply
-the {\bf complexity}, $C_{digital \; circuit}$, has the magnitude
+The {\bf algorithmic complexity} or simply the {\bf complexity} of a digital circuit, $C_{digital \; circuit}$, has the magnitude
 order given by the minimal number of symbols needed to express its
 definition.
 
@@ -211,15 +150,14 @@ Definition \ref{circCompl} is inspired by \cite{Chaitin77}'s definition for the
 algorithmic complexity of a string of symbols. The
 {\em algorithmic complexity} of a string is related to the
 dimension of the smallest program that generates it.  Our $C_{digital
-\; circuit}$ can be associated to the shortest unambiguous circuit description
-in a certain HDL (in the most of cases it is about a behavioral
-description).
+\; circuit}$ can be associated with the shortest unambiguous circuit description
+in a certain HDL (in most cases, it is a behavioral description).
 
 \begin{definition}
-A {\bf simple circuit} is a circuit having the complexity
+A {\bf simple circuit} is a circuit having a complexity
 much smaller than   its size:
 $$C_{simple \; circuit} << S_{simple \; circuit}.$$
-Usually  the complexity of a simple circuit is constant:
+Usually, the complexity of a simple circuit is constant:
 $C_{simple \; circuit} \in O(1)$.
 
 $\diamond$
@@ -227,7 +165,7 @@ $\diamond$
 
 \begin{definition}
 A {\bf complex circuit} is a circuit having the complexity  in
-the same magnitude order with its size:
+the same order of magnitude with its size:
 $$C_{complex \; circuit} \sim S_{complex \; circuit}$$
 
 $\diamond$
@@ -249,11 +187,27 @@ S_{random\_circ} \in O(S_{random\_circ}).$$
 
 $\diamond$
 \end{exemplu}
+Listing \ref{lst:A10_randomCircuit.sv} shows \texttt{A10\_randomCir} that defines a combinational circuit with five input signals: \( a, b, c, d, e \), and two output signals: \( f \) and \( g \). Additionally, it includes two internal logic signals, \( w1 \) and \( w2 \), which serve as intermediate nodes in the circuit.
+
+The circuit begins by computing \( w1 \) using an AND gate, which takes \( a \) and \( b \) as inputs. Similarly, another AND gate computes \( w2 \) using inputs \( c \) and \( d \). 
+The output \( f \) is determined by an OR gate, which takes \( w1 \) and \( c \) as inputs. Expanding the expression, we get:
+
+\[
+f = w1 + c = (a \cdot b) + c
+\]
+
+The second output, \( g \), is computed using another OR gate, which takes \( e \) and \( w2 \) as inputs. This results in the equation:
+
+\[
+g = e + w2 = e + (c \cdot d)
+\]
+
+This module implements a combinational logic circuit using basic AND and OR operations to determine the outputs \( f \) and \( g \) based on the provided inputs.
 
 
 \begin{exemplu}
 The following Verilog program describes a {\em simple circuit},
-because the program that define completely the circuit is the same
+because the program that defines the circuit completely is the same
 for any value of {\em n}.
 {\em 
 \includeverilogcode[caption={Example of a simple circuit.  File: A10\_orPrefixes.sv  (SystemVerilog)}, 
@@ -263,35 +217,69 @@ for any value of {\em n}.
                     lastline=30]
                     {\verilogSourceDir/A10_orPrefixes.sv}
 }
-The {\em prefixes of OR} circuit consists in {\em n} $OR_{2}$ gates
+The {\em prefixes of the OR} circuit consists of {\em n} $OR_{2}$ gates
 connected in a very regular form. The definition is the same for
-any value of {\em n}.\footnote{A short discussion occurs when the
-dimension of the input is specified. To be extremely rigorous, the
+any value of {\em n}.\footnote{To be rigorous, when the
+dimension of the input is specified, the
 parameter $n$ is expressed using a string o symbols in $O(log \;
-n)$. But usually this aspect can be ignored.}
+n)$. Typically, this aspect can be ignored.}
 
 $\diamond$
 \end{exemplu}
+Listing \ref{lst:A10_orPrefixes.sv} shows \texttt{orPrefixes} that implements a parallel prefix computation using bitwise OR operations. The module is parameterized by \( n \), which defaults to 256, meaning it can operate on bit vectors of varying lengths.
+
+The module has an output signal \texttt{out} and an input signal \texttt{in}, both of which are \( n \)-bit wide logic vectors. The purpose of this module is to compute the prefix OR of the input vector and store the results in the output vector.
+
+The process is handled within an \texttt{always\_comb} block, ensuring that the computation occurs continuously as a purely combinational operation. The first element of the output, \texttt{out[0]}, is assigned directly from the first element of the input, \texttt{in[0]}, as shown in the equation:
+
+\[
+\text{out}[0] = \text{in}[0]
+\]
+
+A \texttt{for} loop iterates from index \( k = 1 \) to \( k = n-1 \), computing each subsequent element of the output vector as the bitwise OR of the corresponding input bit and the previously computed output bit. This results in the recurrence relation:
+
+\[
+\text{out}[k] = \text{in}[k] \ | \ \text{out}[k-1]
+\]
+
+Expanding this relation, each element in \texttt{out} accumulates the OR of all previous bits in \texttt{in}, forming a prefix OR operation:
+
+\[
+\text{out}[1] = \text{in}[1] \ | \ \text{in}[0]
+\]
+
+\[
+\text{out}[2] = \text{in}[2] \ | \ \text{in}[1] \ | \ \text{in}[0]
+\]
+
+\[
+\text{out}[3] = \text{in}[3] \ | \ \text{in}[2] \ | \ \text{in}[1] \ | \ \text{in}[0]
+\]
+
+This pattern continues until \texttt{out[n-1]}, which contains the OR of all bits in \texttt{in} from index \( 0 \) to \( n-1 \).
+
+The module effectively computes a cumulative OR function over the input vector, making it useful in applications such as prefix sum computations, data compression, or bitmask operations where a running OR of previous elements is required. Since it uses a simple loop in an \texttt{always\_comb} block, it can be synthesized efficiently in hardware without requiring clocked registers.
+
 
 \begin{verisum}{\em :
 
 \hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
 
 \begin{description}
-    \item[and, or, xor, not]: are reserved names for predefined circuits which can be instantiated under specific names
+    \item[and, or, xor, not]: are reserved names for predefined circuits that can be instantiated under specific names
     \item[parameter]: used to define a local parameter
     \item[integer] k: defined a positive integer
-    \item[for]: defined the well known loop running under the index {\tt k}
+    \item[for]: defined the well-known loop running under the index {\tt k}
 \end{description}
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
-Composing circuits generate not only biggest structures, but also
-{\em deepest} ones. The depth of the circuit is related with the
+Composing circuits generates not only the largest structures but also the
+{\em deepest} ones. The depth of the circuit is related to the
 associated propagation time.
 
 \begin{definition}
-The {\em depth} of a combinational circuit is equal with the total
+The {\em depth} of a combinational circuit is equal to the total
 number of serially connected {\em constant} input gates (usually 2-input gates) on the longest path from inputs
 to the outputs of the circuit.
 
@@ -300,8 +288,8 @@ $\diamond$
 
 
 
-At the current technological level the size becomes  less
-important than the complexity, because we can {\em produce}
+At the current technological level, the size has become less
+important than the complexity because we can {\em produce}
 circuits having an increasing number of components, but we can
 {\em describe} only circuits having the range of complexity
 limited by our mental capacity to deal efficiently with complex
@@ -309,21 +297,21 @@ representations. The first step to have a circuit is to express
 what it must do in a behavioral description written in a certain
 HDL. If this "definition" is too large, having the magnitude order
 of a huge multi-billion-transistor circuit, we don't have the
-possibility to write the testable program expressing our desire.
+possibility to write a testable program expressing our desire.
 
-In the domain of circuit design we passed long ago beyond the
+In the domain of circuit design, we passed long ago beyond the
 stage of {\em minimizing} the number of gates in a few gates
-circuit. Now, the most important thing, in the
+circuit. Now, the most important thing in the
 multi-billion-transistor circuit era, is the {\em ability to
-describe} simple enough (because we can't
-write huge programs), big (because we can produce more circuits on
-the same area) sized circuits. We must take into consideration that the Moore's Law applies to size not
+describe} a circuit simple enough (because we can't
+write huge programs), and sized large enough (because we can produce more circuits on
+the same area). We must take into consideration that Moore's Law applies to size not
 to complexity.
 
-
+%**********************
 \subsection{Taxonomy}
-
-Starting from the generic definition, in Figure \ref{fin_aut} are represented the generic structures of the automata used in digital design.
+%**********************
+Starting from the generic definition, Figure \ref{fin_aut} represents the generic structures of the automata used in digital design.
 
 The structures found in current practice are:
 \begin{description}
@@ -342,7 +330,7 @@ the output is generated by the previous state.}}{fin_aut}
     
     
     \item[Mealy immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending on state and input; the latency of the Y output compared to the X input is zero
-    \item[Moore immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending only by the state; the latency of the Y output compared to the X input is one clock cycle
+    \item[Moore immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending only on the state; the latency of the Y output compared to the X input is one clock cycle
     \item[Mealy delayed automaton]: is a Mealy immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is one clock cycle
     \item[Moore delayed automaton]: is a Moore immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is two clock cycles.
 \end{description}
@@ -354,44 +342,46 @@ Depending on the way the machine is integrated into the system we are designing,
 We will make another important distinction: that between complex automata and simple ones.
 
 \begin{definition}
-A complex automaton has a description proportional with the number of state it has.
+A complex automaton has a description proportional to the number of states it has.
 
 $\diamond$
 \end{definition}
 
 \begin{definition}
-A simple automaton has a description of constant size, independent of the number of its states.
+A simple automaton has a description of constant size independent of the number of its states.
 
 $\diamond$
 \end{definition}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Finite (complex) Automata}
-
-Why "finite automata"? Does the term want to distinguish it from the case of possible "infinite automata"? No. Finite is the number of states of the automaton that can handle an infinitely long, even "infinite", string of symbols applied to the input. So, the finiteness of the automaton is related to a metaphorical, not actual, infinity of the string accepted as input.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The term "finite automata" does not imply a distinction from a possible category of "infinite automata." Rather, the adjective "finite" refers specifically to the number of states in the automaton, which remains bounded regardless of the length of the input it processes. A finite automaton is capable of handling an arbitrarily long, or even conceptually infinite, sequence of symbols presented at its input. Thus, the finiteness of the automaton pertains to the structure of its state space, not to any limitation on the length of the input string it can process. In this sense, the automaton's finiteness is contrasted with the metaphorical infinity of the input rather than an actual infinity of the automaton itself.
 
 \begin{definition}
-A finite automaton is characterized by $|Q| \in O(1)$, i.e., the size of the set Q is constant and independent on the length of the string of symbols it receives.
+A finite automaton is characterized by $|Q| \in O(1)$, i.e., the size of the set Q is constant and independent of the length of the string of symbols it receives.
 
 $\diamond$
 \end{definition}
 
-We will exemplify with two typical cases: a recognizing automaton and a control automaton.
+We will illustrate this concept using two representative cases: a recognition automaton and a control automaton.
 
+%********************************
 \subsection{Recognizing automata}
-
-Theoretical linguist Noam Chomsky introduced the concept of generative grammar \cite{Chomsky56, Chomsky59, Chomsky63}, a concept used in modern computer science to develop compiler theory, a theory used to translate programs written in a high-level language into the machine language used at the lowest level in a computing machine \cite{Hopcroft2001}. The first step in translation is to recognize the sequence to be translated as belonging to a particular language. The simplest possible example concerns the languages defined in the set $\{0,1\}^*$, that of all strings formed with elements from the set $\{0,1\}$. We will consider, in the following example, a language from the category of regular languages, in the sense of the classification made by N. Chomsky. Regular languages, or type 3, are the simplest languages, in the sense that they are generated with the most restrictions: the string is formed by increasing each step independently of the context at one end only. For these languages a finite automaton (a two-loop digital system) can be used to recognize or generate.
+%*********************************
+Theoretical linguist Noam Chomsky introduced the concept of generative grammar \cite{Chomsky56, Chomsky59, Chomsky63}, a concept used in modern computer science to develop compiler theory, a theory used to translate programs written in a high-level language into the machine language used at the lowest level in a computing machine \cite{Hopcroft2001}. The first step in translation is to recognize the sequence to be translated as belonging to a particular language. The simplest possible example concerns the languages defined in the set $\{0,1\}^*$, that of all strings formed with elements from the set $\{0,1\}$. We will consider, in the following example, a language from the category of regular languages, in the sense of the classification made by N. Chomsky. Regular languages, or type 3, are the simplest languages in the sense that they are generated with the most restrictions: the string is formed by increasing each step independently of the context at one end only. For these languages, a finite automaton (a two-loop digital system) can be used to recognize or generate.
 
 \begin{exemplu}\label{regLang}
-The binary   to the language $L = \{1^{n}0^{m} | n,m \geq 1\} \in \{0,1\}^*$,
+The binary inputs to the language $L = \{1^{n}0^{m} | n,m \geq 1\} \in \{0,1\}^*$,
 are recognized by a finite half-automaton.
 Let's define and design it. The transition diagram defining the
 behavior of the half-automaton is presented in Figure \ref{rega},
 where the state set $Q$ contains:
 
 \placedrawing[H]{figures/04_02_transition_diagram.lp}{{\bf Transition diagram.} {\small
-The transition diagram for the half-automaton which recognizes
+The transition diagram for the half-automaton, which recognizes
 strings of form $1^{n}0^{m}$, for $n \geq 1$ and $m \geq 1$. Each
-circle represent a state, each (marked) arrow represent a
+circle represents a state, and each (marked) arrow represents a
 (conditioned) transition.}}{rega}
 
 \begin{itemize}
@@ -416,9 +406,9 @@ circle represent a state, each (marked) arrow represent a
 
 
 
-The first step in implementing the structure of the just defined
+The first step in implementing the structure of the just-defined
 automaton is to {\bf assign binary codes} to each state.
-In this stage we have the absolute freedom. Any assignment can be
+In this stage, we have absolute freedom. Any assignment can be
 used. The only difference will be in the resulting structure but
 not in the resulting behavior.
 
@@ -456,19 +446,19 @@ in Figure \ref{rega}. For the outputs, the symbols $Y_1$ and $Y_2$ are used with
 \end{verbatim}
 The input signal is symbolized by $X$.
 
-Results the transition table, for the functions $f$ and $g$, presented in
-Table \ref{table1}. The resulting transition functions the resulting immediate Mealy automaton are:
+The results of the transition table, for the functions $f$ and $g$, are presented in
+Table \ref{table1}. The resulting transition functions of the resulting immediate Mealy automaton are:
 $$Q_{1}^{+} = Q_{1} \cdot X = ((Q_{1} \cdot X)')'$$
 $$Q_{0}^{+} = Q_{1} \cdot X + Q_{0} \cdot X' = ((Q_{1} \cdot X)' \cdot (Q_{0} \cdot X'))'$$
 $$Y_1 = (Q_0 \cdot X)'$$
 $$Y_0 = Q_1 \cdot X' = (Q_1' + X)'$$
 
 The circuit is represented in Figure \ref{aut1} in a version using inverted gated
-only. The 2-bit state register is designed by 2 D flip-flops. The
+only. The 2-bit state register is designed with 2-D flip-flops. The
 {\tt reset}  input is applied on the {\em set} input of D-FF1 and
 on the {\em reset} input of D-FF0.
 
-The recognition process begins with the application of the {\tt reset} signal through which the automaton goes to the initial state, $q_0$, coded by $Q_1, Q_0 = 10$. A correct string must start with 1, otherwise the automaton goes to the final state, $q_3$, which signals {\tt fail}. In state $q_1$, the automaton receives 1s, until the first 0 is applied to the input and the automaton passes to state $q_2$ in which it signals, through {\tt rec0}, that the string received is correct. If in state $q_2$ it is received in 1, then the string is cataloged as not belonging to those recognized by blocking the automaton in state $q_3$.
+The recognition process begins with the application of the {\tt reset} signal through which the automaton goes to the initial state, $q_0$, coded by $Q_1, Q_0 = 10$. A correct string must start with 1, otherwise the automaton goes to the final state, $q_3$, which signals {\tt fail}. In state $q_1$, the automaton receives 1s until the first 0 is applied to the input, and the automaton passes to state $q_2$ in which it signals, through {\tt rec0}, that the string received is correct. If the state $q_2$ it is received in 1, then the string is cataloged as not belonging to those recognized by blocking the automaton in state $q_3$.
 
 $\diamond$
 \end{exemplu}
@@ -493,6 +483,12 @@ Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | 
                     lastline=30]
                     {\verilogSourceDir/A10_defines.vh}
 }
+\end{exemplu}
+Listing \ref{lst:A10_defines.vh} shows a code snippet that defines several preprocessor macros in SystemVerilog that are used to establish constants for a finite automaton. In the first section, input codes are defined. The macro \texttt{\`define a 1'b1} specifies that the symbol \textit{a} is represented by the 1-bit binary value \texttt{1'b1}, while \texttt{\`define b 1'b0} defines the symbol \textit{b} as the 1-bit binary value \texttt{1'b0}. These definitions are for the input signals to the automaton.
+
+In the next portion of the code, output codes are established. The macro \texttt{\`define recA 2'b10} is used to indicate that the automaton outputs the 2-bit binary value \texttt{2'b10} when it receives input \textit{a}. Similarly, \texttt{\`define recB 2'b01} specifies that the output \texttt{2'b01} corresponds to the reception of input \textit{b}. Additionally, \texttt{\`define fail 2'b00} is defined to represent the output condition when the automaton fails to receive the correct string.
+
+The final section of the code defines the internal states of the automaton. The initial state is set by the macro \texttt{\`define init 2'b10}, assigning the value \texttt{2'b10} to the starting state. The macro \texttt{\`define runA 2'b11} denotes a state where the automaton has received at least one \textit{b}. In contrast, \texttt{\`define runB 2'b01} is used to indicate that the automaton has received at least one \textit{a}. Finally, the macro \texttt{\`define error 2'b00} defines the error state, which shares the same binary encoding as the \texttt{fail} output.
 
 {\em 
 \includeverilogcode[caption={Structural description of the immediate Mealy automaton
@@ -503,6 +499,11 @@ Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | 
                     lastline=30]
                     {\verilogSourceDir/A10_regLang.sv}
 }
+Listing \ref{lst:A10_regLang.sv} implements a Mealy automaton within a module named \texttt{regLang}. It begins by including a header file (\texttt{"defines.vh"}) that contains macro definitions for state encodings. The module itself declares an input signal (\texttt{in}), a two-bit output signal (\texttt{out}), a reset signal (\texttt{reset}), and a clock signal. Two internal two-bit registers, \texttt{state} and \texttt{nextState}, are defined to hold the current state and the computed next state of the automaton, respectively.
+
+State updates occur in an \texttt{always\_ff} block that is triggered on the positive edge of the clock. Within this block, the current state is set to the initial state (defined by the macro \texttt{\`init}) when the reset signal is active. Otherwise, the state is updated to the value of \texttt{nextState}, which is determined by the automaton’s state-transition logic.
+
+The next state and output logic are implemented in separate modules. The module instantiation \texttt{loopCLC lC( in, state, nextState )} is responsible for computing the next state based on the current state and the input signal. In parallel, the instantiation \texttt{outCLC oC( state, in, out )} computes the output, which depends on both the current state and the input signal. Because the output is a function of both the state and the input, this design characterizes a Mealy automaton, where outputs may change asynchronously with respect to the state update clock edge.
 
 {\em 
 \includeverilogcode[caption={Combinational circuit used to compute the loop for the
@@ -513,6 +514,10 @@ Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | 
                     lastline=30]
                     {\verilogSourceDir/A10_loopCLC.sv}
 }
+Listing \ref{lst:A10_loopCLC.sv} shows a SystemVerilog module with \texttt{loopCLC} that defines a combinational logic block that computes the next state of a finite state machine based on the current state and an input signal. The module accepts an input signal \texttt{in} and a two-bit signal \texttt{state} representing the current state, and it produces a two-bit output signal \texttt{nextState} that represents the computed next state. 
+
+Within the module, an \texttt{always\_comb} block, labeled \texttt{loop\_clc}, implements the state transition logic using a \texttt{case} statement on the current state. When the state is \texttt{\`init}, the next state is determined by checking the input: if \texttt{in} equals the macro \texttt{\`a}, then \texttt{nextState} is assigned \texttt{\`runA}; otherwise, it is assigned \texttt{\`error}. In the \texttt{\`runA} state, if the input remains \texttt{\`a}, the automaton stays in the \texttt{\`runA} state, but if the input differs, it transitions to \texttt{\`runB}. When the state is \texttt{\`runB}, the next state remains \texttt{\`runB} if the input is equal to the macro \texttt{\`b}; if not, the automaton enters the \texttt{\`error} state. Once in the \texttt{\`error} state, the module is designed to remain in that state regardless of the input.
+
 
 {\em 
 \includeverilogcode[caption={Combinational circuit used to compute the output for
@@ -524,6 +529,10 @@ Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | 
                     {\verilogSourceDir/A10_outCLC.sv}
 }
 
+Listing \ref{lst:A10_outCLC.sv} shows a SystemVerilog module \texttt{outCLC} that implements the output logic for a finite state machine. It accepts a 2-bit input signal \texttt{state} and a 1-bit input \texttt{in}, and produces a 2-bit output signal \texttt{out}. This module uses an \texttt{always\_comb} block to define combinational logic that directly computes the output based on both the current state and the input value.
+
+Within the combinational block, a \texttt{case} statement examines the value of \texttt{state} to determine the appropriate output. In the state defined by the macro \texttt{\`init}, the output is assigned conditionally: if the input \texttt{in} equals the macro \texttt{\`a}, then \texttt{out} is set to the value specified by \texttt{\`recA}; otherwise, it is set to \texttt{\`fail}. When the state is \texttt{\`runA}, if the input equals \texttt{\`a} the output remains \texttt{\`recA}, but if it does not, the output is updated to \texttt{\`recB}. For the state \texttt{\`runB}, the logic assigns \texttt{\`fail} to \texttt{out} when the input equals \texttt{\`a}, and assigns \texttt{\`recB} when it does not. Finally, if the state is \texttt{\`error}, the output is unconditionally set to \texttt{\`fail}.
+
 {\em 
 \includeverilogcode[caption={Test module for the
              immediate Mealy  automaton which recognizes the language $L = (a^nb^m | n,m >0)$.   File: A10\_testRegLang.sv  (SystemVerilog)}, 
@@ -534,9 +543,13 @@ Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | 
                     {\verilogSourceDir/A10_testRegLang.sv}
 }
 
+Listing \ref{lst:A10_testRegLang.sv} shows a SystemVerilog module \texttt{testRegLang} that functions as a testbench for the finite state machine defined in the \texttt{regLang} module. In this testbench, several signals are declared, including a one-bit input \texttt{in}, a two-bit output \texttt{out}, a reset signal \texttt{reset}, and a clock signal \texttt{clock}. The testbench is responsible for generating stimulus and observing the behavior of the \texttt{regLang} module during simulation.
+
+An initial block is dedicated to clock generation. The clock is initialized to 0, and a \texttt{forever} loop toggles the clock every time unit by inverting its value. This produces a periodic square wave that drives the synchronous components of the design. Another initial block manages the reset signal and input stimulus. Here, the reset is initially asserted, and the input is set to the value defined by the macro \texttt{\`a}. After a delay, the reset is de-asserted, and subsequent delays cause the input to change first to the value corresponding to \texttt{\`b} and later back to the value defined by \texttt{\`a}. The simulation is programmed to finish after a certain period, ensuring that all intended transitions are exercised.
+
+The \texttt{regLang} module, which contains the core finite state machine logic, is instantiated with the testbench signals connected to its ports. This instantiation, labeled as \texttt{dut} (device under test), allows the testbench to apply the generated inputs and observe the resulting outputs. Additionally, another initial block uses the \texttt{\$monitor} system task to continuously print the simulation time along with the current values of the clock, reset, input, and output signals, facilitating real-time observation of the system's behavior. Waveform dumping is also set up using \texttt{\$dumpfile} and \texttt{\$dumpvars}, which enable post-simulation analysis through a waveform viewer.
 
 $\diamond$
-\end{exemplu}
 
 \begin{verisum}{\em :
 
@@ -552,14 +565,14 @@ $\diamond$
 
 The main point: for any values for $m$ and $n$, the number of states of the finite automaton is constant, equal with 4. But the description of the of the automaton's behavior is proportional with the number of states (see the number of lines of the truth table defining the state transition) and independent by values $m$ and $n$.
 
-
-
+%****************************************************************
 \subsection{{\bf {\em Control Automata (CROM)}}}\label{contrAut}
-
+%****************************************************************
 In addition to recognition and generation functions, finite state machines are used to control systems that evolve under sequences of received commands and return signals to the machine that report significant events for the evolution of the command sequence.
 
+%*************************
 \subsubsection{Structure}
-
+%*************************
 A control automaton is embedded in a system using three main connections (see Figure \ref{contr_aut}):
 \begin{itemize}
     \item the $p$-bit input {\tt operation[p-1:0]} selects the control

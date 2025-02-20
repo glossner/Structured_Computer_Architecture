@@ -237,3 +237,15 @@ For write operations, when \texttt{wen} is asserted, the module writes the value
 \subsection{Conclusion}
 %****************************************************
 The design of a multi-port register file is a complex trade-off between latency, power, area, and access bandwidth. Small, low-latency register files are best implemented using \texttt{Vec[Reg]}, while large-scale register files require SRAM-based architectures with multi-porting techniques such as banking, replication, and bypassing. A well-optimized register file ensures efficient execution of instructions while maintaining balance between scalability and implementation cost.
+
+
+%*************************************
+\section{Mealy vs Moore Automata}
+%*************************************
+Mealy and Moore automata are two fundamental models for designing finite state machines, and they differ primarily in the way outputs are generated. In a Mealy automaton, the output is a function of both the current state and the current input. This means that the output can change immediately in response to an input change, potentially resulting in faster response times. However, this tight coupling may also lead to glitches if the input changes asynchronously relative to the state transitions.
+
+In contrast, a Moore automaton generates outputs solely based on the current state, independent of the immediate input. As a result, the output in a Moore machine only changes when the state changes. This can simplify the design and make the system more robust, since outputs are synchronized with state transitions, but it may also introduce a delay in output response compared to a Mealy design.
+
+Another key difference is the state complexity. Mealy machines often require fewer states to implement the same functionality because they leverage the input signal directly to determine outputs. Moore machines, while potentially more straightforward in terms of output logic, might require additional states to achieve equivalent behavior since each state must uniquely determine the output.
+
+In summary, the choice between a Mealy and a Moore automaton involves trade-offs between response speed, design simplicity, and state complexity. A Mealy design is advantageous when quick reaction to inputs is essential, whereas a Moore design may be preferred for its stability and easier analysis, especially in environments where synchronized outputs are critical.
