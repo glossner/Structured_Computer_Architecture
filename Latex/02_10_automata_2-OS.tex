@@ -473,7 +473,10 @@ Designing a finite automaton using a description in System Verilog HDL involves 
 
 
 \begin{exemplu}\label{mealySV}
-Let's revisit the previous example, recognizing the language $L = (a^{n}b^{m} | n,m >0)$, and solve the design using a System Verilog description.
+We now reconsider the previous example, which involves recognizing the language \( L = \{ a^n b^m \mid n, m > 0 \} \), and proceed with its implementation using a SystemVerilog description.
+
+\normalfont{A key observation is that, regardless of the specific values of \( m \) and \( n \), the number of states in the finite automaton remains constant at four. However, while the number of states is fixed, the complexity of describing the automaton's behavior is proportional to this number. Specifically, the size of the truth table that defines the state transitions scales with the number of states but remains independent of the values of \( m \) and \( n \).}
+
 
 {\em 
 \includeverilogcode[caption={Defines binary codes for input, output and state variables.  File: A10\_defines.vh  (SystemVerilog)}, 
@@ -545,7 +548,7 @@ Within the combinational block, a \texttt{case} statement examines the value of 
 
 Listing \ref{lst:A10_testRegLang.sv} shows a SystemVerilog module \texttt{testRegLang} that functions as a testbench for the finite state machine defined in the \texttt{regLang} module. In this testbench, several signals are declared, including a one-bit input \texttt{in}, a two-bit output \texttt{out}, a reset signal \texttt{reset}, and a clock signal \texttt{clock}. The testbench is responsible for generating stimulus and observing the behavior of the \texttt{regLang} module during simulation.
 
-An initial block is dedicated to clock generation. The clock is initialized to 0, and a \texttt{forever} loop toggles the clock every time unit by inverting its value. This produces a periodic square wave that drives the synchronous components of the design. Another initial block manages the reset signal and input stimulus. Here, the reset is initially asserted, and the input is set to the value defined by the macro \texttt{\`a}. After a delay, the reset is de-asserted, and subsequent delays cause the input to change first to the value corresponding to \texttt{\`b} and later back to the value defined by \texttt{\`a}. The simulation is programmed to finish after a certain period, ensuring that all intended transitions are exercised.
+An initial block is dedicated to clock generation. The clock is initialized to 0, and a \texttt{forever} loop toggles the clock every time unit by inverting its value. This produces a periodic square wave that drives the synchronous components of the design. Another initial block manages the reset signal and input stimulus. Here, the reset is initially asserted, and the input is set to the value defined by the macro \texttt{\`a}. After a 2 time unit delay, the reset is de-asserted, and subsequent delays cause the input to change first to the value corresponding to \texttt{\`b} and later back to the value defined by \texttt{\`a}. The simulation is programmed to finish after 100 time units, ensuring that all intended transitions are exercised.
 
 The \texttt{regLang} module, which contains the core finite state machine logic, is instantiated with the testbench signals connected to its ports. This instantiation, labeled as \texttt{dut} (device under test), allows the testbench to apply the generated inputs and observe the resulting outputs. Additionally, another initial block uses the \texttt{\$monitor} system task to continuously print the simulation time along with the current values of the clock, reset, input, and output signals, facilitating real-time observation of the system's behavior. Waveform dumping is also set up using \texttt{\$dumpfile} and \texttt{\$dumpvars}, which enable post-simulation analysis through a waveform viewer.
 
@@ -563,7 +566,6 @@ $\diamond$
 \rule[5mm]{16cm}{0.25mm} }
 \end{verisum}
 
-The main point: for any values for $m$ and $n$, the number of states of the finite automaton is constant, equal with 4. But the description of the of the automaton's behavior is proportional with the number of states (see the number of lines of the truth table defining the state transition) and independent by values $m$ and $n$.
 
 %****************************************************************
 \subsection{{\bf {\em Control Automata (CROM)}}}\label{contrAut}
@@ -573,43 +575,45 @@ In addition to recognition and generation functions, finite state machines are u
 %*************************
 \subsubsection{Structure}
 %*************************
-A control automaton is embedded in a system using three main connections (see Figure \ref{contr_aut}):
+A control automaton is embedded within a system through three primary connections (see Figure \ref{contr_aut}):
 \begin{itemize}
-    \item the $p$-bit input {\tt operation[p-1:0]} selects the control
-    sequence to be executed by the control automaton; it is
-    used to part the ROM in $2^{p}$ parts, each having the {\bf
-    same} dimension; in each part a sequence of maximum $2^{n}$
-    operation can be ``stored" for execution
-    (it {\em receives} the information about ``what to do")
-    \item the $m$-bit command output, {\tt command[m-1:0]}, the control
-    automaton uses to {\em generate} ``the command" toward
-    the controlled subsystem
-    \item the $n$-bit input {\tt flags[q-1:0]} the control
-automaton uses to {\em receive} information, represented by some
-{\em independent bits}, about ``what happens" in the controlled
-subsystems commanded by the output {\tt command[m-1:0]}.
+    \item The $p$-bit input {\tt operation[p-1:0]} selects the control
+    sequence to be executed by the control automaton. This input is used 
+    to partition the ROM into $2^{p}$ sections, each of equal size. 
+    Within each section, a sequence of up to $2^{n}$ operations can be 
+    stored for execution. Essentially, this input {\em specifies} "what to do."
+    
+    \item The $m$-bit command output {\tt command[m-1:0]} is used by 
+    the control automaton to {\em generate} the necessary commands 
+    for the controlled subsystem.
+    
+    \item The $n$-bit input {\tt flags[q-1:0]} allows the control 
+    automaton to {\em receive} status information from the controlled 
+    subsystem. This information consists of {\em independent bits} that 
+    indicate "what is happening" within the subsystem in response to 
+    the commands issued via {\tt command[m-1:0]}.
 \end{itemize}
+
 
 \placedrawing[h]{figures/04_04_control_automaton0.lp}{{\bf Control Automaton.} {\small The
 functional definition of control automaton. Control means to issue
 commands and to receive back signals (flags) characterizing the
 effect of the command.}}{contr_aut}
 
-The size and the complexity of the control sequence asks the use of a ROM. The size of the ROM has the magnitude order:
-$$S_{ROM}((m+n) outputs, (n+p+q) inputs) \in O((m+n)\times 2^{n+p+q}).$$
+The size and complexity of the control sequence necessitate the use of a ROM. The required ROM size is given by the following order of magnitude:
 
-In order to reduce the ROM's size we start from the actual
-applications which emphasize two very important facts:
+\[
+S_{ROM}((m+n) \text{ outputs}, (n+p+q) \text{ inputs}) \in O((m+n) \times 2^{n+p+q}).
+\]
+
+To reduce the ROM size, we analyze real-world applications, which highlight two key observations:
+
 \begin{enumerate}
-    \item the automaton can ``store" the information about ``what to do"
-in the state space, i.e., each current state belongs to a path
-through the state space, {\bf started} in one initial state given
-by the code used to specify the operation
-    \item in most of states the automaton tests only
-one bit from the {\tt flags[q-1:0]} input and if not, a few
-additional states in the flow-chart solve the problem in most of
-the cases.
+    \item The automaton can {\em store} information about ``what to do'' within its state space. Specifically, each current state belongs to a path through the state space, {\bf originating} from an initial state determined by the code used to specify the operation.
+    
+    \item In most states, the automaton evaluates only a single bit from the {\tt flags[q-1:0]} input. In cases where additional bits must be considered, a small number of extra states in the flowchart typically resolve the issue.
 \end{enumerate}
+
 
 \placedrawing[h]{figures/04_05_control_automaton1.lp}{{\bf Optimized version of control
 automata.} {\small The flags received from the controlled system
@@ -617,42 +621,12 @@ have independent meaning considered in distinct cycles. The flag
 selected by the code TEST, T, decides from what half of ROM the
 next state and output will be read.}}{red_ca}
 
-Starting from these remarks the  structure of the control
-automaton can be modified (see Figure \ref{red_ca}). Because the
-sequence is {\bf only} initialized using the code {\tt
-operation[n-1:0]}, this code is used only for addressing the first
-command line from ROM in a single state in which $MOD=1$. For this
-feature we must add $n$ eMUXs  and a new output to the ROM to
-generate the signal $MOD$. This change allows us to use in a more
-flexible way the ``storing space" of ROM. Because a control
-sequence can have the dimension very different from the dimension
-of the other control sequence it is not efficient to allocate fix
-size part of ROM for each sequence as in we did in the initial
-solution. The version presented in Figure \ref{red_ca} uses for
-each control sequence only as much of space as needed to store all
-lines of command.
+Building upon these observations, the structure of the control automaton can be modified (see Figure \ref{red_ca}). Since the sequence is {\bf only} initialized using the code {\tt operation[n-1:0]}, this code is used solely to address the first command line in the ROM, within a single state where $MOD=1$. To implement this functionality, $n$ eMUXs must be added, along with a new ROM output to generate the signal $MOD$. This modification enables a more flexible utilization of the ``storage space'' within the ROM. Because the size of a control sequence can vary significantly from that of another, it is inefficient to allocate a fixed-size section of ROM for each sequence, as was done in the initial design. The revised structure shown in Figure \ref{red_ca} dynamically allocates only as much ROM space as necessary to store all command lines of each control sequence.
 
-The second modification refers to the input {\tt flags[q-1:0]}.
-Because the bits associated with this input are tested in
-different states, $MUX_{q+2}$ selects in each state the appropriate
-bit using the $t$-bit field TEST. Thus, the $q-1$ bits associated
-to the input {\tt flags[q-1:0]} are removed from the input of the
-ROM, adding only $t = log_2 (q+2)$ output bits to ROM. Instead of  $q$
-bits we connect only one, T, to the input of ROM.
-This new structure works almost the same as the initial structure
-but the size of ROM is very strongly minimized. 
+The second modification concerns the input {\tt flags[q-1:0]}. Since the bits associated with this input are tested in different states, $MUX_{q+2}$ selects the appropriate bit in each state using the $t$-bit field TEST. Consequently, the $q-1$ bits originally included in the {\tt flags[q-1:0]} input are removed from the ROM input, replacing them with only $t = \log_2 (q+2)$ output bits in the ROM. Instead of incorporating all $q$ bits, only a single bit, $T$, is connected to the ROM input. This new structure operates almost identically to the original but significantly reduces the required ROM size.
 
-Working with the control automaton in this new version we will
-make another remark: {\em the most part of the sequence generated
-is organized in a linear sequence.} Therefore, the commands
-associated to the linear sequences can be stored in ROM at the
-successive addresses, i.e., the next address for ROM can be
-obtained incrementing the current address stored in the register
-R. The structure represented in Figure \ref{crom} results. What is
-new in this structure is an increment circuit connected to the
-output of the state register and a small combinational circuit
-that transcodes the bits $M_{1}, M_{0}, T$ into $S_{1}$ and
-$S_{0}$. There are 4 transition modes coded by $M_{1}, M_{0}$:
+While working with this revised control automaton, another important observation emerges: {\em the majority of the generated sequence follows a linear structure.} As a result, the commands associated with these linear sequences can be stored in the ROM at consecutive addresses. That is, the next ROM address can be determined by incrementing the current address stored in register $R$. This leads to the structure illustrated in Figure \ref{crom}. The key innovation in this design is the inclusion of an increment circuit connected to the output of the state register, as well as a small combinational circuit that transcodes the bits $M_{1}, M_{0}, T$ into $S_{1}$ and $S_{0}$. There are four transition modes encoded by $M_{1}, M_{0}$:
+
 
 \placedrawing[h]{figures/04_06_control_automaton2.lp}{{\bf The simplest Controller with
 ROM (CROM).} {\small The Moore form of control automaton is
@@ -660,35 +634,46 @@ optimized using an incremented circuit (INC) to compute the most
 frequent next address for ROM.}}{crom}
 
 \begin{itemize}
-\item {\tt inc}, codded by {\tt MOD[1:0] = 00}: the next address
-for ROM results by incrementing the current address; the selection
-code must be {\tt S[1:0] = 00}
+\item {\tt inc}, encoded by {\tt MOD[1:0] = 00}: The next address 
+for the ROM is obtained by incrementing the current address. 
+The selection code must be {\tt S[1:0] = 00}.
 
-\item {\tt jmp}, codded by {\tt MOD[1:0] = 01}: the next address
-for ROM is given by the content of the one field to the output of
-ROM; the selection code must be {\tt S[1:0] = 01}
+\item {\tt jmp}, encoded by {\tt MOD[1:0] = 01}: The next address 
+for the ROM is determined by the value stored in a specific field 
+at the ROM output. The selection code must be {\tt S[1:0] = 01}.
 
-\item {\tt cjmp}, codded by {\tt MOD[1:0] = 10}: {\bf if} the
-value of the selected flag, T, is 1, {\bf then} the next address
-for ROM is given by the content of the one field to the output of
-ROM, {\bf else} the next address for ROM results by incrementing
-the current address; the selection code must be {\tt S[1:0] = 0T}
+\item {\tt cjmp}, encoded by {\tt MOD[1:0] = 10}: {\bf If} the 
+selected flag, T, has a value of 1, {\bf then} the next address 
+for the ROM is given by the value stored in a specific field at the 
+ROM output; {\bf otherwise}, the next address is obtained by incrementing 
+the current address. The selection code must be {\tt S[1:0] = 0T}.
 
-\item {\tt init}, codded by {\tt MOD[1:0] = 11}: the next address
-for ROM is selected by $nMUX_{4}$ from the initialization input
-{\tt operation}; the selection code must be {\tt S[1:0] = 1-}
+\item {\tt init}, encoded by {\tt MOD[1:0] = 11}: The next address 
+for the ROM is selected by $nMUX_{4}$ from the initialization input 
+{\tt operation}. The selection code must be {\tt S[1:0] = 1-}.
 \end{itemize}
-Results the following logic functions for the trans-coder TC:
+
+This results in the following logic functions for the trans-coder TC:
 \begin{quote}
-{\tt S[1] = MOD[1]$\cdot$MOD[0]} \\ {\tt S[0] = MOD[1]$\cdot$T + MOD[0]}.
+{\tt S[1] = MOD[1]$\cdot$MOD[0]} \\ 
+{\tt S[0] = MOD[1]$\cdot$T + MOD[0]}.
 \end{quote}
 
-Now the size of the ROM is estimated as being:
-$$S_{ROM}((m+n+2+log_2 (q+2)) outputs, n inputs) \in O((m+n)\times 2^{n+p+q})$$
-which means that the size of ROM is reduced with a factor in the range of
-$O(2^{p+q})$ times compared with the initial unstructured version. An more, all the added structure are simple circuits, which means the reduction is not only in size but, much more important, it is in the complexity of the ROM's content.
+The estimated size of the ROM is now given by:
+\[
+S_{ROM}((m+n+2+\log_2 (q+2)) \text{ outputs}, n \text{ inputs}) \in O((m+n) \times 2^{n+p+q})
+\]
+which indicates that the ROM size is reduced by a factor of 
+$O(2^{p+q})$ compared to the initial unstructured version. Furthermore, 
+all additional structures are simple circuits, meaning that the 
+reduction is not only in size but, more importantly, in the complexity 
+of the ROM’s content.
 
-Let's call the structure we came to CROM ({\bf C}ontroller with {\bf ROM}). In this structure there are simple circuits (multiplexers, incremental, register) and complex circuits (TC and ROM). The complexity of the TC does not matter because its size is very small. The complexity of the ROM lies in its content which is defined as a pattern-less binary structure.
+We refer to this optimized structure as CROM ({\bf C}ontroller with {\bf ROM}). 
+CROM consists of both simple circuits (such as multiplexers, an incrementer, and registers) 
+and more complex components (such as TC and ROM). The complexity of TC is negligible, 
+as its size is minimal. The complexity of the ROM, however, is inherent in its content, 
+which is defined as a patternless binary structure.
 
 \subsubsection{Microcoding}
 
@@ -723,11 +708,9 @@ Let's customize the previous definition for a system that is commanded with 4 fi
     <endOfLine>::= eol;
 \end{verbatim}
 }
-Using the definition of {\tt microinstruction}, the content of the file {\tt theDefinition.v} defines, for the sake of an example, the following dummy microprogram:
-{\small
-{\em
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog]
+Using the definition of {\tt microinstruction}, the content of the file {\tt theDefinition.v} defines, the following is a simple example microprogram:
+
+\begin{verilogcode}
 /**********************************************************************
 Function: Dummy microprogram
 File name: theDefinition.sv
@@ -740,61 +723,46 @@ Description: a dummy microprogram used to test the code generator.
             com12; com21; eol;
             cjmp(7); flag2; eol;
     lb(3);  jmp(3); eol;    // halt
-\end{lstlisting}
-\end{shaded*}
-}}
+\end{verilogcode}
 
 $\diamond$
 \end{exemplu}
 
-{\bf A very important comment!}
-The CROM version of the control automaton's structure is characterized by two processes:
+{\bf A Very Important Comment!}
+
+The CROM version of the control automaton's structure is characterized by two key processes:
 \begin{itemize}
-\item  the increasing of the structural complexity.
-\item  the decreasing of the dimension and  of the
-complexity of the binary configuration ``stored" in ROM.
+    \item An increase in structural complexity.
+    \item A reduction in both the size and complexity of the 
+    binary configuration ``stored'' in the ROM.
 \end{itemize}
-In this stage, both the size and the complexity of the system
-grows without any functional improvement. The only effect is
-reducing the (algorithmic) complexity of  ROM's content.
 
-We are in a very important moment of digital system development,
-in which the physical complexity  starts to {\em compensate} the
-``symbolic" complexity of  ROM's content. Both, circuits and
-symbols, are structures but there is a big difference between
-them. The physical structures have simple recursive definitions.
-The symbolic content of ROM  is (almost) random and has no simple
-definition.
+At this stage, both the size and complexity of the system increase without introducing any functional improvements. The sole effect is the reduction of the (algorithmic) complexity of the ROM's content.
 
-{\em We agree to grow a little the complexity  of the physical
-structure, even the size, in order to create the condition to
-reduce the effort to set up the complex symbolic content of ROM.}
+This marks an important phase in the development of digital systems, where physical complexity begins to {\em compensate} for the ``symbolic'' complexity of the ROM's content. While both circuits and symbols are structured entities, there exists a fundamental difference between them. Physical structures can be defined through simple recursive relationships, whereas the symbolic content of the ROM is (almost) random and lacks a straightforward definition.
 
-This is the first main ``{\bf turning point}" in the development
-of digital systems. We have here the first sign about the higher
-complexity of symbolic structures. Using recursive defined
-objects the physical structures are maintained at smaller
-complexity, rather than the symbolic structures, that must assume
-the complexity of the actual problems to be solved with the
-digital machines. The previously defined CROM structure is so
-thought as the content of ROM to be {\em easy designed}, {\em
-easy  tested} and {\em easy  maintained} because it is complex.
-This is the first moment, in our approach, when the symbolic
-structure has more importance than the physical structure of a
-digital machine.
+{\em We accept a moderate increase in the complexity of the physical 
+structure, including its size, in order to create conditions that reduce the effort required to configure the complex symbolic content of the ROM.}
+
+This represents the first major ``{\bf turning point}'' in the evolution of digital systems. Here, we encounter the initial indication of the greater complexity inherent in symbolic structures. By utilizing recursively defined components, physical structures can be kept relatively simple, whereas symbolic structures must account for the full complexity of the problems digital systems are designed to solve. 
+
+The CROM structure is specifically designed so that the ROM content is {\em easy to design}, {\em easy to test}, and {\em easy to maintain}, despite its inherent complexity. This marks the first moment in our approach where the importance of the symbolic structure surpasses that of the physical structure in a digital system.
 
 
+%***************************************************
 \subsubsection{Binary code generator}\label{binGen}
+%***************************************************
+
 
 For defining the bit-content content of the ROM,
 we have to design a Verilog description for a ``machine" which
 takes a file containing lines of {\em microinstructions} and
 translate it into the corresponding binary representation. Then,
-in the module which describes the ROM of CROM we must include the following line: {\small
-\begin{verbatim}
+in the module which describes the ROM of CROM we must include the following line: 
+\begin{verilogcode}
   `include "codeGenerator.v" // generates ROM's content using 'theDefinition.v'
-\end{verbatim}
-}
+\end{verilogcode}
+
 The code generating mechanism is a program which has as input a file describing the behavior of the automaton using a microprogram. Let us consider  Example \ref{dummyMP} where the file {\tt theDefinition} is used  as an input for {\tt codeGenerator.sv}  defined inListing \ref{lst:A10_codeGenerator.sv}.
 
 \includeverilogcode[caption={Micro-program assembler..   File: A10\_codeGenerator.sv  (SystemVerilog)}, 
@@ -805,11 +773,19 @@ The code generating mechanism is a program which has as input a file describing 
                     {\verilogSourceDir/A10_codeGenerator.sv}
 
 
-The file {\tt theDefinition} is included twice because if a
-label is used before it is defined, only at the second pass in the
-memory {\tt labelTab} the right value of the jump address is correct.
+Listing \ref{lst:A10_codeGenerator.sv} shows SystemVerilog code that generates the binary content of a ROM through a structured process that uses registers, tasks, and an initialization routine. Several registers are declared to represent various fields of the ROM entry. For instance, the 2-bit register \texttt{mode} indicates the transition mode, while \texttt{test} is a 1-bit register used for flag selection. Other registers—\texttt{field1} (2 bits), \texttt{field2} (3 bits), \texttt{field3} (2 bits), and \texttt{field4} (8 bits)—store different command parameters. The 5-bit registers \texttt{address} and \texttt{counter} keep track of the ROM addressing and entry count, respectively, and an array \texttt{labelTab} with 32 entries of 5 bits each is used to store addresses associated with specific label indices.
 
-The code generator is tested using the  module for  Listing \ref{lst:A10_simulator.sv}.
+The code defines several tasks that facilitate the creation of ROM entries. The \texttt{eol} task, short for ``end of line'' finalizes an entry by combining all the defined fields into a single ROM word using a concatenation of \texttt{mode}, \texttt{address}, \texttt{test}, \texttt{field1}, \texttt{field2}, \texttt{field3}, and \texttt{field4}. After writing this composite value to the ROM at the location specified by \texttt{counter}, the task resets all fields to zero and increments the counter, preparing for the next entry.
+
+A separate task, \texttt{lb}, is used for label management. It assigns the current value of \texttt{counter} to an index in the \texttt{labelTab} array, thereby enabling jump instructions to reference specific ROM addresses during program execution. In addition to these tasks, several command tasks (such as \texttt{com11}, \texttt{com12}, \texttt{com13} for modifying \texttt{field1}; \texttt{com21} through \texttt{com24} for modifying \texttt{field2}; \texttt{com31} and \texttt{com32} for modifying \texttt{field3}; and \texttt{val} for assigning a value to \texttt{field4}) are defined to set specific bits in the ROM entry corresponding to various instructions.
+
+The code also includes tasks to define transition modes. For example, the \texttt{jmp} task sets \texttt{mode} to \texttt{2'b01} and loads \texttt{address} with a previously stored label from \texttt{labelTab}. The \texttt{cjmp} task functions similarly but sets \texttt{mode} to \texttt{2'b10} to support conditional jumps, while the \texttt{init} task, which sets \texttt{mode} to \texttt{2'b11}, indicates an initialization instruction.
+
+Additionally, two tasks, \texttt{flag1} and \texttt{flag2}, are used for flag selection, assigning the values \texttt{1'b0} and \texttt{1'b1} to the \texttt{test} register, respectively.
+
+The initialization block of the code sets all registers to zero and initializes the counter. It then includes an external file, \texttt{theDefinition.v}, twice. These include directives represent a two-pass assembly process: the first pass defines labels and records their corresponding addresses, while the second pass resolves these labels to generate the correct ROM content. The file {\tt theDefinition} is included twice because if a
+label is used before it is defined, only during the second pass will the
+memory {\tt labelTab} contain the correct value of the jump address.
 
 \includeverilogcode[caption={Micro-program assembler..   File: A10\_simulator.sv  (SystemVerilog)}, 
                     label={lst:A10_simulator.sv}, 
@@ -819,10 +795,15 @@ The code generator is tested using the  module for  Listing \ref{lst:A10_simulat
                     {\verilogSourceDir/A10_simulator.sv}
 
 
+Listing \ref{lst:A10_simulator.sv} shows a SystemVerilog module, named \texttt{simulator}. It is a simulation framework that incorporates externally generated ROM content via the \texttt{`include} directive, which pulls in the file \texttt{codeGenerator.v}. Within the module, a ROM is declared as an array \texttt{mem} consisting of 32 elements, where each element is a 23-bit register. An integer variable \texttt{i} is also declared to serve as a loop index.
+
+In the \texttt{initial} block, a for loop iterates from \texttt{i = 0} to \texttt{i < 16}, effectively processing the first 16 entries of the ROM. For each iteration, the \texttt{\$display} statement is executed, which prints the contents of the current ROM entry in a formatted string. Specifically, the output displays the ROM index, followed by several fields extracted from the corresponding 23-bit word. The fields are partitioned as follows: the \texttt{mode} field is obtained from bits 22 to 21, the \texttt{addr} field from bits 20 to 16, the \texttt{test} bit from bit 15, \texttt{com1} from bits 14 to 13, \texttt{com2} from bits 12 to 10, \texttt{com3} from bits 9 to 8, and finally the \texttt{val} field from bits 7 to 0, which is displayed as a decimal number.
+
+This organization of bits within each ROM entry provides various control and command parameters, giving a structured way to interpret the ROM content generated by the code included from \texttt{codeGenerator.v}. Overall, the module functions as a simulator that outputs the ROM's binary data in a human-readable format, facilitating verification and debugging of the code generation process.
+
 Running the simulation on the file {\tt theDefinition.x} results the content of the ROM:
-{\small
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog]
+
+\begin{verilogcode}
 ROM[0] = mode:00 addr:00000 test:0 com1:11 com2:010 com3:01 val: 24
 ROM[1] = mode:10 addr:00110 test:1 com1:00 com2:001 com3:10 val:  0
 ROM[2] = mode:10 addr:00000 test:0 com1:00 com2:000 com3:00 val:  0
@@ -831,17 +812,11 @@ ROM[4] = mode:00 addr:00000 test:0 com1:10 com2:001 com3:00 val:  0
 ROM[5] = mode:10 addr:00011 test:1 com1:00 com2:000 com3:00 val:  0
 ROM[6] = mode:01 addr:00110 test:0 com1:00 com2:000 com3:00 val:  0
 ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
-\end{lstlisting}
-\end{shaded*}
-}
+\end{verilogcode}
 
-In the next chapter we will put the code generator to work exemplifying its usefulness for designing an elementary processor.
-
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Simple Automata}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 A simple automaton has the loop closed through a simple combinatorial circuit. We will provide two examples on our way to build a computing engine.
 
 \subsection{Counters}
