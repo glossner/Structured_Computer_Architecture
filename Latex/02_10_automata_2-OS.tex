@@ -819,28 +819,30 @@ ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 A simple automaton has the loop closed through a simple combinatorial circuit. We will provide two examples on our way to build a computing engine.
 
+%*********************
 \subsection{Counters}
+%*********************
 
+%***************************
 \subsubsection{T Flip-Flop}
+%***************************
+The smallest and simplest automaton is a half-automaton with two states and a single input (see Figure \ref{t_ff}a). Given an automaton with only two internal states, denoted as \( Q \) and \( Q' \), and a single input bit \( T \), its behavior is constrained to a single logical operation:
 
-The smallest and the simplest automaton is a half-automaton with 2 states and one input (see Figure \ref{t_ff}a). What could be the behavior of an automaton with only two internal states (Q and Q') and a single input bit T? The only solution:
-$$Q \Leftarrow T \;? \; Q' : Q$$
+\[
+Q \Leftarrow T \;? \; Q' : Q
+\]
 
 \placedrawing[h]{figures/04_06_T_flip_flop.lp}{{\bf The T flip-flop.} {\small {\bf
-a.} It is the simplest automaton because: has 1-bit state register
-(a DF-F), a 2-input loop circuit (one as automaton input and
-another to close the loop), and direct output from the state
-register. {\bf b.} The structure of the T flip-flop: the $XOR_{2}$
-circuits complements the state if $T=1$. {\bf c.} The logic
-symbol.}}{t_ff}
+a.} It represents the simplest form of an automaton, as it consists of a 1-bit state register (a D flip-flop), a two-input feedback loop (one input corresponding to the automaton's external input and the other maintaining the feedback loop), and an output directly derived from the state register. {\bf b.} The structural representation of the T flip-flop: the \( XOR_2 \) gate inverts the state when \( T = 1 \). {\bf c.} The logical symbol of the T flip-flop.}}{t_ff}
 
-Let us remember on of the XOR's function: commanded inverter. Then the actual structure of the smallest and simplest automaton is represented in Figure \ref{t_ff}b.
+One fundamental property of the XOR function is its role as a controlled inverter. Consequently, the actual structure of the smallest and simplest automaton is illustrated in Figure \ref{t_ff}b.
 
-The numerical function of the TF-F is 2 modulo counter under the command T. If T=1 then the circuit counts, else it preserves the last state.
+The numerical function of the T flip-flop can be interpreted as a modulo-2 counter governed by the control input \( T \). When \( T = 1 \), the circuit toggles its state, effectively counting. Conversely, when \( T = 0 \), the circuit retains its previous state, exhibiting memory-like behavior.
 
+%******************************
 \subsubsection{Generic Counter}
-
-The counter is basically a simple half-automaton that has an increment circuit on the reverse connection. Each active edge of the clock loads the incremented state register value into the state register. In real application, the functionality is extended to the following set of operations:
+%******************************
+The generic counter is a basic half-automaton augmented with an increment circuit integrated into its feedback loop. At each active clock edge, the incremented value of the state register is loaded into the register. In practical applications, the counter's functionality is extended to support the following operations:
 
 \placedrawing[h]{figures/04_07_counter.lp}{Counter.}{fig38}
 
@@ -865,6 +867,8 @@ Four-bit presetable and reversible counter.
                     {\verilogSourceDir/A10_counterDefines.vh}
 }
 
+Listing \ref{lst:A10_counterDefines.vh} shows the commands for the counter automaton.
+\end{exemplu}
 {\em 
 \includeverilogcode[caption={A presetable up-down counter.   File: A10\_counter.sv  (SystemVerilog)}, 
                     label={lst:A10_counter.sv}, 
@@ -873,6 +877,11 @@ Four-bit presetable and reversible counter.
                     lastline=30]
                     {\verilogSourceDir/A10_counter.sv}
 }
+Listing \ref{lst:A10_counter.sv} shows SystemVerilog code that defines a module named \texttt{counter} that implements a simple synchronous counter. On line 1, the directive \texttt{`include "counterDefines.vh"} is used to incorporate a header file containing macro definitions. These macros, including \texttt{`reset}, \texttt{`load}, \texttt{`up}, and \texttt{`down}, specify the operation codes that determine the counter’s functionality.
+
+The module \texttt{counter} has a 4-bit output, \texttt{out}, a 3-bit input, \texttt{op}, for selecting the operation, a 4-bit input, \texttt{in}, for loading a value, and a clock input, \texttt{clk}. The counter is designed to operate synchronously with the positive edge of the clock. Within an \texttt{always\_ff} block, which is triggered on each rising clock edge, a \texttt{case} statement evaluates the \texttt{op} input and updates the output accordingly.
+
+When the \texttt{op} code corresponds to \texttt{`reset}, the counter is reset by setting \texttt{out} to 0. When the \texttt{op} code is \texttt{`load}, the value from the \texttt{in} input is loaded into \texttt{out}. For the \texttt{`up} operation, the counter increments its current value by 1, whereas for the \texttt{`down} operation, it decrements its current value by 1. In the default case, the counter maintains its current state by leaving \texttt{out} unchanged.
 
 {\em 
 \includeverilogcode[caption={Test module for the counter.   File: A10\_testCounter.sv  (SystemVerilog)}, 
@@ -883,14 +892,24 @@ Four-bit presetable and reversible counter.
                     {\verilogSourceDir/A10_testCounter.sv}
 }
 
+Listing \ref{lst:A10_testCounter.sv} shows a SystemVerilog testbench module, \texttt{testCounter}, that is designed to verify the functionality of a counter module. On line 1, the directive \texttt{`include "counterDefines.vh"} incorporates an external header file that defines various operation macros (\texttt{`reset}, \texttt{`up}, \texttt{`load}, and \texttt{`down}).
+
+Within the \texttt{testCounter} module, four signals are declared: a 4-bit output \texttt{out}, a 3-bit operation code \texttt{op}, a 4-bit input \texttt{in}, and a clock signal \texttt{clk}. The testbench generates a periodic clock by initializing \texttt{clk} to 0 and then continuously toggling its value every time unit using a \texttt{forever} loop. This clock generation mechanism ensures that the counter operates synchronously with a clock period of 2 time units.
+
+Another initial block in the testbench establishes a sequence of test operations. Initially, the operation code \texttt{op} is set to \texttt{`reset}, and the input \texttt{in} is assigned the binary value \texttt{1010}. Following a delay of 2 time units, \texttt{op} is changed to \texttt{`up}, thereby instructing the counter to increment its current value. After an additional delay of 6 time units, the operation code is set to \texttt{`load}, causing the counter to load the value from \texttt{in}. Subsequently, after a further delay of 2 time units, the operation is again changed to \texttt{`up}, and then, following a delay of 10 time units, \texttt{op} is set to \texttt{`down} to prompt a decrement of the counter. Finally, after a delay of 16 time units, the simulation is terminated by invoking the \texttt{\$finish} system task.
+
+At the conclusion of the testbench, the counter module is instantiated as the device under test (DUT) and connected to the declared signals \texttt{out}, \texttt{op}, \texttt{in}, and \texttt{clk}.
+
 $\diamond$
-\end{exemplu}
 
+
+%**********************************************************
 \subsection{{\bf {\em Program Counter}}}\label{progCounter}
+%**********************************************************
 
-A specific application of the counter simple automaton is the system used to compute the next address in the process of running a program (see Figure \ref{fig39}). The set of functions, specified on the input {\tt next}, are:
+A specific application of the counter simple automaton is the system used to compute the next address in the process of running a program (see Figure \ref{fig39}). The set of functions specified on the input {\tt next} are:
 \begin{itemize}
-    \item {\tt nop: addres <= address} for {\tt halt} instruction
+    \item {\tt nop: address <= address} for {\tt halt} instruction
     \item {\tt rst: address <= 0} for system reset
     \item {\tt inc: address <= address + 1} for program counter increment
     \item {\tt rjmp: address <= address + relValue} for relative jump
@@ -900,7 +919,6 @@ A specific application of the counter simple automaton is the system used to com
 
 \placedrawing[H]{figures/04_08_program_counter.lp}{Program Counter.}{fig39}
 
-
 \includeverilogcode[caption={Program counter.   File: A10\_programCounter.sv  (SystemVerilog)}, 
                     label={lst:A10_programCounter.sv}, 
                     firstline=1, 
@@ -908,10 +926,19 @@ A specific application of the counter simple automaton is the system used to com
                     lastline=30]
                     {\verilogSourceDir/A10_programCounter.sv}
 
+Listing \ref{lst:A10_programCounter.sv} shows SystemVerilog code for a module named \texttt{programCounter} that functions as a program counter with a parameterized width. The module outputs a 32-bit program address (\texttt{progAddr}) and receives several inputs: a 3-bit selection signal (\texttt{sel}), a 32-bit relative value (\texttt{relValue}), a 32-bit absolute value (\texttt{absValue}), as well as \texttt{reset} and \texttt{clock} signals. Internally, two 32-bit registers, \texttt{pc} and \texttt{nextPC}, are declared; \texttt{pc} holds the current program counter value, while \texttt{nextPC} is computed based on the control inputs.
 
+The sequential behavior of the counter is described within an \texttt{always\_ff} block that is triggered on the positive edge of the clock. Within this block, if the \texttt{reset} signal is asserted, the program counter \texttt{pc} is reset to zero; otherwise, \texttt{pc} is updated with the value of \texttt{nextPC}. This ensures that the program counter is synchronously updated and can be reliably reset when needed.
+
+The combinational logic for computing the next program counter value is implemented in an \texttt{always\_comb} block using a \texttt{case} statement based on the \texttt{sel} input. When \texttt{sel} is \texttt{3'b000}, \texttt{nextPC} is assigned the current value of \texttt{pc}, effectively holding the counter. If \texttt{sel} is \texttt{3'b001}, \texttt{nextPC} is computed as \(\texttt{pc} + \texttt{relValue}\). For a selection of \texttt{3'b010}, the value of \texttt{nextPC} depends on the absolute value: if \texttt{absValue} is zero, \(\texttt{nextPC} = \texttt{pc} + \texttt{relValue}\); otherwise, \(\texttt{nextPC} = \texttt{pc} + 1\). Similarly, when \texttt{sel} is \texttt{3'b011}, \(\texttt{nextPC}\) is assigned \(\texttt{pc} + 1\) if \texttt{absValue} is zero, or \(\texttt{pc} + \texttt{relValue}\) otherwise. If \texttt{sel} is \texttt{3'b100}, the counter is loaded with the absolute value, so \(\texttt{nextPC} = \texttt{absValue}\). For any other value of \texttt{sel} (the default case), \(\texttt{nextPC} = \texttt{pc} + 1\).
+
+Finally, the current value of the program counter \texttt{pc} is assigned to the output \texttt{progAddr}. An alternative assignment (commented out in the code) would directly assign \texttt{nextPC} to \texttt{progAddr} for a non-pipelined implementation.
+
+%***********************************************************************************
 \subsection{{\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}}\label{rALU}
+%***********************************************************************************
 
-If we connect in a loop a register file with a logical-arithmetic unit we will obtain the simplest form of an executive core of a processor (see Figure \ref{ralu}). The external connections of a Register with Arithmetic \& Logic Unit (RALU) type module are:
+If we connect in a loop a register file with a arithmetic logic unit we obtain the simplest form of an executive core of a processor (see Figure \ref{ralu}). The external connections of a Register with Arithmetic \& Logic Unit (RALU) type module are:
 \begin{description}
     \item[{\tt func[3:0]}]: selects one of the maximum 8 functions performed by ALU
     \item[{\tt carryIn}]: carry input for arithmetic functions (is borrow for subtract)
@@ -930,9 +957,6 @@ According to the connection list, RALU performs no more than 8 functions, on 32-
 
 \placedrawing[h]{figures/04_09_ralu.lp}{32-bit RALU.}{ralu}
 
-In each clock cycle, the function {\tt func} is applied on two operands  selected from the register file and the result, {\tt out}, is loaded back in the register file if {\tt writeEnable = 1}. If {\tt load = 1}, then {\tt leftOp = in}. If {\tt writeEnable = 0}, the content of the register file remains unchanged and the only purpose of the operation is to send toward the external systems the outputs: {\tt carryOut, leftOut, rightOut}.
-
-The code {\tt func} selects the  functions defined in Listing \ref{lst:A10_defineRALU.vh}.
 
 \includeverilogcode[caption={Defining the functions for a RALU.   File: A10\_defineRALU.vh  (SystemVerilog)}, 
                     label={lst:A10_defineRALU.vh}, 
@@ -941,6 +965,8 @@ The code {\tt func} selects the  functions defined in Listing \ref{lst:A10_defin
                     lastline=30]
                     {\verilogSourceDir/A10_defineRALU.vh}
 
+
+
 \includeverilogcode[caption={RALU.   File: A10\_RALU.sv  (SystemVerilog)}, 
                     label={lst:A10_RALU.sv}, 
                     firstline=1, 
@@ -948,7 +974,12 @@ The code {\tt func} selects the  functions defined in Listing \ref{lst:A10_defin
                     lastline=30]
                     {\verilogSourceDir/A10_RALU.sv}
 
-For module {\tt regFile} see \ref{registerFile} in the previous chapter.
+
+Listing \ref{lst:A10_defineRALU.vh} shows SystemVerilog code for a module named \texttt{RALU}. It implements a Register Arithmetic Logic Unit by integrating a register file and an arithmetic logic unit (ALU). The module is designed for 32-bit wide data processing and features three primary outputs: two 32-bit signals, \texttt{leftOut} and \texttt{righttOut}, and a one-bit flag output, \texttt{crOut}. The inputs include three 5-bit addresses (\texttt{leftAddr}, \texttt{rightAddr}, and \texttt{destAddr}) used to access specific registers, a 32-bit data input \texttt{in}, a control signal \texttt{load} that selects between direct input and register file output, a write enable signal \texttt{we}, a 4-bit function code \texttt{func} that determines the ALU operation, and a clock signal.
+
+Internally, the module declares a 32-bit logic variable \texttt{out}, which serves as the output from the ALU and as the data input to the register file. The module instantiates a register file,  \texttt{rf}, which manages data storage and retrieval. For module {\tt regFile} see Section \ref{registerFile}. The outputs of the register file are connected to \texttt{leftOut} and \texttt{righttOut}, while the ALU’s result, \texttt{out}, is routed back into the register file for potential writing. The addresses for reading from the register file are supplied by \texttt{leftAddr} and \texttt{rightAddr}, and the destination register is specified by \texttt{destAddr}. Additionally, the write enable signal \texttt{we} and the clock signal are forwarded to the register file to control synchronous data updates.
+
+Simultaneously, the module instantiates an ALU, denoted as \texttt{alu}, which performs arithmetic or logical operations based on the provided function code \texttt{func}. The left input to the ALU is determined by a conditional expression: if the \texttt{load} signal is asserted, the left input is taken directly from the external 32-bit input \texttt{in}; otherwise, it is taken from \texttt{leftOut}, the output of the register file. The right input to the ALU is directly connected to \texttt{righttOut}. The ALU computes its result and outputs it to the internal variable \texttt{out}, while also generating the carry or flag output \texttt{crOut}.
 
 \includeverilogcode[caption={ALU.   File: A10\_alu.sv  (SystemVerilog)}, 
                     label={lst:A10_alu.sv}, 
@@ -957,10 +988,21 @@ For module {\tt regFile} see \ref{registerFile} in the previous chapter.
                     lastline=30]
                     {\verilogSourceDir/A10_alu.sv}
 
-Let us use the RALU unit we just defined to exemplify simple calculations.
+Listing \ref{lst:A10_alu.sv} shows SystemVerilog code that defines an Arithmetic Logic Unit (ALU) module that performs a variety of arithmetic and logical operations on 32-bit operands. The module begins by including an external file, \texttt{"define.vh"}, which contains macro definitions for the operation codes used within the design. The ALU accepts a 4-bit function code, \texttt{func}, along with two 32-bit inputs, \texttt{left} and \texttt{right}. It produces a 32-bit output, \texttt{out}, and a 1-bit carry or flag output, \texttt{crOut}.
+
+Two internal 33-bit signals, \texttt{sum} and \texttt{dif}, are declared to hold the results of addition and subtraction, respectively. The extra bit in these signals is used to capture any carry-out that may occur during arithmetic operations. Specifically, \texttt{sum} is assigned the result of \texttt{left + right}, while \texttt{dif} is assigned the result of \texttt{left - right}.
+
+The core functionality of the ALU is implemented within an \texttt{always\_comb} block that employs a \texttt{case} statement to select the appropriate operation based on the value of \texttt{func}. For instance, when the function code corresponds to \texttt{`bigv}, the module concatenates a zero bit with the lower 16 bits of \texttt{left} and \texttt{right}, effectively merging these halves into a 32-bit output while setting the carry flag to zero. In the cases of \texttt{`add} and \texttt{`sub}, the concatenation of the carry-out and the 32-bit result from the addition (\texttt{sum}) or subtraction (\texttt{dif}) is assigned to the outputs.
+
+Additional operations are provided for the conditional output of the carry bit. When the function code is \texttt{`addcr} or \texttt{`subcr}, the ALU outputs only the carry bit from the corresponding arithmetic operation, with the remaining 32 bits set to zero. The ALU also supports logical and shifting operations. The \texttt{`lsh} and \texttt{`ash} operations perform logical and arithmetic shifts on the \texttt{left} operand, with the shifted-out bit being routed to the carry output. Other operations, such as \texttt{`move}, \texttt{`mult}, \texttt{`bwand}, \texttt{`bwor}, and \texttt{`bwxor}, respectively, transfer the \texttt{left} operand, multiply the operands, and execute bitwise AND, OR, and XOR functions, with the carry output remaining zero in these cases.
+
+In the default case, the outputs are assigned a 33-bit value corresponding to zero minus one, effectively setting all bits of \texttt{out} and \texttt{crOut} to zero, except for the bitwise representation of negative one. 
+
+
+Let us use the RALU unit we just defined to illustrate elementary computational operations.
 
 \begin{exemplu}\label{ex3.1}
-The following sequence o operations: load two numbers (12 and 5) in register file, add them, divide the result by 4, add with 23, and send out the result on the right output.
+The following sequence of operations: load two numbers (12 and 5) in the register file, add them, divide the result by 4, add with 23, and send out the result on the right output.
 
 
 \begin{table}[H]
@@ -1022,15 +1064,21 @@ t=13 clock=1 func=1101 destAddr=3 leftAddr=2 rightAddr=1 load=0 in=7  RF=[8, 9, 
 \end{verbatim}
 }
 
+%****************************
 \subsection{Stream Memories}
+%****************************
+One of the most significant applications of counters is to facilitate addressing within RAM structures, thereby enabling the systematic organization and retrieval of data in the form of strings. At both the conceptual level, within software, and the structural level, within hardware, two distinct architectures for storing data strings have been devised. One architecture permits both writing and reading operations at the same end of the string, whereas the other supports writing at one end and reading at the opposite end.
 
-One of the most useful applications of counters is to allow addressing of RAM structures in order to organize and access data in the form of strings. Both conceptually, at the software level, and structurally, at the hardware level, two structures for storing data strings have been imposed: one of them accesses the string for both writing and reading at the same end, while the second accesses the string for writing at one end and for reading at the other end. The first is the Last-In-First-Out, LIFO, memory, which is also called a {\bf {\em stack}}, and the second is the First-In-First-Out, FIFO, memory, which is also called a {\bf {\em queue}}.
+The first architecture corresponds to Last-In-First-Out (LIFO) memory, commonly referred to as a {\bf {\em stack}}, while the second corresponds to First-In-First-Out (FIFO) memory, also known as a {\bf {\em queue}}.
 
 
 
+
+
+%**************************************************
 \subsubsection{LIFO (Stack) Memory}\label{lb:lifo}
-
-\paragraph{Definition} of the FIFO, or stack memory considers the string of symbols  {\tt S = <s0, s1, s2, ...>} which can evolve as follows under the sequence of five commands:
+%**************************************************
+\paragraph{Definition}  The definition of LIFO, or stack memory, considers a sequence of symbols, denoted by \texttt{S = <s0, s1, s2, ...>}, which evolves according to a series of operations.  For example, the following sequence illustrates the typical behavior: 
 \begin{verbatim}
     push a --> S = <a, s0, s1, s2, ...>
     push b --> S = <b, a, s0, s1, s2, ...>
@@ -1039,9 +1087,9 @@ One of the most useful applications of counters is to allow addressing of RAM st
     pop    --> S = <s1, s2, ...>
 \end{verbatim}
 
-Real applications request additional functions for a LIFO used for expression evaluation. An minimally expanded set of functions for the LIFO {\tt S = <s0, s1, s2, ...>} contains the following operations:
+In practical applications, especially in expression evaluation, additional functionalities are required for a LIFO memory. A minimally extended set of operations for the LIFO, represented as \texttt{S = <s0, s1, s2, ...>}, comprises the following commands:
 \begin{itemize}
-\item {\tt nop}: no operation; the contents of {\tt S} in untouched
+\item {\tt nop}: no operation; the contents of {\tt S} in unchanged
 \item {\tt write a}: write {\tt a} in {\tt TOS} \\{\tt <s0, s1, s2, ...> --> <a, s1, s2, ...>}\\used for unary operations; for example: \\{\tt a = s0 + 1}\\
 the TOS is incremented and write back in TOS ({\tt pop, push = write})
 \item {\tt pop}: \\{\tt <s0, s1, s2, ...> --> <s1, s2, ...>}
@@ -1052,6 +1100,7 @@ the first two positions in LIFO are popped, added and the result is pushed back 
 
 \placedrawing[H]{figures/so2_10.lp}{{\bf Stack memory}. {\small {\bf a.} The structure. {\bf b.} Logic symbol. }}{stack}
 
+
 \paragraph{Structure} of a  LIFO memory is defined in Listing \ref{lst:A10_lifo.sv}.
 
 \includeverilogcode[caption={LIFO.   File: A10\_lifo.sv  (SystemVerilog)}, 
@@ -1061,13 +1110,22 @@ the first two positions in LIFO are popped, added and the result is pushed back 
                     lastline=60]
                     {\verilogSourceDir/A10_lifo.sv}
 
-Someone may ask: why don't we signal reaching the maximum storage capacity in the stack? Because, as a rule, the user designs the depth of the stack at a sufficiently high value so that it is not necessary to signal the storage capacity is exceeded. But, when it is the case, these mechanisms exist.
+Listing \ref{lst:A10_lifo.sv} shows a SystemVerilog module that implements a LIFO memory structure, commonly known as a stack. The module, named \texttt{lifo}, features two 32-bit outputs, \texttt{stack0} and \texttt{stack1}, which are derived from an underlying register file. It accepts a 32-bit data input (\texttt{in}), a 3-bit command input (\texttt{com}), and control signals for reset and clock.
 
+Within the module, command codes are defined by convention (as indicated in the comments) to control stack operations. These commands include \texttt{nop (3'b000)} for no operation, \texttt{write (3'b001)} to enable writing, \texttt{pop (3'b010)} to decrement the stack pointer, \texttt{popwr (3'b011)} to perform a combined decrement and write, and \texttt{push (3'b101)} to increment the pointer while writing. 
 
+A 5-bit signal, \texttt{leftAddr}, serves as the main pointer to the current top of the stack, while \texttt{nextAddr} represents the computed subsequent pointer value. The assignment to \texttt{nextAddr} is determined by the command input: if \texttt{com[2]} is asserted, \texttt{nextAddr} is set to \texttt{leftAddr + 1}; if \texttt{com[2]} is not asserted but \texttt{com[1]} is, \texttt{nextAddr} is set to \texttt{leftAddr - 1}; otherwise, \texttt{leftAddr} remains unchanged. An \texttt{always\_ff} block, triggered on the positive edge of the clock, updates \texttt{leftAddr} accordingly—resetting it to zero when the \texttt{reset} signal is active, or updating it with the value of \texttt{nextAddr} otherwise.
 
+The module then instantiates a register file (named \texttt{rf}) that manages the actual data storage. In this instantiation, \texttt{leftAddr} is used as the address for the left output port, while \texttt{leftAddr - 1} is used for the right output port. The destination address for data writing is provided by \texttt{nextAddr}, and the write enable signal is extracted from \texttt{com[0]}. The input data (\texttt{in}) is routed into the register file, and the entire operation is synchronized with the clock signal.
+
+It is important to address the question of why an explicit signal to indicate the maximum storage capacity of the stack is not provided. In practice, the depth of the stack is typically designed to be sufficiently large such that overflow conditions are highly unlikely to occur. Nonetheless, mechanisms to signal when the storage capacity is exceeded do exist and can be implemented as needed.
+
+%**************************************************
 \subsubsection{FIFO (Queue) Memory}\label{lb:fifo}
+%**************************************************
 
-\paragraph{Definition} of the FIFO memory is  represented in Figure \ref{fifo1}. It has the following connections (see Figure \ref{fifo1}a):
+\paragraph{Definition} of the FIFO memory is shown in Figure \ref{fifo1}. It has the following connections (see Figure \ref{fifo1}a):
+%\begin{description}[parsep=0em, itemsep=0.25em]
 \begin{description}
     \item[dataIn]: the data entry of $n$ bits to which the word that will be recorded in the rightmost unoccupied location is applied.
     \item[dataOut]: the $n$ bit data output from which the oldest unextracted record is extracted
@@ -1090,12 +1148,14 @@ In Figures from \ref{fifo1}b to \ref{fifo1}e is exemplified the way FIFO works, 
 
 There are two main types of FIFO:
 \begin{itemize}
-    \item synchronous FIFO: the sending system and the receiving system run with the same clock signal (for those who are interested can consult Appendix \ref{fifoMem})
-    \item asinchronous FIFO: the sending system and the receiving system run with different  clock signals
+    \item synchronous FIFO: the sending system and the receiving system run with the same clock signal 
+    %(for those who are interested can consult Appendix \ref{fifoMem})
+    
+    \item asynchronous FIFO: the sending system and the receiving system run with different clock signals
 \end{itemize}
-Asynchronous FIFO are used to solve the problem of crossing data between systems running in different clock domain. The module BUS Bridge (see Figure \ref{compSys}) contains almost sure an asynchronous FIFO.
+Asynchronous FIFOs are used to solve the problem of crossing data between systems running in different clock domains. The module BUS Bridge (see Figure \ref{compSys}) contains an asynchronous FIFO.
 
-\paragraph{Structure} of a synchronous FIFO memory is presented in Figure \ref{fifo}, where:
+\paragraph{Structure} of a synchronous FIFO memory is shown in Figure \ref{fifo}, where:
 
 \begin{itemize}
     \item {\bf RAM} is a $2^{n}$ $m$-bit words two-port asynchronous random access memory, one
@@ -1117,41 +1177,18 @@ implement a LIFO (queue) memory. The limit flags are computed
 combinational from the addresses used to write and to read the
 memory.}}{fifo}
 
-FIFO works like a circular memory addressed by two pointers ({\tt
-w\_addr[n-1:0]} and {\tt r\_addr[n-1:0]}) running on the same
-direction. If the write pointer {\em after} a write operation
-becomes equal with the read pointer, then the memory is  full and
-the {\tt full} signal is 1. If the read pointer {\em after} a read
-operation becomes equal with the write pointer, then the memory is
-empty and the {\tt empty} signal is 1. The $n+1$-th bit in each
-counter is used to differentiate between empty and full when {\tt
-w\_addr[n-1:0]} and {\tt r\_addr[n-1:0]} are the same. If {\tt
-w\_addr[n]} and {\tt r\_addr[n]} are different, then {\tt
-w\_addr[n-1:0]} = {\tt r\_addr[n-1:0]} means full, else it means
-empty.
-
-The circuit used to compare the two addresses is a combinational
-one. Therefore, its output has a hazardous behavior which affects
-the outputs {\tt full} and {\tt empty}. These two outputs must be
-used carefully in designing the system which includes this FIFO
-memory. The problem can be managed because the system works in the
-same clock domain ({\tt clock} is the same for both ends of FIFO
-and for the entire system). We call this kind of FIFO {\em
-synchronous FIFO}.
 
 
 
+A FIFO memory operates as a circular buffer, where data is addressed by two pointers: the write pointer, {\tt w\_addr[n-1:0]}, and the read pointer, {\tt r\_addr[n-1:0]}. These pointers progress in the same direction, ensuring sequential access to stored data. The memory is considered \textit{full} when, following a write operation, the write pointer becomes equal to the read pointer. In this case, the {\tt full} signal is asserted (\texttt{full = 1}). Conversely, the memory is deemed \textit{empty} when, after a read operation, the read pointer becomes equal to the write pointer, in which case the {\tt empty} signal is asserted (\texttt{empty = 1}).
 
+To distinguish between the full and empty states when both pointers have the same value, an additional bit, the $(n+1)$-th bit, is utilized in each counter. If {\tt w\_addr[n]} and {\tt r\_addr[n]} differ, then {\tt w\_addr[n-1:0]} being equal to {\tt r\_addr[n-1:0]} indicates a \textit{full} condition. Otherwise, when {\tt w\_addr[n]} and {\tt r\_addr[n]} are the same, this equality signifies an \textit{empty} condition.
 
+The comparison between the two address pointers is performed by a purely combinational circuit, which introduces potential timing hazards affecting the {\tt full} and {\tt empty} outputs. As a result, these signals must be used with caution when designing systems that incorporate this FIFO memory. However, this issue is mitigated because the entire system operates within the same clock domain, ensuring that both ends of the FIFO and the rest of the system are synchronized to the same {\tt clock} signal. A FIFO implementation operating under this condition is referred to as a \textit{synchronous FIFO}.
 
-
-
-
-
-
-
+%%%%%%%%%%%%%%%%%%%%
 \section{Problems}
-
+%%%%%%%%%%%%%%%%%%%%%
 \subsection{Finite Complex Automata}
 
 \begin{problem}
