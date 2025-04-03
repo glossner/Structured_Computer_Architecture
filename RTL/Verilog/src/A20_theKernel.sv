@@ -121,16 +121,17 @@
             cPARAM;         CLOAD;
             cJMP(32);       CSTORE;
 //************ MATRIX-VECTOR MULTIPLY ********************************
-    LB(12); cPARAM;                 NOP;
-            cVADD(`p-1);            NOP;
-            cPARAM;                 CLOAD;
-            cSTORE(0);              VADD(1);    // mem[0] = right addr
-            cPARAM;                 ADDRLD;     // matrix end addr + 1
-            cSTORE(1);              REDADD;     // mem[1] = dest addr
+    LB(12); cPARAM;                 NOP;        // dest address
+            cSTORE(1);              NOP;        // mem[1] dest address
+            cPARAM;                 NOP;        // matrix address
+            cVADD(`p);              REDADD;     // end matrix
+            cNOP;                   CLOAD;
+            cPARAM;                 ADDRLD;
+            cNOP;                   NOP;
             cVLOAD(`p-1);           RILOAD(-1);
     LB(24); cLREDINS;               MULT(`p);
             cBRNZDEC(24);           RILOAD(-1);
-            cVLOAD($clog2(`p)-2);   NOP;
+            cVLOAD($clog2(`p));     NOP;
     LB(27); cBRNZDEC(27);           NOP;
             cLOAD(1);               GETSR;
             cJMP(32);               CSTORE;
