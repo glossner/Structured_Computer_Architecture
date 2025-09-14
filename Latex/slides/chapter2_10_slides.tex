@@ -36,6 +36,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
+
 % Set graphics path for images (relative to slides directory)
 \graphicspath{{../Images/}}
 
@@ -184,10 +185,10 @@ By the end of this chapter, you will be able to:
 
 % Section 3: Automata Definitions
 \section{Automata Definitions and Classifications}
-
 \begin{frame}{Generic Automaton Definition}
-\begin{itemize}
-\item \concept{Formal Definition}: Mathematical model of computation
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Formal Definition}: Mathematical model of computation
 \begin{itemize}
 \item Set of states
 \item Input alphabet
@@ -195,21 +196,27 @@ By the end of this chapter, you will be able to:
 \item Initial state
 \item Accepting states
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Two Main Categories}:
+\vspace{0.3cm}
+\concept{Two Main Categories}:
 \begin{itemize}
 \item \textbf{Small \& Complex}: Finite automata with intricate logic
 \item \textbf{Large \& Simple}: Functional automata with regular patterns
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Computational Power}:
+\concept{Computational Power}:
 \begin{itemize}
 \item Language recognition capability
 \item Problem-solving capacity
 \item Complexity classification
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>}
 
 \begin{frame}{Circuit Complexity Measures}
 \begin{itemize}
@@ -307,18 +314,18 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{itemize}
 \end{frame}
-
 \begin{frame}{State Transition Diagrams}
-\begin{itemize}
-\item \concept{Graphical Representation}:
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Graphical Representation}:
 \begin{itemize}
 \item States as circles/nodes
 \item Transitions as labeled arrows
 \item Initial state marked with arrow
 \item Accepting states double-circled
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Design Process}:
+\vspace{0.3cm}
+\concept{Design Process}:
 \begin{enumerate}
 \item Identify required states
 \item Define input conditions
@@ -327,15 +334,21 @@ By the end of this chapter, you will be able to:
 \item Verify completeness
 \end{enumerate}
 \vspace{0.3cm}
-\item \concept{Analysis Techniques}:
+\concept{Analysis Techniques}:
 \begin{itemize}
 \item State reachability
 \item Equivalence checking
 \item Minimization algorithms
 \item Determinism verification
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>}
 
 \begin{frame}{Moore vs. Mealy Machines}
 \begin{columns}

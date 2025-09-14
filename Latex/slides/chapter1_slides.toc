@@ -1,0 +1,13 @@
+\beamer@sectionintoc {1}{A Brief History of Number Systems}{4}{0}{1}
+\beamer@sectionintoc {2}{Evolution of Mathematical Sets}{7}{0}{2}
+\beamer@sectionintoc {3}{Pre-Computer Number Representations}{9}{0}{3}
+\beamer@sectionintoc {4}{Decimal Positional Systems}{10}{0}{4}
+\beamer@sectionintoc {5}{10's Complement for Subtraction}{12}{0}{5}
+\beamer@sectionintoc {6}{Logarithmic Representations}{14}{0}{6}
+\beamer@sectionintoc {7}{Number Representations in Computing}{15}{0}{7}
+\beamer@sectionintoc {8}{Binary and Two's Complement}{16}{0}{8}
+\beamer@sectionintoc {9}{Excess-k and Other Representations}{20}{0}{9}
+\beamer@sectionintoc {10}{Fixed-Point Arithmetic}{21}{0}{10}
+\beamer@sectionintoc {11}{Floating-Point Systems}{23}{0}{11}
+\beamer@sectionintoc {12}{Binary Coded Decimal (BCD)}{26}{0}{12}
+\beamer@sectionintoc {13}{Chapter Summary}{28}{0}{13}

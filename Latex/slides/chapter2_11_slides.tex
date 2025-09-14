@@ -36,6 +36,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
+
 % Set graphics path for images (relative to slides directory)
 \graphicspath{{../Images/}}
 
@@ -171,59 +172,70 @@ By the end of this chapter, you will be able to:
 \item \textbf{Reversible Counter}: Counting mechanism
 \item \textbf{Zero Flag}: Counter state indicator
 \item \textbf{Command Interface}: Counter control
-\end{itemize}
+\end{itemize>
 
 \vspace{0.3cm}
 \concept{Counter Operations}:
-\begin{itemize}
+\begin{itemize>
 \item \textbf{NOP}: No operation
 \item \textbf{UP}: Increment counter
 \item \textbf{DOWN}: Decrement counter
 \item \textbf{Zero Flag}: Indicates counter = 0
-\end{itemize}
-\end{column}
+\end{itemize>
+\end{column>
 \begin{column}{0.4\textwidth}
 \begin{center}
-\includegraphics[width=\textwidth]{elementaryProcessor.png}
-\end{center}
+
+\end{center>
 \concept{System Integration}:
-\begin{itemize}
+\begin{itemize>
 \item Both FA and Counter are 2-OS
 \item Loop connection creates 3-OS
 \item Enhanced computational power
-\end{itemize}
-\end{column}
-\end{columns}
-\end{frame}
+\end{itemize>
+\end{column>
+\end{columns>
+\end{frame>
 
 % Section 3: Elementary Processor Architecture
 \section{Elementary Processor Architecture}
 
 \begin{frame}{Elementary Processor Overview}
-\begin{itemize}
-\item \concept{Definition}: Simplest version of a processor
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Definition}: Simplest version of a processor
 \begin{itemize}
 \item Implements 3-OS principles
 \item Demonstrates processor fundamentals
 \item Educational and practical value
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Main Components}:
+\vspace{0.3cm}
+\concept{Main Components}:
 \begin{itemize}
 \item \textbf{RALU}: Registers with Arithmetic \& Logic Unit
 \item \textbf{CROM}: Control ROM (micro-programmed control)
 \item \textbf{Interface}: Data input/output and control signals
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Design Philosophy}:
+\concept{Design Philosophy}:
 \begin{itemize}
 \item Simple functional automaton (RALU)
 \item Complex control automaton (CROM)
 \item Clear separation of concerns
 \item Micro-programmable architecture
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\includegraphics[width=\textwidth]{elementaryProcessor.png}
+\end{center>
+\vspace{0.2cm}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
 
 \begin{frame}{RALU: Registers with ALU}
 \begin{columns}

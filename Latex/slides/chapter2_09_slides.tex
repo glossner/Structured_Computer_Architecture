@@ -132,30 +132,45 @@ By the end of this chapter, you will be able to:
 
 % Section 2: Elementary Latches
 \section{Elementary Latches}
-
 \begin{frame}{The Simplest Memory Element}
-\begin{itemize}
-\item \concept{Latch Function}: Store temporary signal transitions
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Latch Function}: Store temporary signal transitions
 \begin{itemize}
 \item Capture transition from 1 to 0 (reset-only latch)
 \item Capture transition from 0 to 1 (set-only latch)
 \item Maintain state indefinitely
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Basic Principle}:
+\vspace{0.3cm}
+\concept{Basic Principle}:
 \begin{itemize}
 \item Feedback loop from output to input
 \item Signal propagation through circuit
 \item State becomes self-sustaining
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Limitation}: 
+\concept{Limitation}: 
 \begin{itemize}
 \item Simple latches cannot "forget"
 \item Need combination for full functionality
 \item Asymmetric command signals
 \end{itemize}
-\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Elementary Latches}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2cm, minimum height=1cm] (and) at (0,1) {AND Loop};
+\node[draw, rectangle, minimum width=2cm, minimum height=1cm] (or) at (0,0) {OR Loop};
+\node[draw, rectangle, minimum width=2cm, minimum height=1cm] (sr) at (0,-1) {Set-Reset};
+\draw[->] (and) -- (or);
+\draw[->] (or) -- (sr);
+}
+\end{center}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{AND and OR Loop Latches}
@@ -282,6 +297,11 @@ S & R & Q \\
 \end{center}
 \end{column}
 \end{columns}
+
+\vspace{0.3cm}
+\begin{center}
+
+\end{center}
 \end{frame}
 
 % Section 3: Clocked Latches
@@ -314,18 +334,18 @@ S & R & Q \\
 \end{itemize}
 \end{itemize}
 \end{frame}
-
 \begin{frame}{Clocked SR Latch}
-\begin{itemize}
-\item \concept{Design Solution}: Add clock conditioning
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Design Solution}: Add clock conditioning
 \begin{itemize}
 \item S and R inputs specify \textbf{how} to switch
 \item Clock (CK) input specifies \textbf{when} to switch
 \item Decoupling of timing from function
 \item Synchronous state changes
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Implementation}:
+\vspace{0.3cm}
+\concept{Implementation}:
 \begin{itemize}
 \item Two additional NAND gates
 \item S and R conditioned by clock
@@ -333,26 +353,32 @@ S & R & Q \\
 \item Immune to input changes when CK = 0
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Operation}:
+\concept{Operation}:
 \begin{itemize}
 \item \textbf{CK = 0}: Latch holds current state
 \item \textbf{CK = 1}: Latch responds to S and R
 \item Eliminates noise sensitivity
 \item Provides controlled timing
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 
+\end{center}
+\end{column}
+\end{columns}
+\end{frame>}
 \begin{frame}{D Latch (Data Latch)}
-\begin{itemize}
-\item \concept{Motivation}: Eliminate forbidden state of SR latch
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Motivation}: Eliminate forbidden state of SR latch
 \begin{itemize}
 \item Single data input instead of S and R
 \item No invalid input combinations
 \item Simpler interface
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Implementation}:
+\vspace{0.3cm}
+\concept{Implementation}:
 \begin{itemize}
 \item D input connected to S
 \item $\overline{D}$ connected to R through inverter
@@ -360,14 +386,20 @@ S & R & Q \\
 \item Transparent when clock is high
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Behavior}:
+\concept{Behavior}:
 \begin{itemize}
 \item \textbf{CK = 1}: Q follows D (transparent)
 \item \textbf{CK = 0}: Q holds last value
 \item No forbidden states
 \item Simple data storage
 \end{itemize}
-\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center}
+\end{column}
+\end{columns}
 \end{frame}
 
 % Section 4: Flip-Flops
@@ -398,17 +430,17 @@ S & R & Q \\
 \end{itemize}
 \end{itemize}
 \end{frame}
-
 \begin{frame}{Master-Slave D Flip-Flop}
-\begin{itemize}
-\item \concept{Structure}: Two latches in series
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Structure}: Two latches in series
 \begin{itemize}
 \item Master latch: Enabled when CLK = 1
 \item Slave latch: Enabled when CLK = 0
 \item Inverted clock between stages
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Operation Sequence}:
+\vspace{0.3cm}
+\concept{Operation Sequence}:
 \begin{enumerate}
 \item \textbf{CLK = 1}: Master captures input D
 \item \textbf{CLK = 0}: Slave captures master output
@@ -416,15 +448,25 @@ S & R & Q \\
 \item Input isolated from output
 \end{enumerate}
 \vspace{0.3cm}
-\item \concept{Advantages}:
+\concept{Advantages}:
 \begin{itemize}
 \item Edge-triggered behavior
 \item No transparency issues
 \item Predictable timing
 \item Standard building block
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center}
+\vspace{0.3cm}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>}
 
 \begin{frame}{Flip-Flop Types and Applications}
 \begin{itemize}
@@ -525,16 +567,17 @@ S & R & Q \\
 \section{Random Access Memory (RAM)}
 
 \begin{frame}{RAM Fundamentals}
-\begin{itemize}
-\item \concept{Definition}: Random Access Memory
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Definition}: Random Access Memory
 \begin{itemize}
 \item Any location accessible in constant time
 \item Address-based data retrieval
 \item Read and write operations
 \item Parallel extension of 1-OS
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Basic Structure}:
+\vspace{0.3cm}
+\concept{Basic Structure}:
 \begin{itemize}
 \item $2^p$ memory locations
 \item $p$-bit address input
@@ -542,27 +585,33 @@ S & R & Q \\
 \item Write enable control
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Key Components}:
+\concept{Key Components}:
 \begin{itemize}
 \item Address decoder (DEMUX)
 \item Memory cell array
 \item Output multiplexer (MUX)
 \item Control logic
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
 \begin{frame}{RAM Operation and Timing}
-\begin{itemize}
-\item \concept{Read Operation}:
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Read Operation}:
 \begin{itemize}
 \item Combinational process
 \item Address selects memory cell
 \item Data appears at output
 \item Access time: $t_{ACC}$
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Write Operation}:
+\vspace{0.3cm}
+\concept{Write Operation}:
 \begin{itemize}
 \item Requires write enable signal
 \item Address must be stable
@@ -570,7 +619,7 @@ S & R & Q \\
 \item More complex than read
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Critical Timing Parameters}:
+\concept{Critical Timing Parameters}:
 \begin{itemize}
 \item $t_{ASU}$: Address setup time
 \item $t_{DSU}$: Data setup time
@@ -578,20 +627,26 @@ S & R & Q \\
 \item $t_{W}$: Write enable width
 \item $t_{AH}$: Address hold time
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>}
 \begin{frame}{Multi-bit Word RAM}
-\begin{itemize}
-\item \concept{Word-Oriented Memory}:
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Word-Oriented Memory}:
 \begin{itemize}
 \item Store $m$-bit words instead of single bits
 \item Parallel columns for each bit position
 \item Shared address decoder
 \item Independent data paths
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Implementation}:
+\vspace{0.3cm}
+\concept{Implementation}:
 \begin{itemize}
 \item One column per bit position
 \item Each column contains $2^p$ memory cells
@@ -599,45 +654,58 @@ S & R & Q \\
 \item Parallel read/write operations
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Advantages}:
+\concept{Advantages}:
 \begin{itemize}
 \item Efficient data organization
 \item Reduced addressing overhead
 \item Better bandwidth utilization
 \item Matches processor word size
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>}
 
 % Section 7: Synchronous Memory
 \section{Synchronous Memory Systems}
 
 \begin{frame}{Synchronous RAM (SRAM)}
-\begin{itemize}
-\item \concept{Motivation}: High-speed operation challenges
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Motivation}: High-speed operation challenges
 \begin{itemize}
 \item GHz frequencies make timing difficult
 \item Asynchronous timing constraints hard to meet
 \item Need better controllability
-\end{itemize}
-\vspace{0.5cm}
-\item \concept{Synchronous Solution}:
+\end{itemize>
+\vspace{0.3cm}
+\concept{Synchronous Solution}:
 \begin{itemize}
 \item All timing relative to clock edge
 \item Setup and hold times defined for clock
 \item More rigorous timing control
 \item Better system integration
-\end{itemize}
+\end{itemize>
 \vspace{0.3cm}
-\item \concept{Benefits}:
+\concept{Benefits}:
 \begin{itemize}
 \item Simplified timing analysis
 \item Better noise immunity
 \item Easier system design
 \item Predictable behavior
-\end{itemize}
-\end{itemize}
-\end{frame}
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
 
 \begin{frame}{Pipelined Synchronous RAM}
 \begin{itemize}
@@ -670,16 +738,17 @@ S & R & Q \\
 \section{Register Files}
 
 \begin{frame}{Register File Concept}
-\begin{itemize}
-\item \concept{Definition}: Battery of registers with multiple access ports
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Definition}: Battery of registers with multiple access ports
 \begin{itemize}
 \item Multiple simultaneous read ports
 \item Single write port
 \item Any register accessible each cycle
 \item Critical processor component
 \end{itemize}
-\vspace{0.5cm}
-\item \concept{Typical Configuration}:
+\vspace{0.3cm}
+\concept{Typical Configuration}:
 \begin{itemize}
 \item Two read ports (left and right)
 \item One write port
@@ -687,15 +756,21 @@ S & R & Q \\
 \item Independent address inputs
 \end{itemize}
 \vspace{0.3cm}
-\item \concept{Applications}:
+\concept{Applications}:
 \begin{itemize}
 \item CPU general-purpose registers
 \item Pipeline stage buffers
 \item Vector processor registers
 \item DSP accumulator banks
 \end{itemize}
-\end{itemize}
-\end{frame}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
 
 \begin{frame}{Register File Implementation}
 \begin{itemize}

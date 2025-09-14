@@ -1,0 +1,10 @@
+\beamer@sectionintoc {1}{Introduction to Second-Order Systems}{4}{0}{1}
+\beamer@sectionintoc {2}{Historical Development of Automata}{6}{0}{2}
+\beamer@sectionintoc {3}{Automata Definitions and Classifications}{8}{0}{3}
+\beamer@sectionintoc {4}{Finite State Machines}{11}{0}{4}
+\beamer@sectionintoc {5}{Control Automata in Digital Systems}{14}{0}{5}
+\beamer@sectionintoc {6}{Counter-Expanded Automata}{16}{0}{6}
+\beamer@sectionintoc {7}{Implementation and Design Considerations}{18}{0}{7}
+\beamer@sectionintoc {8}{Applications in Computer Architecture}{20}{0}{8}
+\beamer@sectionintoc {9}{Advanced Automata Concepts}{22}{0}{9}
+\beamer@sectionintoc {10}{Chapter Summary}{24}{0}{10}
