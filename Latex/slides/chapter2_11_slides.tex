@@ -172,27 +172,27 @@ By the end of this chapter, you will be able to:
 \item \textbf{Reversible Counter}: Counting mechanism
 \item \textbf{Zero Flag}: Counter state indicator
 \item \textbf{Command Interface}: Counter control
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Counter Operations}:
-\begin{itemize>
+\begin{itemize}
 \item \textbf{NOP}: No operation
 \item \textbf{UP}: Increment counter
 \item \textbf{DOWN}: Decrement counter
 \item \textbf{Zero Flag}: Indicates counter = 0
-\end{itemize>
+\end{itemize}
 \end{column}
 \begin{column}{0.4\textwidth}
 \begin{center}
 
 \end{center}
 \concept{System Integration}:
-\begin{itemize>
+\begin{itemize}
 \item Both FA and Counter are 2-OS
 \item Loop connection creates 3-OS
 \item Enhanced computational power
-\end{itemize>
+\end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
@@ -340,7 +340,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{writeEnable}: Write control
 \item \textbf{leftOut/rightOut}: Read outputs
 \item \textbf{in}: Write data input
-\end{itemize>
+\end{itemize}
 \end{column}
 \begin{column}{0.4\textwidth}
 \begin{center}
@@ -352,7 +352,7 @@ By the end of this chapter, you will be able to:
 \item Asynchronous read operation
 \item Dual-port read capability
 \item Register-based storage
-\end{itemize>
+\end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
@@ -381,8 +381,8 @@ By the end of this chapter, you will be able to:
 \item Number of registers vs. access time
 \item Power consumption optimization
 \item Technology mapping considerations
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Section 5: ALU Design
@@ -400,7 +400,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{SUBCR}: Subtraction with carry
 \item \textbf{LSH}: Logical shift
 \item \textbf{ASH}: Arithmetic shift
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Control Interface}:
@@ -408,7 +408,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{aluFunc[3:0]}: Operation selection
 \item \textbf{crIn}: Carry input
 \item \textbf{crOut}: Carry output flag
-\end{itemize>
+\end{itemize}
 \end{column}
 \begin{column}{0.4\textwidth}
 \begin{center}
@@ -420,7 +420,7 @@ By the end of this chapter, you will be able to:
 \item Flag generation
 \item Carry chain support
 \item Efficient implementation
-\end{itemize>
+\end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
@@ -433,22 +433,22 @@ By the end of this chapter, you will be able to:
 \item \textbf{SUB}: $D(X) \leftarrow L(Y) - R(Z)$
 \item \textbf{ADDCR}: Addition with carry propagation
 \item \textbf{SUBCR}: Subtraction with borrow
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm}
 \item \concept{Logical Operations}:
 \begin{itemize}
 \item \textbf{BIGVAL}: $D(X) \leftarrow \{L(Y)[15:0], R(Z)[15:0]\}$
 \item Bit manipulation operations
 \item Boolean logic functions
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm}
 \item \concept{Shift Operations}:
 \begin{itemize}
 \item \textbf{LSH}: $D(X) \leftarrow \{1'b0, L(Y)[31:1]\}$
 \item \textbf{ASH}: $D(X) \leftarrow \{L(Y)[31], L(Y)[31:1]\}$
 \item Multiplication/division by powers of 2
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Section 6: Control ROM and Micro-programming
@@ -463,7 +463,7 @@ By the end of this chapter, you will be able to:
 \item Provides control sequences
 \item Implements instruction execution
 \item Enables programmable control
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Interface}:
@@ -472,7 +472,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{Data Output}: Micro-instruction
 \item \textbf{Enable Signal}: Access control
 \item \textbf{Clock}: Synchronization
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm>
 \concept{Content Generation}:
@@ -481,7 +481,7 @@ By the end of this chapter, you will be able to:
 \item Assembly-like programming
 \item Binary encoding
 \item Verification and testing
-\end{itemize>
+\end{itemize}
 \end{column}
 \begin{column}{0.4\textwidth}
 \begin{center}
@@ -493,7 +493,7 @@ By the end of this chapter, you will be able to:
 \item Fast access time
 \item Programmable content
 \item Reliable operation
-\end{itemize>
+\end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
@@ -508,7 +508,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{leftAddr[4:0]}: Left operand address
 \item \textbf{rightAddr[4:0]}: Right operand address
 \item \textbf{destAddr[4:0]}: Destination address
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Operation Fields}:
 \begin{itemize}
@@ -516,8 +516,8 @@ By the end of this chapter, you will be able to:
 \item \textbf{load}: Data input selection
 \item \textbf{we}: Write enable control
 \item \textbf{aluFunc[3:0]}: ALU function selection
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Micro-programming Assembly Language}
@@ -530,7 +530,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{EQJMP(<label>)}: Jump if equal
 \item \textbf{EMPTYJMP(<label>)}: Jump if input empty
 \item \textbf{FULLJMP(<label>)}: Jump if output full
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Data Operations}:
 \begin{itemize}
@@ -539,15 +539,15 @@ By the end of this chapter, you will be able to:
 \item \textbf{D(<address>)}: Destination selection
 \item \textbf{LOAD}: Load from data input
 \item \textbf{WB}: Write back to register file
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{ALU Functions}:
 \begin{itemize}
 \item \textbf{ADD, SUB}: Arithmetic operations
 \item \textbf{LSH, ASH}: Shift operations
 \item \textbf{BIGVAL}: Concatenation
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Section 7: Processor Operation
@@ -561,7 +561,7 @@ By the end of this chapter, you will be able to:
 \item Decode control fields
 \item Prepare operand addresses
 \item Set up ALU function
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm>
 \item \concept{Execute Phase}:
 \begin{itemize}
@@ -569,7 +569,7 @@ By the end of this chapter, you will be able to:
 \item Perform ALU operation
 \item Generate status flags
 \item Determine next state
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Write-back Phase}:
 \begin{itemize}
@@ -577,8 +577,8 @@ By the end of this chapter, you will be able to:
 \item Update program counter
 \item Handle conditional branches
 \item Prepare for next cycle
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Control Flow Management}
@@ -588,7 +588,7 @@ By the end of this chapter, you will be able to:
 \item Program counter increment
 \item Linear instruction flow
 \item Default operation mode
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm>
 \item \concept{Conditional Branching}:
 \begin{itemize}
@@ -596,7 +596,7 @@ By the end of this chapter, you will be able to:
 \item Multiple condition types
 \item Dynamic control flow
 \item Context-sensitive behavior
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{External Interface}:
 \begin{itemize}
@@ -604,8 +604,8 @@ By the end of this chapter, you will be able to:
 \item Flow control mechanisms
 \item System integration support
 \item Real-time response capability
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Section 8: Programming Model
@@ -619,192 +619,192 @@ By the end of this chapter, you will be able to:
 \item Hardware-oriented programming
 \item Cycle-by-cycle control
 \item Maximum flexibility
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm>
 \item \concept{Assembly Language Interface}:
-\begin{itemize>
+\begin{itemize}
 \item Human-readable mnemonics
 \item Label-based addressing
 \item Structured programming support
 \item Debugging capabilities
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Application Areas}:
-\begin{itemize>
+\begin{itemize}
 \item Digital signal processing
 \item Control system implementation
 \item Educational processor design
 \item Embedded system controllers
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Context-Free Language Processing}
-\begin{itemize>
+\begin{itemize}
 \item \concept{Enhanced Capabilities}:
-\begin{itemize>
+\begin{itemize}
 \item Stack-like behavior simulation
 \item Nested structure processing
 \item Recursive pattern recognition
 \item Context-free grammar parsing
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm>
 \item \concept{Example Applications}:
-\begin{itemize>
+\begin{itemize}
 \item Expression evaluation
 \item Parentheses matching
 \item Compiler front-end processing
 \item Syntax analysis
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Advantages over 2-OS}:
-\begin{itemize>
+\begin{itemize}
 \item Higher computational power
 \item More complex language recognition
 \item Enhanced problem-solving capability
 \item Greater programming flexibility
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Section 9: Design Considerations
 \section{Design Considerations and Trade-offs}
 
 \begin{frame}{Performance Optimization}
-\begin{itemize>
+\begin{itemize}
 \item \concept{Speed Considerations}:
-\begin{itemize>
+\begin{itemize}
 \item Clock frequency limitations
 \item Critical path analysis
 \item Pipeline potential
 \item Instruction throughput
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm>
 \item \concept{Area Optimization}:
-\begin{itemize>
+\begin{itemize}
 \item Register file size
 \item ROM capacity
 \item ALU complexity
 \item Control logic overhead
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Power Management}:
-\begin{itemize>
+\begin{itemize}
 \item Clock gating opportunities
 \item Unused resource shutdown
 \item Dynamic voltage scaling
 \item Activity-based optimization
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Scalability and Extensions}
-\begin{itemize>
+\begin{itemize}
 \item \concept{Architectural Extensions}:
-\begin{itemize>
+\begin{itemize}
 \item Larger register files
 \item Enhanced ALU functions
 \item Multiple execution units
 \item Cache memory integration
-\end{itemize>
+\end{itemize}
 \vspace{0.5cm>
 \item \concept{System Integration}:
-\begin{itemize>
+\begin{itemize}
 \item Multi-processor configurations
 \item Shared memory systems
 \item Communication interfaces
 \item Interrupt handling
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Technology Adaptation}:
-\begin{itemize>
+\begin{itemize}
 \item FPGA implementation
 \item ASIC optimization
 \item Advanced process nodes
 \item Emerging technologies
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Section 10: Summary
 \section{Chapter Summary}
 
 \begin{frame}{Key Concepts Review}
-\begin{itemize>
+\begin{itemize}
 \item \concept{Third-Order Systems (3-OS)}:
-\begin{itemize>
+\begin{itemize}
 \item Third feedback loop enables complex computation
 \item Context-free language processing capability
 \item Elementary processor implementation
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Processor Architecture}:
-\begin{itemize>
+\begin{itemize}
 \item RALU: Simple functional automaton
 \item CROM: Complex control automaton
 \item Micro-programmed control approach
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Implementation Components}:
-\begin{itemize>
+\begin{itemize}
 \item Multi-port register file
 \item Arithmetic logic unit
 \item Control ROM and micro-programming
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Design Principles}
-\begin{itemize>
+\begin{itemize}
 \item \concept{Separation of Concerns}:
-\begin{itemize>
+\begin{itemize}
 \item Data processing (RALU)
 \item Control sequencing (CROM)
 \item Clear interface definition
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Programmability}:
-\begin{itemize>
+\begin{itemize}
 \item Micro-instruction format
 \item Assembly language interface
 \item Flexible control sequences
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Scalability}:
-\begin{itemize>
+\begin{itemize}
 \item Modular design approach
 \item Extensible architecture
 \item Technology independence
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Computational Significance}
-\begin{itemize>
+\begin{itemize}
 \item \concept{Language Recognition Hierarchy}:
-\begin{itemize>
+\begin{itemize}
 \item 0-OS: No language recognition
 \item 1-OS: Simple pattern matching
 \item 2-OS: Regular languages (Type 3)
 \item 3-OS: Context-free languages (Type 2)
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Practical Applications}:
-\begin{itemize>
+\begin{itemize}
 \item Compiler design and implementation
 \item Digital signal processing
 \item Control system applications
 \item Educational processor design
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm>
 \item \concept{Foundation for Advanced Systems}:
-\begin{itemize>
+\begin{itemize}
 \item Modern processor architectures
 \item Multi-core systems
 \item Specialized accelerators
 \item Embedded controllers
-\end{itemize>
-\end{itemize>
+\end{itemize}
+\end{itemize}
 \end{frame}
 
 % Questions slide
@@ -817,12 +817,12 @@ Questions?
 
 \normalsize
 \textbf{Discussion Topics:}
-\begin{itemize>
+\begin{itemize}
 \item How does the third feedback loop enable context-free language processing?
 \item What are the advantages of micro-programmed control?
 \item How do RALU and CROM complement each other in processor design?
 \item What role do elementary processors play in modern computer architecture?
-\end{itemize>
+\end{itemize}
 
 \vspace{0.5cm>
 \textbf{Conclusion:} Order-based approach provides systematic framework for understanding digital system complexity and computational capabilities.
