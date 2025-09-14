@@ -1,0 +1,888 @@
+% Chapter 2.9: Memory Circuits (1-OS) - LaTeX Beamer Slides
+% Structured Computer Architecture: An Order-Based Approach
+% Authors: John Glossner and Gheorghe M. Ştefan
+
+\documentclass[aspectratio=169,11pt]{beamer}
+
+% Theme and color scheme (simple, print-friendly)
+\usetheme{default}
+\usecolortheme{default}
+
+% Simple color scheme for printing
+\definecolor{titlecolor}{RGB}{0,0,0}
+\definecolor{accentcolor}{RGB}{0,0,139}
+\definecolor{textcolor}{RGB}{0,0,0}
+
+% Set colors
+\setbeamercolor{title}{fg=titlecolor}
+\setbeamercolor{frametitle}{fg=titlecolor}
+\setbeamercolor{structure}{fg=accentcolor}
+\setbeamercolor{normal text}{fg=textcolor}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Chapter 2.9: Memory Circuits]{Structured Computer Architecture\\Chapter 2.9: Memory Circuits\\First-Order Systems (1-OS)}
+\subtitle{An Order-Based Approach}
+\author{John Glossner and Gheorghe M. Ştefan}
+\institute{Based on the textbook}
+\date{\today}
+
+% Custom commands
+\newcommand{\concept}[1]{\textbf{\color{accentcolor}#1}}
+\newcommand{\defterm}[1]{\textit{#1}}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Learning Objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will be able to:
+\begin{itemize}
+\item Understand the concept of first-order systems (1-OS) and feedback loops
+\item Analyze the behavior of latches and flip-flops
+\item Design clocked memory circuits and understand timing constraints
+\item Explain the operation of RAM and register files
+\item Distinguish between synchronous and asynchronous memory systems
+\item Understand the trade-offs in memory circuit design
+\end{itemize}
+\end{frame}
+
+% Section 1: Introduction to 1-OS
+\section{Introduction to First-Order Systems}
+
+\begin{frame}{From 0-OS to 1-OS: Adding Memory}
+\begin{itemize}
+\item \concept{0-OS Limitation}: Output depends only on current inputs
+\begin{itemize}
+\item No memory of previous states
+\item Cannot store information
+\item Purely reactive behavior
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{1-OS Innovation}: Introduction of the first feedback loop
+\begin{itemize}
+\item Output fed back to input
+\item Creates memory capability
+\item Enables state storage
+\item Partial autonomy achieved
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Key Principle}: 
+\begin{itemize}
+\item Memory function obtained through reverse connection
+\item Circuit maintains state according to command
+\item Foundation for all sequential logic
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Feedback Loop Concept}
+\begin{itemize}
+\item \concept{Feedback Mechanism}:
+\begin{itemize}
+\item Output signal returns to influence input
+\item Creates dependency on previous state
+\item Enables information storage
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{State Autonomy}:
+\begin{itemize}
+\item State can be maintained without continuous input
+\item Temporary input can have permanent effect
+\item System "remembers" past events
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Applications in Computing}:
+\begin{itemize}
+\item Register storage in processors
+\item Memory cells in RAM
+\item State machines in control units
+\item Pipeline registers
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 2: Elementary Latches
+\section{Elementary Latches}
+
+\begin{frame}{The Simplest Memory Element}
+\begin{itemize}
+\item \concept{Latch Function}: Store temporary signal transitions
+\begin{itemize}
+\item Capture transition from 1 to 0 (reset-only latch)
+\item Capture transition from 0 to 1 (set-only latch)
+\item Maintain state indefinitely
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Basic Principle}:
+\begin{itemize}
+\item Feedback loop from output to input
+\item Signal propagation through circuit
+\item State becomes self-sustaining
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Limitation}: 
+\begin{itemize}
+\item Simple latches cannot "forget"
+\item Need combination for full functionality
+\item Asymmetric command signals
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{AND and OR Loop Latches}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{AND Loop (Reset-Only)}:
+\begin{itemize}
+\item Output connected to one AND input
+\item Reset' pulse applied to other input
+\item Captures transition to 0
+\item Output fixed at 0 after reset
+\end{itemize}
+
+\vspace{0.5cm}
+\concept{Behavior}:
+\begin{itemize}
+\item Normal state: Output = 1
+\item Reset' = 0: Forces output to 0
+\item Output remains 0 permanently
+\item Cannot return to 1
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\concept{OR Loop (Set-Only)}:
+\begin{itemize}
+\item Output connected to one OR input
+\item Set pulse applied to other input
+\item Captures transition to 1
+\item Output fixed at 1 after set
+\end{itemize}
+
+\vspace{0.5cm}
+\concept{Behavior}:
+\begin{itemize}
+\item Normal state: Output = 0
+\item Set = 1: Forces output to 1
+\item Output remains 1 permanently
+\item Cannot return to 0
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Set-Reset (SR) Latch}
+\begin{itemize}
+\item \concept{Combination Solution}: Merge set-only and reset-only latches
+\begin{itemize}
+\item Provides both set and reset capability
+\item Can switch between two stable states
+\item Fundamental memory structure
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Operation}:
+\begin{itemize}
+\item \textbf{Set command (S)}: Active high, sets output to 1
+\item \textbf{Reset command (R')}: Active low, resets output to 0
+\item \textbf{Asymmetric commands}: Different activation levels
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{State Table}:
+\begin{center}
+\begin{tabular}{|c|c|c|l|}
+\hline
+S & R' & Q & Action \\
+\hline
+0 & 1 & Q & Hold \\
+1 & 1 & 1 & Set \\
+0 & 0 & 0 & Reset \\
+1 & 0 & ? & Forbidden \\
+\hline
+\end{tabular}
+\end{center}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Symmetric SR Latches}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{NAND SR Latch}:
+\begin{itemize}
+\item Uses De Morgan's law transformation
+\item Both commands active low (S', R')
+\item More common in practice
+\item Symmetric command structure
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Truth Table}:
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+S' & R' & Q \\
+\hline
+1 & 1 & Hold \\
+0 & 1 & 1 \\
+1 & 0 & 0 \\
+0 & 0 & Invalid \\
+\hline
+\end{tabular}
+\end{center}
+\end{column}
+\begin{column}{0.5\textwidth}
+\concept{NOR SR Latch}:
+\begin{itemize}
+\item Alternative De Morgan transformation
+\item Both commands active high (S, R)
+\item Symmetric high-active commands
+\item Equivalent functionality
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Truth Table}:
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+S & R & Q \\
+\hline
+0 & 0 & Hold \\
+1 & 0 & 1 \\
+0 & 1 & 0 \\
+1 & 1 & Invalid \\
+\hline
+\end{tabular}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 3: Clocked Latches
+\section{Clocked Latches and Timing}
+
+\begin{frame}{The First Latch Problem}
+\begin{itemize}
+\item \concept{Problem Statement}: 
+\begin{itemize}
+\item Same inputs specify \textbf{how} and \textbf{when} latch switches
+\item Immediate reactivity to input changes
+\item Susceptible to noise and glitches
+\item Mechanical switch bouncing issues
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Consequences}:
+\begin{itemize}
+\item Unpredictable state changes
+\item Noise-induced switching
+\item Difficult timing control
+\item Unreliable operation
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Solution Approach}:
+\begin{itemize}
+\item Separate "how" from "when"
+\item Use clock signal for timing control
+\item Condition inputs with clock
+\item Achieve synchronous operation
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Clocked SR Latch}
+\begin{itemize}
+\item \concept{Design Solution}: Add clock conditioning
+\begin{itemize}
+\item S and R inputs specify \textbf{how} to switch
+\item Clock (CK) input specifies \textbf{when} to switch
+\item Decoupling of timing from function
+\item Synchronous state changes
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Implementation}:
+\begin{itemize}
+\item Two additional NAND gates
+\item S and R conditioned by clock
+\item Latch responds only when CK = 1
+\item Immune to input changes when CK = 0
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Operation}:
+\begin{itemize}
+\item \textbf{CK = 0}: Latch holds current state
+\item \textbf{CK = 1}: Latch responds to S and R
+\item Eliminates noise sensitivity
+\item Provides controlled timing
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{D Latch (Data Latch)}
+\begin{itemize}
+\item \concept{Motivation}: Eliminate forbidden state of SR latch
+\begin{itemize}
+\item Single data input instead of S and R
+\item No invalid input combinations
+\item Simpler interface
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Implementation}:
+\begin{itemize}
+\item D input connected to S
+\item $\overline{D}$ connected to R through inverter
+\item Clock enables data transfer
+\item Transparent when clock is high
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Behavior}:
+\begin{itemize}
+\item \textbf{CK = 1}: Q follows D (transparent)
+\item \textbf{CK = 0}: Q holds last value
+\item No forbidden states
+\item Simple data storage
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 4: Flip-Flops
+\section{Flip-Flops and Edge-Triggered Circuits}
+
+\begin{frame}{From Level to Edge Triggering}
+\begin{itemize}
+\item \concept{Latch Limitation}: Level-sensitive operation
+\begin{itemize}
+\item Transparent while clock is active
+\item Multiple changes during clock high
+\item Timing window issues
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Flip-Flop Advantage}: Edge-triggered operation
+\begin{itemize}
+\item Changes only on clock edge
+\item Single transition per clock cycle
+\item Precise timing control
+\item Better noise immunity
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Implementation Methods}:
+\begin{itemize}
+\item Master-slave configuration
+\item Edge detection circuits
+\item Pulse-triggered designs
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Master-Slave D Flip-Flop}
+\begin{itemize}
+\item \concept{Structure}: Two latches in series
+\begin{itemize}
+\item Master latch: Enabled when CLK = 1
+\item Slave latch: Enabled when CLK = 0
+\item Inverted clock between stages
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Operation Sequence}:
+\begin{enumerate}
+\item \textbf{CLK = 1}: Master captures input D
+\item \textbf{CLK = 0}: Slave captures master output
+\item Output changes only on falling edge
+\item Input isolated from output
+\end{enumerate}
+\vspace{0.3cm}
+\item \concept{Advantages}:
+\begin{itemize}
+\item Edge-triggered behavior
+\item No transparency issues
+\item Predictable timing
+\item Standard building block
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Flip-Flop Types and Applications}
+\begin{itemize}
+\item \concept{D Flip-Flop}:
+\begin{itemize}
+\item Data storage and transfer
+\item Pipeline registers
+\item State machine implementation
+\item Most common type
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{JK Flip-Flop}:
+\begin{itemize}
+\item No forbidden states
+\item Toggle capability
+\item Counter applications
+\item More complex control
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{T Flip-Flop}:
+\begin{itemize}
+\item Toggle operation
+\item Frequency division
+\item Counter circuits
+\item Simple interface
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 5: Timing Analysis
+\section{Timing Analysis and Constraints}
+
+\begin{frame}{Critical Timing Parameters}
+\begin{itemize}
+\item \concept{Setup Time ($t_{setup}$)}:
+\begin{itemize}
+\item Minimum time data must be stable before clock edge
+\item Ensures proper data capture
+\item Technology dependent
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Hold Time ($t_{hold}$)}:
+\begin{itemize}
+\item Minimum time data must remain stable after clock edge
+\item Prevents data corruption
+\item Usually shorter than setup time
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Propagation Delay ($t_{pd}$)}:
+\begin{itemize}
+\item Time from clock edge to output change
+\item Determines maximum clock frequency
+\item Includes internal delays
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Clock-to-Q Delay ($t_{cq}$)}:
+\begin{itemize}
+\item Specific propagation delay measurement
+\item Clock edge to output transition
+\item Critical for timing analysis
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Timing Violations and Solutions}
+\begin{itemize}
+\item \concept{Setup Time Violation}:
+\begin{itemize}
+\item Data changes too close to clock edge
+\item Results in metastability
+\item Solutions: Slower clock, faster logic
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Hold Time Violation}:
+\begin{itemize}
+\item Data changes too soon after clock edge
+\item Causes incorrect data capture
+\item Solutions: Add delay, buffer insertion
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Clock Skew Effects}:
+\begin{itemize}
+\item Different clock arrival times
+\item Can cause timing violations
+\item Solutions: Clock tree synthesis, buffers
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Metastability}:
+\begin{itemize}
+\item Unstable intermediate state
+\item Occurs with timing violations
+\item Solutions: Synchronizers, proper timing
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 6: Memory Systems
+\section{Random Access Memory (RAM)}
+
+\begin{frame}{RAM Fundamentals}
+\begin{itemize}
+\item \concept{Definition}: Random Access Memory
+\begin{itemize}
+\item Any location accessible in constant time
+\item Address-based data retrieval
+\item Read and write operations
+\item Parallel extension of 1-OS
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Basic Structure}:
+\begin{itemize}
+\item $2^p$ memory locations
+\item $p$-bit address input
+\item Data input and output
+\item Write enable control
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Key Components}:
+\begin{itemize}
+\item Address decoder (DEMUX)
+\item Memory cell array
+\item Output multiplexer (MUX)
+\item Control logic
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{RAM Operation and Timing}
+\begin{itemize}
+\item \concept{Read Operation}:
+\begin{itemize}
+\item Combinational process
+\item Address selects memory cell
+\item Data appears at output
+\item Access time: $t_{ACC}$
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Write Operation}:
+\begin{itemize}
+\item Requires write enable signal
+\item Address must be stable
+\item Data must meet timing requirements
+\item More complex than read
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Critical Timing Parameters}:
+\begin{itemize}
+\item $t_{ASU}$: Address setup time
+\item $t_{DSU}$: Data setup time
+\item $t_{DH}$: Data hold time
+\item $t_{W}$: Write enable width
+\item $t_{AH}$: Address hold time
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Multi-bit Word RAM}
+\begin{itemize}
+\item \concept{Word-Oriented Memory}:
+\begin{itemize}
+\item Store $m$-bit words instead of single bits
+\item Parallel columns for each bit position
+\item Shared address decoder
+\item Independent data paths
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Implementation}:
+\begin{itemize}
+\item One column per bit position
+\item Each column contains $2^p$ memory cells
+\item Common address decoding
+\item Parallel read/write operations
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Advantages}:
+\begin{itemize}
+\item Efficient data organization
+\item Reduced addressing overhead
+\item Better bandwidth utilization
+\item Matches processor word size
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 7: Synchronous Memory
+\section{Synchronous Memory Systems}
+
+\begin{frame}{Synchronous RAM (SRAM)}
+\begin{itemize}
+\item \concept{Motivation}: High-speed operation challenges
+\begin{itemize}
+\item GHz frequencies make timing difficult
+\item Asynchronous timing constraints hard to meet
+\item Need better controllability
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Synchronous Solution}:
+\begin{itemize}
+\item All timing relative to clock edge
+\item Setup and hold times defined for clock
+\item More rigorous timing control
+\item Better system integration
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Benefits}:
+\begin{itemize}
+\item Simplified timing analysis
+\item Better noise immunity
+\item Easier system design
+\item Predictable behavior
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Pipelined Synchronous RAM}
+\begin{itemize}
+\item \concept{Performance Challenge}: Access time too high
+\begin{itemize}
+\item Memory access limits clock frequency
+\item Need faster response time
+\item Trade-off between speed and latency
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Pipeline Solution}:
+\begin{itemize}
+\item Add output register
+\item Fast access time (register delay)
+\item One clock cycle latency
+\item Higher system frequency possible
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Design Considerations}:
+\begin{itemize}
+\item Latency vs. throughput trade-off
+\item Pipeline depth optimization
+\item Latency hiding techniques
+\item System-level impact
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 8: Register Files
+\section{Register Files}
+
+\begin{frame}{Register File Concept}
+\begin{itemize}
+\item \concept{Definition}: Battery of registers with multiple access ports
+\begin{itemize}
+\item Multiple simultaneous read ports
+\item Single write port
+\item Any register accessible each cycle
+\item Critical processor component
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Typical Configuration}:
+\begin{itemize}
+\item Two read ports (left and right)
+\item One write port
+\item $2^n$ registers of $m$ bits each
+\item Independent address inputs
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Applications}:
+\begin{itemize}
+\item CPU general-purpose registers
+\item Pipeline stage buffers
+\item Vector processor registers
+\item DSP accumulator banks
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Register File Implementation}
+\begin{itemize}
+\item \concept{Multi-Port Structure}:
+\begin{itemize}
+\item Two output multiplexers for reads
+\item Address decoders for write selection
+\item Write enable gating
+\item Simultaneous operation capability
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Interface Signals}:
+\begin{itemize}
+\item \texttt{leftAddr}: Left read port address
+\item \texttt{rightAddr}: Right read port address
+\item \texttt{destAddr}: Write destination address
+\item \texttt{writeEnable}: Write control signal
+\item \texttt{leftOut}, \texttt{rightOut}: Read data outputs
+\item \texttt{in}: Write data input
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Design Trade-offs}:
+\begin{itemize}
+\item Area vs. performance
+\item Number of ports vs. complexity
+\item Register count vs. access time
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 9: Advanced Memory Concepts
+\section{Advanced Memory Concepts}
+
+\begin{frame}{Memory Hierarchy Considerations}
+\begin{itemize}
+\item \concept{Speed vs. Capacity Trade-off}:
+\begin{itemize}
+\item Faster memory is more expensive
+\item Larger memory is slower
+\item Need hierarchical approach
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Memory Types by Speed}:
+\begin{itemize}
+\item \textbf{Registers}: Fastest, smallest capacity
+\item \textbf{Cache}: Fast, medium capacity
+\item \textbf{Main Memory}: Medium speed, large capacity
+\item \textbf{Storage}: Slowest, largest capacity
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Design Principles}:
+\begin{itemize}
+\item Locality of reference
+\item Temporal and spatial locality
+\item Caching strategies
+\item Prefetching techniques
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Memory Interface Standards}
+\begin{itemize}
+\item \concept{SRAM Interfaces}:
+\begin{itemize}
+\item Synchronous operation
+\item Clock-based timing
+\item Burst mode capability
+\item Pipeline-friendly
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{DRAM Interfaces}:
+\begin{itemize}
+\item Row/column addressing
+\item Refresh requirements
+\item Higher density
+\item Complex timing
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Emerging Technologies}:
+\begin{itemize}
+\item Non-volatile memories
+\item 3D memory structures
+\item Processing-in-memory
+\item Quantum memory concepts
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 10: Summary
+\section{Chapter Summary}
+
+\begin{frame}{Key Concepts Review}
+\begin{itemize}
+\item \concept{First-Order Systems (1-OS)}:
+\begin{itemize}
+\item Introduction of feedback loops
+\item Memory capability through state storage
+\item Foundation for sequential logic
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Memory Elements}:
+\begin{itemize}
+\item Latches: Level-sensitive storage
+\item Flip-flops: Edge-triggered storage
+\item Timing constraints and analysis
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Memory Systems}:
+\begin{itemize}
+\item RAM: Random access capability
+\item Synchronous operation benefits
+\item Register files for multi-port access
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Design Principles and Trade-offs}
+\begin{itemize}
+\item \concept{Timing Considerations}:
+\begin{itemize}
+\item Setup and hold time requirements
+\item Clock skew and jitter effects
+\item Synchronous vs. asynchronous design
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Performance Optimization}:
+\begin{itemize}
+\item Pipeline techniques for speed
+\item Latency vs. throughput trade-offs
+\item Memory hierarchy design
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{System Integration}:
+\begin{itemize}
+\item Interface standardization
+\item Timing closure methodology
+\item Power and area considerations
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Connection to Higher-Order Systems}
+\begin{itemize}
+\item \concept{Building Blocks for 2-OS (Automata)}:
+\begin{itemize}
+\item State storage elements
+\item Control signal generation
+\item Sequence detection capability
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Foundation for 3-OS (Processors)}:
+\begin{itemize}
+\item Register files for data storage
+\item Pipeline registers for instruction flow
+\item Memory systems for program/data storage
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{System-Level Impact}:
+\begin{itemize}
+\item Performance bottlenecks
+\item Power consumption
+\item Reliability and fault tolerance
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Questions slide
+\begin{frame}{Questions and Discussion}
+\begin{center}
+\Large
+Questions?
+
+\vspace{1cm}
+
+\normalsize
+\textbf{Discussion Topics:}
+\begin{itemize}
+\item How does feedback create memory in digital circuits?
+\item What are the advantages of edge-triggered over level-sensitive storage?
+\item Why is synchronous design preferred for high-speed systems?
+\item How do timing constraints affect system performance?
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Next:} Chapter 2.10 - Automata: Second-Order Systems (2-OS)
+\end{center}
+\end{frame}
+
+\end{document}
+
