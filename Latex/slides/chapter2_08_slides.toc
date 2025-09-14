@@ -1,8 +1,0 @@
-\beamer@sectionintoc {1}{Introduction to Zero-Order Systems}{4}{0}{1}
-\beamer@sectionintoc {2}{Boolean Algebra}{6}{0}{2}
-\beamer@sectionintoc {3}{Truth Tables}{10}{0}{3}
-\beamer@sectionintoc {4}{Logic Gates and Digital Circuits}{14}{0}{4}
-\beamer@sectionintoc {5}{Combinational Building Blocks}{18}{0}{5}
-\beamer@sectionintoc {6}{Circuit Optimization and Minimization}{22}{0}{6}
-\beamer@sectionintoc {7}{Advanced Combinational Concepts}{25}{0}{7}
-\beamer@sectionintoc {8}{Chapter Summary}{28}{0}{8}
