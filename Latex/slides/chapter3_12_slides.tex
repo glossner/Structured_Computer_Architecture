@@ -1,0 +1,803 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Theme and color scheme
+\usetheme{default}
+\usecolortheme{default}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple color scheme for printing
+\definecolor{darkblue}{RGB}{25,25,112}
+\setbeamercolor{title}{fg=darkblue}
+\setbeamercolor{frametitle}{fg=darkblue}
+\setbeamercolor{structure}{fg=darkblue}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Chapter 3.12: Von Neumann Architecture]{Structured Computer Architecture\\Chapter 3.12: Von Neumann Architecture\\Fourth-Order Systems (4-OS)}
+\author{Based on Structured Computer Architecture: An Order-Based Approach}
+\date{}
+
+% Custom command for highlighting concepts
+\newcommand{\concept}[1]{\textbf{\color{darkblue}#1}}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Learning objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will understand:
+\begin{itemize}
+\item The historical context and theoretical foundations of computation
+\item The mathematical model of the Turing Machine
+\item The decision problem (Entscheidungsproblem) and its significance
+\item Von Neumann architecture principles and components
+\item The stored program concept and its implications
+\item Memory organization and addressing schemes
+\item Instruction set architecture fundamentals
+\item The relationship between hardware and software
+\end{itemize}
+\end{frame}
+
+% Section 1: Historical Context and Theoretical Foundations
+\section{Historical Context and Theoretical Foundations}
+
+\begin{frame}{The Turning Point: Fourth-Order Systems}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Fourth Loop Significance}:
+\begin{itemize}
+\item Meeting point of physical and informational structures
+\item Circuit-information combination determines functionality
+\item Architecture as unifying concept
+\item Synthesis of symbolic and physical structures
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Information as Control}:
+\begin{itemize}
+\item Information takes control at this level
+\item Programs as symbolic structures
+\item Mathematical models enable computation
+\item Digital systems gain autonomy through loops
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Architecture Concept}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2.5cm, minimum height=1cm] (phys) at (0,2) {Physical Structure};
+\node[draw, rectangle, minimum width=2.5cm, minimum height=1cm] (info) at (0,0) {Information Structure};
+\node[draw, rectangle, minimum width=2.5cm, minimum height=0.8cm, fill=blue!20] (arch) at (0,1) {Architecture};
+\draw[<->] (phys) -- (arch);
+\draw[<->] (arch) -- (info);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Origins of Computation Theory}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{The Epimenides Paradox} (7th-6th century BC):
+\begin{itemize}
+\item "All Cretans are liars" - spoken by a Cretan
+\item First recorded decision problem
+\item Cannot determine truth or falsehood
+\item Foundation of logical paradoxes
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Historical Timeline}:
+\begin{itemize}
+\item Ancient Greece: Logical paradoxes
+\item 1900: Hilbert's 23 problems
+\item 1928: Entscheidungsproblem formulated
+\item 1931: Gödel's incompleteness theorems
+\item 1936: Turing machine concept
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{center}
+\textbf{Decision Problem Evolution}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=1.5cm] (epi) at (0,3) {Epimenides};
+\node[draw, circle, minimum width=1.5cm] (hil) at (0,2) {Hilbert};
+\node[draw, circle, minimum width=1.5cm] (god) at (0,1) {Gödel};
+\node[draw, circle, minimum width=1.5cm] (tur) at (0,0) {Turing};
+\draw[->] (epi) -- (hil);
+\draw[->] (hil) -- (god);
+\draw[->] (god) -- (tur);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 2: The Decision Problem
+\section{The Decision Problem}
+
+\begin{frame}{Hilbert's Entscheidungsproblem (1928)}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{The Question}:
+\begin{quote}
+\textit{"Is there an algorithm that takes a statement formulated in a formal system and answers with 'yes' or 'no' whether the statement is true or false in the given system?"}
+\end{quote}
+
+\vspace{0.3cm}
+\concept{Significance}:
+\begin{itemize}
+\item Fundamental question about computability
+\item Seeks universal decision procedure
+\item Bridges logic and computation
+\item Motivates formal system development
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Decision Process}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (stmt) at (0,2) {Statement};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (alg) at (0,1) {Algorithm};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (ans) at (0,0) {Yes/No};
+\draw[->] (stmt) -- (alg);
+\draw[->] (alg) -- (ans);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Gödel's Revolutionary Answer (1931)}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Gödel's Incompleteness Theorem}:
+\begin{quote}
+\textbf{\textit{"In a formal system one can correctly construct true structures whose truth cannot be proven or disproved"}}
+\end{quote}
+
+\vspace{0.3cm}
+\concept{Implications}:
+\begin{itemize}
+\item No universal decision algorithm exists
+\item Formal systems have inherent limitations
+\item Truth vs. provability distinction
+\item Foundation for computability theory
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Impact on Computer Science}:
+\begin{itemize}
+\item Triggered four independent works (1936)
+\item Church, Kleene, Post, Turing
+\item Founded theoretical computer science
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Incompleteness Concept}
+\vspace{0.3cm}
+
+\tikz{
+\draw[thick] (0,0) circle (2cm);
+\node at (0,2.3) {Formal System};
+\draw[thick] (0,0) circle (1.2cm);
+\node at (0,1.5) {Provable};
+\node at (0,0.5) {Statements};
+\node[fill=red!30] at (1.5,0.5) {True but};
+\node[fill=red!30] at (1.5,0.2) {Unprovable};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 3: Turing Machine
+\section{The Turing Machine}
+
+\begin{frame}{Turing Machine Components}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Three Essential Components}:
+\begin{enumerate}
+\item \textbf{Infinite Tape}: Stores symbols from finite alphabet
+\item \textbf{Read/Write Head}: Accesses tape, moves left/right
+\item \textbf{Finite Automaton}: Controls head based on state and symbol
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{Operation Principle}:
+\begin{itemize}
+\item Each clock cycle: read symbol, update state
+\item Head moves one position left or right
+\item Write new symbol based on current state
+\item Finite automaton determines all actions
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Mathematical Abstraction}:
+\begin{itemize}
+\item Infinite tape handles unknown space requirements
+\item Finite computation in practice
+\item Universal model of computation
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Turing Machine Structure}
+\vspace{0.3cm}
+
+\tikz{
+% Tape
+\draw[thick] (-2,2) -- (2,2);
+\draw[thick] (-2,1.5) -- (2,1.5);
+\foreach \x in {-1.5,-1,-0.5,0,0.5,1,1.5} {
+  \draw (\x,1.5) -- (\x,2);
+}
+\node at (0,1.75) {0};
+\node at (0.5,1.75) {1};
+\node at (-0.5,1.75) {1};
+
+% Head
+\draw[thick] (-0.2,1.5) -- (-0.2,1) -- (0.2,1) -- (0.2,1.5);
+\draw[->] (0,1) -- (0,0.5);
+
+% Finite Automaton
+\draw[thick] (-0.5,0.5) rectangle (0.5,0);
+\node at (0,0.25) {FA};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Digital Implementation of Turing Machine}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Digital Components}:
+\begin{itemize}
+\item \textbf{Infinite RAM}: Replaces infinite tape
+\item \textbf{Up-Down Counter}: Addresses memory locations
+\item \textbf{Finite Automaton}: Same control logic
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Practical Considerations}:
+\begin{itemize}
+\item Finite memory in real implementations
+\item Counter provides sequential access
+\item Memory addressing enables random access
+\item Control logic remains unchanged
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Theoretical vs. Practical}:
+\begin{itemize}
+\item Mathematical infinity vs. finite resources
+\item Unknown space requirements handled by allocation
+\item Useful computation always finite
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Digital Representation}
+\vspace{0.3cm}
+
+\tikz{
+% Memory
+\draw[thick] (0,3) rectangle (1.5,2);
+\node at (0.75,2.5) {RAM};
+
+% Counter
+\draw[thick] (0,1.5) rectangle (1.5,1);
+\node at (0.75,1.25) {Counter};
+
+% FA
+\draw[thick] (0,0.5) rectangle (1.5,0);
+\node at (0.75,0.25) {FA};
+
+% Connections
+\draw[->] (0.75,1.5) -- (0.75,2);
+\draw[->] (0.75,1) -- (0.75,0.5);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 4: Von Neumann Architecture
+\section{Von Neumann Architecture}
+
+\begin{frame}{The Stored Program Concept}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Revolutionary Idea}:
+\begin{itemize}
+\item Programs stored in same memory as data
+\item Instructions treated as data
+\item Dynamic program modification possible
+\item Universal computing machine
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Principles}:
+\begin{itemize}
+\item Single memory space for instructions and data
+\item Sequential instruction execution
+\item Binary representation of information
+\item Programmable control unit
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Advantages}:
+\begin{itemize}
+\item Flexibility in programming
+\item Self-modifying code capability
+\item Simplified hardware design
+\item Universal computation model
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Stored Program Concept}
+\vspace{0.3cm}
+
+\tikz{
+% Memory
+\draw[thick] (0,0) rectangle (2,3);
+\node at (1,2.7) {Memory};
+
+% Instructions section
+\draw[dashed] (0,2) -- (2,2);
+\node at (1,2.3) {Instructions};
+\node at (1,1.5) {Data};
+
+% CPU
+\draw[thick] (-1.5,1) rectangle (-0.5,2);
+\node at (-1,1.5) {CPU};
+
+% Connection
+\draw[<->] (-0.5,1.5) -- (0,1.5);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Von Neumann Architecture Components}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Essential Components}:
+\begin{enumerate}
+\item \textbf{Central Processing Unit (CPU)}
+\item \textbf{Memory Unit}
+\item \textbf{Input/Output Devices}
+\item \textbf{Control Unit}
+\item \textbf{Arithmetic Logic Unit (ALU)}
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{CPU Subcomponents}:
+\begin{itemize}
+\item Control Unit: Instruction fetch and decode
+\item ALU: Arithmetic and logical operations
+\item Registers: Fast temporary storage
+\item Program Counter: Instruction address tracking
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Data Flow}:
+\begin{itemize}
+\item Instructions fetched from memory
+\item Data loaded from memory to registers
+\item Operations performed in ALU
+\item Results stored back to memory
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Von Neumann Architecture}
+\vspace{0.3cm}
+
+\tikz{
+% CPU
+\draw[thick] (0,2) rectangle (2,3);
+\node at (1,2.5) {CPU};
+
+% Memory
+\draw[thick] (0,0.5) rectangle (2,1.5);
+\node at (1,1) {Memory};
+
+% I/O
+\draw[thick] (-1,1.25) rectangle (0,1.75);
+\node at (-0.5,1.5) {I/O};
+
+% Connections
+\draw[<->] (1,2) -- (1,1.5);
+\draw[<->] (0,1.5) -- (-1,1.5);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Memory Organization and Addressing}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Memory Structure}:
+\begin{itemize}
+\item Linear array of storage locations
+\item Each location has unique address
+\item Fixed word size (typically 8, 16, 32, 64 bits)
+\item Random access capability
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Addressing Schemes}:
+\begin{itemize}
+\item Direct addressing: Address specifies location
+\item Indirect addressing: Address points to address
+\item Indexed addressing: Base + offset calculation
+\item Relative addressing: PC + displacement
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Memory Hierarchy}:
+\begin{itemize}
+\item Registers: Fastest, smallest capacity
+\item Cache: Fast, medium capacity
+\item Main memory: Moderate speed, large capacity
+\item Secondary storage: Slow, very large capacity
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Memory Organization}
+\vspace{0.3cm}
+
+\tikz{
+% Memory array
+\foreach \y in {0,0.3,0.6,0.9,1.2,1.5} {
+  \draw[thick] (0,\y) rectangle (1.5,\y+0.25);
+}
+\node at (-0.3,1.625) {0};
+\node at (-0.3,1.325) {1};
+\node at (-0.3,1.025) {2};
+\node at (-0.3,0.725) {...};
+\node at (-0.3,0.425) {n-1};
+\node at (-0.3,0.125) {n};
+
+\node at (0.75,1.625) {Data};
+\node at (0.75,1.325) {Instr};
+\node at (0.75,1.025) {Data};
+
+% Address bus
+\draw[->] (-1,0.8) -- (0,0.8);
+\node at (-1.5,0.8) {Address};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 5: Instruction Set Architecture
+\section{Instruction Set Architecture}
+
+\begin{frame}{Instruction Format and Types}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Instruction Components}:
+\begin{itemize}
+\item \textbf{Opcode}: Operation to be performed
+\item \textbf{Operands}: Data or addresses for operation
+\item \textbf{Addressing Mode}: How operands are specified
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Instruction Types}:
+\begin{itemize}
+\item Data transfer: Load, store, move
+\item Arithmetic: Add, subtract, multiply, divide
+\item Logical: AND, OR, NOT, XOR
+\item Control: Branch, jump, call, return
+\item I/O: Input, output operations
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Instruction Formats}:
+\begin{itemize}
+\item Fixed length: All instructions same size
+\item Variable length: Instructions vary in size
+\item Trade-offs: Simplicity vs. code density
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Instruction Format}
+\vspace{0.3cm}
+
+\tikz{
+% Instruction format
+\draw[thick] (0,2) rectangle (3,2.5);
+\draw[thick] (0.8,2) -- (0.8,2.5);
+\draw[thick] (1.6,2) -- (1.6,2.5);
+\draw[thick] (2.4,2) -- (2.4,2.5);
+
+\node at (0.4,2.25) {Op};
+\node at (1.2,2.25) {R1};
+\node at (2,2.25) {R2};
+\node at (2.7,2.25) {R3};
+
+\node at (0.4,1.7) {6 bits};
+\node at (1.2,1.7) {5 bits};
+\node at (2,1.7) {5 bits};
+\node at (2.7,1.7) {5 bits};
+
+% Example
+\node at (1.5,1.2) {ADD R1, R2, R3};
+\node at (1.5,0.9) {R1 ← R2 + R3};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Fetch-Decode-Execute Cycle}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{The Basic Cycle}:
+\begin{enumerate}
+\item \textbf{Fetch}: Get instruction from memory
+\item \textbf{Decode}: Interpret instruction format
+\item \textbf{Execute}: Perform the operation
+\item \textbf{Store}: Write results back
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{Detailed Steps}:
+\begin{itemize}
+\item PC contains address of next instruction
+\item Instruction fetched from memory[PC]
+\item PC incremented to next instruction
+\item Control unit decodes instruction
+\item Operands fetched if needed
+\item ALU performs operation
+\item Results stored in destination
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Control Flow}:
+\begin{itemize}
+\item Sequential execution by default
+\item Branch instructions modify PC
+\item Conditional branches test flags
+\item Subroutine calls save return address
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Fetch-Decode-Execute}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (fetch) at (0,3) {Fetch};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (decode) at (0,2) {Decode};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (execute) at (0,1) {Execute};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (store) at (0,0) {Store};
+
+\draw[->] (fetch) -- (decode);
+\draw[->] (decode) -- (execute);
+\draw[->] (execute) -- (store);
+\draw[->] (store) -- ++(1,0) -- ++(0,3.5) -- (fetch);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 6: Hardware-Software Interface
+\section{Hardware-Software Interface}
+
+\begin{frame}{The Architecture Abstraction}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Abstraction Layers}:
+\begin{itemize}
+\item Application software
+\item System software (OS, compilers)
+\item Instruction Set Architecture (ISA)
+\item Microarchitecture
+\item Digital logic circuits
+\item Analog circuits and devices
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{ISA as Interface}:
+\begin{itemize}
+\item Contract between hardware and software
+\item Defines visible processor state
+\item Specifies instruction semantics
+\item Enables software portability
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Implementation Independence}:
+\begin{itemize}
+\item Same ISA, different implementations
+\item Performance vs. cost trade-offs
+\item Backward compatibility preservation
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Abstraction Layers}
+\vspace{0.3cm}
+
+\tikz{
+\foreach \y/\label in {0/Devices, 0.5/Analog, 1/Digital, 1.5/Micro-arch, 2/ISA, 2.5/System SW, 3/Application} {
+  \draw[thick] (0,\y) rectangle (2,\y+0.4);
+  \node at (1,\y+0.2) {\label};
+}
+
+% Interface highlight
+\draw[thick, red] (-0.1,1.9) rectangle (2.1,2.1);
+\node[red] at (2.5,2) {Interface};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Performance Considerations}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Performance Metrics}:
+\begin{itemize}
+\item Execution time (latency)
+\item Throughput (bandwidth)
+\item Instructions per second (IPS)
+\item Clock frequency
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Factors}:
+\begin{itemize}
+\item Instruction count
+\item Clock cycles per instruction (CPI)
+\item Clock cycle time
+\item Memory access time
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Equation}:
+\begin{align}
+\text{CPU Time} &= \text{Instruction Count} \times \text{CPI} \times \text{Clock Cycle Time}
+\end{align}
+
+\vspace{0.3cm}
+\concept{Optimization Strategies}:
+\begin{itemize}
+\item Reduce instruction count
+\item Improve CPI through pipelining
+\item Increase clock frequency
+\item Optimize memory hierarchy
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Performance Triangle}
+\vspace{0.3cm}
+
+\tikz{
+\node at (0,2) {Instruction};
+\node at (0,1.7) {Count};
+\node at (-1.5,0) {CPI};
+\node at (1.5,0) {Clock};
+\node at (1.5,-0.3) {Cycle};
+
+\draw[thick] (0,1.5) -- (-1.2,0.3);
+\draw[thick] (0,1.5) -- (1.2,0.3);
+\draw[thick] (-1.2,0.3) -- (1.2,0.3);
+
+\node at (0,0.8) {CPU Time};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Summary
+\section{Summary}
+
+\begin{frame}{Chapter Summary}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Concepts Covered}:
+\begin{itemize}
+\item Fourth-order systems mark the convergence of physical and informational structures
+\item The decision problem led to fundamental computability theory
+\item Turing machines provide universal computation model
+\item Von Neumann architecture enables stored program concept
+\item ISA defines hardware-software interface
+\item Performance depends on instruction count, CPI, and clock cycle time
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Historical Significance}:
+\begin{itemize}
+\item From ancient paradoxes to modern computers
+\item Mathematical foundations enable practical implementation
+\item Architecture abstraction enables software development
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Von Neumann Legacy}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=2cm] (center) at (0,0) {Von Neumann};
+\node[draw, rectangle] (stored) at (0,1.5) {Stored Program};
+\node[draw, rectangle] (isa) at (-1.5,0.5) {ISA};
+\node[draw, rectangle] (perf) at (1.5,0.5) {Performance};
+\node[draw, rectangle] (arch) at (0,-1.5) {Architecture};
+
+\draw[->] (center) -- (stored);
+\draw[->] (center) -- (isa);
+\draw[->] (center) -- (perf);
+\draw[->] (center) -- (arch);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Discussion Questions}
+\begin{enumerate}
+\item How does the stored program concept enable universal computation?
+\item What are the trade-offs between different instruction set architectures?
+\item How do abstraction layers facilitate computer system design?
+\item What role does the ISA play in software portability?
+\item How can performance be optimized at the architecture level?
+\item What are the implications of Gödel's incompleteness theorem for computing?
+\item How does the Von Neumann bottleneck affect system performance?
+\item What alternatives to Von Neumann architecture exist?
+\end{enumerate}
+\end{frame}
+
+\end{document}
+
