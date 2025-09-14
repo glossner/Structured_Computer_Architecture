@@ -1,0 +1,787 @@
+% Chapter 2.10: Automata (2-OS) - LaTeX Beamer Slides
+% Structured Computer Architecture: An Order-Based Approach
+% Authors: John Glossner and Gheorghe M. Ştefan
+
+\documentclass[aspectratio=169,11pt]{beamer}
+
+% Theme and color scheme (simple, print-friendly)
+\usetheme{default}
+\usecolortheme{default}
+
+% Simple color scheme for printing
+\definecolor{titlecolor}{RGB}{0,0,0}
+\definecolor{accentcolor}{RGB}{0,0,139}
+\definecolor{textcolor}{RGB}{0,0,0}
+
+% Set colors
+\setbeamercolor{title}{fg=titlecolor}
+\setbeamercolor{frametitle}{fg=titlecolor}
+\setbeamercolor{structure}{fg=accentcolor}
+\setbeamercolor{normal text}{fg=textcolor}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Chapter 2.10: Automata]{Structured Computer Architecture\\Chapter 2.10: Automata\\Second-Order Systems (2-OS)}
+\subtitle{An Order-Based Approach}
+\author{John Glossner and Gheorghe M. Ştefan}
+\institute{Based on the textbook}
+\date{\today}
+
+% Custom commands
+\newcommand{\concept}[1]{\textbf{\color{accentcolor}#1}}
+\newcommand{\defterm}[1]{\textit{#1}}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Learning Objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will be able to:
+\begin{itemize}
+\item Understand second-order systems (2-OS) and the second feedback loop
+\item Analyze finite state machines and their behavior
+\item Design control automata for digital systems
+\item Distinguish between simple and complex circuits
+\item Understand the historical development of automata theory
+\item Apply automata concepts to processor design
+\end{itemize}
+\end{frame}
+
+% Section 1: Introduction to 2-OS
+\section{Introduction to Second-Order Systems}
+
+\begin{frame}{Evolution from 1-OS to 2-OS}
+\begin{itemize}
+\item \concept{1-OS Limitation}: Partial autonomy only
+\begin{itemize}
+\item State maintenance outside input signal range
+\item No autonomous behavior evolution
+\item Reactive to external stimuli
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{2-OS Innovation}: Second feedback loop
+\begin{itemize}
+\item Increases system autonomy
+\item Enables autonomous behavior
+\item Output evolution without input variation
+\item Self-directed state transitions
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Key Achievement}: 
+\begin{itemize}
+\item Behavior autonomy obtained
+\item System can evolve independently
+\item Foundation for intelligent systems
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Main Components of 2-OS}
+\begin{itemize}
+\item \concept{Control Automaton}:
+\begin{itemize}
+\item Manages system behavior
+\item Implements state machine logic
+\item Controls operation sequences
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Program Counter (PC)}:
+\begin{itemize}
+\item Tracks instruction sequence
+\item Provides autonomous progression
+\item Enables program execution
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Registers with Arithmetic \& Logic Unit (RALU)}:
+\begin{itemize}
+\item Data processing capability
+\item Computational operations
+\item State transformation logic
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 2: Historical Development
+\section{Historical Development of Automata}
+
+\begin{frame}{Ancient Origins}
+\begin{itemize}
+\item \concept{Mythological Beginnings}:
+\begin{itemize}
+\item \textbf{Talos}: Bronze automaton from Greek mythology
+\item Self-operating machines in ancient stories
+\item Concept of artificial beings
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Early Engineering}:
+\begin{itemize}
+\item \textbf{Hero of Alexandria (10-70 AD)}: Pneumatic and hydraulic devices
+\item \textbf{Su Song (1020-1101 AD)}: Water-powered astronomical clock
+\item Mechanical figurines and automated systems
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Renaissance Innovations}:
+\begin{itemize}
+\item \textbf{Leonardo da Vinci (1452-1519)}: Mechanical knights
+\item \textbf{Al-Jazari (1136-1206 AD)}: Sophisticated water clocks
+\item Programmable features in mechanical systems
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Mathematical Foundations}
+\begin{itemize}
+\item \concept{Computational Pioneers}:
+\begin{itemize}
+\item \textbf{Pascal (17th century)}: Mechanical calculator
+\item \textbf{Jacquard Loom (1804)}: Pioneered programmability
+\item \textbf{Babbage \& Lovelace}: Analytical Engine concept
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Theoretical Breakthroughs}:
+\begin{itemize}
+\item \textbf{Turing (1936)}: Turing Machine model
+\item \textbf{von Neumann}: Self-replicating automata
+\item \textbf{Chomsky}: Formal language classification
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Modern Applications}:
+\begin{itemize}
+\item \textbf{Shannon}: Boolean circuits foundation
+\item \textbf{Conway}: Game of Life cellular automata
+\item AI, robotics, and formal verification
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 3: Automata Definitions
+\section{Automata Definitions and Classifications}
+\begin{frame}{Generic Automaton Definition}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Formal Definition}: Mathematical model of computation
+\begin{itemize}
+\item Set of states
+\item Input alphabet
+\item Transition function
+\item Initial state
+\item Accepting states
+\end{itemize}
+\vspace{0.3cm}
+\concept{Two Main Categories}:
+\begin{itemize}
+\item \textbf{Small \& Complex}: Finite automata with intricate logic
+\item \textbf{Large \& Simple}: Functional automata with regular patterns
+\end{itemize}
+\vspace{0.3cm}
+\concept{Computational Power}:
+\begin{itemize}
+\item Language recognition capability
+\item Problem-solving capacity
+\item Complexity classification
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Circuit Complexity Measures}
+\begin{itemize}
+\item \concept{Gate Size ($GS$)}:
+\begin{itemize}
+\item Total number of CMOS transistor pairs
+\item Estimate of silicon area required
+\item Hardware implementation cost
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Area Size ($AS$)}:
+\begin{itemize}
+\item Actual silicon area dimension
+\item Production cost factor
+\item Yield considerations
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Algorithmic Complexity ($C$)}:
+\begin{itemize}
+\item Minimal symbols needed for definition
+\item Description length in HDL
+\item Behavioral complexity measure
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Simple vs. Complex Circuits}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Simple Circuits}:
+\begin{itemize}
+\item $C_{simple} << S_{simple}$
+\item Complexity much smaller than size
+\item Usually $C_{simple} \in O(1)$
+\item Regular, repetitive patterns
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Examples}:
+\begin{itemize}
+\item Adder arrays
+\item Memory arrays
+\item Prefix computation circuits
+\item Regular interconnection patterns
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\concept{Complex Circuits}:
+\begin{itemize}
+\item $C_{complex} \sim S_{complex}$
+\item Complexity similar to size
+\item Irregular, random-like patterns
+\item Difficult to describe concisely
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Examples}:
+\begin{itemize}
+\item Random logic circuits
+\item Irregular control logic
+\item Custom optimization circuits
+\item Application-specific designs
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 4: Finite State Machines
+\section{Finite State Machines}
+
+\begin{frame}{Finite Automaton Fundamentals}
+\begin{itemize}
+\item \concept{Formal Definition}: $FA = (Q, \Sigma, \delta, q_0, F)$
+\begin{itemize}
+\item $Q$: Finite set of states
+\item $\Sigma$: Input alphabet
+\item $\delta$: Transition function $Q \times \Sigma \rightarrow Q$
+\item $q_0$: Initial state
+\item $F$: Set of accepting states
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Operation Principle}:
+\begin{itemize}
+\item Start in initial state $q_0$
+\item Read input symbols sequentially
+\item Transition according to $\delta$ function
+\item Accept if final state is in $F$
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Language Recognition}:
+\begin{itemize}
+\item Regular languages (Type 3)
+\item Pattern matching capability
+\item Lexical analysis applications
+\end{itemize}
+\end{itemize}
+\end{frame}
+\begin{frame}{State Transition Diagrams}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Graphical Representation}:
+\begin{itemize}
+\item States as circles/nodes
+\item Transitions as labeled arrows
+\item Initial state marked with arrow
+\item Accepting states double-circled
+\end{itemize}
+\vspace{0.3cm}
+\concept{Design Process}:
+\begin{enumerate}
+\item Identify required states
+\item Define input conditions
+\item Specify state transitions
+\item Mark accepting states
+\item Verify completeness
+\end{enumerate}
+\vspace{0.3cm}
+\concept{Analysis Techniques}:
+\begin{itemize}
+\item State reachability
+\item Equivalence checking
+\item Minimization algorithms
+\item Determinism verification
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Moore vs. Mealy Machines}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Moore Machine}:
+\begin{itemize}
+\item Outputs depend only on current state
+\item $\lambda: Q \rightarrow \Gamma$
+\item Output changes with state transitions
+\item Synchronous output behavior
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Advantages}:
+\begin{itemize}
+\item Simpler timing analysis
+\item Glitch-free outputs
+\item Easier to design
+\item More predictable behavior
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\concept{Mealy Machine}:
+\begin{itemize}
+\item Outputs depend on state and input
+\item $\lambda: Q \times \Sigma \rightarrow \Gamma$
+\item Faster response to inputs
+\item More compact representation
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Advantages}:
+\begin{itemize}
+\item Fewer states required
+\item Immediate output response
+\item More efficient implementation
+\item Better for reactive systems
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 5: Control Automata
+\section{Control Automata in Digital Systems}
+
+\begin{frame}{Control Unit Design}
+\begin{itemize}
+\item \concept{Purpose}: Coordinate system operations
+\begin{itemize}
+\item Sequence control signals
+\item Manage data flow
+\item Implement instruction execution
+\item Handle exceptions and interrupts
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Design Approaches}:
+\begin{itemize}
+\item \textbf{Hardwired Control}: Fixed logic implementation
+\item \textbf{Microprogrammed Control}: Stored program approach
+\item \textbf{Hybrid Control}: Combination of both methods
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Implementation Considerations}:
+\begin{itemize}
+\item Speed vs. flexibility trade-offs
+\item Area and power constraints
+\item Testability and verification
+\item Modification and upgrade capability
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Program Counter (PC) Automaton}
+\begin{itemize}
+\item \concept{Function}: Autonomous instruction sequencing
+\begin{itemize}
+\item Maintains current instruction address
+\item Provides sequential progression
+\item Handles branches and jumps
+\item Enables program execution flow
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Operations}:
+\begin{itemize}
+\item \textbf{Increment}: Normal sequential execution
+\item \textbf{Load}: Branch and jump operations
+\item \textbf{Reset}: System initialization
+\item \textbf{Hold}: Wait states and stalls
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Advanced Features}:
+\begin{itemize}
+\item Branch prediction support
+\item Exception handling
+\item Multi-threading support
+\item Debug and trace capabilities
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 6: Counter-Expanded Automata
+\section{Counter-Expanded Automata}
+
+\begin{frame}{Beyond Regular Languages}
+\begin{itemize}
+\item \concept{Regular Language Limitation}:
+\begin{itemize}
+\item Cannot recognize $\{1^n0^n | n > 0\}$
+\item Finite memory constraint
+\item Need for counting capability
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Counter-Expanded Automaton (CEA)}:
+\begin{itemize}
+\item Finite automaton + reversible counter
+\item Counter provides zero flag to automaton
+\item Enables context-free language recognition
+\item 3-OS system (FA + Counter in loop)
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Enhanced Capabilities}:
+\begin{itemize}
+\item Balanced parentheses checking
+\item Nested structure recognition
+\item Stack-like behavior simulation
+\item Context-free grammar parsing
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{CEA Example: $a^nb^n$ Language}
+\begin{itemize}
+\item \concept{Problem}: Recognize strings with equal numbers of $a$s and $b$s
+\begin{itemize}
+\item Context-free language
+\item Requires counting mechanism
+\item Cannot be solved by finite automaton alone
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{CEA Solution}:
+\begin{itemize}
+\item States: $\{q_0, q_1, q_2, q_3, q_4\}$
+\item Counter operations: $\{nop, up, down\}$
+\item Zero flag from counter
+\item Delimiter symbol $e$ for well-formed strings
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Operation Sequence}:
+\begin{enumerate}
+\item Count $a$s by incrementing counter
+\item Switch to $b$ processing mode
+\item Count $b$s by decrementing counter
+\item Accept if counter reaches zero
+\end{enumerate}
+\end{itemize}
+\end{frame}
+
+% Section 7: Implementation Aspects
+\section{Implementation and Design Considerations}
+
+\begin{frame}{Hardware Implementation}
+\begin{itemize}
+\item \concept{State Encoding}:
+\begin{itemize}
+\item Binary encoding: Minimal flip-flops
+\item One-hot encoding: Fast decoding
+\item Gray code: Reduced switching
+\item Custom encoding: Application-specific
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Logic Implementation}:
+\begin{itemize}
+\item Combinational next-state logic
+\item State register (flip-flops)
+\item Output logic (Moore/Mealy)
+\item Clock and reset distribution
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Optimization Techniques}:
+\begin{itemize}
+\item State minimization
+\item Logic synthesis
+\item Timing optimization
+\item Power reduction
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Design Verification}
+\begin{itemize}
+\item \concept{Functional Verification}:
+\begin{itemize}
+\item State coverage analysis
+\item Transition coverage testing
+\item Input sequence validation
+\item Output correctness checking
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Formal Methods}:
+\begin{itemize}
+\item Model checking techniques
+\item Temporal logic verification
+\item Equivalence checking
+\item Property verification
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Testing Strategies}:
+\begin{itemize}
+\item Directed test cases
+\item Random test generation
+\item Corner case analysis
+\item Stress testing
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 8: Applications
+\section{Applications in Computer Architecture}
+
+\begin{frame}{Processor Control Units}
+\begin{itemize}
+\item \concept{Instruction Decode}:
+\begin{itemize}
+\item Opcode interpretation
+\item Addressing mode handling
+\item Resource allocation
+\item Pipeline control
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Execution Control}:
+\begin{itemize}
+\item ALU operation sequencing
+\item Memory access coordination
+\item Register file management
+\item Exception handling
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{System Control}:
+\begin{itemize}
+\item Interrupt processing
+\item Power management
+\item Debug support
+\item Performance monitoring
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Memory Controllers}
+\begin{itemize}
+\item \concept{DRAM Control}:
+\begin{itemize}
+\item Refresh cycle management
+\item Row/column addressing
+\item Timing constraint enforcement
+\item Bank management
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Cache Controllers}:
+\begin{itemize}
+\item Hit/miss detection
+\item Replacement policy implementation
+\item Coherency protocol management
+\item Prefetch control
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{I/O Controllers}:
+\begin{itemize}
+\item Protocol state machines
+\item Data transfer management
+\item Error detection and correction
+\item Flow control
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 9: Advanced Topics
+\section{Advanced Automata Concepts}
+
+\begin{frame}{Hierarchical State Machines}
+\begin{itemize}
+\item \concept{Motivation}: Managing complexity
+\begin{itemize}
+\item Large state spaces
+\item Nested behaviors
+\item Modular design
+\item Reusability
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Statecharts}:
+\begin{itemize}
+\item Hierarchical states
+\item Concurrent regions
+\item History states
+\item Broadcast communication
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Benefits}:
+\begin{itemize}
+\item Reduced complexity
+\item Better maintainability
+\item Improved readability
+\item Easier verification
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Concurrent and Parallel Automata}
+\begin{itemize}
+\item \concept{Parallel Composition}:
+\begin{itemize}
+\item Multiple automata running simultaneously
+\item Independent state evolution
+\item Synchronization points
+\item Communication mechanisms
+\end{itemize}
+\vspace{0.5cm}
+\item \concept{Synchronization Methods}:
+\begin{itemize}
+\item Shared signals
+\item Message passing
+\item Rendezvous points
+\item Barrier synchronization
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Applications}:
+\begin{itemize}
+\item Multi-core processors
+\item Distributed systems
+\item Protocol implementations
+\item Parallel algorithms
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Section 10: Summary
+\section{Chapter Summary}
+
+\begin{frame}{Key Concepts Review}
+\begin{itemize}
+\item \concept{Second-Order Systems (2-OS)}:
+\begin{itemize}
+\item Second feedback loop enables autonomy
+\item Behavior evolution without input changes
+\item Foundation for intelligent systems
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Automata Theory}:
+\begin{itemize}
+\item Mathematical models of computation
+\item State-based behavior description
+\item Language recognition capabilities
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Implementation Aspects}:
+\begin{itemize}
+\item Hardware realization techniques
+\item Optimization strategies
+\item Verification methodologies
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Design Principles}
+\begin{itemize}
+\item \concept{Complexity Management}:
+\begin{itemize}
+\item Simple vs. complex circuit classification
+\item Hierarchical design approaches
+\item Modular implementation strategies
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Performance Considerations}:
+\begin{itemize}
+\item State encoding optimization
+\item Timing constraint satisfaction
+\item Power and area trade-offs
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Verification and Testing}:
+\begin{itemize}
+\item Formal verification methods
+\item Coverage-driven testing
+\item Model checking techniques
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Connection to Higher-Order Systems}
+\begin{itemize}
+\item \concept{Building Blocks for 3-OS (Processors)}:
+\begin{itemize}
+\item Control unit implementation
+\item Instruction sequencing logic
+\item Exception handling mechanisms
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{System-Level Integration}:
+\begin{itemize}
+\item Memory controller design
+\item I/O protocol implementation
+\item Inter-component communication
+\end{itemize}
+\vspace{0.3cm}
+\item \concept{Advanced Applications}:
+\begin{itemize}
+\item Multi-core coordination
+\item Distributed system control
+\item Adaptive system behavior
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+% Questions slide
+\begin{frame}{Questions and Discussion}
+\begin{center}
+\Large
+Questions?
+
+\vspace{1cm}
+
+\normalsize
+\textbf{Discussion Topics:}
+\begin{itemize}
+\item How does the second feedback loop enable autonomous behavior?
+\item What are the trade-offs between Moore and Mealy machines?
+\item How do counter-expanded automata extend computational power?
+\item What role do automata play in modern processor design?
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Next:} Chapter 2.11 - Processors: Third-Order Systems (3-OS)
+\end{center}
+\end{frame}
+
+\end{document}
+

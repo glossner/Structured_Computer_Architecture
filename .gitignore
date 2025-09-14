@@ -352,3 +352,95 @@ xcuserdata
 hs_err_pid*
 
 
+
+### LaTeX template
+# Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+# Intermediate documents:
+*.dvi
+*.xdv
+*-converted-to.*
+
+# latexmk
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+# Beamer specific
+*.nav
+*.pre
+*.snm
+*.vrb
+
+# Changes package
+*.soc
+
+# Comment package
+*.cut
+
+# Program outputs
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+# Hyperref package
+*.brf
+
+# Listings package
+*.lol
+
+# Memoir package
+*.glo
+*.acn
+*.acr
+*.alg
+*.glg
+*.gls
+*.ist
+
+# Minted package
+_minted*
+*.pyg
+
+# Nomencl package
+*.nlg
+*.nlo
+*.nls
+
+# TikZ & PGF
+*.auxlock
+
+# Todonotes package
+*.tdo
+
+# Glossaries package
+*.acn
+*.acr
+*.glg
+*.glo
+*.gls
+*.glsdefs
+
+# Makeindex package
+*.idx
+*.ilg
+*.ind
+
