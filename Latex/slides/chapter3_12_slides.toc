@@ -1,7 +1,0 @@
-\beamer@sectionintoc {1}{Historical Context and Theoretical Foundations}{4}{0}{1}
-\beamer@sectionintoc {2}{The Decision Problem}{6}{0}{2}
-\beamer@sectionintoc {3}{The Turing Machine}{8}{0}{3}
-\beamer@sectionintoc {4}{Von Neumann Architecture}{10}{0}{4}
-\beamer@sectionintoc {5}{Instruction Set Architecture}{13}{0}{5}
-\beamer@sectionintoc {6}{Hardware-Software Interface}{15}{0}{6}
-\beamer@sectionintoc {7}{Summary}{17}{0}{7}
