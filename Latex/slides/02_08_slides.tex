@@ -1,67 +1,3 @@
-% Chapter 2.8: Combinational Circuits (0-OS) - LaTeX Beamer Slides
-% Structured Computer Architecture: An Order-Based Approach
-% Authors: John Glossner and Gheorghe M. Ştefan
-
-\documentclass[aspectratio=169,11pt]{beamer}
-
-% Theme and color scheme (simple, print-friendly)
-\usetheme{default}
-\usecolortheme{default}
-
-% Simple color scheme for printing
-\definecolor{titlecolor}{RGB}{0,0,0}
-\definecolor{accentcolor}{RGB}{0,0,139}
-\definecolor{textcolor}{RGB}{0,0,0}
-
-% Set colors
-\setbeamercolor{title}{fg=titlecolor}
-\setbeamercolor{frametitle}{fg=titlecolor}
-\setbeamercolor{structure}{fg=accentcolor}
-\setbeamercolor{normal text}{fg=textcolor}
-
-% Remove navigation symbols
-\setbeamertemplate{navigation symbols}{}
-
-% Simple footline
-\setbeamertemplate{footline}[frame number]
-
-% Packages
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{tikz}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{listings}
-\usepackage{xcolor}
-
-% Set graphics path for images (relative to slides directory)
-\graphicspath{{../Images/}}
-
-% Title information
-\title[Chapter 2.8: Combinational Circuits]{Structured Computer Architecture\\Chapter 2.8: Combinational Circuits\\Zero-Order Systems (0-OS)}
-\subtitle{An Order-Based Approach}
-\author{John Glossner and Gheorghe M. Ştefan}
-\institute{Based on the textbook}
-\date{\today}
-
-% Custom commands
-\newcommand{\concept}[1]{\textbf{\color{accentcolor}#1}}
-\newcommand{\defterm}[1]{\textit{#1}}
-
-\begin{document}
-
-% Title slide
-\begin{frame}
-\titlepage
-\end{frame}
-
-% Table of contents
-\begin{frame}{Outline}
-\tableofcontents
-\end{frame}
-
 % Learning Objectives
 \begin{frame}{Learning Objectives}
 By the end of this chapter, you will be able to:
@@ -75,8 +11,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 1: Introduction to 0-OS
-\section{Introduction to Zero-Order Systems}
+% subsection 1: Introduction to 0-OS
+\subsection{Introduction to Zero-Order Systems}
 
 \begin{frame}{What are Zero-Order Systems (0-OS)?}
 \begin{itemize}
@@ -127,8 +63,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 2: Boolean Algebra
-\section{Boolean Algebra}
+% subsection 2: Boolean Algebra
+\subsection{Boolean Algebra}
 
 \begin{frame}{Historical Background}
 \begin{itemize}
@@ -242,8 +178,8 @@ A \land \neg A &= 0
 \end{itemize}
 \end{frame}
 
-% Section 3: Truth Tables
-\section{Truth Tables}
+% subsection 3: Truth Tables
+\subsection{Truth Tables}
 
 \begin{frame}{Truth Table Fundamentals}
 \begin{itemize}
@@ -421,8 +357,8 @@ A & B & A \odot B \\
 \end{itemize}
 \end{frame}
 
-% Section 4: Logic Gates and Circuits
-\section{Logic Gates and Digital Circuits}
+% subsection 4: Logic Gates and Circuits
+\subsection{Logic Gates and Digital Circuits}
 
 \begin{frame}{Physical Implementation of Logic Gates}
 \begin{itemize}
@@ -568,8 +504,8 @@ C_{out} &= AB + C_{in}(A \oplus B)
 \end{columns}
 \end{frame}
 
-% Section 5: Combinational Building Blocks
-\section{Combinational Building Blocks}
+% subsection 5: Combinational Building Blocks
+\subsection{Combinational Building Blocks}
 
 \begin{frame}{Decoders}
 \begin{itemize}
@@ -677,8 +613,8 @@ C_{out} &= AB + C_{in}(A \oplus B)
 \end{itemize}
 \end{frame}
 
-% Section 6: Circuit Optimization
-\section{Circuit Optimization and Minimization}
+% subsection 6: Circuit Optimization
+\subsection{Circuit Optimization and Minimization}
 
 \begin{frame}{Karnaugh Maps (K-Maps)}
 \begin{itemize}
@@ -765,8 +701,8 @@ C_{out} &= AB + C_{in}(A \oplus B)
 \end{itemize}
 \end{frame}
 
-% Section 7: Advanced Topics
-\section{Advanced Combinational Concepts}
+% subsection 7: Advanced Topics
+\subsection{Advanced Combinational Concepts}
 
 \begin{frame}{Hazards and Glitches}
 \begin{itemize}
@@ -845,8 +781,8 @@ C_{out} &= AB + C_{in}(A \oplus B)
 \end{itemize}
 \end{frame}
 
-% Section 8: Summary
-\section{Chapter Summary}
+% subsection 8: Summary
+\subsection{Chapter Summary}
 
 \begin{frame}{Key Concepts Review}
 \begin{itemize}
@@ -945,5 +881,4 @@ Questions?
 \end{center}
 \end{frame}
 
-\end{document}
 

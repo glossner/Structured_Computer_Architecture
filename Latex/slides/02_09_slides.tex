@@ -1,67 +1,3 @@
-% Chapter 2.9: Memory Circuits (1-OS) - LaTeX Beamer Slides
-% Structured Computer Architecture: An Order-Based Approach
-% Authors: John Glossner and Gheorghe M. Ştefan
-
-\documentclass[aspectratio=169,11pt]{beamer}
-
-% Theme and color scheme (simple, print-friendly)
-\usetheme{default}
-\usecolortheme{default}
-
-% Simple color scheme for printing
-\definecolor{titlecolor}{RGB}{0,0,0}
-\definecolor{accentcolor}{RGB}{0,0,139}
-\definecolor{textcolor}{RGB}{0,0,0}
-
-% Set colors
-\setbeamercolor{title}{fg=titlecolor}
-\setbeamercolor{frametitle}{fg=titlecolor}
-\setbeamercolor{structure}{fg=accentcolor}
-\setbeamercolor{normal text}{fg=textcolor}
-
-% Remove navigation symbols
-\setbeamertemplate{navigation symbols}{}
-
-% Simple footline
-\setbeamertemplate{footline}[frame number]
-
-% Packages
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{tikz}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{listings}
-\usepackage{xcolor}
-
-% Set graphics path for images (relative to slides directory)
-\graphicspath{{../Images/}}
-
-% Title information
-\title[Chapter 2.9: Memory Circuits]{Structured Computer Architecture\\Chapter 2.9: Memory Circuits\\First-Order Systems (1-OS)}
-\subtitle{An Order-Based Approach}
-\author{John Glossner and Gheorghe M. Ştefan}
-\institute{Based on the textbook}
-\date{\today}
-
-% Custom commands
-\newcommand{\concept}[1]{\textbf{\color{accentcolor}#1}}
-\newcommand{\defterm}[1]{\textit{#1}}
-
-\begin{document}
-
-% Title slide
-\begin{frame}
-\titlepage
-\end{frame}
-
-% Table of contents
-\begin{frame}{Outline}
-\tableofcontents
-\end{frame}
-
 % Learning Objectives
 \begin{frame}{Learning Objectives}
 By the end of this chapter, you will be able to:
@@ -75,8 +11,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 1: Introduction to 1-OS
-\section{Introduction to First-Order Systems}
+% subsection 1: Introduction to 1-OS
+\subsection{Introduction to First-Order Systems}
 
 \begin{frame}{From 0-OS to 1-OS: Adding Memory}
 \begin{itemize}
@@ -130,8 +66,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 2: Elementary Latches
-\section{Elementary Latches}
+% subsection 2: Elementary Latches
+\subsection{Elementary Latches}
 \begin{frame}{The Simplest Memory Element}
 \begin{columns}
 \begin{column}{0.6\textwidth}
@@ -304,8 +240,8 @@ S & R & Q \\
 \end{center}
 \end{frame}
 
-% Section 3: Clocked Latches
-\section{Clocked Latches and Timing}
+% subsection 3: Clocked Latches
+\subsection{Clocked Latches and Timing}
 
 \begin{frame}{The First Latch Problem}
 \begin{itemize}
@@ -402,8 +338,8 @@ S & R & Q \\
 \end{columns}
 \end{frame}
 
-% Section 4: Flip-Flops
-\section{Flip-Flops and Edge-Triggered Circuits}
+% subsection 4: Flip-Flops
+\subsection{Flip-Flops and Edge-Triggered Circuits}
 
 \begin{frame}{From Level to Edge Triggering}
 \begin{itemize}
@@ -496,8 +432,8 @@ S & R & Q \\
 \end{itemize}
 \end{frame}
 
-% Section 5: Timing Analysis
-\section{Timing Analysis and Constraints}
+% subsection 5: Timing Analysis
+\subsection{Timing Analysis and Constraints}
 
 \begin{frame}{Critical Timing Parameters}
 \begin{itemize}
@@ -563,8 +499,8 @@ S & R & Q \\
 \end{itemize}
 \end{frame}
 
-% Section 6: Memory Systems
-\section{Random Access Memory (RAM)}
+% subsection 6: Memory Systems
+\subsection{Random Access Memory (RAM)}
 
 \begin{frame}{RAM Fundamentals}
 \begin{columns}
@@ -670,8 +606,8 @@ S & R & Q \\
 \end{columns}
 \end{frame}
 
-% Section 7: Synchronous Memory
-\section{Synchronous Memory Systems}
+% subsection 7: Synchronous Memory
+\subsection{Synchronous Memory Systems}
 
 \begin{frame}{Synchronous RAM (SRAM)}
 \begin{columns}
@@ -681,7 +617,7 @@ S & R & Q \\
 \item GHz frequencies make timing difficult
 \item Asynchronous timing constraints hard to meet
 \item Need better controllability
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm}
 \concept{Synchronous Solution}:
 \begin{itemize}
@@ -689,7 +625,7 @@ S & R & Q \\
 \item Setup and hold times defined for clock
 \item More rigorous timing control
 \item Better system integration
-\end{itemize>
+\end{itemize}
 \vspace{0.3cm}
 \concept{Benefits}:
 \begin{itemize}
@@ -697,7 +633,7 @@ S & R & Q \\
 \item Better noise immunity
 \item Easier system design
 \item Predictable behavior
-\end{itemize>
+\end{itemize}
 \end{column}
 \begin{column}{0.4\textwidth}
 \begin{center}
@@ -734,8 +670,8 @@ S & R & Q \\
 \end{itemize}
 \end{frame}
 
-% Section 8: Register Files
-\section{Register Files}
+% subsection 8: Register Files
+\subsection{Register Files}
 
 \begin{frame}{Register File Concept}
 \begin{columns}
@@ -801,8 +737,8 @@ S & R & Q \\
 \end{itemize}
 \end{frame}
 
-% Section 9: Advanced Memory Concepts
-\section{Advanced Memory Concepts}
+% subsection 9: Advanced Memory Concepts
+\subsection{Advanced Memory Concepts}
 
 \begin{frame}{Memory Hierarchy Considerations}
 \begin{itemize}
@@ -859,8 +795,8 @@ S & R & Q \\
 \end{itemize}
 \end{frame}
 
-% Section 10: Summary
-\section{Chapter Summary}
+% subsection 10: Summary
+\subsection{Chapter Summary}
 
 \begin{frame}{Key Concepts Review}
 \begin{itemize}
@@ -958,6 +894,3 @@ Questions?
 \textbf{Next:} Chapter 2.10 - Automata: Second-Order Systems (2-OS)
 \end{center}
 \end{frame}
-
-\end{document}
-

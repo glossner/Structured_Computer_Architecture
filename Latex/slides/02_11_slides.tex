@@ -1,68 +1,3 @@
-% Chapter 2.11: Processors (3-OS) - LaTeX Beamer Slides
-% Structured Computer Architecture: An Order-Based Approach
-% Authors: John Glossner and Gheorghe M. Ştefan
-
-\documentclass[aspectratio=169,11pt]{beamer}
-
-% Theme and color scheme (simple, print-friendly)
-\usetheme{default}
-\usecolortheme{default}
-
-% Simple color scheme for printing
-\definecolor{titlecolor}{RGB}{0,0,0}
-\definecolor{accentcolor}{RGB}{0,0,139}
-\definecolor{textcolor}{RGB}{0,0,0}
-
-% Set colors
-\setbeamercolor{title}{fg=titlecolor}
-\setbeamercolor{frametitle}{fg=titlecolor}
-\setbeamercolor{structure}{fg=accentcolor}
-\setbeamercolor{normal text}{fg=textcolor}
-
-% Remove navigation symbols
-\setbeamertemplate{navigation symbols}{}
-
-% Simple footline
-\setbeamertemplate{footline}[frame number]
-
-% Packages
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{tikz}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{listings}
-\usepackage{xcolor}
-
-
-% Set graphics path for images (relative to slides directory)
-\graphicspath{{../Images/}}
-
-% Title information
-\title[Chapter 2.11: Processors]{Structured Computer Architecture\\Chapter 2.11: Processors\\Third-Order Systems (3-OS)}
-\subtitle{An Order-Based Approach}
-\author{John Glossner and Gheorghe M. Ştefan}
-\institute{Based on the textbook}
-\date{\today}
-
-% Custom commands
-\newcommand{\concept}[1]{\textbf{\color{accentcolor}#1}}
-\newcommand{\defterm}[1]{\textit{#1}}
-
-\begin{document}
-
-% Title slide
-\begin{frame}
-\titlepage
-\end{frame}
-
-% Table of contents
-\begin{frame}{Outline}
-\tableofcontents
-\end{frame}
-
 % Learning Objectives
 \begin{frame}{Learning Objectives}
 By the end of this chapter, you will be able to:
@@ -76,8 +11,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 1: Introduction to 3-OS
-\section{Introduction to Third-Order Systems}
+% subsection 1: Introduction to 3-OS
+\subsection{Introduction to Third-Order Systems}
 
 \begin{frame}{Evolution to 3-OS: The Third Loop}
 \begin{itemize}
@@ -133,8 +68,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 2: Counter-Expanded Automata
-\section{Counter-Expanded Automata}
+% subsection 2: Counter-Expanded Automata
+\subsection{Counter-Expanded Automata}
 
 \begin{frame}{Beyond Finite Automata Limitations}
 \begin{itemize}
@@ -197,8 +132,8 @@ By the end of this chapter, you will be able to:
 \end{columns}
 \end{frame}
 
-% Section 3: Elementary Processor Architecture
-\section{Elementary Processor Architecture}
+% subsection 3: Elementary Processor Architecture
+\subsection{Elementary Processor Architecture}
 
 \begin{frame}{Elementary Processor Overview}
 \begin{columns}
@@ -317,8 +252,8 @@ By the end of this chapter, you will be able to:
 \end{columns}
 \end{frame}
 
-% Section 4: Register File Design
-\section{Register File Implementation}
+% subsection 4: Register File Design
+\subsection{Register File Implementation}
 
 \begin{frame}{Register File Architecture}
 \begin{columns}
@@ -385,8 +320,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 5: ALU Design
-\section{Arithmetic Logic Unit (ALU)}
+% subsection 5: ALU Design
+\subsection{Arithmetic Logic Unit (ALU)}
 
 \begin{frame}{ALU Functionality}
 \begin{columns}
@@ -451,8 +386,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 6: Control ROM and Micro-programming
-\section{Control ROM and Micro-programming}
+% subsection 6: Control ROM and Micro-programming
+\subsection{Control ROM and Micro-programming}
 
 \begin{frame}{ROM Structure}
 \begin{columns}
@@ -474,7 +409,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{Clock}: Synchronization
 \end{itemize}
 
-\vspace{0.3cm>
+\vspace{0.3cm}
 \concept{Content Generation}:
 \begin{itemize}
 \item Micro-code generator tool
@@ -509,7 +444,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{rightAddr[4:0]}: Right operand address
 \item \textbf{destAddr[4:0]}: Destination address
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Operation Fields}:
 \begin{itemize}
 \item \textbf{crIn}: Carry input control
@@ -531,7 +466,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{EMPTYJMP(<label>)}: Jump if input empty
 \item \textbf{FULLJMP(<label>)}: Jump if output full
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Data Operations}:
 \begin{itemize}
 \item \textbf{L(<address>)}: Left operand selection
@@ -540,7 +475,7 @@ By the end of this chapter, you will be able to:
 \item \textbf{LOAD}: Load from data input
 \item \textbf{WB}: Write back to register file
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{ALU Functions}:
 \begin{itemize}
 \item \textbf{ADD, SUB}: Arithmetic operations
@@ -550,8 +485,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 7: Processor Operation
-\section{Elementary Processor Operation}
+% subsection 7: Processor Operation
+\subsection{Elementary Processor Operation}
 
 \begin{frame}{Instruction Execution Cycle}
 \begin{itemize}
@@ -562,7 +497,7 @@ By the end of this chapter, you will be able to:
 \item Prepare operand addresses
 \item Set up ALU function
 \end{itemize}
-\vspace{0.5cm>
+\vspace{0.5cm}
 \item \concept{Execute Phase}:
 \begin{itemize}
 \item Read operands from register file
@@ -570,7 +505,7 @@ By the end of this chapter, you will be able to:
 \item Generate status flags
 \item Determine next state
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Write-back Phase}:
 \begin{itemize}
 \item Store result in destination register
@@ -589,7 +524,7 @@ By the end of this chapter, you will be able to:
 \item Linear instruction flow
 \item Default operation mode
 \end{itemize}
-\vspace{0.5cm>
+\vspace{0.5cm}
 \item \concept{Conditional Branching}:
 \begin{itemize}
 \item Flag-based decisions
@@ -597,7 +532,7 @@ By the end of this chapter, you will be able to:
 \item Dynamic control flow
 \item Context-sensitive behavior
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{External Interface}:
 \begin{itemize}
 \item Data input/output coordination
@@ -608,8 +543,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 8: Programming Model
-\section{Programming Model and Applications}
+% subsection 8: Programming Model
+\subsection{Programming Model and Applications}
 
 \begin{frame}{Programming Paradigm}
 \begin{itemize}
@@ -620,7 +555,7 @@ By the end of this chapter, you will be able to:
 \item Cycle-by-cycle control
 \item Maximum flexibility
 \end{itemize}
-\vspace{0.5cm>
+\vspace{0.5cm}
 \item \concept{Assembly Language Interface}:
 \begin{itemize}
 \item Human-readable mnemonics
@@ -628,7 +563,7 @@ By the end of this chapter, you will be able to:
 \item Structured programming support
 \item Debugging capabilities
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Application Areas}:
 \begin{itemize}
 \item Digital signal processing
@@ -648,7 +583,7 @@ By the end of this chapter, you will be able to:
 \item Recursive pattern recognition
 \item Context-free grammar parsing
 \end{itemize}
-\vspace{0.5cm>
+\vspace{0.5cm}
 \item \concept{Example Applications}:
 \begin{itemize}
 \item Expression evaluation
@@ -656,7 +591,7 @@ By the end of this chapter, you will be able to:
 \item Compiler front-end processing
 \item Syntax analysis
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Advantages over 2-OS}:
 \begin{itemize}
 \item Higher computational power
@@ -667,8 +602,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 9: Design Considerations
-\section{Design Considerations and Trade-offs}
+% subsection 9: Design Considerations
+\subsection{Design Considerations and Trade-offs}
 
 \begin{frame}{Performance Optimization}
 \begin{itemize}
@@ -679,7 +614,7 @@ By the end of this chapter, you will be able to:
 \item Pipeline potential
 \item Instruction throughput
 \end{itemize}
-\vspace{0.5cm>
+\vspace{0.5cm}
 \item \concept{Area Optimization}:
 \begin{itemize}
 \item Register file size
@@ -687,7 +622,7 @@ By the end of this chapter, you will be able to:
 \item ALU complexity
 \item Control logic overhead
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Power Management}:
 \begin{itemize}
 \item Clock gating opportunities
@@ -707,7 +642,7 @@ By the end of this chapter, you will be able to:
 \item Multiple execution units
 \item Cache memory integration
 \end{itemize}
-\vspace{0.5cm>
+\vspace{0.5cm}
 \item \concept{System Integration}:
 \begin{itemize}
 \item Multi-processor configurations
@@ -715,7 +650,7 @@ By the end of this chapter, you will be able to:
 \item Communication interfaces
 \item Interrupt handling
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Technology Adaptation}:
 \begin{itemize}
 \item FPGA implementation
@@ -726,8 +661,8 @@ By the end of this chapter, you will be able to:
 \end{itemize}
 \end{frame}
 
-% Section 10: Summary
-\section{Chapter Summary}
+% subsection 10: Summary
+\subsection{Chapter Summary}
 
 \begin{frame}{Key Concepts Review}
 \begin{itemize}
@@ -737,14 +672,14 @@ By the end of this chapter, you will be able to:
 \item Context-free language processing capability
 \item Elementary processor implementation
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Processor Architecture}:
 \begin{itemize}
 \item RALU: Simple functional automaton
 \item CROM: Complex control automaton
 \item Micro-programmed control approach
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Implementation Components}:
 \begin{itemize}
 \item Multi-port register file
@@ -762,14 +697,14 @@ By the end of this chapter, you will be able to:
 \item Control sequencing (CROM)
 \item Clear interface definition
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Programmability}:
 \begin{itemize}
 \item Micro-instruction format
 \item Assembly language interface
 \item Flexible control sequences
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Scalability}:
 \begin{itemize}
 \item Modular design approach
@@ -788,7 +723,7 @@ By the end of this chapter, you will be able to:
 \item 2-OS: Regular languages (Type 3)
 \item 3-OS: Context-free languages (Type 2)
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Practical Applications}:
 \begin{itemize}
 \item Compiler design and implementation
@@ -796,7 +731,7 @@ By the end of this chapter, you will be able to:
 \item Control system applications
 \item Educational processor design
 \end{itemize}
-\vspace{0.3cm>
+\vspace{0.3cm}
 \item \concept{Foundation for Advanced Systems}:
 \begin{itemize}
 \item Modern processor architectures
@@ -813,7 +748,7 @@ By the end of this chapter, you will be able to:
 \Large
 Questions?
 
-\vspace{1cm>
+\vspace{1cm}
 
 \normalsize
 \textbf{Discussion Topics:}
@@ -824,10 +759,9 @@ Questions?
 \item What role do elementary processors play in modern computer architecture?
 \end{itemize}
 
-\vspace{0.5cm>
+\vspace{0.5cm}
 \textbf{Conclusion:} Order-based approach provides systematic framework for understanding digital system complexity and computational capabilities.
 \end{center}
 \end{frame}
 
-\end{document}
 

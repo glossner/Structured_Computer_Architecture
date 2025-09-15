@@ -1,0 +1,167 @@
+% Chapter 1: Number Systems - LaTeX Beamer Slides
+% Structured Computer Architecture: An Order-Based Approach
+% Authors: John Glossner and Gheorghe M. Ştefan
+
+\documentclass[aspectratio=169,11pt]{beamer}
+
+% Theme and color scheme (simple, print-friendly)
+\usetheme{default}
+\usecolortheme{default}
+
+% Simple color scheme for printing
+\definecolor{titlecolor}{RGB}{0,0,0}
+\definecolor{accentcolor}{RGB}{0,0,139}
+\definecolor{textcolor}{RGB}{0,0,0}
+
+% Set colors
+\setbeamercolor{title}{fg=titlecolor}
+\setbeamercolor{frametitle}{fg=titlecolor}
+\setbeamercolor{structure}{fg=accentcolor}
+\setbeamercolor{normal text}{fg=textcolor}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Part 1: Number Systems]{Structured Computer Architecture}
+\subtitle{An Order-Based Approach}
+\author{John Glossner and Gheorghe M. Ştefan}
+%\institute{Based on the textbook}
+\date{\today}
+
+% Custom commands
+\newcommand{\concept}[1]{\textbf{\color{accentcolor}#1}}
+\newcommand{\defterm}[1]{\textit{#1}}
+
+\begin{document}
+
+%******************************
+% Title Slide
+%*******************************
+\begin{frame}
+\titlepage
+\end{frame}
+
+%******************************
+% Part I Slides (7 chapters)
+%*******************************
+\part{Number Systems and Representations}
+
+\begin{frame}
+\begin{center}
+{\Huge Part I}\\[0.5cm]
+{\Large Number Systems and Representations}\\[0.5cm]
+%{\normalsize Foundations of Digital Representation}
+\end{center}
+\end{frame}
+
+\section{Number Systems, Sets, and Representations}
+\begin{frame}{Outline}
+\tableofcontents[sections=1]
+\end{frame}
+\input{Latex/slides/01_01-07_slides}
+
+%******************************
+% Part II Slides
+%*******************************
+\part{From Gates to Processors}
+
+\begin{frame}
+\begin{center}
+{\Huge Part II}\\[0.5cm]
+{\Large From Gates to Processors}\\[0.5cm]
+%{\normalsize Foundations of Digital Representation}
+\end{center}
+\end{frame}
+
+%***************************************
+% Chapter 02_08: Combinational Circuits
+%***************************************
+\section{Combinational Circuits: No-Loop, Zero-Order Systems (0-OS)}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 8: Combinational Circuits}\\[0.5cm]
+{\Large No-Loop, Zero-Order Systems (0-OS)}\\[0.5cm]
+%{\normalsize Foundations of Digital Representation}
+\end{center}
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents[sections=2]
+\end{frame}
+\input{Latex/slides/02_08_slides}
+
+%***************************************
+% Chapter 02_09: Memory Circuits
+%***************************************
+\section{Memory Circuits: One-Loop, First-Order Systems (1-OS)}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 9: Memory Circuits}\\[0.5cm]
+{\Large One-Loop, First-Order Systems (1-OS)}\\[0.5cm]
+%{\normalsize Foundations of Digital Representation}
+\end{center}
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents[sections=3]
+\end{frame}
+\input{Latex/slides/02_09_slides}
+
+%***************************************
+% Chapter 02_10: Automata
+%***************************************
+\section{Automata: Two-Loop, Second-Order Systems (2-OS)}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 10: Automata}\\[0.5cm]
+{\Large Two-Loop, Second-Order Systems (2-OS)}\\[0.5cm]
+%{\normalsize Foundations of Digital Representation}
+\end{center}
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents[sections=4]
+\end{frame}
+\input{Latex/slides/02_10_slides}
+
+%***************************************
+% Chapter 02_11: Processors
+%***************************************
+\section{Processors: Three-Loop, Third-Order Systems (3-OS)}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 11: Processors}\\[0.5cm]
+{\Large Three-Loop, Third-Order Systems (3-OS)}\\[0.5cm]
+%{\normalsize Foundations of Digital Representation}
+\end{center}
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents[sections=5]
+\end{frame}
+\input{Latex/slides/02_11_slides}
+
+
+\end{document}
