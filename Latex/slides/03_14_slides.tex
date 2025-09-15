@@ -1,0 +1,1045 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Theme and color scheme
+\usetheme{default}
+\usecolortheme{default}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple color scheme for printing
+\definecolor{darkblue}{RGB}{25,25,112}
+\setbeamercolor{title}{fg=darkblue}
+\setbeamercolor{frametitle}{fg=darkblue}
+\setbeamercolor{structure}{fg=darkblue}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Chapter 3.14: Parallel Computing]{Structured Computer Architecture\\Chapter 3.14: Parallel Computing\\N-Order Systems (N-OS)}
+\author{Based on Structured Computer Architecture: An Order-Based Approach}
+\date{}
+
+% Custom command for highlighting concepts
+\newcommand{\concept}[1]{\textbf{\color{darkblue}#1}}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Reset section counter for this chapter
+\setcounter{section}{0}
+
+% Define sections for this chapter
+\section{Introduction to N-Order Systems}
+\section{Cellular Automata Theory}
+\section{Controlled Cellular Automata}
+\section{Parallel Computing Architectures}
+\section{Mapping and Distribution}
+\section{Performance and Scalability}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Learning objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will understand:
+\begin{itemize}
+\item N-Order Systems (N-OS) and their theoretical foundations
+\item Cellular Automata concepts and applications
+\item Controlled Cellular Automata (CCA) architecture
+\item Parallel computing paradigms and mapping operations
+\item Distribution networks and scalability challenges
+\item Space-time trade-offs in parallel computation
+\item Moore's Law implications for parallel systems
+\end{itemize}
+\end{frame}
+
+% Section 1: Introduction to N-Order Systems
+\section{Introduction to N-Order Systems}
+
+\begin{frame}{From Sequential to Parallel: The N-OS Evolution}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Motivation for N-Order Systems}:
+\begin{itemize}
+\item Previous chapters: Sequential feedback loops (1-OS to 5-OS)
+\item Question: Can we continue closing new loops?
+\item Goal: Additional gains from additional loops
+\item Challenge: Managing complexity as N increases
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Complexity Management}:
+\begin{itemize}
+\item \textbf{Size}: Proportional to N (acceptable)
+\item \textbf{Complexity}: Must remain independent of N
+\item \textbf{Solution}: Loops close over identical systems
+\item \textbf{Repetitive patterns}: Keep description controllable
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Moore's Law Constraint}:
+\begin{itemize}
+\item Exponential growth in size (transistors)
+\item Complexity must remain manageable
+\item Repetitive patterns enable scaling
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{System Order Evolution}
+\vspace{0.3cm}
+
+\tikz{
+% System progression
+\node at (1,4) {\textbf{System Evolution}};
+
+\draw[thick] (0,3.5) rectangle (2,3.7);
+\node at (1,3.6) {0-OS: Combinational};
+
+\draw[thick] (0,3.1) rectangle (2,3.3);
+\node at (1,3.2) {1-OS: Memory};
+
+\draw[thick] (0,2.7) rectangle (2,2.9);
+\node at (1,2.8) {2-OS: Automata};
+
+\draw[thick] (0,2.3) rectangle (2,2.5);
+\node at (1,2.4) {3-OS: Processors};
+
+\draw[thick] (0,1.9) rectangle (2,2.1);
+\node at (1,2) {4-OS: Von Neumann};
+
+\draw[thick] (0,1.5) rectangle (2,1.7);
+\node at (1,1.6) {5-OS: Harvard};
+
+\draw[thick, dashed] (0,1.1) rectangle (2,1.3);
+\node at (1,1.2) {N-OS: Parallel};
+
+% Arrows
+\foreach \y in {3.3,2.9,2.5,2.1,1.7} {
+  \draw[->] (1,\y) -- (1,\y-0.2);
+}
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{N-Order System Structure}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{N-OS Characteristics}:
+\begin{itemize}
+\item \textbf{Size}: $O(N)$ - Linear growth with number of components
+\item \textbf{Complexity}: $O(1)$ or $O(N)$ depending on design
+\item \textbf{Simple Systems}: Identical cells, $O(1)$ complexity
+\item \textbf{Complex Systems}: Different cells, $O(N)$ complexity
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Requirements}:
+\begin{itemize}
+\item Cells $c_0, c_1, \ldots, c_{N-1}$ must be identical
+\item Regular interconnection pattern
+\item Description involves:
+\begin{itemize}
+\item Single cell description
+\item Interconnection pattern for N-1 cells
+\end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Scalability Principle}:
+\begin{itemize}
+\item Only simple systems (identical cells) are practical
+\item Complex systems become uncontrollable for large N
+\item Goal: Maximize N while maintaining simplicity
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{N-OS Structure}
+\vspace{0.3cm}
+
+\tikz{
+% N-OS representation
+\node at (1,3.5) {\textbf{N-Order System}};
+
+% Cells
+\foreach \x/\label in {0/c_0, 0.8/c_1, 1.6/c_2, 2.4/c_{N-1}} {
+  \draw[thick] (\x,2.5) rectangle (\x+0.6,3);
+  \node at (\x+0.3,2.75) {\label};
+}
+
+% Connections
+\draw[<->] (0.6,2.75) -- (0.8,2.75);
+\draw[<->] (1.4,2.75) -- (1.6,2.75);
+\draw[dashed] (2.2,2.75) -- (2.4,2.75);
+
+% Labels
+\node at (1.5,2.2) {Identical Cells};
+\node at (1.5,1.9) {Regular Connections};
+
+% Complexity comparison
+\node at (1.5,1.4) {\textbf{Complexity}};
+\node at (0.7,1.1) {Simple: $O(1)$};
+\node at (2.3,1.1) {Complex: $O(N)$};
+\draw[thick, green] (0.2,1.1) -- (1.2,1.1);
+\draw[thick, red] (1.8,1.1) -- (2.8,1.1);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 2: Cellular Automata Theory
+\section{Cellular Automata Theory}
+
+\begin{frame}{Theoretical Cellular Automaton}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Cellular Automaton Definition}:
+\begin{itemize}
+\item Unlimited number of identical cells
+\item Linear connection between adjacent cells
+\item Each cell is a finite automaton
+\item Synchronous operation across all cells
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Cell Behavior}:
+\begin{itemize}
+\item Internal state determines cell behavior
+\item Inputs from left and right neighbors
+\item State transitions based on:
+\begin{itemize}
+\item Current internal state
+\item Left neighbor signal
+\item Right neighbor signal
+\end{itemize>
+\item All cells switch simultaneously
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Theoretical Properties}:
+\begin{itemize}
+\item Infinite array of cells
+\item Homogeneous structure
+\item Local interactions only
+\item Global behavior emerges from local rules
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Cellular Automaton}
+\vspace{0.3cm}
+
+\tikz{
+% Cellular automaton representation
+\node at (1.5,3.5) {\textbf{1D Cellular Automaton}};
+
+% Cells
+\foreach \x/\label in {0/..., 0.8/c_{i-1}, 1.6/c_i, 2.4/c_{i+1}, 3.2/...} {
+  \draw[thick] (\x,2.5) rectangle (\x+0.6,3);
+  \node at (\x+0.3,2.75) {\label};
+}
+
+% Connections
+\draw[<->] (0.6,2.75) -- (0.8,2.75);
+\draw[<->] (1.4,2.75) -- (1.6,2.75);
+\draw[<->] (2.2,2.75) -- (2.4,2.75);
+\draw[<->] (3,2.75) -- (3.2,2.75);
+
+% State transitions
+\draw[->] (1.9,2.5) -- (1.9,2);
+\node at (1.9,1.8) {State};
+\node at (1.9,1.6) {Transition};
+
+% Input signals
+\draw[->] (1.4,2.3) -- (1.6,2.3);
+\draw[->] (2.2,2.3) -- (2,2.3);
+\node at (1.2,2.1) {Left};
+\node at (2.4,2.1) {Right};
+
+% Clock
+\node at (1.5,1.2) {Synchronous Clock};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Simple Cellular Automaton Example}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{One-Bit Cell Automaton}:
+\begin{itemize}
+\item Each cell has one-bit state
+\item Two one-bit inputs (left and right neighbors)
+\item State transition function based on 3-bit input
+\item 8 possible input combinations
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Implementation Characteristics}:
+\begin{itemize}
+\item Two-state finite automaton per cell
+\item General form using 8-bit lookup table
+\item Multiplexer-based implementation
+\item Constant description size (independent of N)
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Key Properties}:
+\begin{itemize}
+\item \textbf{Simplicity}: Constant complexity $O(1)$
+\item \textbf{Scalability}: Size independent description
+\item \textbf{Regularity}: Identical cells and connections
+\item \textbf{Efficiency}: Parallel operation
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Cell State Transition}
+\vspace{0.3cm}
+
+\tikz{
+% Cell representation
+\draw[thick] (0.5,2.5) rectangle (2.5,3.5);
+\node at (1.5,3) {Cell $c_i$};
+
+% Inputs
+\draw[->] (0,3) -- (0.5,3);
+\node at (0.2,3.3) {Left};
+\draw[->] (3,3) -- (2.5,3);
+\node at (2.8,3.3) {Right};
+
+% State
+\draw[thick] (1.2,2.5) rectangle (1.8,2.8);
+\node at (1.5,2.65) {State};
+
+% Transition function
+\node at (1.5,2.2) {Transition Function};
+\node at (1.5,1.9) {$f(state, left, right)$};
+
+% Truth table representation
+\node at (1.5,1.5) {\textbf{8-bit Lookup}};
+\draw[thick] (0.8,1.1) rectangle (2.2,1.3);
+\node at (1.5,1.2) {Rule Table};
+
+% Output
+\draw[->] (1.5,1.1) -- (1.5,0.8);
+\node at (1.5,0.6) {Next State};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 3: Controlled Cellular Automata
+\section{Controlled Cellular Automata}
+
+\begin{frame}{Limitations of Theoretical Model}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Theoretical Model Problems}:
+\begin{itemize}
+\item \textbf{Computational Inefficiency}: Real problems cannot be solved effectively
+\item \textbf{Unstructured Mechanism}: Completely unstructured computation
+\item \textbf{Hardware Size}: Physical structure becomes inefficiently large
+\item \textbf{All-or-Nothing}: All components involved in every cycle
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Need for Practical Model}:
+\begin{itemize}
+\item Space-time trade-off capability
+\item Suitable sequencing of computation steps
+\item Structured state space
+\item Controlled execution flow
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Solution Approach}:
+\begin{itemize}
+\item Move from theoretical to abstract model
+\item Increase flexibility of computing process
+\item Reduce hardware structure size
+\item Maintain parallel processing benefits
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Model Evolution}
+\vspace{0.3cm}
+
+\tikz{
+% Theoretical model
+\node at (1,3.5) {\textbf{Theoretical CA}};
+\draw[thick] (0,3) rectangle (2,3.3);
+\node at (1,3.15) {Unstructured};
+\draw[thick] (0,2.7) rectangle (2,3);
+\node at (1,2.85) {All Components};
+\draw[thick] (0,2.4) rectangle (2,2.7);
+\node at (1,2.55) {Every Cycle};
+
+% Arrow
+\draw[->, thick] (1,2.2) -- (1,1.8);
+\node at (1.5,2) {Improve};
+
+% Practical model
+\node at (1,1.5) {\textbf{Controlled CA}};
+\draw[thick] (0,1) rectangle (2,1.3);
+\node at (1,1.15) {Structured};
+\draw[thick] (0,0.7) rectangle (2,1);
+\node at (1,0.85) {Selective Use};
+\draw[thick] (0,0.4) rectangle (2,0.7);
+\node at (1,0.55) {Sequenced};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Controlled Cellular Automaton (CCA) Architecture}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{CCA Components}:
+\begin{itemize}
+\item \textbf{SQ (Controller)}: Processor + data memory + program memory
+\item \textbf{Distribute Network}: Log-depth distribution network
+\item \textbf{Map (Cell Array)}: Finite number of cells with RALU units
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Enhanced Cell Structure}:
+\begin{itemize>
+\item Replace simple state register with register file
+\item Structured state space: $Q = \{Q_0 \times Q_1 \times \ldots \times Q_{m-1}\}$
+\item RALU-type execution unit in each cell
+\item Local memory resources
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Control Mechanism}:
+\begin{itemize}
+\item SQ issues same command to all cells each cycle
+\item Commands include: operations, addressing modes, addresses, constants
+\item Serial connection for data transfer between SQ and cells
+\item Distributed execution with centralized control
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{CCA Architecture}
+\vspace{0.3cm}
+
+\tikz{
+% Controller
+\draw[thick] (0.5,3.5) rectangle (2.5,4);
+\node at (1.5,3.75) {SQ Controller};
+
+% Distribution network
+\draw[thick] (1.2,3) rectangle (1.8,3.3);
+\node at (1.5,3.15) {Dist};
+\draw[->] (1.5,3.5) -- (1.5,3.3);
+
+% Distribution tree
+\draw[->] (1.5,3) -- (1,2.7);
+\draw[->] (1.5,3) -- (2,2.7);
+\draw[->] (1,2.7) -- (0.7,2.4);
+\draw[->] (1,2.7) -- (1.3,2.4);
+\draw[->] (2,2.7) -- (1.7,2.4);
+\draw[->] (2,2.7) -- (2.3,2.4);
+
+% Cells
+\foreach \x/\label in {0.5/c_0, 1.1/c_1, 1.7/c_2, 2.3/c_3} {
+  \draw[thick] (\x,2) rectangle (\x+0.4,2.4);
+  \node at (\x+0.2,2.2) {\label};
+}
+
+% Cell connections
+\draw[<->] (0.9,2.2) -- (1.1,2.2);
+\draw[<->] (1.5,2.2) -- (1.7,2.2);
+
+% Labels
+\node at (1.5,1.7) {Map Array};
+\node at (1.5,1.4) {RALU Cells};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Distribution Network Design}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Distribution Network Requirements}:
+\begin{itemize}
+\item \textbf{Problem}: Direct connection from SQ to many cells impossible
+\item \textbf{Electrical Constraints}: High frequency, large distances
+\item \textbf{Solution}: Log-depth distribution tree
+\item \textbf{Latency}: Logarithmic in number of cells
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Network Characteristics}:
+\begin{itemize}
+\item Pipeline registers at each node
+\item Two connections per node maximum
+\item Reasonable distances between connections
+\item Scalable to large number of cells
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Performance Benefits}:
+\begin{itemize}
+\item Maintains high clock frequency
+\item Enables large-scale parallel systems
+\item Predictable latency characteristics
+\item Efficient command distribution
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Distribution Network}
+\vspace{0.3cm}
+
+\tikz{
+% Root
+\draw[thick] (1.5,3.5) rectangle (1.8,3.8);
+\node at (1.65,3.65) {SQ};
+
+% Level 1
+\draw[thick] (0.8,3) rectangle (1.1,3.3);
+\draw[thick] (2.2,3) rectangle (2.5,3.3);
+\draw[->] (1.65,3.5) -- (0.95,3.3);
+\draw[->] (1.65,3.5) -- (2.35,3.3);
+
+% Level 2
+\draw[thick] (0.3,2.5) rectangle (0.6,2.8);
+\draw[thick] (1.3,2.5) rectangle (1.6,2.8);
+\draw[thick] (1.7,2.5) rectangle (2,2.8);
+\draw[thick] (2.7,2.5) rectangle (3,2.8);
+
+\draw[->] (0.95,3) -- (0.45,2.8);
+\draw[->] (0.95,3) -- (1.45,2.8);
+\draw[->] (2.35,3) -- (1.85,2.8);
+\draw[->] (2.35,3) -- (2.85,2.8);
+
+% Cells
+\foreach \x in {0.45, 1.45, 1.85, 2.85} {
+  \draw[thick] (\x-0.1,2) rectangle (\x+0.1,2.3);
+  \draw[->] (\x,2.5) -- (\x,2.3);
+}
+
+% Labels
+\node at (1.65,1.7) {Log-depth: $O(\log p)$};
+\node at (1.65,1.4) {Pipeline registers};
+\node at (1.65,1.1) {High frequency};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 4: Parallel Computing Architectures
+\section{Parallel Computing Architectures}
+
+\begin{frame}{Mapping Operations in Parallel Computing}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Mapping Concept}:
+\begin{itemize}
+\item Apply same function to each element in collection
+\item Fundamental parallel computing operation
+\item Examples: vector operations, array processing
+\item Natural fit for cellular automaton structure
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Implementation in CCA}:
+\begin{itemize>
+\item Map array contains cells for parallel execution
+\item Same function applied to distributed data
+\item Vector elements distributed across cells
+\item Simultaneous execution on all elements
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Programming Model}:
+\begin{itemize}
+\item High-level: \texttt{map(function, vector)}
+\item Hardware: Distributed function execution
+\item Control: Single instruction, multiple data (SIMD)
+\item Efficiency: Parallel processing of large datasets
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Mapping Example}
+\vspace{0.3cm}
+
+\tikz{
+% Input vector
+\node at (1.5,3.5) {\textbf{Vector Doubling}};
+\node at (0.5,3.2) {Input:};
+\foreach \x/\val in {1/1, 1.4/2, 1.8/3, 2.2/4} {
+  \draw[thick] (\x,3) rectangle (\x+0.3,3.3);
+  \node at (\x+0.15,3.15) {\val};
+}
+
+% Function
+\node at (1.5,2.7) {Function: $f(x) = 2x$};
+
+% Parallel application
+\foreach \x in {1.15, 1.55, 1.95, 2.35} {
+  \draw[->] (\x,3) -- (\x,2.4);
+  \node at (\x,2.5) {$\times 2$};
+}
+
+% Output vector
+\node at (0.5,2.1) {Output:};
+\foreach \x/\val in {1/2, 1.4/4, 1.8/6, 2.2/8} {
+  \draw[thick] (\x,1.9) rectangle (\x+0.3,2.2);
+  \node at (\x+0.15,2.05) {\val};
+}
+
+% Parallel execution
+\node at (1.5,1.6) {Parallel Execution};
+\node at (1.5,1.3) {All elements simultaneously};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{CCA Internal State Representation}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Matrix State Model}:
+\begin{itemize}
+\item Global state represented as matrix $\mathbf{M_{mp}}$
+\item $m$ rows: memory locations per cell
+\item $p$ columns: number of cells
+\item Each element: data word in cell's local memory
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Memory Organization}:
+\begin{itemize}
+\item Each cell has local memory with $m$ locations
+\item Distributed memory across $p$ cells
+\item Total memory: $m \times p$ words
+\item Parallel access to different memory locations
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Data Distribution}:
+\begin{itemize}
+\item Vectors distributed row-wise or column-wise
+\item Matrices distributed across multiple cells
+\item Load balancing through proper distribution
+\item Communication between adjacent cells
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Matrix State Model}
+\vspace{0.3cm}
+
+\tikz{
+% Matrix representation
+\node at (1.5,3.5) {$\mathbf{M_{mp}}$};
+
+% Matrix
+\draw[thick] (0.5,2.5) rectangle (2.5,3.2);
+
+% Grid lines
+\foreach \x in {0.9, 1.3, 1.7, 2.1} {
+  \draw (\x,2.5) -- (\x,3.2);
+}
+\foreach \y in {2.7, 2.9, 3.1} {
+  \draw (0.5,\y) -- (2.5,\y);
+}
+
+% Labels
+\node at (0.3,2.85) {$m$};
+\node at (1.5,2.3) {$p$ cells};
+
+% Cell indices
+\foreach \x/\idx in {0.7/0, 1.1/1, 1.5/2, 1.9/..., 2.3/p-1} {
+  \node at (\x,2.1) {$c_{\idx}$};
+}
+
+% Memory locations
+\foreach \y/\idx in {3.05/0, 2.85/1, 2.65/..., 2.45/m-1} {
+  \node at (0.2,\y) {$\idx$};
+}
+
+% Data distribution
+\node at (1.5,1.8) {\textbf{Data Distribution}};
+\node at (1.5,1.5) {Row: Vector elements};
+\node at (1.5,1.2) {Column: Cell memory};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 5: Mapping and Distribution
+\section{Mapping and Distribution}
+
+\begin{frame}{Instruction Format and Execution}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Instruction Components}:
+\begin{itemize}
+\item \textbf{Logical-Arithmetic Operations}: Function to be performed
+\item \textbf{Addressing Modes}: How to access local memory
+\item \textbf{Addresses}: Memory locations in each cell
+\item \textbf{Constants}: Immediate values for operations
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Execution Model}:
+\begin{itemize}
+\item Single instruction broadcast to all cells
+\item Each cell executes same operation
+\item Different data in each cell's local memory
+\item SIMD (Single Instruction, Multiple Data) paradigm
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Data Transfer}:
+\begin{itemize}
+\item Serial connection between SQ and cells
+\item Data movement between SQ memory and cell memory
+\item Efficient bulk data transfer mechanisms
+\item Support for various data distribution patterns
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{SIMD Execution}
+\vspace{0.3cm}
+
+\tikz{
+% Controller instruction
+\draw[thick] (0.5,3.5) rectangle (2.5,3.8);
+\node at (1.5,3.65) {SQ: ADD R1, R2, R3};
+
+% Distribution
+\draw[->] (1.5,3.5) -- (0.7,3);
+\draw[->] (1.5,3.5) -- (1.5,3);
+\draw[->] (1.5,3.5) -- (2.3,3);
+
+% Cells executing same instruction
+\foreach \x/\label in {0.5/c_0, 1.3/c_1, 2.1/c_2} {
+  \draw[thick] (\x,2.7) rectangle (\x+0.4,3);
+  \node at (\x+0.2,2.85) {\label};
+}
+
+% Different data
+\node at (0.7,2.5) {Data A};
+\node at (1.5,2.5) {Data B};
+\node at (2.3,2.5) {Data C};
+
+% Same operation
+\node at (0.7,2.2) {A+A};
+\node at (1.5,2.2) {B+B};
+\node at (2.3,2.2) {C+C};
+
+% Results
+\node at (0.7,1.9) {2A};
+\node at (1.5,1.9) {2B};
+\node at (2.3,1.9) {2C};
+
+\node at (1.5,1.5) {\textbf{Same Instruction}};
+\node at (1.5,1.2) {\textbf{Different Data}};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Space-Time Trade-offs}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Trade-off Principles}:
+\begin{itemize}
+\item \textbf{More Space}: More parallel units, faster execution
+\item \textbf{Less Space}: Fewer units, sequential execution
+\item \textbf{Optimal Balance}: Match problem size to hardware
+\item \textbf{Reconfigurable}: Adapt to different problem sizes
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Implementation Strategies}:
+\begin{itemize}
+\item \textbf{Temporal Sequencing}: Reuse hardware over time
+\item \textbf{Spatial Distribution}: Distribute computation across space
+\item \textbf{Hybrid Approaches}: Combine temporal and spatial methods
+\item \textbf{Dynamic Allocation}: Adjust resources based on workload
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Performance Considerations}:
+\begin{itemize}
+\item Communication overhead vs. computation
+\item Memory bandwidth limitations
+\item Synchronization requirements
+\item Load balancing across cells
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Space-Time Trade-off}
+\vspace{0.3cm}
+
+\tikz{
+% Axes
+\draw[->] (0,0) -- (3,0);
+\draw[->] (0,0) -- (0,3);
+\node at (3.2,0) {Space};
+\node at (0,3.2) {Time};
+
+% Trade-off curve
+\draw[thick, blue] (0.5,2.5) .. controls (1.5,1.5) .. (2.5,0.5);
+
+% Points
+\fill[red] (0.7,2.2) circle (0.05);
+\node at (0.7,2.5) {Sequential};
+\fill[red] (2.3,0.7) circle (0.05);
+\node at (2.3,0.4) {Parallel};
+
+% Optimal region
+\fill[green] (1.5,1.5) circle (0.05);
+\node at (1.5,1.8) {Optimal};
+
+% Labels
+\node at (1.5,3.5) {\textbf{Trade-off Curve}};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 6: Performance and Scalability
+\section{Performance and Scalability}
+
+\begin{frame}{Scalability Analysis}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Scalability Metrics}:
+\begin{itemize}
+\item \textbf{Strong Scaling}: Fixed problem size, increase processors
+\item \textbf{Weak Scaling}: Problem size grows with processors
+\item \textbf{Efficiency}: Actual speedup vs. theoretical maximum
+\item \textbf{Overhead}: Communication and synchronization costs
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Limiting Factors}:
+\begin{itemize}
+\item \textbf{Amdahl's Law}: Sequential portions limit speedup
+\item \textbf{Communication Latency}: Distribution network delays
+\item \textbf{Memory Bandwidth}: Data transfer bottlenecks
+\item \textbf{Load Imbalance}: Uneven work distribution
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Optimization Strategies}:
+\begin{itemize}
+\item Minimize communication overhead
+\item Optimize data locality
+\item Balance computational load
+\item Overlap computation and communication
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Scalability Curves}
+\vspace{0.3cm}
+
+\tikz{
+% Axes
+\draw[->] (0,0) -- (3,0);
+\draw[->] (0,0) -- (0,3);
+\node at (3.2,0) {Processors};
+\node at (0,3.2) {Speedup};
+
+% Ideal scaling
+\draw[thick, green] (0,0) -- (2.8,2.8);
+\node at (2.5,2.5) {Ideal};
+
+% Realistic scaling
+\draw[thick, blue] (0,0) .. controls (1,0.8) and (2,1.5) .. (2.8,1.8);
+\node at (2.2,1.3) {Realistic};
+
+% Amdahl's limit
+\draw[thick, red, dashed] (0,0) .. controls (1,0.7) and (2,1.2) .. (2.8,1.3);
+\node at (2.2,0.9) {Amdahl};
+
+% Labels
+\node at (1.5,3.5) {\textbf{Scaling Behavior}};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Applications and Use Cases}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Suitable Applications}:
+\begin{itemize}
+\item \textbf{Scientific Computing}: Numerical simulations, modeling
+\item \textbf{Image Processing}: Pixel-level operations, filtering
+\item \textbf{Signal Processing}: Digital filters, transforms
+\item \textbf{Machine Learning}: Matrix operations, neural networks
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Application Characteristics}:
+\begin{itemize}
+\item Data-parallel computations
+\item Regular memory access patterns
+\item Minimal inter-processor communication
+\item Embarrassingly parallel problems
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Modern Implementations}:
+\begin{itemize}
+\item \textbf{GPUs}: Graphics processing units
+\item \textbf{Vector Processors}: Specialized SIMD machines
+\item \textbf{Systolic Arrays}: Regular computation patterns
+\item \textbf{FPGA Arrays}: Reconfigurable parallel processing
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Application Domains}
+\vspace{0.3cm}
+
+\tikz{
+% Application categories
+\node at (1.5,3.5) {\textbf{N-OS Applications}};
+
+\draw[thick] (0.5,3) rectangle (2.5,3.2);
+\node at (1.5,3.1) {Scientific Computing};
+
+\draw[thick] (0.5,2.6) rectangle (2.5,2.8);
+\node at (1.5,2.7) {Image Processing};
+
+\draw[thick] (0.5,2.2) rectangle (2.5,2.4);
+\node at (1.5,2.3) {Signal Processing};
+
+\draw[thick] (0.5,1.8) rectangle (2.5,2);
+\node at (1.5,1.9) {Machine Learning};
+
+% Characteristics
+\node at (1.5,1.5) {\textbf{Common Traits}};
+\node at (1.5,1.2) {Data Parallel};
+\node at (1.5,0.9) {Regular Patterns};
+\node at (1.5,0.6) {SIMD Friendly};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Summary
+\section{Summary}
+
+\begin{frame}{Chapter Summary}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Concepts Covered}:
+\begin{itemize>
+\item N-Order Systems extend sequential computing to parallel
+\item Cellular Automata provide theoretical foundation
+\item Controlled Cellular Automata enable practical implementation
+\item SIMD paradigm: Single Instruction, Multiple Data
+\item Space-time trade-offs optimize resource utilization
+\item Scalability challenges and solutions
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Architectural Innovations}:
+\begin{itemize}
+\item Distribution networks for command broadcast
+\item Structured state spaces with register files
+\item RALU execution units in each cell
+\item Matrix-based state representation
+\item Efficient data transfer mechanisms
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Modern Relevance}:
+\begin{itemize}
+\item Foundation for GPU architectures
+\item Basis for vector processing systems
+\item Principles apply to many-core processors
+\item Relevant to AI/ML accelerators
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{N-OS Evolution}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=1.5cm] (center) at (0,0) {N-OS};
+\node[draw, rectangle] (ca) at (0,1.5) {Cellular Automata};
+\node[draw, rectangle] (cca) at (-1.5,0.5) {Controlled CA};
+\node[draw, rectangle] (simd) at (1.5,0.5) {SIMD};
+\node[draw, rectangle] (modern) at (0,-1.5) {Modern GPUs};
+
+\draw[->] (ca) -- (center);
+\draw[->] (center) -- (cca);
+\draw[->] (center) -- (simd);
+\draw[->] (center) -- (modern);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Discussion Questions}
+\begin{enumerate}
+\item How do N-Order Systems address the limitations of sequential computing?
+\item What are the key differences between theoretical and controlled cellular automata?
+\item How does the distribution network design affect system scalability?
+\item What types of problems are best suited for N-OS architectures?
+\item How do space-time trade-offs influence system design decisions?
+\item What are the main challenges in achieving linear speedup with parallel systems?
+\item How do modern GPU architectures relate to the N-OS concepts?
+\item What role does data locality play in N-OS performance?
+\end{enumerate}
+\end{frame>
+
+\end{document}
+
