@@ -175,10 +175,10 @@ By the end of this chapter, you will understand:
 \item Only simple systems (identical cells) are practical
 \item Complex systems become uncontrollable for large N
 \item Goal: Maximize N while maintaining simplicity
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{N-OS Structure}
 \vspace{0.3cm}
 
@@ -208,10 +208,10 @@ By the end of this chapter, you will understand:
 \draw[thick, green] (0.2,1.1) -- (1.2,1.1);
 \draw[thick, red] (1.8,1.1) -- (2.8,1.1);
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 % Section 2: Cellular Automata Theory
 \section{Cellular Automata Theory}
@@ -237,9 +237,9 @@ By the end of this chapter, you will understand:
 \item Current internal state
 \item Left neighbor signal
 \item Right neighbor signal
-\end{itemize>
+\end{itemize}
 \item All cells switch simultaneously
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Theoretical Properties}:
@@ -248,10 +248,10 @@ By the end of this chapter, you will understand:
 \item Homogeneous structure
 \item Local interactions only
 \item Global behavior emerges from local rules
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Cellular Automaton}
 \vspace{0.3cm}
 
@@ -285,10 +285,10 @@ By the end of this chapter, you will understand:
 % Clock
 \node at (1.5,1.2) {Synchronous Clock};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Simple Cellular Automaton Example}
 \begin{columns}
@@ -299,7 +299,7 @@ By the end of this chapter, you will understand:
 \item Two one-bit inputs (left and right neighbors)
 \item State transition function based on 3-bit input
 \item 8 possible input combinations
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Implementation Characteristics}:
@@ -308,7 +308,7 @@ By the end of this chapter, you will understand:
 \item General form using 8-bit lookup table
 \item Multiplexer-based implementation
 \item Constant description size (independent of N)
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Key Properties}:
@@ -317,10 +317,10 @@ By the end of this chapter, you will understand:
 \item \textbf{Scalability}: Size independent description
 \item \textbf{Regularity}: Identical cells and connections
 \item \textbf{Efficiency}: Parallel operation
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Cell State Transition}
 \vspace{0.3cm}
 
@@ -352,10 +352,10 @@ By the end of this chapter, you will understand:
 \draw[->] (1.5,1.1) -- (1.5,0.8);
 \node at (1.5,0.6) {Next State};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 % Section 3: Controlled Cellular Automata
 \section{Controlled Cellular Automata}
@@ -369,7 +369,7 @@ By the end of this chapter, you will understand:
 \item \textbf{Unstructured Mechanism}: Completely unstructured computation
 \item \textbf{Hardware Size}: Physical structure becomes inefficiently large
 \item \textbf{All-or-Nothing}: All components involved in every cycle
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Need for Practical Model}:
@@ -378,7 +378,7 @@ By the end of this chapter, you will understand:
 \item Suitable sequencing of computation steps
 \item Structured state space
 \item Controlled execution flow
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Solution Approach}:
@@ -387,10 +387,10 @@ By the end of this chapter, you will understand:
 \item Increase flexibility of computing process
 \item Reduce hardware structure size
 \item Maintain parallel processing benefits
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Model Evolution}
 \vspace{0.3cm}
 
@@ -417,10 +417,10 @@ By the end of this chapter, you will understand:
 \draw[thick] (0,0.4) rectangle (2,0.7);
 \node at (1,0.55) {Sequenced};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Controlled Cellular Automaton (CCA) Architecture}
 \begin{columns}
@@ -430,16 +430,16 @@ By the end of this chapter, you will understand:
 \item \textbf{SQ (Controller)}: Processor + data memory + program memory
 \item \textbf{Distribute Network}: Log-depth distribution network
 \item \textbf{Map (Cell Array)}: Finite number of cells with RALU units
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Enhanced Cell Structure}:
-\begin{itemize>
+\begin{itemize}
 \item Replace simple state register with register file
 \item Structured state space: $Q = \{Q_0 \times Q_1 \times \ldots \times Q_{m-1}\}$
 \item RALU-type execution unit in each cell
 \item Local memory resources
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Control Mechanism}:
@@ -448,10 +448,10 @@ By the end of this chapter, you will understand:
 \item Commands include: operations, addressing modes, addresses, constants
 \item Serial connection for data transfer between SQ and cells
 \item Distributed execution with centralized control
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{CCA Architecture}
 \vspace{0.3cm}
 
@@ -487,10 +487,10 @@ By the end of this chapter, you will understand:
 \node at (1.5,1.7) {Map Array};
 \node at (1.5,1.4) {RALU Cells};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Distribution Network Design}
 \begin{columns}
@@ -510,7 +510,7 @@ By the end of this chapter, you will understand:
 \item Two connections per node maximum
 \item Reasonable distances between connections
 \item Scalable to large number of cells
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Performance Benefits}:
@@ -519,10 +519,10 @@ By the end of this chapter, you will understand:
 \item Enables large-scale parallel systems
 \item Predictable latency characteristics
 \item Efficient command distribution
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Distribution Network}
 \vspace{0.3cm}
 
@@ -559,10 +559,10 @@ By the end of this chapter, you will understand:
 \node at (1.65,1.4) {Pipeline registers};
 \node at (1.65,1.1) {High frequency};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 % Section 4: Parallel Computing Architectures
 \section{Parallel Computing Architectures}
@@ -580,12 +580,12 @@ By the end of this chapter, you will understand:
 
 \vspace{0.3cm}
 \concept{Implementation in CCA}:
-\begin{itemize>
+\begin{itemize}
 \item Map array contains cells for parallel execution
 \item Same function applied to distributed data
 \item Vector elements distributed across cells
 \item Simultaneous execution on all elements
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Programming Model}:
@@ -594,10 +594,10 @@ By the end of this chapter, you will understand:
 \item Hardware: Distributed function execution
 \item Control: Single instruction, multiple data (SIMD)
 \item Efficiency: Parallel processing of large datasets
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Mapping Example}
 \vspace{0.3cm}
 
@@ -630,10 +630,10 @@ By the end of this chapter, you will understand:
 \node at (1.5,1.6) {Parallel Execution};
 \node at (1.5,1.3) {All elements simultaneously};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{CCA Internal State Representation}
 \begin{columns}
@@ -644,7 +644,7 @@ By the end of this chapter, you will understand:
 \item $m$ rows: memory locations per cell
 \item $p$ columns: number of cells
 \item Each element: data word in cell's local memory
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Memory Organization}:
@@ -653,7 +653,7 @@ By the end of this chapter, you will understand:
 \item Distributed memory across $p$ cells
 \item Total memory: $m \times p$ words
 \item Parallel access to different memory locations
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Data Distribution}:
@@ -662,10 +662,10 @@ By the end of this chapter, you will understand:
 \item Matrices distributed across multiple cells
 \item Load balancing through proper distribution
 \item Communication between adjacent cells
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Matrix State Model}
 \vspace{0.3cm}
 
@@ -703,10 +703,10 @@ By the end of this chapter, you will understand:
 \node at (1.5,1.5) {Row: Vector elements};
 \node at (1.5,1.2) {Column: Cell memory};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 % Section 5: Mapping and Distribution
 \section{Mapping and Distribution}
@@ -729,7 +729,7 @@ By the end of this chapter, you will understand:
 \item Each cell executes same operation
 \item Different data in each cell's local memory
 \item SIMD (Single Instruction, Multiple Data) paradigm
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Data Transfer}:
@@ -738,10 +738,10 @@ By the end of this chapter, you will understand:
 \item Data movement between SQ memory and cell memory
 \item Efficient bulk data transfer mechanisms
 \item Support for various data distribution patterns
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{SIMD Execution}
 \vspace{0.3cm}
 
@@ -779,10 +779,10 @@ By the end of this chapter, you will understand:
 \node at (1.5,1.5) {\textbf{Same Instruction}};
 \node at (1.5,1.2) {\textbf{Different Data}};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Space-Time Trade-offs}
 \begin{columns}
@@ -802,7 +802,7 @@ By the end of this chapter, you will understand:
 \item \textbf{Spatial Distribution}: Distribute computation across space
 \item \textbf{Hybrid Approaches}: Combine temporal and spatial methods
 \item \textbf{Dynamic Allocation}: Adjust resources based on workload
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Performance Considerations}:
@@ -811,10 +811,10 @@ By the end of this chapter, you will understand:
 \item Memory bandwidth limitations
 \item Synchronization requirements
 \item Load balancing across cells
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Space-Time Trade-off}
 \vspace{0.3cm}
 
@@ -841,10 +841,10 @@ By the end of this chapter, you will understand:
 % Labels
 \node at (1.5,3.5) {\textbf{Trade-off Curve}};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 % Section 6: Performance and Scalability
 \section{Performance and Scalability}
@@ -858,7 +858,7 @@ By the end of this chapter, you will understand:
 \item \textbf{Weak Scaling}: Problem size grows with processors
 \item \textbf{Efficiency}: Actual speedup vs. theoretical maximum
 \item \textbf{Overhead}: Communication and synchronization costs
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Limiting Factors}:
@@ -867,7 +867,7 @@ By the end of this chapter, you will understand:
 \item \textbf{Communication Latency}: Distribution network delays
 \item \textbf{Memory Bandwidth}: Data transfer bottlenecks
 \item \textbf{Load Imbalance}: Uneven work distribution
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Optimization Strategies}:
@@ -876,10 +876,10 @@ By the end of this chapter, you will understand:
 \item Optimize data locality
 \item Balance computational load
 \item Overlap computation and communication
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Scalability Curves}
 \vspace{0.3cm}
 
@@ -905,10 +905,10 @@ By the end of this chapter, you will understand:
 % Labels
 \node at (1.5,3.5) {\textbf{Scaling Behavior}};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Applications and Use Cases}
 \begin{columns}
@@ -919,7 +919,7 @@ By the end of this chapter, you will understand:
 \item \textbf{Image Processing}: Pixel-level operations, filtering
 \item \textbf{Signal Processing}: Digital filters, transforms
 \item \textbf{Machine Learning}: Matrix operations, neural networks
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Application Characteristics}:
@@ -928,7 +928,7 @@ By the end of this chapter, you will understand:
 \item Regular memory access patterns
 \item Minimal inter-processor communication
 \item Embarrassingly parallel problems
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Modern Implementations}:
@@ -937,10 +937,10 @@ By the end of this chapter, you will understand:
 \item \textbf{Vector Processors}: Specialized SIMD machines
 \item \textbf{Systolic Arrays}: Regular computation patterns
 \item \textbf{FPGA Arrays}: Reconfigurable parallel processing
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{Application Domains}
 \vspace{0.3cm}
 
@@ -966,10 +966,10 @@ By the end of this chapter, you will understand:
 \node at (1.5,0.9) {Regular Patterns};
 \node at (1.5,0.6) {SIMD Friendly};
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 % Summary
 \section{Summary}
@@ -978,14 +978,14 @@ By the end of this chapter, you will understand:
 \begin{columns}
 \begin{column}{0.6\textwidth}
 \concept{Key Concepts Covered}:
-\begin{itemize>
+\begin{itemize}
 \item N-Order Systems extend sequential computing to parallel
 \item Cellular Automata provide theoretical foundation
 \item Controlled Cellular Automata enable practical implementation
 \item SIMD paradigm: Single Instruction, Multiple Data
 \item Space-time trade-offs optimize resource utilization
 \item Scalability challenges and solutions
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Architectural Innovations}:
@@ -995,7 +995,7 @@ By the end of this chapter, you will understand:
 \item RALU execution units in each cell
 \item Matrix-based state representation
 \item Efficient data transfer mechanisms
-\end{itemize>
+\end{itemize}
 
 \vspace{0.3cm}
 \concept{Modern Relevance}:
@@ -1004,10 +1004,10 @@ By the end of this chapter, you will understand:
 \item Basis for vector processing systems
 \item Principles apply to many-core processors
 \item Relevant to AI/ML accelerators
-\end{itemize>
-\end{column>
-\begin{column>{0.4\textwidth>
-\begin{center>
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
 \textbf{N-OS Evolution}
 \vspace{0.3cm}
 
@@ -1023,10 +1023,10 @@ By the end of this chapter, you will understand:
 \draw[->] (center) -- (simd);
 \draw[->] (center) -- (modern);
 }
-\end{center>
-\end{column>
-\end{columns>
-\end{frame>
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Discussion Questions}
 \begin{enumerate}
@@ -1039,7 +1039,7 @@ By the end of this chapter, you will understand:
 \item How do modern GPU architectures relate to the N-OS concepts?
 \item What role does data locality play in N-OS performance?
 \end{enumerate}
-\end{frame>
+\end{frame}
 
 \end{document}
 
