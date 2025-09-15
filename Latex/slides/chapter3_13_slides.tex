@@ -1,0 +1,928 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Theme and color scheme
+\usetheme{default}
+\usecolortheme{default}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple color scheme for printing
+\definecolor{darkblue}{RGB}{25,25,112}
+\setbeamercolor{title}{fg=darkblue}
+\setbeamercolor{frametitle}{fg=darkblue}
+\setbeamercolor{structure}{fg=darkblue}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Chapter 3.13: Harvard Architecture]{Structured Computer Architecture\\Chapter 3.13: Harvard Architecture\\Fifth-Order Systems (5-OS)}
+\author{Based on Structured Computer Architecture: An Order-Based Approach}
+\date{}
+
+% Custom command for highlighting concepts
+\newcommand{\concept}[1]{\textbf{\color{darkblue}#1}}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Reset section counter for this chapter
+\setcounter{section}{0}
+
+% Define sections for this chapter
+\section{Historical Context and Motivation}
+\section{Interpreting vs. Executing}
+\section{Harvard Computer Architecture}
+\section{RISC Approach}
+\section{Memory Hierarchy and Performance}
+\section{Implementation Considerations}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Learning objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will understand:
+\begin{itemize}
+\item The historical development from Turing machines to Harvard architecture
+\item The distinction between interpreting and executing instructions
+\item Harvard vs. Von Neumann architectural models
+\item RISC (Reduced Instruction Set Computer) principles
+\item Memory hierarchy implications in Harvard architecture
+\item Performance benefits of separate instruction and data memories
+\item Fifth-order system characteristics and loop structures
+\end{itemize}
+\end{frame}
+
+% Section 1: Historical Context and Motivation
+\section{Historical Context and Motivation}
+
+\begin{frame}{From Turing Machine to Harvard Architecture}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Universal Turing Machine (UTM) Insight}:
+\begin{itemize}
+\item Turing divided tape into two parts:
+\begin{itemize}
+\item Machine description $M(T)$ (program)
+\item Associated tape $T$ (data)
+\end{itemize}
+\item Two-memory concept: programs and data
+\item Multi-tape TM: multiple memories, multiple heads
+\item Same-cycle access to different memories
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Mathematical Foundation}:
+\begin{itemize}
+\item UTM operates with dual memory structure
+\item Multiple read heads enable parallel access
+\item Theoretical basis for Harvard model
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{UTM Memory Structure}
+\vspace{0.3cm}
+
+\tikz{
+% Program memory
+\draw[thick] (0,2.5) rectangle (2,3);
+\node at (1,2.75) {Program $M(T)$};
+
+% Data memory  
+\draw[thick] (0,1.5) rectangle (2,2);
+\node at (1,1.75) {Data $T$};
+
+% Processing unit
+\draw[thick] (0.5,0.5) rectangle (1.5,1);
+\node at (1,0.75) {UTM};
+
+% Connections
+\draw[<->] (1,1) -- (1,1.5);
+\draw[<->] (1,2) -- (1,2.5);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Historical Milestone: Harvard Mark I (1944)}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Historical Event}:
+\begin{itemize}
+\item \textbf{March 29, 1944}: John von Neumann runs program on Harvard Mark I
+\item Working on Manhattan Project
+\item First practical implementation of dual-memory concept
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Howard Aiken's Design Decision}:
+\begin{itemize}
+\item Architect chose two-memory organization
+\item One memory for programs
+\item Separate memory for data
+\item Inspired by Turing Machine theory
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Birth of Harvard Abstract Model}:
+\begin{itemize}
+\item Parallel development to Von Neumann model
+\item Both inspired by Turing Machine concepts
+\item Different approaches to memory organization
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Harvard Mark I Concept}
+\vspace{0.3cm}
+
+\tikz{
+% Timeline
+\draw[thick] (0,0) -- (0,3);
+\node at (-0.5,3) {1944};
+\node at (-0.5,2) {Mark I};
+\node at (-0.5,1) {Aiken};
+\node at (-0.5,0) {UTM};
+
+% Architecture
+\draw[thick] (1,2.5) rectangle (2.5,3);
+\node at (1.75,2.75) {Program};
+\draw[thick] (1,1.5) rectangle (2.5,2);
+\node at (1.75,1.75) {Data};
+\draw[thick] (1.25,0.5) rectangle (2.25,1);
+\node at (1.75,0.75) {CPU};
+
+\draw[->] (1.75,1) -- (1.75,1.5);
+\draw[->] (1.75,2) -- (1.75,2.5);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 2: Interpreting vs. Executing
+\section{Interpreting vs. Executing}
+
+\begin{frame}{UTM Processing Collaboration}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{UTM Processing Model}:
+\begin{itemize}
+\item Collaboration between program and finite automaton
+\item Each data change requires multiple steps:
+\begin{enumerate}
+\item Reading from program part of tape
+\item State transitions of UTM's finite automaton
+\end{enumerate}
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Computational Complexity Factors}:
+\begin{enumerate}
+\item \textbf{Program size}: Flexible, redesignable structure
+\item \textbf{Automaton size}: Fixed, physically implemented structure
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{Design Considerations}:
+\begin{itemize}
+\item Hardware complexity reduction is crucial
+\item Specification, design, verification, validation, testing effort
+\item Minimize control automaton complexity
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{UTM Processing Flow}
+\vspace{0.3cm}
+
+\tikz{
+% Program tape
+\draw[thick] (0,3) rectangle (2,3.5);
+\node at (1,3.25) {Program};
+
+% Data tape
+\draw[thick] (0,2) rectangle (2,2.5);
+\node at (1,2.25) {Data};
+
+% Finite automaton
+\draw[thick] (0.5,0.5) rectangle (1.5,1.5);
+\node at (1,1) {FA};
+
+% Process flow
+\draw[->] (1,2.5) -- (1,1.5);
+\draw[->] (1,3) -- (1,1.5);
+\node at (2.2,1.75) {Read};
+\node at (2.2,1.25) {Transition};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Shannon's Contribution and Zero-State Solution}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Claude Shannon's Approach (1956)}:
+\begin{itemize}
+\item Reduced finite automaton to only 2 states
+\item Consequence: Increased binary circuit complexity
+\item State reduction ≠ complexity reduction
+\item Larger next-state calculation circuits
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Zero-State Finite Automaton}:
+\begin{itemize}
+\item Ultimate solution: eliminate finite automaton entirely
+\item Zero internal states = zero control complexity
+\item Justifies complete elimination of control complexity
+\item Direct instruction execution without interpretation
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Philosophy}:
+\begin{itemize}
+\item Minimize hardware control complexity
+\item Prefer execution over interpretation
+\item UTM with zero states as ideal model
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Control Complexity Evolution}
+\vspace{0.3cm}
+
+\tikz{
+% Traditional FA
+\draw[thick] (0,3) circle (0.3);
+\draw[thick] (0.7,3) circle (0.3);
+\draw[thick] (1.4,3) circle (0.3);
+\node at (0.7,2.5) {Many States};
+
+% Shannon's 2-state
+\draw[thick] (0,2) circle (0.3);
+\draw[thick] (0.7,2) circle (0.3);
+\node at (0.35,1.5) {2 States};
+\node at (0.35,1.2) {Complex Logic};
+
+% Zero-state
+\draw[thick] (0.35,0.5) rectangle (0.7,0.8);
+\node at (0.525,0.65) {Direct};
+\node at (0.525,0.2) {Zero States};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Interpreting vs. Executing Instructions}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Two Approaches to Instruction Processing}:
+
+\vspace{0.3cm}
+\textbf{1. Interpretation}:
+\begin{itemize}
+\item Instruction is \textbf{interpreted}
+\item Executes sequence of micro-instructions
+\item Generated by control automaton
+\item Multiple clock cycles per instruction
+\item Complex control logic required
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. Execution}:
+\begin{itemize}
+\item Instruction is \textbf{executed} directly
+\item Single clock cycle execution
+\item Instruction fields applied directly to components
+\item Minimal control complexity
+\item UTM with zero internal states model
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Executive Structure Preference}:
+\begin{itemize}
+\item UTM with two tapes (Harvard model)
+\item Zero internal states (direct execution)
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Instruction Processing}
+\vspace{0.3cm}
+
+\tikz{
+% Interpretation path
+\node at (1,3.5) {\textbf{Interpretation}};
+\draw[thick] (0,3) rectangle (2,3.3);
+\node at (1,3.15) {Instruction};
+\draw[->] (1,3) -- (1,2.7);
+\draw[thick] (0,2.4) rectangle (2,2.7);
+\node at (1,2.55) {Control Automaton};
+\draw[->] (1,2.4) -- (1,2.1);
+\draw[thick] (0,1.8) rectangle (2,2.1);
+\node at (1,1.95) {Micro-instructions};
+
+% Execution path
+\node at (1,1.3) {\textbf{Execution}};
+\draw[thick] (0,0.8) rectangle (2,1.1);
+\node at (1,0.95) {Instruction};
+\draw[->] (1,0.8) -- (1,0.5);
+\draw[thick] (0,0.2) rectangle (2,0.5);
+\node at (1,0.35) {Direct to Hardware};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 3: Harvard Computer Architecture
+\section{Harvard Computer Architecture}
+
+\begin{frame}{Harvard Abstract Model: Fifth-Order System}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Fifth Loop Structure}:
+\begin{itemize}
+\item Processor + Program Memory = 4-OS (Fourth-Order System)
+\item Adding Data Memory loop = 5-OS (Fifth-Order System)
+\item Dual memory connections enable parallel access
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Architectural Features}:
+\begin{itemize}
+\item Separate program and data memories
+\item Independent memory buses
+\item Simultaneous instruction and data access
+\item Enhanced memory bandwidth
+\item Reduced memory access conflicts
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{RISC Implementation Focus}:
+\begin{itemize}
+\item Harvard model naturally suits RISC processors
+\item Simple instruction formats
+\item Direct execution capability
+\item Minimal control complexity
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Harvard 5-OS Model}
+\vspace{0.3cm}
+
+\tikz{
+% Program Memory
+\draw[thick] (0,3) rectangle (1.5,3.5);
+\node at (0.75,3.25) {Program};
+\node at (0.75,3.05) {Memory};
+
+% Data Memory
+\draw[thick] (0,1) rectangle (1.5,1.5);
+\node at (0.75,1.25) {Data};
+\node at (0.75,1.05) {Memory};
+
+% Processor
+\draw[thick] (2,2) rectangle (3,2.5);
+\node at (2.5,2.25) {CPU};
+
+% Connections (dual bus)
+\draw[<->] (1.5,3.25) -- (2,2.4);
+\draw[<->] (1.5,1.25) -- (2,2.1);
+
+% Loop indicators
+\node at (1.75,2.8) {4-OS};
+\node at (1.75,1.7) {5-OS};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Harvard vs. Von Neumann: Key Differences}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Harvard Architecture Advantages}:
+\begin{itemize}
+\item \textbf{Dual connections}: Independent program and data paths
+\item \textbf{Parallel access}: Instruction fetch + data access in same cycle
+\item \textbf{No memory conflicts}: Separate buses eliminate contention
+\item \textbf{Higher bandwidth}: Two memory accesses per cycle possible
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Memory Hierarchy Impact}:
+\begin{itemize}
+\item Deeper memory hierarchy possible
+\item L1 cache miss resolution much faster
+\item L2, L3 cache levels more effective
+\item Severe consequences for memory access speed optimization
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{RALU Subsystem Benefits}:
+\begin{itemize}
+\item Simultaneous instruction and data processing
+\item Reduced pipeline stalls
+\item Enhanced throughput
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Architecture Comparison}
+\vspace{0.3cm}
+
+\tikz{
+% Von Neumann
+\node at (1,3.5) {\textbf{Von Neumann}};
+\draw[thick] (0,3) rectangle (2,3.3);
+\node at (1,3.15) {Unified Memory};
+\draw[thick] (0.5,2.5) rectangle (1.5,2.8);
+\node at (1,2.65) {CPU};
+\draw[<->] (1,2.8) -- (1,3);
+
+% Harvard
+\node at (1,2) {\textbf{Harvard}};
+\draw[thick] (0,1.5) rectangle (1,1.7);
+\node at (0.5,1.6) {Prog};
+\draw[thick] (1.2,1.5) rectangle (2.2,1.7);
+\node at (1.7,1.6) {Data};
+\draw[thick] (0.6,1) rectangle (1.6,1.3);
+\node at (1.1,1.15) {CPU};
+\draw[<->] (0.8,1.3) -- (0.5,1.5);
+\draw[<->] (1.4,1.3) -- (1.7,1.5);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 4: RISC Approach
+\section{RISC Approach}
+
+\begin{frame}{Reduced Instruction Set Computer (RISC) Principles}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{RISC Philosophy}:
+\begin{itemize}
+\item Maintain only simplest, most frequently used instructions
+\item Large instruction set → reduced instruction set
+\item Rejected instructions implemented as sequences
+\item All complex operations decomposed into simple ones
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Advantages}:
+\begin{itemize}
+\item Simple design outperforms complex CPU designs
+\item Huge amounts of performance data support RISC
+\item Machine code only marginally larger than CISC
+\item Better performance despite larger code size
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Design Benefits}:
+\begin{itemize}
+\item Simplified control logic
+\item Faster instruction execution
+\item Easier pipeline implementation
+\item Reduced hardware complexity
+\item Better compiler optimization opportunities
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{RISC vs CISC}
+\vspace{0.3cm}
+
+\tikz{
+% CISC
+\node at (1,3.5) {\textbf{CISC}};
+\draw[thick] (0,3) rectangle (2,3.3);
+\node at (1,3.15) {Complex Instructions};
+\draw[thick] (0,2.7) rectangle (2,3);
+\node at (1,2.85) {Complex Control};
+\node at (1,2.5) {Slower, Smaller Code};
+
+% RISC
+\node at (1,2) {\textbf{RISC}};
+\draw[thick] (0,1.5) rectangle (2,1.7);
+\node at (1,1.6) {Simple Instructions};
+\draw[thick] (0,1.3) rectangle (2,1.5);
+\node at (1,1.4) {Simple Control};
+\node at (1,1) {Faster, Larger Code};
+
+% Performance arrow
+\draw[->, thick, red] (2.2,2.75) -- (2.2,1.55);
+\node[red] at (2.7,2.15) {Better};
+\node[red] at (2.7,1.95) {Performance};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{RISC Instruction Characteristics}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Instruction Set Properties}:
+\begin{itemize}
+\item \textbf{Fixed instruction length}: Simplifies decode logic
+\item \textbf{Simple addressing modes}: Reduces complexity
+\item \textbf{Load/store architecture}: Memory access only via specific instructions
+\item \textbf{Large register file}: Reduces memory accesses
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Execution Model}:
+\begin{itemize}
+\item One instruction per clock cycle (ideally)
+\item Direct execution without micro-code
+\item Minimal control unit complexity
+\item Pipeline-friendly design
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Harvard Architecture Synergy}:
+\begin{itemize}
+\item RISC naturally fits Harvard model
+\item Separate instruction and data paths
+\item Simultaneous fetch and execute
+\item Optimal for pipeline implementation
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{RISC Instruction Format}
+\vspace{0.3cm}
+
+\tikz{
+% Fixed format instruction
+\draw[thick] (0,2.5) rectangle (3,3);
+\draw[thick] (0.6,2.5) -- (0.6,3);
+\draw[thick] (1.2,2.5) -- (1.2,3);
+\draw[thick] (1.8,2.5) -- (1.8,3);
+\draw[thick] (2.4,2.5) -- (2.4,3);
+
+\node at (0.3,2.75) {Op};
+\node at (0.9,2.75) {Rs};
+\node at (1.5,2.75) {Rt};
+\node at (2.1,2.75) {Rd};
+\node at (2.7,2.75) {Func};
+
+\node at (1.5,2.2) {32-bit Fixed Format};
+
+% Simple operations
+\node at (1.5,1.7) {\textbf{Simple Operations}};
+\node at (1.5,1.4) {ADD, SUB, AND, OR};
+\node at (1.5,1.1) {LOAD, STORE};
+\node at (1.5,0.8) {BRANCH, JUMP};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 5: Memory Hierarchy and Performance
+\section{Memory Hierarchy and Performance}
+
+\begin{frame}{Memory Hierarchy in Harvard Architecture}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Hierarchical Memory Structure}:
+\begin{itemize}
+\item \textbf{L1 Cache}: Separate instruction and data caches
+\item \textbf{L2 Cache}: Unified or separate second-level cache
+\item \textbf{L3 Cache}: Third-level cache for larger systems
+\item \textbf{Main Memory}: Separate or unified main memory
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Benefits}:
+\begin{itemize}
+\item L1 cache miss resolved much faster
+\item Independent cache hierarchies reduce conflicts
+\item Parallel access to instruction and data caches
+\item Better cache utilization patterns
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Access Patterns}:
+\begin{itemize}
+\item Instruction access: Sequential, predictable
+\item Data access: Random, less predictable
+\item Separate optimization strategies possible
+\item Different cache policies for each type
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth>
+\begin{center>
+\textbf{Memory Hierarchy}
+\vspace{0.3cm}
+
+\tikz{
+% L1 Caches
+\draw[thick] (0,3.5) rectangle (1,4);
+\node at (0.5,3.75) {L1-I};
+\draw[thick] (1.5,3.5) rectangle (2.5,4);
+\node at (2,3.75) {L1-D};
+
+% L2 Cache
+\draw[thick] (0.5,2.8) rectangle (2,3.2);
+\node at (1.25,3) {L2 Cache};
+
+% L3 Cache
+\draw[thick] (0.25,2.1) rectangle (2.25,2.5);
+\node at (1.25,2.3) {L3 Cache};
+
+% Main Memory
+\draw[thick] (0,1.4) rectangle (2.5,1.8);
+\node at (1.25,1.6) {Main Memory};
+
+% CPU
+\draw[thick] (0.75,4.2) rectangle (1.75,4.6);
+\node at (1.25,4.4) {CPU};
+
+% Connections
+\draw[<->] (1,4.2) -- (0.5,4);
+\draw[<->] (1.5,4.2) -- (2,4);
+\draw[<->] (1.25,3.5) -- (1.25,3.2);
+\draw[<->] (1.25,2.8) -- (1.25,2.5);
+\draw[<->] (1.25,2.1) -- (1.25,1.8);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Performance Analysis and Optimization}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Performance Metrics}:
+\begin{itemize}
+\item \textbf{Memory bandwidth}: Dual access capability
+\item \textbf{Cache hit rates}: Separate optimization for I-cache and D-cache
+\item \textbf{Pipeline efficiency}: Reduced stalls from memory conflicts
+\item \textbf{Throughput}: Instructions per cycle improvement
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Optimization Strategies}:
+\begin{itemize}
+\item Instruction cache: Optimize for sequential access
+\item Data cache: Optimize for spatial/temporal locality
+\item Prefetching: Different strategies for each cache
+\item Cache sizing: Independent optimization
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{System-Level Benefits}:
+\begin{itemize}
+\item Reduced memory bottlenecks
+\item Better resource utilization
+\item Improved scalability
+\item Enhanced parallel processing capability
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth>
+\begin{center>
+\textbf{Performance Comparison}
+\vspace{0.3cm}
+
+\tikz{
+% Performance bars
+\draw[thick, fill=blue!30] (0,3) rectangle (1,3.5);
+\node at (0.5,2.7) {Von Neumann};
+\draw[thick, fill=green!30] (0,2) rectangle (1.8,2.5);
+\node at (0.9,1.7) {Harvard};
+
+\node at (1,3.8) {\textbf{Memory Bandwidth}};
+
+% Cache performance
+\draw[thick, fill=blue!30] (0,1) rectangle (1.2,1.3);
+\node at (0.6,0.8) {Unified Cache};
+\draw[thick, fill=green!30] (0,0.3) rectangle (1.6,0.6);
+\node at (0.8,0.1) {Separate Caches};
+
+\node at (1,1.5) {\textbf{Cache Efficiency}};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 6: Implementation Considerations
+\section{Implementation Considerations}
+
+\begin{frame}{Hardware Implementation Challenges}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Design Complexity}:
+\begin{itemize}
+\item \textbf{Dual memory interfaces}: Separate controllers needed
+\item \textbf{Bus arbitration}: Managing multiple memory accesses
+\item \textbf{Cache coherency}: Maintaining consistency between caches
+\item \textbf{Address space management}: Separate or unified addressing
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Cost Considerations}:
+\begin{itemize}
+\item Additional memory controllers
+\item Separate cache structures
+\item More complex interconnect
+\item Higher pin count requirements
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Trade-offs}:
+\begin{itemize}
+\item Performance vs. complexity
+\item Cost vs. benefit analysis
+\item Power consumption implications
+\item Silicon area requirements
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth>
+\begin{center>
+\textbf{Implementation Complexity}
+\vspace{0.3cm}
+
+\tikz{
+% Complexity factors
+\node at (1,3.5) {\textbf{Design Factors}};
+
+\draw[thick] (0,3) rectangle (2,3.2);
+\node at (1,3.1) {Memory Controllers};
+
+\draw[thick] (0,2.6) rectangle (2,2.8);
+\node at (1,2.7) {Cache Management};
+
+\draw[thick] (0,2.2) rectangle (2,2.4);
+\node at (1,2.3) {Bus Arbitration};
+
+\draw[thick] (0,1.8) rectangle (2,2);
+\node at (1,1.9) {Address Mapping};
+
+% Trade-off arrow
+\draw[->, thick] (0.5,1.5) -- (1.5,1.5);
+\node at (0.3,1.3) {Cost};
+\node at (1.7,1.3) {Performance};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Modern Applications and Variations}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Contemporary Implementations}:
+\begin{itemize}
+\item \textbf{Digital Signal Processors (DSPs)}: Pure Harvard architecture
+\item \textbf{Microcontrollers}: Modified Harvard with unified addressing
+\item \textbf{ARM Processors}: Harvard pipeline with Von Neumann interface
+\item \textbf{RISC-V}: Configurable memory architecture options
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Hybrid Approaches}:
+\begin{itemize}
+\item Harvard pipeline with Von Neumann memory
+\item Separate L1 caches, unified L2 cache
+\item Dynamic switching between modes
+\item Software-configurable memory organization
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Future Directions}:
+\begin{itemize}
+\item Near-memory computing
+\item Processing-in-memory architectures
+\item Heterogeneous memory systems
+\item AI-optimized memory hierarchies
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth>
+\begin{center>
+\textbf{Modern Implementations}
+\vspace{0.3cm}
+
+\tikz{
+% DSP
+\draw[thick] (0,3.5) rectangle (2,3.8);
+\node at (1,3.65) {DSP - Pure Harvard};
+
+% MCU
+\draw[thick] (0,3) rectangle (2,3.3);
+\node at (1,3.15) {MCU - Modified};
+
+% ARM
+\draw[thick] (0,2.5) rectangle (2,2.8);
+\node at (1,2.65) {ARM - Hybrid};
+
+% RISC-V
+\draw[thick] (0,2) rectangle (2,2.3);
+\node at (1,2.15) {RISC-V - Configurable};
+
+% Future
+\draw[thick, dashed] (0,1.5) rectangle (2,1.8);
+\node at (1,1.65) {Future - PIM};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Summary
+\section{Summary}
+
+\begin{frame}{Chapter Summary}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Concepts Covered}:
+\begin{itemize}
+\item Harvard architecture emerged from UTM dual-tape concept
+\item Historical significance of Harvard Mark I (1944)
+\item Distinction between instruction interpretation and execution
+\item RISC principles naturally align with Harvard architecture
+\item Fifth-order systems provide enhanced memory bandwidth
+\item Performance benefits through separate instruction and data paths
+\item Modern implementations use hybrid approaches
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Architectural Advantages}:
+\begin{itemize}
+\item Parallel instruction and data access
+\item Reduced memory conflicts
+\item Enhanced pipeline efficiency
+\item Better cache utilization
+\item Improved overall system performance
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth>
+\begin{center>
+\textbf{Harvard Architecture Legacy}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=2cm] (center) at (0,0) {Harvard};
+\node[draw, rectangle] (risc) at (0,1.5) {RISC};
+\node[draw, rectangle] (perf) at (-1.5,0.5) {Performance};
+\node[draw, rectangle] (mem) at (1.5,0.5) {Memory};
+\node[draw, rectangle] (modern) at (0,-1.5) {Modern CPUs};
+
+\draw[->] (center) -- (risc);
+\draw[->] (center) -- (perf);
+\draw[->] (center) -- (mem);
+\draw[->] (center) -- (modern);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Discussion Questions}
+\begin{enumerate}
+\item How does the Harvard architecture address the Von Neumann bottleneck?
+\item What are the trade-offs between Harvard and Von Neumann architectures?
+\item Why do RISC processors naturally fit the Harvard model?
+\item How does separate instruction and data memory affect cache design?
+\item What are the implications of zero-state finite automaton concept?
+\item How do modern processors implement hybrid Harvard-Von Neumann approaches?
+\item What role does the memory hierarchy play in Harvard architecture performance?
+\item How might future computing paradigms evolve the Harvard concept?
+\end{enumerate}
+\end{frame}
+
+\end{document}
+

@@ -1,0 +1,1201 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Theme and color scheme
+\usetheme{default}
+\usecolortheme{default}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Simple color scheme for printing
+\definecolor{darkblue}{RGB}{25,25,112}
+\setbeamercolor{title}{fg=darkblue}
+\setbeamercolor{frametitle}{fg=darkblue}
+\setbeamercolor{structure}{fg=darkblue}
+
+% Simple footline
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Code listing setup
+\lstdefinestyle{chisel}{
+    language=Scala,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    rulecolor=\color{black!30},
+    breaklines=true,
+    breakatwhitespace=false,
+    tabsize=2,
+    captionpos=b
+}
+
+\lstdefinestyle{verilog}{
+    language=Verilog,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    rulecolor=\color{black!30},
+    breaklines=true,
+    breakatwhitespace=false,
+    tabsize=2,
+    captionpos=b
+}
+
+% Set graphics path for images (relative to slides directory)
+\graphicspath{{../Images/}}
+
+% Title information
+\title[Appendix A01: Hardware Description Languages]{Structured Computer Architecture\\Appendix A01: Hardware Description Languages\\Chisel, SystemVerilog, and Comparisons}
+\author{Based on Structured Computer Architecture: An Order-Based Approach}
+\date{}
+
+% Custom command for highlighting concepts
+\newcommand{\concept}[1]{\textbf{\color{darkblue}#1}}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Reset section counter for this appendix
+\setcounter{section}{0}
+
+% Define sections for this appendix
+\section{Introduction to HDLs}
+\section{Chisel Language}
+\section{SystemVerilog}
+\section{Chisel vs SystemVerilog}
+\section{Practical Examples}
+\section{Design Methodology}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Learning objectives
+\begin{frame}{Learning Objectives}
+By the end of this appendix, you will understand:
+\begin{itemize}
+\item Hardware Description Language (HDL) fundamentals
+\item Chisel language features and syntax
+\item SystemVerilog capabilities and applications
+\item Comparative analysis of Chisel vs SystemVerilog
+\item Practical implementation examples in both languages
+\item Design methodology and best practices
+\item Integration with hardware development flows
+\end{itemize}
+\end{frame}
+
+% Section 1: Introduction to HDLs
+\section{Introduction to HDLs}
+
+\begin{frame}{What are Hardware Description Languages?}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{HDL Definition}:
+\begin{itemize}
+\item Specialized programming languages for hardware design
+\item Describe digital circuits at various abstraction levels
+\item Enable simulation, synthesis, and verification
+\item Bridge between algorithm and silicon implementation
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Abstraction Levels}:
+\begin{itemize}
+\item \textbf{Behavioral}: Algorithm-level description
+\item \textbf{RTL}: Register Transfer Level
+\item \textbf{Gate}: Logic gate level
+\item \textbf{Switch}: Transistor level
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Benefits}:
+\begin{itemize}
+\item Design reusability and modularity
+\item Simulation before fabrication
+\item Automated synthesis and optimization
+\item Verification and testing capabilities
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{HDL Design Flow}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (spec) at (0,4) {Specification};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (hdl) at (0,3) {HDL Code};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (sim) at (0,2) {Simulation};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (syn) at (0,1) {Synthesis};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.8cm] (impl) at (0,0) {Implementation};
+
+\draw[->] (spec) -- (hdl);
+\draw[->] (hdl) -- (sim);
+\draw[->] (hdl) -- (syn);
+\draw[->] (syn) -- (impl);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Evolution of HDLs}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Historical Development}:
+\begin{itemize}
+\item \textbf{1980s}: VHDL and Verilog emergence
+\item \textbf{1990s}: Standardization and adoption
+\item \textbf{2000s}: SystemVerilog and SystemC
+\item \textbf{2010s}: High-level synthesis and Chisel
+\item \textbf{2020s}: AI-assisted design and verification
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Modern Trends}:
+\begin{itemize}
+\item Higher abstraction levels
+\item Functional programming paradigms
+\item Parameterizable and generic designs
+\item Integration with software development tools
+\item Open-source hardware ecosystems
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Industry Adoption}:
+\begin{itemize}
+\item Traditional: Verilog/VHDL dominance
+\item Emerging: Chisel, SpinalHDL, PyMTL
+\item Specialized: HLS tools (Vivado HLS, Catapult)
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{HDL Timeline}
+\vspace{0.3cm}
+
+\tikz{
+\draw[thick] (0,0) -- (0,4);
+\foreach \y/\year/\tech in {0/1980s/VHDL, 1/1990s/Verilog, 2/2000s/SystemV, 3/2010s/Chisel, 4/2020s/AI-HDL} {
+  \draw[thick] (-0.1,\y) -- (0.1,\y);
+  \node[left] at (-0.2,\y) {\year};
+  \node[right] at (0.2,\y) {\tech};
+}
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 2: Chisel Language
+\section{Chisel Language}
+
+\begin{frame}{Chisel Overview}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Chisel Definition}:
+\begin{itemize}
+\item \textbf{C}onstructing \textbf{H}ardware \textbf{I}n a \textbf{S}cala \textbf{E}mbedded \textbf{L}anguage
+\item Hardware design language embedded in Scala
+\item Developed at UC Berkeley
+\item Compiles to synthesizable Verilog
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Features}:
+\begin{itemize}
+\item \textbf{Hardware Construction Language}: High-level abstractions
+\item \textbf{Parameterization}: Generic and reusable modules
+\item \textbf{Strong Typing}: Rigorous type checking
+\item \textbf{Functional Programming}: Scala's functional paradigms
+\item \textbf{Object-Oriented}: Classes and inheritance
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Advantages}:
+\begin{itemize}
+\item Reduced design time and errors
+\item Better code reusability
+\item Integration with software tools
+\item Modern programming language features
+\end{itemize>
+\end{column>
+\begin{column}{0.4\textwidth>
+\begin{center>
+\textbf{Chisel Ecosystem}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=1.5cm] (chisel) at (0,0) {Chisel};
+\node[draw, rectangle] (scala) at (0,1.5) {Scala};
+\node[draw, rectangle] (verilog) at (-1.5,-1) {Verilog};
+\node[draw, rectangle] (firrtl) at (1.5,-1) {FIRRTL};
+\node[draw, rectangle] (tools) at (0,-2) {CAD Tools};
+
+\draw[->] (scala) -- (chisel);
+\draw[->] (chisel) -- (verilog);
+\draw[->] (chisel) -- (firrtl);
+\draw[->] (verilog) -- (tools);
+\draw[->] (firrtl) -- (tools);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{Chisel Basic Syntax}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Import Statements}:
+\begin{lstlisting}[style=chisel]
+import chisel3._
+import chisel3.util._
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Basic Module}:
+\begin{lstlisting}[style=chisel]
+class MyModule extends Module {
+  val io = IO(new Bundle {
+    val in = Input(UInt(8.W))
+    val out = Output(UInt(8.W))
+  })
+  
+  io.out := io.in + 1.U
+}
+\end{lstlisting}
+\end{column}
+\begin{column}{0.5\textwidth}
+\concept{Scala Basics for Chisel}:
+\begin{itemize}
+\item \texttt{val}: Immutable variables
+\item \texttt{var}: Mutable variables  
+\item \texttt{def}: Function definitions
+\item \texttt{class}: Class definitions
+\item \texttt{object}: Singleton objects
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Chisel-Specific}:
+\begin{itemize}
+\item \texttt{Module}: Hardware module base class
+\item \texttt{Bundle}: Interface definition
+\item \texttt{IO()}: Port declaration
+\item \texttt{:=}: Connection operator
+\item \texttt{.W}: Width specification
+\end{itemize>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{Chisel Data Types}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Basic Types}:
+\begin{lstlisting}[style=chisel]
+// Unsigned integers
+val a = UInt(8.W)
+val b = 42.U
+
+// Signed integers  
+val c = SInt(16.W)
+val d = (-5).S
+
+// Boolean
+val e = Bool()
+val f = true.B
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Aggregate Types}:
+\begin{lstlisting}[style=chisel]
+// Vector
+val vec = Vec(4, UInt(8.W))
+
+// Bundle
+class MyBundle extends Bundle {
+  val data = UInt(32.W)
+  val valid = Bool()
+}
+\end{lstlisting>
+\end{column>
+\begin{column>{0.5\textwidth}
+\concept{Type Features}:
+\begin{itemize}
+\item \textbf{Width inference}: Automatic width calculation
+\item \textbf{Type safety}: Compile-time type checking
+\item \textbf{Hardware semantics}: Types map to hardware
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Width Specification}:
+\begin{lstlisting}[style=chisel]
+UInt(8.W)    // 8-bit unsigned
+SInt(16.W)   // 16-bit signed
+UInt()       // Inferred width
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Literals}:
+\begin{lstlisting}[style=chisel]
+42.U         // Unsigned literal
+(-5).S       // Signed literal
+true.B       // Boolean literal
+"h1A".U      // Hex literal
+"b1010".U    // Binary literal
+\end{lstlisting>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{Chisel Control Structures}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Conditional Logic}:
+\begin{lstlisting}[style=chisel]
+when(condition) {
+  // Execute when true
+}.elsewhen(condition2) {
+  // Execute when condition2 true
+}.otherwise {
+  // Default case
+}
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Switch Statement}:
+\begin{lstlisting}[style=chisel]
+switch(selector) {
+  is(0.U) {
+    // Case 0
+  }
+  is(1.U) {
+    // Case 1
+  }
+}
+\end{lstlisting>
+\end{column}
+\begin{column>{0.5\textwidth}
+\concept{Registers}:
+\begin{lstlisting}[style=chisel]
+val reg = RegNext(io.in)
+val regInit = RegInit(0.U(8.W))
+
+// Clock and reset
+val reg = withClock(clock) {
+  withReset(reset) {
+    Reg(UInt(8.W))
+  }
+}
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Memory}:
+\begin{lstlisting}[style=chisel]
+val mem = Mem(1024, UInt(32.W))
+val data = mem(addr)
+mem(addr) := writeData
+\end{lstlisting>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 3: SystemVerilog
+\section{SystemVerilog}
+
+\begin{frame}{SystemVerilog Overview}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{SystemVerilog Definition}:
+\begin{itemize}
+\item Extension of Verilog-2001
+\item IEEE 1800 standard
+\item Combines design and verification features
+\item Industry-standard HDL
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Enhancements over Verilog}:
+\begin{itemize}
+\item \textbf{Object-Oriented Programming}: Classes and objects
+\item \textbf{Advanced Data Types}: Structures, unions, enums
+\item \textbf{Interfaces}: Modular connection specification
+\item \textbf{Assertions}: Formal verification constructs
+\item \textbf{Constrained Random}: Advanced testbench features
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Application Areas}:
+\begin{itemize}
+\item RTL design and synthesis
+\item Verification and testbenches
+\item System-level modeling
+\item Formal verification
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{SystemVerilog Features}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=2cm] (sv) at (0,0) {SystemVerilog};
+\node[draw, rectangle] (design) at (-1.5,1.5) {Design};
+\node[draw, rectangle] (verif) at (1.5,1.5) {Verification};
+\node[draw, rectangle] (oop) at (-1.5,-1.5) {OOP};
+\node[draw, rectangle] (assert) at (1.5,-1.5) {Assertions};
+
+\draw[->] (sv) -- (design);
+\draw[->] (sv) -- (verif);
+\draw[->] (sv) -- (oop);
+\draw[->] (sv) -- (assert);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{SystemVerilog Basic Syntax}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Module Definition}:
+\begin{lstlisting}[style=verilog]
+module counter #(
+  parameter WIDTH = 8
+)(
+  input  logic clk,
+  input  logic rst_n,
+  input  logic enable,
+  output logic [WIDTH-1:0] count
+);
+
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n)
+    count <= '0;
+  else if (enable)
+    count <= count + 1;
+end
+
+endmodule
+\end{lstlisting>
+\end{column}
+\begin{column>{0.5\textwidth}
+\concept{Key Syntax Elements}:
+\begin{itemize}
+\item \texttt{logic}: 4-state data type
+\item \texttt{always\_ff}: Clocked logic
+\item \texttt{always\_comb}: Combinational logic
+\item \texttt{interface}: Connection specification
+\item \texttt{modport}: Interface direction
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Data Types}:
+\begin{lstlisting}[style=verilog]
+logic [7:0] data;
+bit [15:0] address;
+int counter;
+real frequency;
+
+typedef struct {
+  logic [31:0] data;
+  logic valid;
+} packet_t;
+\end{lstlisting>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{SystemVerilog Advanced Features}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Interfaces}:
+\begin{lstlisting}[style=verilog]
+interface bus_if;
+  logic [31:0] data;
+  logic valid;
+  logic ready;
+  
+  modport master (
+    output data, valid,
+    input ready
+  );
+  
+  modport slave (
+    input data, valid,
+    output ready
+  );
+endinterface
+\end{lstlisting}
+\end{column}
+\begin{column>{0.5\textwidth}
+\concept{Classes (for Verification)}:
+\begin{lstlisting}[style=verilog]
+class packet;
+  rand bit [31:0] data;
+  rand bit [7:0] id;
+  
+  constraint valid_id {
+    id inside {[1:10]};
+  }
+  
+  function void display();
+    $display("Packet: data=%h, id=%d", 
+             data, id);
+  endfunction
+endclass
+\end{lstlisting>
+
+\vspace{0.3cm}
+\concept{Assertions}:
+\begin{lstlisting}[style=verilog]
+assert property (
+  @(posedge clk) 
+  req |-> ##[1:3] ack
+);
+\end{lstlisting>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 4: Chisel vs SystemVerilog
+\section{Chisel vs SystemVerilog}
+
+\begin{frame}{Comparative Analysis: Design Philosophy}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Chisel Approach}:
+\begin{itemize}
+\item \textbf{Embedded DSL}: Leverages Scala ecosystem
+\item \textbf{Functional Programming}: Immutable data, higher-order functions
+\item \textbf{Generator-based}: Parameterizable hardware generators
+\item \textbf{Type Safety}: Strong static typing
+\item \textbf{Modern Tooling}: IDE support, debugging
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Advantages}:
+\begin{itemize}
+\item Reduced boilerplate code
+\item Better abstraction and reusability
+\item Integration with software development
+\item Powerful parameterization
+\item Less error-prone
+\end{itemize>
+\end{column}
+\begin{column>{0.5\textwidth}
+\concept{SystemVerilog Approach}:
+\begin{itemize}
+\item \textbf{Traditional HDL}: Hardware-centric syntax
+\item \textbf{Imperative Programming}: Procedural constructs
+\item \textbf{Module-based}: Hierarchical design
+\item \textbf{Industry Standard}: Wide tool support
+\item \textbf{Verification Focus}: Advanced testbench features
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Advantages}:
+\begin{itemize}
+\item Industry-wide adoption
+\item Mature tool ecosystem
+\item Direct hardware mapping
+\item Comprehensive verification features
+\item Familiar to hardware engineers
+\end{itemize>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{Code Comparison: Simple Counter}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Chisel Implementation}:
+\begin{lstlisting}[style=chisel, basicstyle=\ttfamily\tiny]
+class Counter(width: Int) extends Module {
+  val io = IO(new Bundle {
+    val enable = Input(Bool())
+    val count = Output(UInt(width.W))
+  })
+  
+  val reg = RegInit(0.U(width.W))
+  
+  when(io.enable) {
+    reg := reg + 1.U
+  }
+  
+  io.count := reg
+}
+
+// Usage
+val counter8 = Module(new Counter(8))
+val counter16 = Module(new Counter(16))
+\end{lstlisting}
+\end{column}
+\begin{column>{0.5\textwidth}
+\concept{SystemVerilog Implementation}:
+\begin{lstlisting}[style=verilog, basicstyle=\ttfamily\tiny]
+module counter #(
+  parameter WIDTH = 8
+)(
+  input  logic clk,
+  input  logic rst_n,
+  input  logic enable,
+  output logic [WIDTH-1:0] count
+);
+
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n)
+    count <= '0;
+  else if (enable)
+    count <= count + 1;
+end
+
+endmodule
+
+// Usage
+counter #(.WIDTH(8)) counter8_inst (...);
+counter #(.WIDTH(16)) counter16_inst (...);
+\end{lstlisting>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Performance and Productivity Comparison}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Development Productivity}:
+\begin{itemize}
+\item \textbf{Chisel}: Higher abstraction reduces code size by 2-10x
+\item \textbf{SystemVerilog}: More verbose but explicit
+\item \textbf{Learning Curve}: Chisel requires Scala knowledge
+\item \textbf{Debugging}: Chisel provides better error messages
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Generated Hardware Quality}:
+\begin{itemize}
+\item \textbf{Performance}: Comparable synthesized results
+\item \textbf{Area}: Similar resource utilization
+\item \textbf{Power}: No significant difference
+\item \textbf{Timing}: Both meet timing constraints equally
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Tool Ecosystem}:
+\begin{itemize}
+\item \textbf{SystemVerilog}: Universal tool support
+\item \textbf{Chisel}: Growing but limited tool support
+\item \textbf{Verification}: SystemVerilog has mature frameworks
+\item \textbf{Simulation}: Both integrate with standard simulators
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Comparison Metrics}
+\vspace{0.3cm}
+
+\tikz{
+% Code size comparison
+\draw[thick, fill=blue!30] (0,3.5) rectangle (1,4);
+\draw[thick, fill=red!30] (0,3) rectangle (2.5,3.5);
+\node at (-0.5,3.75) {Chisel};
+\node at (-0.5,3.25) {SystemV};
+\node at (1.5,4.2) {\textbf{Code Size}};
+
+% Learning curve
+\draw[thick, fill=red!30] (0,2.5) rectangle (2,3);
+\draw[thick, fill=blue!30] (0,2) rectangle (1.2,2.5);
+\node at (-0.5,2.75) {Chisel};
+\node at (-0.5,2.25) {SystemV};
+\node at (1.5,3.2) {\textbf{Learning}};
+
+% Tool support
+\draw[thick, fill=blue!30] (0,1.5) rectangle (1.5,2);
+\draw[thick, fill=red!30] (0,1) rectangle (2.8,1.5);
+\node at (-0.5,1.75) {Chisel};
+\node at (-0.5,1.25) {SystemV};
+\node at (1.5,2.2) {\textbf{Tools}};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 5: Practical Examples
+\section{Practical Examples}
+
+\begin{frame}[fragile]{Example: FIFO Implementation in Chisel}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[style=chisel, basicstyle=\ttfamily\tiny]
+class FIFO(depth: Int, width: Int) extends Module {
+  val io = IO(new Bundle {
+    val enq = Flipped(new DecoupledIO(UInt(width.W)))
+    val deq = new DecoupledIO(UInt(width.W))
+  })
+  
+  val mem = Mem(depth, UInt(width.W))
+  val enqPtr = RegInit(0.U(log2Ceil(depth).W))
+  val deqPtr = RegInit(0.U(log2Ceil(depth).W))
+  val full = RegInit(false.B)
+  val empty = RegInit(true.B)
+  
+  // Enqueue logic
+  when(io.enq.fire) {
+    mem(enqPtr) := io.enq.bits
+    enqPtr := enqPtr + 1.U
+  }
+  
+  // Dequeue logic
+  when(io.deq.fire) {
+    deqPtr := deqPtr + 1.U
+  }
+  
+  io.enq.ready := !full
+  io.deq.valid := !empty
+  io.deq.bits := mem(deqPtr)
+}
+\end{lstlisting>
+\end{column>
+\begin{column>{0.5\textwidth}
+\concept{Key Chisel Features Demonstrated}:
+\begin{itemize}
+\item \textbf{Parameterization}: Generic depth and width
+\item \textbf{Bundle}: Interface definition
+\item \textbf{DecoupledIO}: Ready-valid interface
+\item \textbf{Mem}: Memory primitive
+\item \textbf{RegInit}: Initialized registers
+\item \textbf{fire}: Ready and valid both true
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Design Benefits}:
+\begin{itemize}
+\item Type-safe interfaces
+\item Automatic width inference
+\item Reusable across projects
+\item Clear separation of concerns
+\item Built-in flow control
+\end{itemize>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{Example: FIFO Implementation in SystemVerilog}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[style=verilog, basicstyle=\ttfamily\tiny]
+module fifo #(
+  parameter DEPTH = 16,
+  parameter WIDTH = 8,
+  parameter ADDR_WIDTH = $clog2(DEPTH)
+)(
+  input  logic clk,
+  input  logic rst_n,
+  input  logic [WIDTH-1:0] din,
+  input  logic wr_en,
+  input  logic rd_en,
+  output logic [WIDTH-1:0] dout,
+  output logic full,
+  output logic empty
+);
+
+logic [WIDTH-1:0] mem [DEPTH-1:0];
+logic [ADDR_WIDTH-1:0] wr_ptr, rd_ptr;
+logic [ADDR_WIDTH:0] count;
+
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
+    wr_ptr <= '0;
+    rd_ptr <= '0;
+    count <= '0;
+  end else begin
+    if (wr_en && !full) begin
+      mem[wr_ptr] <= din;
+      wr_ptr <= wr_ptr + 1;
+    end
+    if (rd_en && !empty) begin
+      rd_ptr <= rd_ptr + 1;
+    end
+    
+    case ({wr_en && !full, rd_en && !empty})
+      2'b10: count <= count + 1;
+      2'b01: count <= count - 1;
+    endcase
+  end
+end
+
+assign dout = mem[rd_ptr];
+assign full = (count == DEPTH);
+assign empty = (count == 0);
+
+endmodule
+\end{lstlisting>
+\end{column>
+\begin{column>{0.5\textwidth}
+\concept{SystemVerilog Features Demonstrated}:
+\begin{itemize}
+\item \textbf{Parameters}: Configurable design
+\item \textbf{Memory Array}: Explicit memory declaration
+\item \textbf{always\_ff}: Clocked logic
+\item \textbf{case}: Multi-way selection
+\item \textbf{System Functions}: \$clog2 for width calculation
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Implementation Details}:
+\begin{itemize}
+\item Explicit pointer management
+\item Manual count tracking
+\item Direct memory indexing
+\item Combinational output assignment
+\item Reset handling
+\end{itemize>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}[fragile]{Example: Parameterizable ALU}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Chisel ALU}:
+\begin{lstlisting}[style=chisel, basicstyle=\ttfamily\tiny]
+object ALUOp extends ChiselEnum {
+  val ADD, SUB, AND, OR, XOR = Value
+}
+
+class ALU(width: Int) extends Module {
+  val io = IO(new Bundle {
+    val a = Input(UInt(width.W))
+    val b = Input(UInt(width.W))
+    val op = Input(ALUOp())
+    val result = Output(UInt(width.W))
+    val zero = Output(Bool())
+  })
+  
+  io.result := MuxLookup(io.op, 0.U)(Seq(
+    ALUOp.ADD -> (io.a + io.b),
+    ALUOp.SUB -> (io.a - io.b),
+    ALUOp.AND -> (io.a & io.b),
+    ALUOp.OR  -> (io.a | io.b),
+    ALUOp.XOR -> (io.a ^ io.b)
+  ))
+  
+  io.zero := io.result === 0.U
+}
+\end{lstlisting>
+\end{column>
+\begin{column>{0.5\textwidth}
+\concept{SystemVerilog ALU}:
+\begin{lstlisting}[style=verilog, basicstyle=\ttfamily\tiny]
+typedef enum logic [2:0] {
+  ADD = 3'b000,
+  SUB = 3'b001,
+  AND = 3'b010,
+  OR  = 3'b011,
+  XOR = 3'b100
+} alu_op_t;
+
+module alu #(
+  parameter WIDTH = 32
+)(
+  input  logic [WIDTH-1:0] a,
+  input  logic [WIDTH-1:0] b,
+  input  alu_op_t op,
+  output logic [WIDTH-1:0] result,
+  output logic zero
+);
+
+always_comb begin
+  case (op)
+    ADD: result = a + b;
+    SUB: result = a - b;
+    AND: result = a & b;
+    OR:  result = a | b;
+    XOR: result = a ^ b;
+    default: result = '0;
+  endcase
+end
+
+assign zero = (result == '0);
+
+endmodule
+\end{lstlisting>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Section 6: Design Methodology
+\section{Design Methodology}
+
+\begin{frame}{HDL Design Best Practices}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{General Design Principles}:
+\begin{itemize}
+\item \textbf{Modularity}: Break design into reusable components
+\item \textbf{Hierarchy}: Use clear hierarchical structure
+\item \textbf{Parameterization}: Make designs configurable
+\item \textbf{Documentation}: Comment code and interfaces
+\item \textbf{Testing}: Comprehensive verification strategy
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Chisel-Specific Best Practices}:
+\begin{itemize}
+\item Use Bundle for complex interfaces
+\item Leverage Scala's type system
+\item Create hardware generators, not just modules
+\item Use functional programming constructs
+\item Separate generation-time and runtime logic
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{SystemVerilog Best Practices}:
+\begin{itemize}
+\item Use interfaces for complex connections
+\item Employ proper coding styles for synthesis
+\item Separate design and verification code
+\item Use assertions for specification
+\item Follow naming conventions
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Design Flow}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (spec) at (0,4) {Specification};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (arch) at (0,3.3) {Architecture};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (hdl) at (0,2.6) {HDL Coding};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (test) at (0,1.9) {Testing};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (syn) at (0,1.2) {Synthesis};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (impl) at (0,0.5) {Implementation};
+
+\draw[->] (spec) -- (arch);
+\draw[->] (arch) -- (hdl);
+\draw[->] (hdl) -- (test);
+\draw[->] (test) -- (syn);
+\draw[->] (syn) -- (impl);
+
+% Feedback loops
+\draw[->, dashed] (test.west) -- ++(-0.5,0) -- ++(0,0.7) -- (hdl.west);
+\draw[->, dashed] (syn.west) -- ++(-0.7,0) -- ++(0,1.4) -- (hdl.west);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Tool Integration and Workflow}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Chisel Workflow}:
+\begin{itemize}
+\item \textbf{Development}: IntelliJ IDEA or VS Code with Scala
+\item \textbf{Build System}: SBT (Scala Build Tool)
+\item \textbf{Testing}: ChiselTest framework
+\item \textbf{Generation}: FIRRTL compiler to Verilog
+\item \textbf{Synthesis}: Standard EDA tools (Synopsys, Cadence)
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{SystemVerilog Workflow}:
+\begin{itemize}
+\item \textbf{Development}: Specialized HDL editors
+\item \textbf{Simulation}: ModelSim, VCS, Xcelium
+\item \textbf{Synthesis}: Design Compiler, Genus
+\item \textbf{Verification}: UVM, formal tools
+\item \textbf{Implementation}: Place and route tools
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Integration Considerations}:
+\begin{itemize}
+\item Version control strategies
+\item Continuous integration setup
+\item Documentation generation
+\item IP reuse and packaging
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Tool Ecosystem}
+\vspace{0.3cm}
+
+\tikz{
+% Chisel tools
+\node at (0,3.5) {\textbf{Chisel}};
+\draw[thick] (-1,3) rectangle (1,3.3);
+\node at (0,3.15) {SBT/IDE};
+\draw[thick] (-1,2.6) rectangle (1,2.9);
+\node at (0,2.75) {ChiselTest};
+\draw[thick] (-1,2.2) rectangle (1,2.5);
+\node at (0,2.35) {FIRRTL};
+
+% SystemVerilog tools
+\node at (0,1.8) {\textbf{SystemVerilog}};
+\draw[thick] (-1,1.3) rectangle (1,1.6);
+\node at (0,1.45) {Simulators};
+\draw[thick] (-1,0.9) rectangle (1,1.2);
+\node at (0,1.05) {Synthesis};
+\draw[thick] (-1,0.5) rectangle (1,0.8);
+\node at (0,0.65) {Verification};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+% Summary
+\section{Summary}
+
+\begin{frame}{Appendix Summary}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Takeaways}:
+\begin{itemize}
+\item HDLs are essential for modern hardware design
+\item Chisel offers higher abstraction and productivity
+\item SystemVerilog provides industry-standard features
+\item Both languages produce equivalent hardware
+\item Choice depends on project requirements and team expertise
+\item Tool ecosystem maturity varies between languages
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{When to Choose Chisel}:
+\begin{itemize}
+\item Complex, parameterizable designs
+\item Research and academic projects
+\item Teams with software background
+\item Need for rapid prototyping
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{When to Choose SystemVerilog}:
+\begin{itemize}
+\item Industry production designs
+\item Existing SystemVerilog codebase
+\item Comprehensive verification requirements
+\item Maximum tool compatibility needed
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{HDL Selection Criteria}
+\vspace{0.3cm}
+
+\tikz{
+% Decision factors
+\node at (1,3.5) {\textbf{Project Factors}};
+
+\draw[thick] (0,3) rectangle (2,3.2);
+\node at (1,3.1) {Team Expertise};
+
+\draw[thick] (0,2.6) rectangle (2,2.8);
+\node at (1,2.7) {Tool Requirements};
+
+\draw[thick] (0,2.2) rectangle (2,2.4);
+\node at (1,2.3) {Design Complexity};
+
+\draw[thick] (0,1.8) rectangle (2,2);
+\node at (1,1.9) {Time Constraints};
+
+\draw[thick] (0,1.4) rectangle (2,1.6);
+\node at (1,1.5) {Verification Needs};
+
+% Decision arrow
+\draw[->, thick] (1,1.2) -- (1,0.8);
+\node at (1,0.6) {\textbf{HDL Choice}};
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\begin{frame}{Further Resources}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Chisel Resources}:
+\begin{itemize}
+\item \textbf{Official Documentation}: chisel-lang.org
+\item \textbf{Book}: "Digital Design with Chisel" (free online)
+\item \textbf{Cheat Sheet}: Quick reference guide
+\item \textbf{GitHub}: chisel-lang/chisel3
+\item \textbf{Community}: Gitter chat, Stack Overflow
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{SystemVerilog Resources}:
+\begin{itemize}
+\item \textbf{IEEE Standard}: 1800-2017
+\item \textbf{Books}: "SystemVerilog for Design" by Sutherland
+\item \textbf{Training}: Verification Academy
+\item \textbf{Forums}: EDA community forums
+\item \textbf{Tools}: Vendor documentation
+\end{itemize>
+
+\vspace{0.3cm}
+\concept{Practice Recommendations}:
+\begin{itemize}
+\item Start with simple examples
+\item Build incrementally complex designs
+\item Focus on one language initially
+\item Practice with real hardware targets
+\end{itemize>
+\end{column>
+\begin{column>{0.4\textwidth>
+\begin{center>
+\textbf{Learning Path}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (basics) at (0,3) {HDL Basics};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (syntax) at (0,2.3) {Language Syntax};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (examples) at (0,1.6) {Simple Examples};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (projects) at (0,0.9) {Real Projects};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (advanced) at (0,0.2) {Advanced Topics};
+
+\draw[->] (basics) -- (syntax);
+\draw[->] (syntax) -- (examples);
+\draw[->] (examples) -- (projects);
+\draw[->] (projects) -- (advanced);
+}
+\end{center>
+\end{column>
+\end{columns>
+\end{frame>
+
+\end{document}
+
