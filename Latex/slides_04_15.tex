@@ -1,0 +1,993 @@
+% Learning objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will understand:
+\begin{itemize}
+\item Performance optimization principles in digital logic design
+\item Chisel control constructs: \texttt{when}, \texttt{MuxCase}, and \texttt{switch}
+\item Synthesis implications of different coding styles
+\item Hardware structures: multiplexers vs. priority logic
+\item Timing, area, and power trade-offs
+\item Best practices for performance-optimized design
+\item Tool-specific synthesis considerations
+\end{itemize}
+\end{frame}
+
+% Section 1: Introduction to Performance Optimization
+\section{Introduction to Performance Optimization}
+
+\begin{frame}{Performance Optimization in Digital Design}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Optimization Goals}:
+\begin{itemize}
+\item \textbf{Timing Performance}: Minimize critical path delay
+\item \textbf{Area Efficiency}: Reduce hardware resource usage
+\item \textbf{Power Consumption}: Optimize for low power operation
+\item \textbf{Synthesis Quality}: Generate efficient hardware structures
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Considerations}:
+\begin{itemize}
+\item Choice of HDL constructs affects synthesis results
+\item Different coding styles produce different hardware
+\item Tool-specific optimizations and limitations
+\item Trade-offs between competing objectives
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Chisel-Specific Factors}:
+\begin{itemize}
+\item High-level constructs map to hardware structures
+\item Functional programming paradigms influence synthesis
+\item Type system provides optimization opportunities
+\item Generator-based design enables parameterization
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Optimization Triangle}
+\vspace{0.3cm}
+
+\tikz{
+% Triangle
+\draw[thick] (0,0) -- (2,3) -- (4,0) -- cycle;
+
+% Vertices
+\node at (0,-0.3) {\textbf{Area}};
+\node at (4,-0.3) {\textbf{Power}};
+\node at (2,3.3) {\textbf{Performance}};
+
+% Center
+\node at (2,1) {Design};
+\node at (2,0.7) {Space};
+
+% Trade-off arrows
+\draw[<->] (0.5,0.5) -- (3.5,0.5);
+\draw[<->] (1,2.5) -- (3,2.5);
+\draw[<->] (0.8,0.3) -- (1.8,2.7);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{HDL Construct Impact on Hardware}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Behavioral vs. Structural Implications}:
+\begin{itemize}
+\item \textbf{Behavioral}: High-level description of functionality
+\item \textbf{Structural}: Direct mapping to hardware components
+\item \textbf{Synthesis}: Translation from behavioral to structural
+\item \textbf{Optimization}: Tool-dependent improvements
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Control Structure Categories}:
+\begin{itemize}
+\item \textbf{Sequential Logic}: \texttt{when-elsewhen-otherwise}
+\item \textbf{Parallel Logic}: \texttt{MuxCase} and multiplexers
+\item \textbf{Hybrid Logic}: \texttt{switch} statements
+\item \textbf{Conditional Logic}: Priority-based selection
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Synthesis Considerations}:
+\begin{itemize}
+\item Tool interpretation of HDL constructs
+\item Optimization passes and transformations
+\item Target technology constraints
+\item Design rule compliance
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{HDL to Hardware Flow}
+\vspace{0.3cm}
+
+\tikz{
+% Flow diagram
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (hdl) at (0,3) {HDL Code};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (syn) at (0,2.2) {Synthesis};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (opt) at (0,1.4) {Optimization};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.6cm] (hw) at (0,0.6) {Hardware};
+
+\draw[->] (hdl) -- (syn);
+\draw[->] (syn) -- (opt);
+\draw[->] (opt) -- (hw);
+
+% Side annotations
+\node[right] at (2.2,3) {Behavioral};
+\node[right] at (2.2,2.2) {Translation};
+\node[right] at (2.2,1.4) {Improvement};
+\node[right] at (2.2,0.6) {Structural};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 2: Chisel Control Constructs
+\section{Chisel Control Constructs}
+
+\begin{frame}[fragile]{The \texttt{when} Construct}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Syntax and Semantics}:
+\begin{lstlisting}[style=chisel]
+when(condition1) {
+  // Execute when condition1 true
+}.elsewhen(condition2) {
+  // Execute when condition2 true
+}.otherwise {
+  // Default case
+}
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Characteristics}:
+\begin{itemize}
+\item Sequential evaluation of conditions
+\item Priority-based logic structure
+\item Natural for software-like if-else logic
+\item Cascaded conditional implementation
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth>
+\concept{Hardware Generation}:
+\begin{itemize}
+\item Creates priority logic chain
+\item Sequential condition checking
+\item Early termination when condition met
+\item Propagation delay through cascade
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Use Cases}:
+\begin{itemize}
+\item Natural priority ordering
+\item Sequential decision making
+\item Default/fallback cases
+\item Human-readable conditions
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Impact}:
+\begin{itemize}
+\item Longer critical path for later conditions
+\item Compact area for early termination
+\item Power efficient for sparse conditions
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{The \texttt{MuxCase} Construct}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Syntax and Semantics}:
+\begin{lstlisting}[style=chisel]
+val result = MuxCase(default, Seq(
+  (condition1 -> value1),
+  (condition2 -> value2),
+  (condition3 -> value3)
+))
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Characteristics}:
+\begin{itemize}
+\item Parallel evaluation of conditions
+\item Priority-free selection logic
+\item Direct multiplexer mapping
+\item Simultaneous condition checking
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth>
+\concept{Hardware Generation}:
+\begin{itemize}
+\item Creates multiplexer tree structure
+\item Parallel logic evaluation
+\item Fixed propagation delay
+\item Predictable timing characteristics
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Use Cases}:
+\begin{itemize}
+\item Mutually exclusive conditions
+\item Performance-critical paths
+\item Parallel decision making
+\item Fixed-latency requirements
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Impact}:
+\begin{itemize}
+\item Consistent timing across conditions
+\item Larger area for parallel evaluation
+\item Higher power for all conditions
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{The \texttt{switch} Construct}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\concept{Syntax and Semantics}:
+\begin{lstlisting}[style=chisel]
+switch(selector) {
+  is("b00".U) { result := a }
+  is("b01".U) { result := b }
+  is("b10".U) { result := c }
+  is("b11".U) { result := d }
+}
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Characteristics}:
+\begin{itemize}
+\item Multi-way branching based on value
+\item Flexible synthesis options
+\item Can generate mux or priority logic
+\item Tool-dependent optimization
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth>
+\concept{Hardware Generation Options}:
+\begin{itemize}
+\item \textbf{Multiplexer Tree}: For mutually exclusive cases
+\item \textbf{Priority Logic}: For overlapping conditions
+\item \textbf{Decoder Logic}: For wide selectors
+\item \textbf{Hybrid Structures}: Tool-optimized combinations
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Synthesis Factors}:
+\begin{itemize}
+\item Condition exclusivity
+\item Selector width and encoding
+\item Tool optimization capabilities
+\item Target technology characteristics
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 3: Synthesis Implications
+\section{Synthesis Implications}
+
+\begin{frame}{Timing and Performance Analysis}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Critical Path Considerations}:
+\begin{itemize}
+\item \textbf{\texttt{when}}: Sequential evaluation creates cascaded delays
+\item \textbf{\texttt{MuxCase}}: Parallel evaluation with fixed delay
+\item \textbf{\texttt{switch}}: Variable delay based on synthesis choice
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Propagation Delay Analysis}:
+\begin{itemize}
+\item \textbf{Cascaded Logic}: Delay accumulates through chain
+\item \textbf{Parallel Logic}: Single-level delay for all paths
+\item \textbf{Multiplexer Tree}: Logarithmic delay with input count
+\item \textbf{Priority Encoder}: Linear delay with condition count
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Optimization}:
+\begin{itemize}
+\item Choose construct based on timing requirements
+\item Consider condition ordering for \texttt{when}
+\item Use \texttt{MuxCase} for critical timing paths
+\item Balance area and timing trade-offs
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Timing Comparison}
+\vspace{0.3cm}
+
+\tikz{
+% Timing bars
+\node at (1.5,3.5) {\textbf{Propagation Delay}};
+
+% when construct
+\draw[thick, fill=red!30] (0,3) rectangle (2.5,3.2);
+\node at (-0.5,3.1) {\texttt{when}};
+\node at (3,3.1) {Variable};
+
+% MuxCase construct  
+\draw[thick, fill=green!30] (0,2.6) rectangle (1.5,2.8);
+\node at (-0.5,2.7) {\texttt{MuxCase}};
+\node at (3,2.7) {Fixed};
+
+% switch construct
+\draw[thick, fill=blue!30] (0,2.2) rectangle (2,2.4);
+\node at (-0.5,2.3) {\texttt{switch}};
+\node at (3,2.3) {Tool-dep};
+
+% Scale
+\node at (0,1.8) {Fast};
+\node at (2.5,1.8) {Slow};
+\draw[->] (0,1.9) -- (2.5,1.9);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Area and Resource Utilization}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Hardware Resource Requirements}:
+\begin{itemize}
+\item \textbf{\texttt{when}}: Compact for early termination cases
+\item \textbf{\texttt{MuxCase}}: Larger due to parallel evaluation
+\item \textbf{\texttt{switch}}: Variable based on synthesis strategy
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Logic Utilization Patterns}:
+\begin{itemize}
+\item \textbf{Priority Logic}: Sequential gates, pruning opportunities
+\item \textbf{Multiplexer Logic}: Parallel gates, full evaluation
+\item \textbf{Decoder Logic}: One-hot encoding, distributed control
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Optimization Strategies}:
+\begin{itemize}
+\item Order conditions by probability in \texttt{when}
+\item Use \texttt{MuxCase} for mutually exclusive cases
+\item Consider condition complexity and frequency
+\item Leverage synthesis tool optimizations
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Area Comparison}
+\vspace{0.3cm}
+
+\tikz{
+% Area bars
+\node at (1.5,3.5) {\textbf{Hardware Area}};
+
+% when construct
+\draw[thick, fill=green!30] (0,3) rectangle (1.2,3.2);
+\node at (-0.5,3.1) {\texttt{when}};
+\node at (2.5,3.1) {Compact};
+
+% MuxCase construct  
+\draw[thick, fill=red!30] (0,2.6) rectangle (2.2,2.8);
+\node at (-0.5,2.7) {\texttt{MuxCase}};
+\node at (2.5,2.7) {Larger};
+
+% switch construct
+\draw[thick, fill=blue!30] (0,2.2) rectangle (1.7,2.4);
+\node at (-0.5,2.3) {\texttt{switch}};
+\node at (2.5,2.3) {Variable};
+
+% Scale
+\node at (0,1.8) {Small};
+\node at (2.2,1.8) {Large};
+\draw[->] (0,1.9) -- (2.2,1.9);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Power Consumption Analysis}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Power Consumption Factors}:
+\begin{itemize}
+\item \textbf{Dynamic Power}: Switching activity and capacitance
+\item \textbf{Static Power}: Leakage current in inactive logic
+\item \textbf{Activity Factor}: Percentage of logic switching
+\item \textbf{Clock Power}: Distribution and sequential elements
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Construct-Specific Power Characteristics}:
+\begin{itemize}
+\item \textbf{\texttt{when}}: Lower power for sparse conditions
+\item \textbf{\texttt{MuxCase}}: Higher power due to parallel evaluation
+\item \textbf{\texttt{switch}}: Power depends on synthesis choice
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Power Optimization Techniques}:
+\begin{itemize}
+\item Clock gating for inactive logic
+\item Condition ordering for early termination
+\item Power-aware synthesis settings
+\item Activity-driven optimization
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Power Characteristics}
+\vspace{0.3cm}
+
+\tikz{
+% Power components
+\node at (1.5,3.5) {\textbf{Power Breakdown}};
+
+% Dynamic power
+\draw[thick, fill=red!30] (0,3) rectangle (2,3.2);
+\node at (1,3.1) {Dynamic};
+
+% Static power
+\draw[thick, fill=blue!30] (0,2.7) rectangle (1.2,2.9);
+\node at (0.6,2.8) {Static};
+
+% Clock power
+\draw[thick, fill=green!30] (0,2.4) rectangle (1.5,2.6);
+\node at (0.75,2.5) {Clock};
+
+% Activity factor impact
+\node at (1.5,2) {\textbf{Activity Impact}};
+\node at (1.5,1.7) {High activity → High power};
+\node at (1.5,1.4) {Sparse conditions → Low power};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 4: Hardware Structure Analysis
+\section{Hardware Structure Analysis}
+
+\begin{frame}{Multiplexer Tree Structures}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Multiplexer Characteristics}:
+\begin{itemize}
+\item \textbf{Structure}: Tree of 2:1 multiplexers
+\item \textbf{Delay}: Logarithmic with number of inputs
+\item \textbf{Area}: Linear with number of inputs
+\item \textbf{Control}: Binary encoded select signals
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{When to Use Multiplexers}:
+\begin{itemize}
+\item Mutually exclusive conditions
+\item Fixed timing requirements
+\item Parallel data selection
+\item Performance-critical paths
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Considerations}:
+\begin{itemize}
+\item Input data width affects area
+\item Select signal encoding impacts delay
+\item Technology-specific optimizations
+\item Power consumption for unused inputs
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{4:1 Multiplexer Tree}
+\vspace{0.3cm}
+
+\tikz{
+% Inputs
+\foreach \y/\label in {3.5/A, 3/B, 2.5/C, 2/D} {
+  \node at (0,\y) {\label};
+  \draw[->] (0.2,\y) -- (0.8,\y);
+}
+
+% First level muxes
+\draw[thick] (1,3.5) rectangle (1.5,3);
+\draw[thick] (1,2.5) rectangle (1.5,2);
+\node at (1.25,3.25) {MUX};
+\node at (1.25,2.25) {MUX};
+
+% Second level mux
+\draw[thick] (2,3) rectangle (2.5,2.5);
+\node at (2.25,2.75) {MUX};
+
+% Connections
+\draw[->] (1.5,3.25) -- (2,2.9);
+\draw[->] (1.5,2.25) -- (2,2.6);
+
+% Select signals
+\draw[->] (1.25,2.9) -- (1.25,2.7);
+\node at (1.25,2.6) {S0};
+\draw[->] (2.25,2.4) -- (2.25,2.2);
+\node at (2.25,2.1) {S1};
+
+% Output
+\draw[->] (2.5,2.75) -- (3,2.75);
+\node at (3.2,2.75) {Out};
+
+% Timing
+\node at (1.75,1.5) {Delay: $2 \times t_{mux}$};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Priority Logic Structures}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Priority Logic Characteristics}:
+\begin{itemize}
+\item \textbf{Structure}: Cascaded conditional gates
+\item \textbf{Delay}: Linear with condition position
+\item \textbf{Area}: Depends on condition complexity
+\item \textbf{Control}: Sequential evaluation order
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{When to Use Priority Logic}:
+\begin{itemize}
+\item Natural priority ordering
+\item Overlapping conditions
+\item Default/fallback cases
+\item Early termination benefits
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Optimization Opportunities}:
+\begin{itemize}
+\item Order by condition probability
+\item Simplify condition expressions
+\item Use early termination
+\item Minimize critical path conditions
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Priority Logic Chain}
+\vspace{0.3cm}
+
+\tikz{
+% Conditions
+\foreach \y/\label in {3.5/C1, 3/C2, 2.5/C3, 2/Default} {
+  \node at (0,\y) {\label};
+}
+
+% Logic gates
+\draw[thick] (1,3.5) rectangle (1.8,3.2);
+\node at (1.4,3.35) {AND};
+\draw[thick] (1,3) rectangle (1.8,2.7);
+\node at (1.4,2.85) {AND};
+\draw[thick] (1,2.5) rectangle (1.8,2.2);
+\node at (1.4,2.35) {AND};
+
+% OR gate
+\draw[thick] (2.5,3) rectangle (3.2,2.2);
+\node at (2.85,2.6) {OR};
+
+% Connections
+\draw[->] (0.2,3.5) -- (1,3.4);
+\draw[->] (0.2,3) -- (1,2.9);
+\draw[->] (0.2,2.5) -- (1,2.4);
+
+\draw[->] (1.8,3.35) -- (2.5,2.9);
+\draw[->] (1.8,2.85) -- (2.5,2.7);
+\draw[->] (1.8,2.35) -- (2.5,2.5);
+\draw[->] (0.2,2) -- (2.5,2.3);
+
+% Inhibit connections
+\draw[->] (1.4,3.2) -- (1.4,3);
+\draw[->] (1.4,2.7) -- (1.4,2.5);
+
+% Output
+\draw[->] (3.2,2.6) -- (3.7,2.6);
+\node at (3.9,2.6) {Out};
+
+% Timing
+\node at (2,1.5) {Delay: Variable};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Decoder Logic Structures}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Decoder Characteristics}:
+\begin{itemize}
+\item \textbf{Structure}: Binary to one-hot conversion
+\item \textbf{Delay}: Fixed for all outputs
+\item \textbf{Area}: Exponential with input width
+\item \textbf{Control}: Distributed enable signals
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{When to Use Decoders}:
+\begin{itemize}
+\item Wide selector signals
+\item One-hot control requirements
+\item Distributed control logic
+\item Memory address decoding
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Implementation Considerations}:
+\begin{itemize}
+\item Input encoding affects complexity
+\item Output loading impacts performance
+\item Enable signals for power optimization
+\item Technology-specific implementations
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{2:4 Decoder}
+\vspace{0.3cm}
+
+\tikz{
+% Inputs
+\node at (0,3) {A1};
+\node at (0,2.5) {A0};
+\draw[->] (0.2,3) -- (1,3);
+\draw[->] (0.2,2.5) -- (1,2.5);
+
+% Decoder box
+\draw[thick] (1,2) rectangle (2.5,3.5);
+\node at (1.75,2.75) {2:4};
+\node at (1.75,2.5) {DEC};
+
+% Outputs
+\foreach \y/\label in {3.3/Y3, 3/Y2, 2.7/Y1, 2.4/Y0} {
+  \draw[->] (2.5,\y) -- (3.2,\y);
+  \node at (3.4,\y) {\label};
+}
+
+% Truth table
+\node at (1.75,1.5) {\textbf{One-hot outputs}};
+\node at (1.75,1.2) {Only one active};
+
+% Enable
+\node at (0,1.8) {EN};
+\draw[->] (0.2,1.8) -- (1,2.2);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 5: Optimization Strategies
+\section{Optimization Strategies}
+
+\begin{frame}{Condition Ordering and Probability}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Probability-Based Optimization}:
+\begin{itemize}
+\item Order conditions by execution frequency
+\item Place most likely conditions first in \texttt{when}
+\item Minimize average-case delay
+\item Consider worst-case timing constraints
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Condition Complexity Analysis}:
+\begin{itemize}
+\item Simple conditions before complex ones
+\item Minimize logic depth for critical paths
+\item Balance condition evaluation cost
+\item Consider synthesis tool capabilities
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Early Termination Benefits}:
+\begin{itemize}
+\item Reduce power consumption
+\item Improve average-case performance
+\item Simplify downstream logic
+\item Enable aggressive optimizations
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Condition Ordering}
+\vspace{0.3cm}
+
+\tikz{
+% Probability bars
+\node at (1.5,3.5) {\textbf{Execution Frequency}};
+
+\draw[thick, fill=green!30] (0,3) rectangle (2.5,3.2);
+\node at (-0.5,3.1) {C1};
+\node at (3,3.1) {80\%};
+
+\draw[thick, fill=blue!30] (0,2.6) rectangle (1.5,2.8);
+\node at (-0.5,2.7) {C2};
+\node at (3,2.7) {15\%};
+
+\draw[thick, fill=red!30] (0,2.2) rectangle (0.8,2.4);
+\node at (-0.5,2.3) {C3};
+\node at (3,2.3) {5\%};
+
+% Optimization arrow
+\draw[->, thick] (1.5,1.8) -- (1.5,1.4);
+\node at (1.5,1.2) {\textbf{Order by frequency}};
+\node at (1.5,0.9) {Most likely first};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Synthesis Tool Optimization}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Tool-Specific Optimizations}:
+\begin{itemize}
+\item Leverage synthesis tool capabilities
+\item Use tool-specific optimization directives
+\item Understand tool limitations and preferences
+\item Profile different coding styles
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Optimization Passes}:
+\begin{itemize}
+\item Logic optimization and minimization
+\item Technology mapping and binding
+\item Timing-driven optimization
+\item Power-aware transformations
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Constraints}:
+\begin{itemize}
+\item Timing constraints and clock periods
+\item Area and resource limitations
+\item Power budgets and requirements
+\item Technology-specific rules
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Optimization Flow}
+\vspace{0.3cm}
+
+\tikz{
+% Optimization stages
+\node[draw, rectangle, minimum width=2cm, minimum height=0.5cm] (logic) at (0,3) {Logic Opt};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.5cm] (tech) at (0,2.4) {Tech Map};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.5cm] (timing) at (0,1.8) {Timing Opt};
+\node[draw, rectangle, minimum width=2cm, minimum height=0.5cm] (power) at (0,1.2) {Power Opt};
+
+\draw[->] (logic) -- (tech);
+\draw[->] (tech) -- (timing);
+\draw[->] (timing) -- (power);
+
+% Feedback loops
+\draw[->, dashed] (timing.west) -- ++(-0.5,0) -- ++(0,0.6) -- (tech.west);
+\draw[->, dashed] (power.west) -- ++(-0.7,0) -- ++(0,1.8) -- (logic.west);
+
+% Constraints
+\node[right] at (2.2,2.4) {Constraints};
+\node[right] at (2.2,2.1) {Guide};
+\node[right] at (2.2,1.8) {Optimization};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Best Practices for Performance Optimization}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Design Guidelines}:
+\begin{itemize}
+\item Choose appropriate control construct for use case
+\item Consider timing, area, and power trade-offs
+\item Profile different implementation options
+\item Use synthesis reports for optimization guidance
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Coding Recommendations}:
+\begin{itemize}
+\item Use \texttt{MuxCase} for mutually exclusive conditions
+\item Use \texttt{when} for priority-based logic
+\item Order conditions by probability and complexity
+\item Minimize condition evaluation complexity
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Verification and Validation}:
+\begin{itemize}
+\item Verify functional equivalence across optimizations
+\item Validate timing and power requirements
+\item Test corner cases and edge conditions
+\item Use formal verification when appropriate
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Optimization Checklist}
+\vspace{0.3cm}
+
+\tikz{
+% Checklist items
+\node at (1.5,3.5) {\textbf{Design Checklist}};
+
+\foreach \y/\item in {3.2/Construct Choice, 2.9/Condition Order, 2.6/Timing Analysis, 2.3/Area Estimation, 2/Power Analysis, 1.7/Synthesis Reports, 1.4/Verification} {
+  \draw[thick] (0,\y-0.1) rectangle (0.2,\y+0.1);
+  \node[right] at (0.3,\y) {\item};
+}
+
+% Checkmarks
+\foreach \y in {3.2, 2.9, 2.6, 2.3, 2, 1.7, 1.4} {
+  \node at (0.1,\y) {✓};
+}
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Section 6: Design Trade-offs
+\section{Design Trade-offs}
+
+\begin{frame}{Performance vs. Area Trade-offs}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Trade-off Analysis}:
+\begin{itemize}
+\item \textbf{High Performance}: Parallel logic, larger area
+\item \textbf{Low Area}: Sequential logic, longer delays
+\item \textbf{Balanced}: Hybrid approaches, moderate both
+\item \textbf{Application-Specific}: Optimize for critical metrics
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Space Exploration}:
+\begin{itemize}
+\item Evaluate multiple implementation options
+\item Use Pareto-optimal solutions
+\item Consider application requirements
+\item Balance competing objectives
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Optimization Strategies}:
+\begin{itemize}
+\item Pipeline critical paths for performance
+\item Share resources for area efficiency
+\item Use clock gating for power savings
+\item Leverage tool-specific optimizations
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Design Space}
+\vspace{0.3cm}
+
+\tikz{
+% Axes
+\draw[->] (0,0) -- (3,0);
+\draw[->] (0,0) -- (0,3);
+\node at (3.2,0) {Area};
+\node at (0,3.2) {Performance};
+
+% Pareto frontier
+\draw[thick, blue] (0.5,2.8) .. controls (1.5,2) .. (2.8,0.5);
+
+% Design points
+\fill[red] (0.7,2.5) circle (0.05);
+\node at (0.7,2.8) {MuxCase};
+\fill[red] (2.2,1.2) circle (0.05);
+\node at (2.2,0.9) {when};
+\fill[red] (1.5,1.8) circle (0.05);
+\node at (1.5,2.1) {switch};
+
+% Optimal region
+\draw[thick, green, dashed] (0.5,2.8) .. controls (1.5,2) .. (2.8,0.5);
+\node at (2,2.5) {Pareto};
+\node at (2,2.2) {Frontier};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Summary
+\section{Summary}
+
+\begin{frame}{Chapter Summary}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Concepts Covered}:
+\begin{itemize}
+\item Performance optimization principles in digital logic
+\item Chisel control constructs and their synthesis implications
+\item Hardware structures: multiplexers, priority logic, decoders
+\item Timing, area, and power trade-offs
+\item Optimization strategies and best practices
+\item Tool-specific considerations and constraints
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Guidelines}:
+\begin{itemize}
+\item Choose constructs based on application requirements
+\item Consider synthesis implications early in design
+\item Profile multiple implementation options
+\item Use synthesis tools effectively
+\item Validate optimization results
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Future Considerations}:
+\begin{itemize}
+\item Emerging synthesis technologies
+\item AI-assisted optimization
+\item Power-efficient design techniques
+\item Advanced verification methods
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth>
+\begin{center}
+\textbf{Optimization Summary}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=1.5cm] (center) at (0,0) {Optimized};
+\node[draw, circle, minimum width=1.5cm] (center2) at (0,0) {Design};
+\node[draw, rectangle] (timing) at (0,1.5) {Timing};
+\node[draw, rectangle] (area) at (-1.5,0.5) {Area};
+\node[draw, rectangle] (power) at (1.5,0.5) {Power};
+\node[draw, rectangle] (tools) at (0,-1.5) {Tools};
+
+\draw[->] (timing) -- (center);
+\draw[->] (center) -- (area);
+\draw[->] (center) -- (power);
+\draw[->] (center) -- (tools);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Discussion Questions}
+\begin{enumerate}
+\item How do different Chisel constructs affect synthesis results?
+\item What factors should guide the choice between \texttt{when} and \texttt{MuxCase}?
+\item How can condition ordering optimize performance in priority logic?
+\item What are the trade-offs between parallel and sequential logic structures?
+\item How do synthesis tools influence optimization strategies?
+\item What role does application profiling play in optimization decisions?
+\item How can power consumption be minimized in control logic?
+\item What verification challenges arise from optimization transformations?
+\end{enumerate}
+\end{frame}
+

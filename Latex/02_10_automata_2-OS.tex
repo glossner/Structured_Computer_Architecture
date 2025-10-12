@@ -478,14 +478,14 @@ We now reconsider the previous example, which involves recognizing the language 
 \normalfont{A key observation is that, regardless of the specific values of \( m \) and \( n \), the number of states in the finite automaton remains constant at four. However, while the number of states is fixed, the complexity of describing the automaton's behavior is proportional to this number. Specifically, the size of the truth table that defines the state transitions scales with the number of states but remains independent of the values of \( m \) and \( n \).}
 
 
-{\em 
+
 \includeverilogcode[caption={Defines binary codes for input, output and state variables.  File: A10\_defines.vh  (SystemVerilog)}, 
                     label={lst:A10_defines.vh}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_defines.vh}
-}
+
 \end{exemplu}
 Listing \ref{lst:A10_defines.vh} shows a code snippet that defines several preprocessor macros in SystemVerilog that are used to establish constants for a finite automaton. In the first section, input codes are defined. The macro \texttt{\`define a 1'b1} specifies that the symbol \textit{a} is represented by the 1-bit binary value \texttt{1'b1}, while \texttt{\`define b 1'b0} defines the symbol \textit{b} as the 1-bit binary value \texttt{1'b0}. These definitions are for the input signals to the automaton.
 
@@ -493,7 +493,7 @@ In the next portion of the code, output codes are established. The macro \texttt
 
 The final section of the code defines the internal states of the automaton. The initial state is set by the macro \texttt{\`define init 2'b10}, assigning the value \texttt{2'b10} to the starting state. The macro \texttt{\`define runA 2'b11} denotes a state where the automaton has received at least one \textit{b}. In contrast, \texttt{\`define runB 2'b01} is used to indicate that the automaton has received at least one \textit{a}. Finally, the macro \texttt{\`define error 2'b00} defines the error state, which shares the same binary encoding as the \texttt{fail} output.
 
-{\em 
+
 \includeverilogcode[caption={Structural description of the immediate Mealy automaton
              designed to recognize the regular language $L = (a^nb^m | n,m >0)$.  File: A10\_regLang.sv  (SystemVerilog)}, 
                     label={lst:A10_regLang.sv}, 
@@ -501,14 +501,13 @@ The final section of the code defines the internal states of the automaton. The 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_regLang.sv}
-}
+
 Listing \ref{lst:A10_regLang.sv} implements a Mealy automaton within a module named \texttt{regLang}. It begins by including a header file (\texttt{"defines.vh"}) that contains macro definitions for state encodings. The module itself declares an input signal (\texttt{in}), a two-bit output signal (\texttt{out}), a reset signal (\texttt{reset}), and a clock signal. Two internal two-bit registers, \texttt{state} and \texttt{nextState}, are defined to hold the current state and the computed next state of the automaton, respectively.
 
 State updates occur in an \texttt{always\_ff} block that is triggered on the positive edge of the clock. Within this block, the current state is set to the initial state (defined by the macro \texttt{\`init}) when the reset signal is active. Otherwise, the state is updated to the value of \texttt{nextState}, which is determined by the automaton’s state-transition logic.
 
 The next state and output logic are implemented in separate modules. The module instantiation \texttt{loopCLC lC( in, state, nextState )} is responsible for computing the next state based on the current state and the input signal. In parallel, the instantiation \texttt{outCLC oC( state, in, out )} computes the output, which depends on both the current state and the input signal. Because the output is a function of both the state and the input, this design characterizes a Mealy automaton, where outputs may change asynchronously with respect to the state update clock edge.
 
-{\em 
 \includeverilogcode[caption={Combinational circuit used to compute the loop for the
                 immediate Mealy automaton used to recognize the language $L = (a^nb^m | n,m >0)$.  File: A10\_loopCLC.sv  (SystemVerilog)}, 
                     label={lst:A10_loopCLC.sv}, 
@@ -516,13 +515,11 @@ The next state and output logic are implemented in separate modules. The module 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_loopCLC.sv}
-}
+
 Listing \ref{lst:A10_loopCLC.sv} shows a SystemVerilog module with \texttt{loopCLC} that defines a combinational logic block that computes the next state of a finite state machine based on the current state and an input signal. The module accepts an input signal \texttt{in} and a two-bit signal \texttt{state} representing the current state, and it produces a two-bit output signal \texttt{nextState} that represents the computed next state. 
 
 Within the module, an \texttt{always\_comb} block, labeled \texttt{loop\_clc}, implements the state transition logic using a \texttt{case} statement on the current state. When the state is \texttt{\`init}, the next state is determined by checking the input: if \texttt{in} equals the macro \texttt{\`a}, then \texttt{nextState} is assigned \texttt{\`runA}; otherwise, it is assigned \texttt{\`error}. In the \texttt{\`runA} state, if the input remains \texttt{\`a}, the automaton stays in the \texttt{\`runA} state, but if the input differs, it transitions to \texttt{\`runB}. When the state is \texttt{\`runB}, the next state remains \texttt{\`runB} if the input is equal to the macro \texttt{\`b}; if not, the automaton enters the \texttt{\`error} state. Once in the \texttt{\`error} state, the module is designed to remain in that state regardless of the input.
 
-
-{\em 
 \includeverilogcode[caption={Combinational circuit used to compute the output for
              immediate Mealy  automaton which recognizes the language $L = (a^nb^m | n,m >0)$.   File: A10\_outCLC.sv  (SystemVerilog)}, 
                     label={lst:A10_outCLC.sv}, 
@@ -530,13 +527,13 @@ Within the module, an \texttt{always\_comb} block, labeled \texttt{loop\_clc}, i
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_outCLC.sv}
-}
+
 
 Listing \ref{lst:A10_outCLC.sv} shows a SystemVerilog module \texttt{outCLC} that implements the output logic for a finite state machine. It accepts a 2-bit input signal \texttt{state} and a 1-bit input \texttt{in}, and produces a 2-bit output signal \texttt{out}. This module uses an \texttt{always\_comb} block to define combinational logic that directly computes the output based on both the current state and the input value.
 
 Within the combinational block, a \texttt{case} statement examines the value of \texttt{state} to determine the appropriate output. In the state defined by the macro \texttt{\`init}, the output is assigned conditionally: if the input \texttt{in} equals the macro \texttt{\`a}, then \texttt{out} is set to the value specified by \texttt{\`recA}; otherwise, it is set to \texttt{\`fail}. When the state is \texttt{\`runA}, if the input equals \texttt{\`a} the output remains \texttt{\`recA}, but if it does not, the output is updated to \texttt{\`recB}. For the state \texttt{\`runB}, the logic assigns \texttt{\`fail} to \texttt{out} when the input equals \texttt{\`a}, and assigns \texttt{\`recB} when it does not. Finally, if the state is \texttt{\`error}, the output is unconditionally set to \texttt{\`fail}.
 
-{\em 
+
 \includeverilogcode[caption={Test module for the
              immediate Mealy  automaton which recognizes the language $L = (a^nb^m | n,m >0)$.   File: A10\_testRegLang.sv  (SystemVerilog)}, 
                     label={lst:A10_testRegLang.sv}, 
@@ -544,7 +541,7 @@ Within the combinational block, a \texttt{case} statement examines the value of 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_testRegLang.sv}
-}
+
 
 Listing \ref{lst:A10_testRegLang.sv} shows a SystemVerilog module \texttt{testRegLang} that functions as a testbench for the finite state machine defined in the \texttt{regLang} module. In this testbench, several signals are declared, including a one-bit input \texttt{in}, a two-bit output \texttt{out}, a reset signal \texttt{reset}, and a clock signal \texttt{clock}. The testbench is responsible for generating stimulus and observing the behavior of the \texttt{regLang} module during simulation.
 
@@ -710,6 +707,7 @@ Let's customize the previous definition for a system that is commanded with 4 fi
 }
 Using the definition of {\tt microinstruction}, the content of the file {\tt theDefinition.v} defines, the following is a simple example microprogram:
 
+{\em 
 \begin{verilogcode}
 /**********************************************************************
 Function: Dummy microprogram
@@ -724,6 +722,7 @@ Description: a dummy microprogram used to test the code generator.
             cjmp(7); flag2; eol;
     lb(3);  jmp(3); eol;    // halt
 \end{verilogcode}
+}
 
 $\diamond$
 \end{exemplu}
@@ -869,28 +868,28 @@ Four-bit presetable and reversible counter.
 
 Listing \ref{lst:A10_counterDefines.vh} shows the commands for the counter automaton.
 \end{exemplu}
-{\em 
+ 
 \includeverilogcode[caption={A presetable up-down counter.   File: A10\_counter.sv  (SystemVerilog)}, 
                     label={lst:A10_counter.sv}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_counter.sv}
-}
+
 Listing \ref{lst:A10_counter.sv} shows SystemVerilog code that defines a module named \texttt{counter} that implements a simple synchronous counter. On line 1, the directive \texttt{`include "counterDefines.vh"} is used to incorporate a header file containing macro definitions. These macros, including \texttt{`reset}, \texttt{`load}, \texttt{`up}, and \texttt{`down}, specify the operation codes that determine the counter’s functionality.
 
 The module \texttt{counter} has a 4-bit output, \texttt{out}, a 3-bit input, \texttt{op}, for selecting the operation, a 4-bit input, \texttt{in}, for loading a value, and a clock input, \texttt{clk}. The counter is designed to operate synchronously with the positive edge of the clock. Within an \texttt{always\_ff} block, which is triggered on each rising clock edge, a \texttt{case} statement evaluates the \texttt{op} input and updates the output accordingly.
 
 When the \texttt{op} code corresponds to \texttt{`reset}, the counter is reset by setting \texttt{out} to 0. When the \texttt{op} code is \texttt{`load}, the value from the \texttt{in} input is loaded into \texttt{out}. For the \texttt{`up} operation, the counter increments its current value by 1, whereas for the \texttt{`down} operation, it decrements its current value by 1. In the default case, the counter maintains its current state by leaving \texttt{out} unchanged.
 
-{\em 
+
 \includeverilogcode[caption={Test module for the counter.   File: A10\_testCounter.sv  (SystemVerilog)}, 
                     label={lst:A10_testCounter.sv}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_testCounter.sv}
-}
+
 
 Listing \ref{lst:A10_testCounter.sv} shows a SystemVerilog testbench module, \texttt{testCounter}, that is designed to verify the functionality of a counter module. On line 1, the directive \texttt{`include "counterDefines.vh"} incorporates an external header file that defines various operation macros (\texttt{`reset}, \texttt{`up}, \texttt{`load}, and \texttt{`down}).
 
@@ -908,14 +907,20 @@ $\diamond$
 %**********************************************************
 
 A specific application of the counter simple automaton is the system used to compute the next address in the process of running a program (see Figure \ref{fig39}). The set of functions specified on the input {\tt next} are:
-\begin{itemize}
-    \item {\tt nop: address <= address} for {\tt halt} instruction
-    \item {\tt rst: address <= 0} for system reset
-    \item {\tt inc: address <= address + 1} for program counter increment
-    \item {\tt rjmp: address <= address + relValue} for relative jump
-    \item {\tt crjmp: address <= (absValue = 0) ? address + relValue : address + 1} for conditioned branch
-    \item {\tt ajmp: address <= absValue} for absolute jump
-\end{itemize}
+\begin{description}
+    \item[nop]: for {\tt halt} instruction the program counter stays unchanged \\ 
+        {\tt  address <= address} 
+    \item[rst]: for system reset the address is initialized to zero \\
+        {\tt  address <= 0} 
+    \item[inc]: for program counter increment \\
+        {\tt  address <= address + 1} 
+    \item[rjmp]: for relative jump \\
+        {\tt address <= address + relValue} 
+    \item[crjmp]: for conditioned branch \\
+        {\tt  address <= (value = 0) ? address + relValue : address + 1} 
+    \item[ajmp]: for absolute jump \\
+        {\tt  address <= absValue} 
+\end{description}
 
 \placedrawing[H]{figures/04_08_program_counter.lp}{Program Counter.}{fig39}
 

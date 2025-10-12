@@ -1,0 +1,1103 @@
+
+% Learning objectives
+\begin{frame}{Learning Objectives}
+By the end of this chapter, you will understand:
+\begin{itemize}
+\item Instruction Level Parallelism (ILP) concepts and benefits
+\item Pipelining principles and implementation techniques
+\item Pipeline stages and timing analysis
+\item Hazards: structural, data, and control dependencies
+\item Advanced ILP techniques: superscalar, out-of-order execution
+\item Performance metrics and optimization strategies
+\item Trade-offs between complexity and performance
+\end{itemize}
+\end{frame}
+
+% subsection 1: Introduction to ILP
+\subsection{Introduction to ILP}
+
+\begin{frame}{What is Instruction Level Parallelism?}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{ILP Definition}:
+\begin{itemize}
+\item Parallel execution of instructions within a single program
+\item Exploiting independence between instructions
+\item Multiple instructions in various stages of execution
+\item Fundamental technique for performance improvement
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Forms of ILP}:
+\begin{itemize}
+\item \textbf{Pipelining}: Overlapping instruction execution stages
+\item \textbf{Multiple Issue}: Multiple instructions per cycle
+\item \textbf{Out-of-Order Execution}: Dynamic instruction reordering
+\item \textbf{Speculative Execution}: Predicting and executing ahead
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Benefits}:
+\begin{itemize}
+\item Higher instruction throughput
+\item Better resource utilization
+\item Improved clock frequency potential
+\item Enhanced overall system performance
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Implementation Challenges}:
+\begin{itemize}
+\item Managing dependencies between instructions
+\item Handling control flow changes
+\item Increased hardware complexity
+\item Power consumption considerations
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{ILP Techniques}
+\vspace{0.3cm}
+
+\tikz{
+% Central ILP concept
+\node[draw, circle, minimum width=1.5cm] (ilp) at (0,0) {ILP};
+
+% Techniques around it
+\node[draw, rectangle] (pipe) at (0,1.8) {Pipelining};
+\node[draw, rectangle] (multi) at (-1.8,0.9) {Multiple};
+\node[draw, rectangle] (multi2) at (-1.8,0.6) {Issue};
+\node[draw, rectangle] (ooo) at (1.8,0.9) {Out-of-Order};
+\node[draw, rectangle] (ooo2) at (1.8,0.6) {Execution};
+\node[draw, rectangle] (spec) at (0,-1.8) {Speculative};
+\node[draw, rectangle] (spec2) at (0,-2.1) {Execution};
+
+% Connections
+\draw[->] (pipe) -- (ilp);
+\draw[->] (multi) -- (ilp);
+\draw[->] (ooo) -- (ilp);
+\draw[->] (spec) -- (ilp);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Sequential vs. Parallel Execution}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Sequential Execution}:
+\begin{itemize}
+\item One instruction completes before next begins
+\item Simple control logic and implementation
+\item Underutilized hardware resources
+\item Lower performance potential
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Parallel Execution (ILP)}:
+\begin{itemize}
+\item Multiple instructions in flight simultaneously
+\item Complex control and dependency management
+\item Better hardware resource utilization
+\item Higher performance potential
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Differences}:
+\begin{itemize}
+\item \textbf{Throughput}: Instructions per cycle
+\item \textbf{Latency}: Time for single instruction
+\item \textbf{Resource Usage}: Functional unit utilization
+\item \textbf{Complexity}: Control logic requirements
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Metrics}:
+\begin{itemize}
+\item \textbf{CPI}: Cycles per instruction
+\item \textbf{IPC}: Instructions per cycle
+\item \textbf{Throughput}: Instructions per second
+\item \textbf{Speedup}: Performance improvement ratio
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Execution Comparison}
+\vspace{0.3cm}
+
+% Sequential execution
+\tikz{
+\node at (1.5,3.5) {\textbf{Sequential}};
+
+% Instructions
+\foreach \x/\inst in {0/I1, 0.8/I2, 1.6/I3, 2.4/I4} {
+  \draw[thick, fill=blue!30] (\x,3) rectangle (\x+0.6,3.3);
+  \node at (\x+0.3,3.15) {\inst};
+}
+
+% Time arrow
+\draw[->] (0,2.7) -- (3,2.7);
+\node at (1.5,2.5) {Time};
+\node at (1.5,2.2) {4 cycles};
+}
+
+\vspace{0.5cm}
+
+% Parallel execution
+\tikz{
+\node at (1.5,2.5) {\textbf{Pipelined}};
+
+% Pipeline stages
+\foreach \y/\stage in {2.2/IF, 1.9/ID, 1.6/EX, 1.3/WB} {
+  \node at (-0.3,\y) {\stage};
+}
+
+% Instructions in pipeline
+\foreach \x/\cycle in {0/1, 0.4/2, 0.8/3, 1.2/4} {
+  % I1
+  \draw[thick, fill=red!30] (\x,2.1) rectangle (\x+0.3,2.3);
+  % I2
+  \if\cycle1\else
+    \draw[thick, fill=green!30] (\x,1.8) rectangle (\x+0.3,2);
+  \fi
+  % I3
+  \if\cycle1\else\if\cycle2\else
+    \draw[thick, fill=blue!30] (\x,1.5) rectangle (\x+0.3,1.7);
+  \fi\fi
+  % I4
+  \if\cycle1\else\if\cycle2\else\if\cycle3\else
+    \draw[thick, fill=yellow!30] (\x,1.2) rectangle (\x+0.3,1.4);
+  \fi\fi\fi
+}
+
+% Time arrow
+\draw[->] (0,0.9) -- (1.5,0.9);
+\node at (0.75,0.7) {Time};
+\node at (0.75,0.4) {4 cycles, 4 instructions};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% subsection 2: Pipelining Fundamentals
+\subsection{Pipelining Fundamentals}
+
+\begin{frame}{Pipeline Acceleration Principle}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Basic Principle}:
+\begin{itemize}
+\item Break complex operation into simpler stages
+\item Insert pipeline registers between stages
+\item Allow multiple operations to overlap
+\item Increase clock frequency by reducing critical path
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Timing Analysis}:
+\begin{itemize}
+\item \textbf{Without Pipeline}: $T_{clock} = t_{CLC_{f \circ g}}$
+\item \textbf{With Pipeline}: $T_{clock} = \max(t_{CLC_f}, t_{CLC_g})$
+\item \textbf{Acceleration}: $\alpha = \frac{t_{CLC_{f \circ g}}}{\max(t_{CLC_f}, t_{CLC_g})}$
+\item \textbf{Maximum Efficiency}: $\alpha \approx 2$ when $t_{CLC_f} \approx t_{CLC_g}$
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Design Considerations}:
+\begin{itemize}
+\item Balance pipeline stage delays
+\item Minimize register overhead
+\item Consider setup and hold times
+\item Account for clock skew and jitter
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Scalability}:
+\begin{itemize}
+\item Process can be applied recursively
+\item Continue until desired frequency achieved
+\item Diminishing returns with more stages
+\item Increased latency with deeper pipelines
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Pipeline Acceleration}
+\vspace{0.3cm}
+
+% Non-pipelined circuit
+\tikz{
+\node at (1.5,3.5) {\textbf{Non-Pipelined}};
+
+\draw[thick] (0,3) rectangle (0.5,3.3);
+\node at (0.25,3.15) {Reg};
+
+\draw[thick] (0.7,3) rectangle (2.3,3.3);
+\node at (1.5,3.15) {$CLC_{f \circ g}$};
+
+\draw[thick] (2.5,3) rectangle (3,3.3);
+\node at (2.75,3.15) {Reg};
+
+\draw[->] (0.5,3.15) -- (0.7,3.15);
+\draw[->] (2.3,3.15) -- (2.5,3.15);
+
+\node at (1.5,2.7) {$T_{clock} = t_{CLC_{f \circ g}}$};
+}
+
+\vspace{0.5cm}
+
+% Pipelined circuit
+\tikz{
+\node at (1.5,2.5) {\textbf{Pipelined}};
+
+\draw[thick] (0,2) rectangle (0.4,2.3);
+\node at (0.2,2.15) {Reg};
+
+\draw[thick] (0.6,2) rectangle (1.2,2.3);
+\node at (0.9,2.15) {$CLC_f$};
+
+\draw[thick] (1.4,2) rectangle (1.8,2.3);
+\node at (1.6,2.15) {Reg};
+
+\draw[thick] (2,2) rectangle (2.6,2.3);
+\node at (2.3,2.15) {$CLC_g$};
+
+\draw[thick] (2.8,2) rectangle (3.2,2.3);
+\node at (3,2.15) {Reg};
+
+\draw[->] (0.4,2.15) -- (0.6,2.15);
+\draw[->] (1.2,2.15) -- (1.4,2.15);
+\draw[->] (1.8,2.15) -- (2,2.15);
+\draw[->] (2.6,2.15) -- (2.8,2.15);
+
+\node at (1.6,1.7) {$T_{clock} = \max(t_{CLC_f}, t_{CLC_g})$};
+\node at (1.6,1.4) {Speedup: $\alpha \approx 2$};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Classic RISC Pipeline Stages}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Five-Stage Pipeline}:
+\begin{enumerate}
+\item \textbf{IF (Instruction Fetch)}: Fetch instruction from memory
+\item \textbf{ID (Instruction Decode)}: Decode instruction and read registers
+\item \textbf{EX (Execute)}: Perform ALU operation or address calculation
+\item \textbf{MEM (Memory Access)}: Access data memory if needed
+\item \textbf{WB (Write Back)}: Write result back to register file
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{Stage Characteristics}:
+\begin{itemize}
+\item Each stage takes one clock cycle
+\item Pipeline registers store intermediate results
+\item Control signals propagated through pipeline
+\item Data forwarding may be needed between stages
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Pipeline Benefits}:
+\begin{itemize}
+\item Up to 5x speedup in ideal conditions
+\item One instruction completed per cycle (after fill)
+\item Better resource utilization
+\item Scalable to more complex processors
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Pipeline Challenges}:
+\begin{itemize}
+\item Pipeline hazards and dependencies
+\item Branch prediction requirements
+\item Exception handling complexity
+\item Increased design verification effort
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{5-Stage Pipeline}
+\vspace{0.3cm}
+
+\tikz{
+% Pipeline stages
+\foreach \y/\stage/\desc in {
+  3.5/IF/Fetch,
+  3/ID/Decode,
+  2.5/EX/Execute,
+  2/MEM/Memory,
+  1.5/WB/Write Back
+} {
+  \draw[thick] (0,\y-0.2) rectangle (2,\y+0.2);
+  \node at (0.3,\y) {\textbf{\stage}};
+  \node at (1.3,\y) {\desc};
+}
+
+% Pipeline registers
+\foreach \y in {3.3, 2.8, 2.3, 1.8} {
+  \draw[thick, fill=yellow!30] (2.2,\y-0.1) rectangle (2.6,\y+0.1);
+  \node at (2.4,\y) {Reg};
+}
+
+% Data flow
+\foreach \y in {3.5, 3, 2.5, 2, 1.5} {
+  \draw[->] (2,\y) -- (2.2,\y);
+}
+\draw[->] (2.6,1.8) -- (2.6,1.3);
+\draw[->] (2.6,1.3) -- (0,1.3);
+\draw[->] (0,1.3) -- (0,1.7);
+
+% Timing
+\node at (1,1) {\textbf{Latency: 5 cycles}};
+\node at (1,0.7) {\textbf{Throughput: 1 inst/cycle}};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% subsection 3: Pipeline Implementation
+\subsection{Pipeline Implementation}
+
+\begin{frame}{toyRISC Pipelined Implementation}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Four-Stage toyRISC Pipeline}:
+\begin{enumerate}
+\item \textbf{IF (Instruction Fetch)}: PC addresses program memory, compute next PC
+\item \textbf{OF (Operands Fetch)}: Read operands from register file
+\item \textbf{EX (Execution)}: ALU operation, branch address calculation
+\item \textbf{WB (Write Back)}: Update PC and write result to register file
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{Timing Analysis}:
+\begin{itemize}
+\item $t_{IF} = t_{pc} + \max(t_{next}, t_{ProgMem}) + t_{PipeReg1}$
+\item $t_{OF} = t_{PipeReg1} + t_{regFile} + t_{PipeReg2}$
+\item $t_{EX} = t_{PipeReg2} + \max(t_{ALU}, t_{add}, t_{DataMem}) + t_{PipeReg3}$
+\item $t_{WB} = t_{PipeReg3} + \max(t_{regFile}, t_{PC})$
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Clock Frequency}:
+\begin{itemize}
+\item $T_{clock} = \max(t_{IF}, t_{OF}, t_{EX}, t_{WB})$
+\item Balanced pipeline stages for optimal performance
+\item Critical path determines maximum frequency
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{toyRISC Pipeline}
+\vspace{0.3cm}
+
+\tikz{
+% Pipeline stages
+\node at (1.5,3.8) {\textbf{toyRISC 4-Stage}};
+
+% IF stage
+\draw[thick] (0,3.3) rectangle (3,3.6);
+\node at (0.2,3.45) {\textbf{IF}};
+\node at (1.5,3.45) {PC → ProgMem, NextPC};
+
+% OF stage
+\draw[thick] (0,2.8) rectangle (3,3.1);
+\node at (0.2,2.95) {\textbf{OF}};
+\node at (1.5,2.95) {RegFile Read};
+
+% EX stage
+\draw[thick] (0,2.3) rectangle (3,2.6);
+\node at (0.2,2.45) {\textbf{EX}};
+\node at (1.5,2.45) {ALU, DataMem, Branch};
+
+% WB stage
+\draw[thick] (0,1.8) rectangle (3,2.1);
+\node at (0.2,1.95) {\textbf{WB}};
+\node at (1.5,1.95) {RegFile Write, PC Update};
+
+% Pipeline registers
+\foreach \y in {3.15, 2.65, 2.15} {
+  \draw[thick, fill=yellow!30] (3.2,\y-0.1) rectangle (3.6,\y+0.1);
+  \node at (3.4,\y) {Reg};
+}
+
+% Latency
+\node at (1.5,1.4) {\textbf{Latency: 3 cycles}};
+\node at (1.5,1.1) {\textbf{4 instructions in flight}};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Pipeline Execution Example}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Instruction Sequence}:
+%\begin{lstlisting}[style=Assembler]
+\begin{lstlisting}
+XOR(5,0,0)  ; R5 = R0 XOR R0
+VAL(1,12)   ; R1 = 12
+SUB(2,3,4)  ; R2 = R3 - R4
+ADD(0,0,3)  ; R0 = R0 + R3
+AND(1,3,2)  ; R1 = R3 AND R2
+\end{lstlisting}
+
+\vspace{0.3cm}
+\concept{Pipeline Execution}:
+\begin{itemize}
+\item Each instruction takes 4 cycles to complete
+\item New instruction starts every cycle
+\item After initial fill, one instruction completes per cycle
+\item Steady-state throughput: 1 instruction/cycle
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Analysis}:
+\begin{itemize}
+\item \textbf{Latency}: 3 cycles (pipeline depth - 1)
+\item \textbf{Throughput}: 1 instruction per cycle
+\item \textbf{Speedup}: Approximately 4x over non-pipelined
+\item \textbf{Efficiency}: Depends on hazard frequency
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Pipeline Timeline}
+\vspace{0.3cm}
+
+\begin{table}[h]
+\tiny
+\begin{tabular}{|c||c|c|c|c|c|c|c|}
+\hline
+\textbf{Stage/Time} & \textbf{i} & \textbf{i+1} & \textbf{i+2} & \textbf{i+3} & \textbf{i+4} & \textbf{i+5} & \textbf{i+6} \\
+\hline\hline
+\textbf{IF} & XOR & VAL & SUB & ADD & AND & & \\
+\hline
+\textbf{OF} & & XOR & VAL & SUB & ADD & AND & \\
+\hline
+\textbf{EX} & & & XOR & VAL & SUB & ADD & AND \\
+\hline
+\textbf{WB} & & & & XOR & VAL & SUB & ADD \\
+\hline
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+
+\tikz{
+% Completion timeline
+\node at (1.5,2.5) {\textbf{Instruction Completion}};
+
+\foreach \x/\inst in {0/XOR, 0.6/VAL, 1.2/SUB, 1.8/ADD, 2.4/AND} {
+  \draw[thick, fill=green!30] (\x,2) rectangle (\x+0.5,2.3);
+  \node at (\x+0.25,2.15) {\inst};
+}
+
+\draw[->] (0,1.7) -- (2.9,1.7);
+\node at (1.45,1.5) {Time (cycles)};
+
+\node at (1.5,1.2) {\textbf{Steady State:}};
+\node at (1.5,0.9) {1 instruction/cycle};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% subsection 4: Hazards and Dependencies
+\subsection{Hazards and Dependencies}
+
+\begin{frame}{Types of Pipeline Hazards}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Structural Hazards}:
+\begin{itemize}
+\item Hardware resource conflicts
+\item Multiple instructions need same resource
+\item Examples: memory port conflicts, functional unit conflicts
+\item Solutions: duplicate resources, pipeline stalls
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Data Hazards}:
+\begin{itemize}
+\item Dependencies between instructions
+\item \textbf{RAW (Read After Write)}: True dependency
+\item \textbf{WAR (Write After Read)}: Anti-dependency
+\item \textbf{WAW (Write After Write)}: Output dependency
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Control Hazards}:
+\begin{itemize}
+\item Branch and jump instructions
+\item Unknown next instruction address
+\item Pipeline must stall or speculate
+\item Solutions: branch prediction, delayed branches
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Hazard Resolution}:
+\begin{itemize}
+\item \textbf{Stalling}: Insert pipeline bubbles
+\item \textbf{Forwarding}: Bypass pipeline registers
+\item \textbf{Prediction}: Speculative execution
+\item \textbf{Reordering}: Dynamic instruction scheduling
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Hazard Types}
+\vspace{0.3cm}
+
+% Structural hazard
+\tikz{
+\node at (1.5,3.5) {\textbf{Structural}};
+\draw[thick] (0,3.1) rectangle (3,3.3);
+\node at (1.5,3.2) {Inst1: MEM access};
+\draw[thick] (0,2.9) rectangle (3,3.1);
+\node at (1.5,3) {Inst2: MEM access};
+\draw[thick, red] (2.5,2.9) rectangle (2.7,3.3);
+\node at (2.6,2.7) {Conflict};
+}
+
+\vspace{0.3cm}
+
+% Data hazard
+\tikz{
+\node at (1.5,2.5) {\textbf{Data (RAW)}};
+\draw[thick] (0,2.1) rectangle (3,2.3);
+\node at (1.5,2.2) {ADD R1, R2, R3};
+\draw[thick] (0,1.9) rectangle (3,2.1);
+\node at (1.5,2) {SUB R4, R1, R5};
+\draw[->, red, thick] (0.8,2.1) -- (1.2,1.9);
+\node at (2.6,1.7) {R1 dep};
+}
+
+\vspace{0.3cm}
+
+% Control hazard
+\tikz{
+\node at (1.5,1.5) {\textbf{Control}};
+\draw[thick] (0,1.1) rectangle (3,1.3);
+\node at (1.5,1.2) {BEQ R1, R2, Label};
+\draw[thick] (0,0.9) rectangle (3,1.1);
+\node at (1.5,1) {??? (unknown)};
+\draw[->, red, thick] (1.5,1.1) -- (1.5,0.9);
+\node at (2.6,0.7) {Branch};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Data Dependencies and Forwarding}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Read After Write (RAW) Dependency}:
+\begin{itemize}
+\item Most common and critical dependency
+\item Instruction reads register written by previous instruction
+\item Creates pipeline stall without forwarding
+\item Example: ADD R1, R2, R3; SUB R4, R1, R5
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Forwarding/Bypassing Solution}:
+\begin{itemize}
+\item Forward result from later pipeline stage
+\item Bypass intermediate pipeline registers
+\item Reduces or eliminates pipeline stalls
+\item Requires additional hardware paths
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Forwarding Paths}:
+\begin{itemize}
+\item \textbf{EX-to-EX}: ALU result to ALU input
+\item \textbf{MEM-to-EX}: Memory result to ALU input
+\item \textbf{WB-to-EX}: Write-back result to ALU input
+\item \textbf{Load-Use}: Special case requiring stall
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Limitations}:
+\begin{itemize}
+\item Load-use hazards still require stalls
+\item Increased hardware complexity
+\item Additional multiplexers and control logic
+\item Power consumption overhead
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Data Forwarding}
+\vspace{0.3cm}
+
+% Without forwarding
+\tikz{
+\node at (1.5,3.5) {\textbf{Without Forwarding}};
+
+% Pipeline stages
+\foreach \y/\stage in {3.2/EX, 2.9/MEM, 2.6/WB} {
+  \draw[thick] (0,\y-0.1) rectangle (1,\y+0.1);
+  \node at (0.5,\y) {\stage};
+}
+
+% Instructions
+\draw[thick, fill=red!30] (1.2,3.1) rectangle (1.8,3.3);
+\node at (1.5,3.2) {ADD};
+\draw[thick, fill=blue!30] (1.2,2.8) rectangle (1.8,3);
+\node at (1.5,2.9) {SUB};
+
+% Stall
+\draw[thick, fill=gray!30] (2,2.8) rectangle (2.6,3);
+\node at (2.3,2.9) {STALL};
+
+\node at (1.5,2.3) {2 cycle stall};
+}
+
+\vspace{0.5cm}
+
+% With forwarding
+\tikz{
+\node at (1.5,2) {\textbf{With Forwarding}};
+
+% Pipeline stages
+\foreach \y/\stage in {1.7/EX, 1.4/MEM, 1.1/WB} {
+  \draw[thick] (0,\y-0.1) rectangle (1,\y+0.1);
+  \node at (0.5,\y) {\stage};
+}
+
+% Instructions
+\draw[thick, fill=red!30] (1.2,1.6) rectangle (1.8,1.8);
+\node at (1.5,1.7) {ADD};
+\draw[thick, fill=blue!30] (1.2,1.3) rectangle (1.8,1.5);
+\node at (1.5,1.4) {SUB};
+
+% Forwarding path
+\draw[->, green, thick] (1.8,1.7) -- (2.2,1.7) -- (2.2,1.4) -- (1.8,1.4);
+\node at (2.5,1.55) {Forward};
+
+\node at (1.5,0.8) {No stall};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Control Hazards and Branch Prediction}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Control Hazard Problem}:
+\begin{itemize}
+\item Branch outcome unknown until EX stage
+\item Next instruction address uncertain
+\item Pipeline must stall or guess
+\item Significant performance impact
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Branch Prediction Techniques}:
+\begin{itemize}
+\item \textbf{Static Prediction}: Always taken/not taken
+\item \textbf{Dynamic Prediction}: Based on history
+\item \textbf{1-bit Predictor}: Last outcome
+\item \textbf{2-bit Predictor}: Saturating counter
+\item \textbf{Correlating Predictors}: Pattern-based
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Branch Target Prediction}:
+\begin{itemize}
+\item \textbf{Branch Target Buffer (BTB)}: Cache of target addresses
+\item \textbf{Return Address Stack}: For function calls
+\item \textbf{Indirect Branch Prediction}: For computed jumps
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Misprediction Recovery}:
+\begin{itemize}
+\item Flush incorrectly fetched instructions
+\item Restore processor state
+\item Restart from correct address
+\item Performance penalty for mispredictions
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Branch Prediction}
+\vspace{0.3cm}
+
+% 2-bit predictor state machine
+\tikz{
+\node at (1.5,3.5) {\textbf{2-bit Predictor}};
+
+% States
+\node[draw, circle] (st) at (0,2.5) {ST};
+\node[draw, circle] (wt) at (3,2.5) {WT};
+\node[draw, circle] (wn) at (0,1.5) {WN};
+\node[draw, circle] (sn) at (3,1.5) {SN};
+
+% Transitions
+\draw[->] (st) to[bend left] node[above] {T} (wt);
+\draw[->] (wt) to[bend left] node[below] {NT} (st);
+\draw[->] (wt) to[bend left] node[right] {T} (sn);
+\draw[->] (sn) to[bend left] node[left] {NT} (wt);
+\draw[->] (sn) to[bend left] node[below] {T} (wn);
+\draw[->] (wn) to[bend left] node[above] {NT} (sn);
+\draw[->] (wn) to[bend left] node[left] {T} (st);
+\draw[->] (st) to[bend left] node[right] {NT} (wn);
+
+% Labels
+\node at (1.5,0.8) {ST: Strong Taken};
+\node at (1.5,0.5) {WT: Weak Taken};
+\node at (1.5,0.2) {WN: Weak Not Taken};
+\node at (1.5,-0.1) {SN: Strong Not Taken};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% subsection 5: Advanced ILP Techniques
+\subsection{Advanced ILP Techniques}
+
+\begin{frame}{Superscalar Processors}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Superscalar Concept}:
+\begin{itemize}
+\item Multiple instructions issued per cycle
+\item Multiple functional units
+\item Dynamic instruction scheduling
+\item Higher instruction-level parallelism
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Implementation Challenges}:
+\begin{itemize}
+\item \textbf{Instruction Fetch}: Multiple instructions per cycle
+\item \textbf{Decode Complexity}: Parallel instruction decode
+\item \textbf{Resource Conflicts}: Managing multiple functional units
+\item \textbf{Register Renaming}: Eliminate false dependencies
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Scheduling Approaches}:
+\begin{itemize}
+\item \textbf{Static Scheduling}: Compiler-based reordering
+\item \textbf{Dynamic Scheduling}: Hardware-based reordering
+\item \textbf{Out-of-Order Execution}: Tomasulo's algorithm
+\item \textbf{Speculative Execution}: Execute before branches resolved
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Performance Benefits}:
+\begin{itemize}
+\item Higher instructions per cycle (IPC)
+\item Better functional unit utilization
+\item Reduced impact of individual hazards
+\item Scalable performance improvements
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Superscalar Pipeline}
+\vspace{0.3cm}
+
+\tikz{
+% Multiple issue pipeline
+\node at (1.5,3.5) {\textbf{4-way Superscalar}};
+
+% Fetch stage
+\draw[thick] (0,3) rectangle (3,3.3);
+\node at (1.5,3.15) {Fetch 4 Instructions};
+
+% Decode stage
+\foreach \x in {0, 0.75, 1.5, 2.25} {
+  \draw[thick] (\x,2.5) rectangle (\x+0.6,2.8);
+  \node at (\x+0.3,2.65) {Dec};
+}
+
+% Execute stage
+\foreach \x/\unit in {0/ALU, 0.75/ALU, 1.5/LD/ST, 2.25/BR} {
+  \draw[thick] (\x,2) rectangle (\x+0.6,2.3);
+  \node at (\x+0.3,2.15) {\unit};
+}
+
+% Write back
+\draw[thick] (0,1.5) rectangle (3,1.8);
+\node at (1.5,1.65) {Write Back 4 Results};
+
+% Arrows
+\foreach \x in {0.3, 1.05, 1.8, 2.55} {
+  \draw[->] (\x,3) -- (\x,2.8);
+  \draw[->] (\x,2.5) -- (\x,2.3);
+  \draw[->] (\x,2) -- (\x,1.8);
+}
+
+\node at (1.5,1.2) {\textbf{Up to 4 IPC}};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Out-of-Order Execution Principle}:
+\begin{itemize}
+\item Instructions execute when operands ready
+\item Not necessarily in program order
+\item Improves functional unit utilization
+\item Hides latency of slow operations
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Key Components}:
+\begin{itemize}
+\item \textbf{Reservation Stations}: Hold instructions waiting for operands
+\item \textbf{Reorder Buffer}: Maintain program order for commits
+\item \textbf{Register Renaming}: Eliminate false dependencies
+\item \textbf{Common Data Bus}: Broadcast results to waiting instructions
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Tomasulo's Algorithm}:
+\begin{itemize}
+\item Dynamic scheduling with register renaming
+\item Reservation stations track dependencies
+\item Instructions execute when ready
+\item Results committed in program order
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Benefits and Costs}:
+\begin{itemize}
+\item \textbf{Benefits}: Higher IPC, latency tolerance
+\item \textbf{Costs}: Complex hardware, power consumption
+\item \textbf{Scalability}: Limited by window size
+\item \textbf{Verification}: Complex correctness verification
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{Out-of-Order Engine}
+\vspace{0.3cm}
+
+\tikz{
+% Instruction flow
+\node at (1.5,3.8) {\textbf{OoO Execution}};
+
+% Fetch/Decode
+\draw[thick] (0.5,3.4) rectangle (2.5,3.6);
+\node at (1.5,3.5) {Fetch/Decode};
+
+% Reservation stations
+\draw[thick] (0,2.8) rectangle (1,3.2);
+\node at (0.5,3) {RS1};
+\draw[thick] (1.2,2.8) rectangle (2.2,3.2);
+\node at (1.7,3) {RS2};
+\draw[thick] (2.4,2.8) rectangle (3.4,3.2);
+\node at (2.9,3) {RS3};
+
+% Functional units
+\draw[thick] (0,2.2) rectangle (1,2.6);
+\node at (0.5,2.4) {ALU1};
+\draw[thick] (1.2,2.2) rectangle (2.2,2.6);
+\node at (1.7,2.4) {ALU2};
+\draw[thick] (2.4,2.2) rectangle (3.4,2.6);
+\node at (2.9,2.4) {LD/ST};
+
+% Reorder buffer
+\draw[thick] (0.5,1.6) rectangle (2.5,1.9);
+\node at (1.5,1.75) {Reorder Buffer};
+
+% Commit
+\draw[thick] (0.5,1) rectangle (2.5,1.3);
+\node at (1.5,1.15) {Commit (In-Order)};
+
+% Arrows
+\draw[->] (1.5,3.4) -- (0.5,3.2);
+\draw[->] (1.5,3.4) -- (1.7,3.2);
+\draw[->] (1.5,3.4) -- (2.9,3.2);
+\draw[->] (0.5,2.8) -- (0.5,2.6);
+\draw[->] (1.7,2.8) -- (1.7,2.6);
+\draw[->] (2.9,2.8) -- (2.9,2.6);
+\draw[->] (1.5,2.2) -- (1.5,1.9);
+\draw[->] (1.5,1.6) -- (1.5,1.3);
+
+\node at (1.7,0.7) {\textbf{Execute when ready}};
+\node at (1.7,0.4) {\textbf{Commit in order}};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% subsection 6: Performance Analysis
+\subsection{Performance Analysis}
+
+\begin{frame}{ILP Performance Metrics}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Performance Metrics}:
+\begin{itemize}
+\item \textbf{IPC (Instructions Per Cycle)}: Average instructions completed per cycle
+\item \textbf{CPI (Cycles Per Instruction)}: Average cycles per instruction (1/IPC)
+\item \textbf{Speedup}: Performance improvement over baseline
+\item \textbf{Efficiency}: Actual performance vs. theoretical maximum
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Factors Affecting ILP Performance}:
+\begin{itemize}
+\item \textbf{Instruction Mix}: Types of instructions in workload
+\item \textbf{Dependency Frequency}: How often hazards occur
+\item \textbf{Branch Frequency}: Control flow disruptions
+\item \textbf{Cache Performance}: Memory system efficiency
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Amdahl's Law for ILP}:
+\begin{itemize}
+\item Sequential portions limit parallel speedup
+\item Dependencies create sequential bottlenecks
+\item Diminishing returns with more parallel resources
+\item Practical ILP limits: 2-4 instructions per cycle
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Optimization Strategies}:
+\begin{itemize}
+\item Compiler optimizations for ILP
+\item Hardware prediction improvements
+\item Larger instruction windows
+\item Better branch prediction
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{ILP Performance}
+\vspace{0.3cm}
+
+% Performance graph
+\tikz{
+\draw[->] (0,0) -- (3,0);
+\draw[->] (0,0) -- (0,3);
+\node at (3.2,0) {Issue Width};
+\node at (0,3.2) {IPC};
+
+% Performance curve
+\draw[thick, blue] (0.2,0.2) .. controls (1,1.5) and (2,2.2) .. (2.8,2.4);
+
+% Theoretical maximum
+\draw[thick, red, dashed] (0,0) -- (2.8,2.8);
+\node at (2.2,2.5) {Theoretical};
+\node at (2.2,2.2) {Actual};
+
+% Practical limit
+\draw[thick, green, dashed] (0,1.8) -- (3,1.8);
+\node at (2.5,1.5) {Practical Limit};
+
+% Labels
+\node at (1.5,-0.3) {Superscalar Width};
+\node at (-0.5,1.5) {IPC};
+}
+
+\vspace{0.5cm}
+
+% Bottlenecks
+\tikz{
+\node at (1.5,1.5) {\textbf{ILP Bottlenecks}};
+\node at (1.5,1.2) {• Dependencies};
+\node at (1.5,0.9) {• Branch mispredictions};
+\node at (1.5,0.6) {• Resource conflicts};
+\node at (1.5,0.3) {• Memory latency};
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Summary
+\subsection{Summary}
+
+\begin{frame}{Chapter Summary}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+\concept{Key Concepts Covered}:
+\begin{itemize}
+\item Instruction Level Parallelism (ILP) fundamentals
+\item Pipelining principles and implementation
+\item Pipeline hazards and resolution techniques
+\item Advanced ILP: superscalar and out-of-order execution
+\item Performance analysis and optimization strategies
+\item Trade-offs between complexity and performance
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Technical Innovations}:
+\begin{itemize}
+\item Pipeline acceleration techniques
+\item Data forwarding and hazard resolution
+\item Branch prediction mechanisms
+\item Dynamic instruction scheduling
+\item Register renaming and speculation
+\end{itemize}
+
+\vspace{0.3cm}
+\concept{Modern Relevance}:
+\begin{itemize}
+\item Foundation for all modern processors
+\item Basis for high-performance computing
+\item Principles in GPU and accelerator design
+\item Continued evolution in processor architecture
+\item Critical for energy-efficient computing
+\end{itemize}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{center}
+\textbf{ILP Evolution}
+\vspace{0.3cm}
+
+\tikz{
+\node[draw, circle, minimum width=1.5cm] (center) at (0,0) {ILP};
+\node[draw, rectangle] (pipe) at (0,1.5) {Pipelining};
+\node[draw, rectangle] (super) at (-1.5,0.5) {Superscalar};
+\node[draw, rectangle] (ooo) at (1.5,0.5) {Out-of-Order};
+\node[draw, rectangle] (modern) at (0,-1.5) {Modern CPUs};
+
+\draw[->] (pipe) -- (center);
+\draw[->] (center) -- (super);
+\draw[->] (center) -- (ooo);
+\draw[->] (center) -- (modern);
+}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Discussion Questions}
+\begin{enumerate}
+\item How does pipelining improve processor performance and what are its limitations?
+\item What are the different types of pipeline hazards and how can they be resolved?
+\item How does data forwarding reduce pipeline stalls and what are its costs?
+\item What role does branch prediction play in maintaining pipeline efficiency?
+\item How do superscalar processors achieve higher instruction throughput?
+\item What are the benefits and challenges of out-of-order execution?
+\item How do compiler optimizations complement hardware ILP techniques?
+\item What factors limit the practical amount of ILP that can be extracted?
+\end{enumerate}
+\end{frame}
+
+

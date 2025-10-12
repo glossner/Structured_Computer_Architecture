@@ -4,6 +4,8 @@
 
 \documentclass[aspectratio=169,11pt]{beamer}
 
+
+
 % Theme and color scheme (simple, print-friendly)
 \usetheme{default}
 \usecolortheme{default}
@@ -30,11 +32,14 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+%\usepackage{adjustbox}
 \usepackage{tikz}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{listings}
 \usepackage{xcolor}
+
+\usepackage{latexcad}  % Position sensitive
 
 % Set graphics path for images (relative to slides directory)
 \graphicspath{{../Images/}}
@@ -52,6 +57,17 @@
 
 \begin{document}
 
+%******************************************
+% Section contents
+%  Place a section TOC before each section
+%*******************************************
+\AtBeginSection[]{
+  \begin{frame}{Outline}
+    \tableofcontents[currentsection,hideallsubsections]
+  \end{frame}
+}
+
+
 %******************************
 % Title Slide
 %*******************************
@@ -68,15 +84,11 @@
 \begin{center}
 {\Huge Part I}\\[0.5cm]
 {\Large Number Systems and Representations}\\[0.5cm]
-%{\normalsize Foundations of Digital Representation}
 \end{center}
 \end{frame}
 
 \section{Number Systems, Sets, and Representations}
-\begin{frame}{Outline}
-\tableofcontents[sections=1]
-\end{frame}
-\input{Latex/slides/01_01-07_slides}
+\input{Latex/slides_01_01-07}
 
 %******************************
 % Part II Slides
@@ -87,81 +99,146 @@
 \begin{center}
 {\Huge Part II}\\[0.5cm]
 {\Large From Gates to Processors}\\[0.5cm]
-%{\normalsize Foundations of Digital Representation}
 \end{center}
 \end{frame}
 
 %***************************************
 % Chapter 02_08: Combinational Circuits
 %***************************************
-\section{Combinational Circuits: No-Loop, Zero-Order Systems (0-OS)}
-
 \begin{frame}
 \begin{center}
 {\Huge Chapter 8: Combinational Circuits}\\[0.5cm]
 {\Large No-Loop, Zero-Order Systems (0-OS)}\\[0.5cm]
-%{\normalsize Foundations of Digital Representation}
 \end{center}
 \end{frame}
 
-\begin{frame}{Outline}
-\tableofcontents[sections=2]
-\end{frame}
-\input{Latex/slides/02_08_slides}
+\section{Combinational Circuits: No-Loop, Zero-Order Systems (0-OS)}
+\input{Latex/slides_02_08}
 
 %***************************************
 % Chapter 02_09: Memory Circuits
 %***************************************
-\section{Memory Circuits: One-Loop, First-Order Systems (1-OS)}
-
 \begin{frame}
 \begin{center}
 {\Huge Chapter 9: Memory Circuits}\\[0.5cm]
 {\Large One-Loop, First-Order Systems (1-OS)}\\[0.5cm]
-%{\normalsize Foundations of Digital Representation}
 \end{center}
 \end{frame}
 
-\begin{frame}{Outline}
-\tableofcontents[sections=3]
-\end{frame}
-\input{Latex/slides/02_09_slides}
+\section{Memory Circuits: One-Loop, First-Order Systems (1-OS)}
+\input{Latex/slides_02_09}
 
 %***************************************
 % Chapter 02_10: Automata
 %***************************************
-\section{Automata: Two-Loop, Second-Order Systems (2-OS)}
-
 \begin{frame}
 \begin{center}
 {\Huge Chapter 10: Automata}\\[0.5cm]
 {\Large Two-Loop, Second-Order Systems (2-OS)}\\[0.5cm]
-%{\normalsize Foundations of Digital Representation}
 \end{center}
 \end{frame}
 
-\begin{frame}{Outline}
-\tableofcontents[sections=4]
-\end{frame}
-\input{Latex/slides/02_10_slides}
+\section{Automata: Two-Loop, Second-Order Systems (2-OS)}
+\input{Latex/slides_02_10}
 
 %***************************************
 % Chapter 02_11: Processors
 %***************************************
-\section{Processors: Three-Loop, Third-Order Systems (3-OS)}
-
 \begin{frame}
 \begin{center}
 {\Huge Chapter 11: Processors}\\[0.5cm]
 {\Large Three-Loop, Third-Order Systems (3-OS)}\\[0.5cm]
-%{\normalsize Foundations of Digital Representation}
 \end{center}
 \end{frame}
 
-\begin{frame}{Outline}
-\tableofcontents[sections=5]
+\section{Processors: Three-Loop, Third-Order Systems (3-OS)}
+\input{Latex/slides_02_11}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Part III Slides
+%%%%%%%%%%%%%%%%%%%%%%%%
+\part{Computing}
+
+\begin{frame}
+\begin{center}
+{\Huge Part III}\\[0.5cm]
+{\Large Computing}\\[0.5cm]
+\end{center}
 \end{frame}
-\input{Latex/slides/02_11_slides}
+
+
+%***************************************
+% Chapter 03_12: Von Neumann
+%***************************************
+\section{Computers: Four-Loop, Fourth-Order Systems (4-OS)}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 12: Computers:}\\[0.5cm]
+{\Large Von Neumann: Four-Loop, Fourth-Order Systems (4-OS)}\\[0.5cm]
+\end{center}
+\end{frame}
+
+\input{Latex/slides_03_12}
+
+%***************************************
+% Chapter 03_13: Harvard Computer
+%***************************************
+\section{Computers: Five-Loop, Fifth-Order Systems (5-OS)}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 13: Computers:}\\[0.5cm]
+{\Large Harvard:  Five-Loop, Fifth-Order Systems (5-OS)}\\[0.5cm]
+\end{center}
+\end{frame}
+
+\input{Latex/slides_03_13}
+
+%***************************************
+% Chapter 03_14: Parallel Computation
+%***************************************
+% \section{Computers: N-Loop, N-Order Systems (N-OS)}
+
+% \begin{frame}
+% \begin{center}
+% {\Huge Chapter 14: Computers:}\\[0.5cm]
+% {\Large Parallel Computers: N-Loop, N-Order Systems (N-OS)}\\[0.5cm]
+% %{\normalsize Foundations of Digital Representation}
+% \end{center}
+% \end{frame}
+
+% \begin{frame}{Outline}
+% \tableofcontents[sections=8]
+% \end{frame}
+% \input{Latex/slides/03_14_slides}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Part IV Slides
+%%%%%%%%%%%%%%%%%%%%%%%%
+\part{Practical Designs}
+
+\begin{frame}
+\begin{center}
+{\Huge Part IV}\\[0.5cm]
+{\Large Practical Designs}\\[0.5cm]
+\end{center}
+\end{frame}
+
+
+%***************************************
+% Chapter 04_16: ILP
+%***************************************
+\section{Instruction-Level Parallelism}
+
+\begin{frame}
+\begin{center}
+{\Huge Chapter 16: Instruction-Level Parallelism:}\\[0.5cm]
+\end{center}
+\end{frame}
+
+
+\input{Latex/slides_04_16}
 
 
 \end{document}

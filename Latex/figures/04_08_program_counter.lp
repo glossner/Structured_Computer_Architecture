@@ -6,11 +6,13 @@
 \thicklines
 \drawframebox{16.0}{20.0}{24.0}{12.0}{Program Counter}
 \drawvector{16.0}{14.0}{6.0}{0}{-1}
-\drawvector{16.0}{32.0}{6.0}{0}{-1}
+\drawvector{10.0}{32.0}{6.0}{0}{-1}
+\drawvector{22.0}{32.0}{6.0}{0}{-1}
 \drawvector{34.0}{22.0}{6.0}{-1}{0}
 \thinlines
 \drawvector{34.0}{16.0}{6.0}{-1}{0}
-\drawcenteredtext{16.0}{34.0}{value}
+\drawcenteredtext{10.0}{34.0}{relValue}
+\drawcenteredtext{22.0}{34.0}{absValue}
 \drawcenteredtext{16.0}{6.0}{address}
 \drawcenteredtext{38.0}{22.0}{next}
 \thicklines
