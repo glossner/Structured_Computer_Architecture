@@ -1,4 +1,5 @@
-// See README.md for license details.
+// Licensed under the Solderpad Hardware License v 2.1  
+// See: https://solderpad.org/licenses/SHL-2.1/
 
 package scabook
 

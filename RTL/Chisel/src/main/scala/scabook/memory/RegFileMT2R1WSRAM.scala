@@ -1,5 +1,5 @@
-// Licensed under the BSD 3-Clause License. 
-// See https://opensource.org/licenses/BSD-3-Clause for details.
+// Licensed under the Solderpad Hardware License v 2.1  
+// See: https://solderpad.org/licenses/SHL-2.1/
 
 package scabook.memory
 
