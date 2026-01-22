@@ -7,5 +7,5 @@
             D(0); L(3); MOVE; WB; LL; // rf[0] <= rf[3]
             D(6); L(6); R(5); SUB; WB; ZJMP(55); LL; 
              // rf[6] <= rf[6]-rf[5]; if (rf[6]=0) jump to LB(55)
-            JMP(0); LL; jump to LB(0)
-    LB(55); JMP(55); LL; jump to LB(55); i.e., halt micro-program
+            JMP(0); LL; // jump to LB(0)
+    LB(55); JMP(55); LL; // jump to LB(55); i.e., halt micro-program

@@ -160,7 +160,7 @@
         aluFunc = `subcr;
     endfunction
 
-    function LSH; // rf[dest] = rf[left] >> 1
+    function RSH; // rf[dest] = rf[left] >> 1
         aluFunc = `lsh  ;
     endfunction
 

@@ -1,4 +1,4 @@
-\chapter{Combinational Circuits:  No-Loop, Zero-Order Systems (0-OS)}\label{lect1}
+\chapter{Combinational Circuits\index{combinational circuits: zero order digital system (0-OS) having having no loop connections}:  No-Loop, Zero-Order Systems (0-OS)\index{0-OS: zero order system -- gates}}\label{lect1}
 \localtoc
 
 In this chapter, we make a compromise and provide an introduction to the field of digital circuits that introduces only the necessary concepts to understand the principles on which the organization and architecture of computers are based. We generally present functional or behavioral designs in preference to highly optimized structural components.
@@ -6,12 +6,12 @@ In this chapter, we make a compromise and provide an introduction to the field o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Boolean Algebra}
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-Boolean algebra is a branch of mathematics that deals with binary variables and logical operations. It serves as the foundation for modern digital logic and computer science, enabling the design and analysis of digital circuits and computational algorithms. Developed in the mid-19th century, Boolean algebra forms the basis of everything from simple electronic gates to complex processors.
+Boolean algebra\index{Boolean algebra: is a branch of algebra whose variables are the truth values true and false} is a branch of mathematics that deals with binary variables and logical operations. It serves as the foundation for modern digital logic and computer science, enabling the design and analysis of digital circuits and computational algorithms. Developed in the mid-19th century, Boolean algebra forms the basis of everything from simple electronic gates to complex processors.
 
 %*********************************
 \subsection{Historical Background}
 %*********************************
-Boolean algebra was introduced by George Boole in \emph{An Investigation of the Laws of Thought}, published in 1854 \cite{boole1854book}. Boole sought to formalize the process of human reasoning using a symbolic language, representing logical relationships through algebraic structures. Although initially developed as a tool for philosophy and logic, Boolean algebra found practical applications in the early 20th century when Claude Shannon demonstrated its utility in designing electrical circuits \cite{shannon38}.
+Boolean algebra was introduced by George Boole\index{Boole, George (1815-1864), English mathematician and philosopher credited for Boolean algebra} in \emph{An Investigation of the Laws of Thought}, published in 1854 \cite{boole1854book}. Boole sought to formalize the process of human reasoning using a symbolic language, representing logical relationships through algebraic structures. Although initially developed as a tool for philosophy and logic, Boolean algebra found practical applications in the early 20th century when Claude Shannon\index{Shannon, Claude (1916-2001): an American mathematician, electrical engineer, computer scientist, who demonstrated that electrical applications of Boolean algebra can substantiate any  digital computing machine using digital circuits} demonstrated its utility in designing electrical circuits \cite{shannon38}.
 
 Shannon's master's thesis, \emph{A Symbolic Analysis of Relay and Switching Circuits}, linked Boolean algebra with electrical switches, showing how logical operations could be implemented using relay circuits. This work laid the foundation for digital circuit design and the development of modern computers \cite{shannon38}.
 
@@ -64,15 +64,15 @@ A \lor \neg A = 1, \quad A \land \neg A = 0
 %***************************
 \subsection{DeMorgan's Laws}
 %***************************
-Augustus De Morgan (1806–1871) was a British mathematician and logician whose work played an important role in the development of formal logic and algebra. Born in India and educated in England, De Morgan became the first professor of mathematics at University College London \cite{grattan1997}. 
+Augustus De Morgan\index{De Morgan, Augustus (1806–1871), a 19th-century British mathematician credited for De Morgan Laws}  was a British mathematician and logician whose work played an important role in the development of formal logic and algebra. Born in India and educated in England, De Morgan became the first professor of mathematics at University College London \cite{grattan1997}. 
 
 De Morgan's Laws were introduced in his 1847 book, \emph{Formal Logic: or, The Calculus of Inference, Necessary and Probable} \cite{deMorgan1847}. In this work, De Morgan formalized rules for distributing negations over logical operators, providing a foundation for algebraic reasoning in logic. While the concepts underlying these laws can be traced back to Aristotelian logic, De Morgan was the first to formalize them using algebraic symbols.
 
 His work paralleled that of George Boole, whose algebraic system, now known as Boolean algebra, was published in the same period. Together, De Morgan and Boole changed the field of logic, moving it from a purely philosophical discipline to a mathematical one \cite{grattan1997}.
 
-DeMorgan's Laws are fundamental principles in Boolean algebra, describing the relationships between logical conjunction (AND), disjunction (OR), and negation (NOT). They provide a way to express the complement of a compound expression in terms of the complements of its components. These laws are especially useful in digital logic design and simplification, as they allow for the transformation of logic expressions to equivalent forms using fewer gates or alternate gate configurations \cite{rosen2018, tanenbaum2013}.
+De Morgan's Laws are fundamental principles in Boolean algebra, describing the relationships between logical conjunction (AND), disjunction (OR), and negation (NOT). They provide a way to express the complement of a compound expression in terms of the complements of its components. These laws are especially useful in digital logic design and simplification, as they allow for the transformation of logic expressions to equivalent forms using fewer gates or alternate gate configurations \cite{rosen2018, tanenbaum2013}.
 
-Mathematically, DeMorgan's Laws state:
+Mathematically, De Morgan's Laws state:
 \[
 \neg (A \lor B) = (\neg A) \land (\neg B), \quad \neg (A \land B) = (\neg A) \lor (\neg B)
 \]
@@ -252,7 +252,7 @@ In the electronic digital domain, we work with only two values (see Figure \ref{
 \placedrawing[H]{figures/01_01_digital_0_and_1.lp}{The two levels of the signal in the digital domain. Low level (0 Volt) for {\tt 0} or {\tt false}, and high level ($V_{DD}$ Volt) for {\tt 1} or {\tt true}.}{fig:logic_levels}
 
 \begin{itemize}
-\item 0, represented by the electrical value 0 V, having two meanings:
+\item 0, represented by the electrical value 0 V, which has two meanings:
 \begin{itemize}
 \item the numerical value {\tt 0}
 \item the logic value {\tt false}
@@ -281,7 +281,7 @@ Any simulation is based on the generation of waveforms with which the simulated 
 %*********************************************************    
 \includeverilogcode[caption={Waveform Generator Code (Hand Written SystemVerilog)},     label={lst:verilog_waveformgenerator}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/waveFormGenerator.sv}
 
-Listing \ref{lst:verilog_waveformgenerator} shows the SystemVerilog module, \texttt{waveFormGenerator}. It generates two output waveforms: a \texttt{randomWave} signal and a \texttt{clock} signal. The \texttt{randomWave} signal transitions between predefined states based on explicit delays specified using the \texttt{\#} operator. It begins at \texttt{0}, transitions to \texttt{1} after 2 time units, back to \texttt{0} after 6 more time units, to \texttt{1} after 4 additional time units, and finally to \texttt{0} after 8 time units. The simulation halts 5 time units later using the \texttt{\$stop} command. The \texttt{clock} signal is a periodic waveform toggling its state every 2 time units, implemented with a \texttt{forever} loop.
+    Listing \ref{lst:verilog_waveformgenerator} shows the System Verilog\index{System Verilog: a Hardware Description Language preceded by Verilog} module, \texttt{waveFormGenerator}. It generates two output waveforms\index{waveform: electronic signal  indicating the time domain image of a measured signal}: a \texttt{randomWave} signal and a \texttt{clock} signal. The \texttt{randomWave} signal transitions between predefined states based on explicit delays specified using the \texttt{\#} operator. It begins at \texttt{0}, transitions to \texttt{1} after 2 time units, back to \texttt{0} after 6 more time units, to \texttt{1} after 4 additional time units, and finally to \texttt{0} after 8 time units. The simulation halts 5 time units later using the \texttt{\$stop} command. The \texttt{clock} signal is a periodic waveform toggling its state every 2 time units, implemented with a \texttt{forever} loop.
 
 \placedrawing[H]{figures/01_02_waveSim.lp}{Waveforms generated by Vivado for hand written SystemVerilog simulation}{fig:vivado_wave}
 
@@ -368,7 +368,7 @@ A one-input combinational circuit is a digital logic circuit where the output de
 
 \placedrawing[H]{figures/02_01_not.lp}{Graphic representation of the NOT and BUFFER circuits.}{fig:one_input_ckt}
 
-Table \ref{tab:one_input_circuits} shows the truth table for a NOT gate, which inverts the input (\( f(A) = \neg A \)), and BUFFER (constant) circuit, which outputs a fixed value regardless of the input (\( f(A) = 0 \) or \( f(A) = 1 \)). Figure \ref{fig:one_input_ckt} shows the logic circuit symbol of the NOT and BUFFER combinational circuits. This is also called a gate symbol.
+Table \ref{tab:one_input_circuits} shows the truth table for a NOT gate\index{gate: logical circuit!NOT: logic circuit that inverts the truth value}, which inverts the input (\( f(A) = \neg A \)), and BUFFER (constant) circuit, which outputs a fixed value regardless of the input (\( f(A) = 0 \) or \( f(A) = 1 \)). Figure \ref{fig:one_input_ckt} shows the logic circuit symbol of the NOT and BUFFER combinational circuits. This is also called a gate symbol.
 
 %***************************************************
 \subsection{Physical Implementation of NOT Circuit}
@@ -410,31 +410,31 @@ Each type of two-input gate corresponds to a specific Boolean operation, such as
 Table \ref{tab:two_input_gates} shows the truth table for combinational 2-input gates and Table \ref{tab:logic_gates_summary} shows the summary of their interpretations.
 
 \begin{description}
-\item[AND]: \( A \cdot B = AB \), where \( AB = 1 \) only if both \( A \) and \( B \) are 1, otherwise \( AB = 0 \). \\
+\item[AND]:\index{gate: logical circuit!AND: compute the Boolean conjunction} \( A \cdot B = AB \), where \( AB = 1 \) only if both \( A \) and \( B \) are 1, otherwise \( AB = 0 \). \\
     Numerical interpretation: Arithmetic product. \\
     Symbolic interpretation:  Gate, because \( A = 1 \) opens the way for \( B \). \\
     Alternative names: Conjunction, multiply gate, all-or-nothing gate \cite{boole1854book, rosen2018}.
 
-\item[NAND]: \( \neg (A \cdot B) \), where the output is \( 0 \) only if both \( A \) and \( B \) are 1; otherwise, the output is \( 1 \). \\
+\item[NAND]:\index{gate: logical circuit!NAND: compute the inverse of the Boolean conjunction} \( \neg (A \cdot B) \), where the output is \( 0 \) only if both \( A \) and \( B \) are 1; otherwise, the output is \( 1 \). \\
     Symbolic interpretation: Universal gate. \\
     Alternative names: Sheffer stroke, negated AND gate \cite{sheffer1913, rosen2018}.
 
-\item[OR]: \( A + B \), where \( A + B = 1 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, \( A + B = 0 \). \\
+\item[OR]:\index{gate: logical circuit!OR: compute the Boolean disjunction} \( A + B \), where \( A + B = 1 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, \( A + B = 0 \). \\
     Symbolic interpretation: Inclusive OR. \\
     Alternative names: Disjunction, any-or-all gate \cite{rosen2018}.
 
-\item[NOR]: \( \neg (A + B) \), where the output is \( 0 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, the output is \( 1 \). \\
+\item[NOR]:\index{gate: logical circuit!NOR: compute the inverse of the  Boolean disjunction} \( \neg (A + B) \), where the output is \( 0 \) if at least one of \( A \) or \( B \) is \( 1 \); otherwise, the output is \( 1 \). \\
     Symbolic interpretation: Universal gate. \\
     Alternative names: Peirce arrow, negated OR gate \cite{peirce1885, rosen2018}.
 
-\item[XOR]: Exclusive OR, because it excludes the case \( A = B = 1 \) in determining \( 1 \) on the output. \\
+\item[XOR]:\index{gate: logical circuit!XOR: compute the Boolean exclusive OR} Exclusive OR, because it excludes the case \( A = B = 1 \) in determining \( 1 \) on the output. \\
     \( A \oplus B = 1 \) when only one of the inputs \( A \) or \( B \) is \( 1 \). \\
     Logic interpretation: Conditioned inverter, i.e., \( \text{if } A = 0 \text{ then } A \oplus B = B, \text{ else } A \oplus B = B' \). \\
     Numerical interpretation: Modulo-2 sum. \\
     Symbolic interpretation: Anticoincidence. \\
     Alternative names: Either-or gate, modulo-2 adder \cite{shannon48, rosen2018}.
 
-\item[XNOR]: \( \neg (A \oplus B) \). \\
+\item[XNOR]:\index{gate: logical circuit!nXOR: compute the inverse of the Boolean exclusive OR} \( \neg (A \oplus B) \). \\
     Symbolic interpretation: Coincidence. \\
     Alternative names: Equality gate, NOT XOR \cite{mano2017, rosen2018}.
 \end{description}
@@ -470,7 +470,7 @@ Many of the historical names in \ref{tab:logic_gates_summary} stem from differen
 Figure \ref{fig:graphical_gates} shows the graphical representations of logic gates. These originated from the need to visually depict logical operations in a way that facilitated the design and analysis of digital systems. These representations were inspired by symbolic logic and Boolean algebra, where logic functions were expressed using abstract symbols. Early pioneers, such as Claude Shannon, formalized the connection between Boolean algebra and electronic circuits, enabling the translation of logical expressions into circuit designs \cite{shannon48}. Over time, distinct shapes were assigned to each gate for clarity—such as the triangular symbol for NOT gates and the curved line for OR gates. Standardization efforts by organizations like the IEEE and IEC later codified these symbols, ensuring universal recognition and consistency in circuit diagrams \cite{ieee_std_91}. 
 
 
-\placedrawing[H]{figures/02_08_non_inverting_gate_waveforms.lp}{Wave forms for the non-inverting gates.}{fig:waveforms}
+\placedrawing[H]{figures/02_08_non_inverting_gate_waveforms.lp}{Waveforms for the non-inverting gates.}{fig:waveforms}
 Waveforms are tools used in digital logic for visualizing and analyzing the behavior of signals over time. They represent the changes in voltage levels for inputs, outputs, and intermediate nodes in a circuit, making it easier to understand timing relationships, transitions, and delays. The use of waveforms emerged alongside the development of oscilloscopes and other signal measurement tools in the early 20th century, as engineers needed a method to observe electrical signals in real-time. With the advent of digital systems, waveforms became a standard way to represent binary signals, where high and low voltage levels correspond to logical 1s and 0s, respectively. Waveforms allow engineers to verify the correct operation of logic circuits and diagnose timing-related issues such as glitches, race conditions, and setup/hold violations \cite{horowitz1993, ieee_waveform}. Their graphical nature complements schematic diagrams by providing temporal information that is not inherently visible in static circuit representations.
 
 
@@ -493,7 +493,7 @@ Mathematically, the total number of distinct \( n \)-input gates is \( N^{2^n} \
 
 In modern digital design, many-input gates are often implemented using a combination of smaller gates, as direct implementation can become physically and computationally impractical for large \( n \). For example, a 16-input AND gate might be constructed hierarchically by combining multiple 2-input AND gates. 
 
-Let's consider some significant examples using verilog's ' (tick) symbol to denote negation:
+Let us consider some significant examples using verilog's' (tick) symbol to denote negation:
 
 \begin{itemize}
     \item (A')' = A
@@ -532,7 +532,7 @@ Let's consider some significant examples using verilog's ' (tick) symbol to deno
 %*******************
 \subsection{Decoder}
 %********************
-Figure \ref{fig:decoder} shows a generic $n$-bit decoder. A decoder is a combinational logic circuit that translates a binary-encoded input signal into a unique one-hot output. The term "one-hot" refers to a representation in which only one bit is set to '1', while all other bits are '0'. For example, in a 4-bit 1-hot code, valid outputs include 0001, 0010, 0100, and 1000. This encoding is commonly used in digital systems in control logic. It eliminates the need for decoding multiple bits simultaneously. 
+Figure \ref{fig:decoder} shows a generic $n$-bit {\bf {\em decoder}}\index{decoder: logic circuit that translates a binary-encoded input signal into a unique one-hot output}. A decoder is a combinational logic circuit that translates a binary-encoded input signal into a unique {\bf {\em one-hot}}\index{one-hot: a representation in which only one bit is set to '1', while all other bits are '0'} output. The term "one-hot" refers to a representation in which only one bit is set to '1', while all other bits are '0'. For example, in a 4-bit 1-hot code, valid outputs include 0001, 0010, 0100, and 1000. This encoding is commonly used in digital systems for control logic. It eliminates the need to decode multiple bits simultaneously. 
 
 \begin{figure}[h!]
 \centering
@@ -553,7 +553,7 @@ x_1 & x_0 &  y_3 &  y_2 & y_1 & y_0 \\
 \label{fig:decoder_truth_table}
 \end{figure}
 
-A decoder takes an \(n\)-bit binary input and generates \(2^n\) output lines, with exactly one line active (logic high) for any given input combination. The structure of a decoder includes an array of logic gates that process the input bits and their complements to generate the appropriate output signals. For example, Figure \ref{fig:decoder_truth_table} shows the truth table for a 2-to-4 decoder. Figure \ref{fig:decoder_and_gates}a shows an elementary decode that output both $x_n$ and $\overline{x_n}$. Figure \ref{fig:decoder_and_gates}a shows the two input bits (\(x_1\) and \(x_0\)) and their negations (\(\overline{x_0}\) and \(\overline{x_1}\)) are used to drive four output signals (\(y_3, y_2, y_1, y_0\)). 
+A decoder takes an \(n\)-bit binary input and generates \(2^n\) output lines, with exactly one line active (logic high) for any given input combination. The structure of a decoder includes an array of logic gates that process the input bits and their complements to generate the appropriate output signals. For example, Figure \ref{fig:decoder_truth_table} shows the truth table for a 2-to-4 decoder. Figure \ref{fig:decoder_and_gates}a shows an elementary decoder\index{elementary decoder: a one-input decoder} that outputs both $x_n$ and $\overline{x_n}$. Figure \ref{fig:decoder_and_gates}a shows that the two input bits (\(x_1\) and \(x_0\)) and their negations (\(\overline{x_0}\) and \(\overline{x_1}\)) are used to drive four output signals (\(y_3, y_2, y_1, y_0\)). 
 
 \placedrawing[H]{figures/02_10_recursive_decoder.lp}{Recursively defined 3-input decoder (DCD). {\bf a.} Elementary decoder (eDCD). {\bf b.} Two-input decoder (DCD2). {\bf c.} Three-input DCD (DCD3).}{fig:decoder_and_gates}
 
@@ -632,18 +632,18 @@ SystemVerilog, as an enhancement of Verilog, introduces parameterization capabil
 \subsection{Multiplexer}\label{genericMux}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-A \textbf{multiplexer} (often abbreviated as \textit{mux}) is a combinational logic circuit that selects one of several input signals and forwards the selected input to a single output line. The input selection is controlled by a set of control signals or \textit{select lines}, which determine which input to pass to the output. A multiplexer with $n$ select lines can control $2^n$ inputs, making it a highly versatile and compact solution for signal routing in digital systems.
+A {\bf {\em multiplexer}}\index{multiplexer: selects one of several input signals according to a selection code} (often abbreviated \textit{mux}) is a combinational logic circuit that selects one of several input signals and transmits the selected input to a single output line. The input selection is controlled by a set of control signals or \textit{select lines} that determine which input to pass to the output. A multiplexer with $n$ select lines can control the $2^n$ inputs, making it a highly versatile and compact solution for signal routing in digital systems.
 
-Multiplexers are widely used in digital design due to their ability to manage multiple signals within a system efficiently. In arithmetic circuits, multiplexers are often used for operations like selecting between different data sources or routing data to various processing units. They are also important components in larger systems such as CPUs, where they help implement control logic, ALU operation selection, and pipeline data forwarding. For example, in a microprocessor, a multiplexer might be used to select between input operands for an arithmetic operation based on the current instruction.
+Multiplexers are widely used in digital design due to their ability to manage multiple signals within a system efficiently. In arithmetic circuits, multiplexers are often used for operations such as selecting between different data sources or routing data to various processing units. They are also important components in larger systems, such as CPUs, where they help implement control logic, ALU operation selection, and pipeline data forwarding. For example, in a microprocessor, a multiplexer might be used to select between input operands for an arithmetic operation based on the current instruction.
 
-Multiplexers are used because they minimize the number of physical connections and wires required in a circuit. By reducing the need for separate connections for each input-output pair, a multiplexer allows for more efficient circuit designs. Additionally, they enhance the scalability of systems, because additional inputs can be accommodated by increasing the number of select lines. 
+Multiplexers are used because they minimize the number of physical connections and wires required in a circuit. By reducing the need for separate connections for each input-output pair, a multiplexer allows for more efficient circuit designs. In addition, they enhance the scalability of systems because additional inputs can be accommodated by increasing the number of select lines. 
 
 %**********************************
 \subsection{Elementary Multiplexer}
 %**********************************
 \placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexer (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
 
-Any combinational circuit can be expressed using only NAND functions. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexer (eMUX) represented in Figure \ref{fig:mux}, and shows:
+Any combinational circuit can be expressed using only NAND functions. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexer\index{elementary multiplexer: a 2 selected inputs multiplexer} (eMUX) represented in Figure \ref{fig:mux}, and shows the following:
 
 \begin{center} O = {\bf if} (S) {\bf then} I1 {\bf else} I0 \end{center}
 
@@ -651,7 +651,7 @@ Any combinational circuit can be expressed using only NAND functions. But a more
 \subsection{Many-input Multiplexer}
 %**********************************
 
-Figure \ref{fig:gen_mux} shows a many-input multiplexer. It takes bits from $m=2^n$ inputs selected by a $n$-bit code.
+Figure \ref{fig:gen_mux} shows a multiplexer with many-inputs. It takes bits from $m=2^n$ inputs selected by a $n$-bit code.
 
 \placedrawing[H]{figures/02_12_mux_generalized.lp}{The general definition of the multiplexer circuit (MUXn). {\bf a.} The structure of MUXn: a DCDn serially connected with a $m=2^n$ ANDs on the first level of an AND-OR structure. {\bf b.} The logic symbol for MUXn.}{fig:gen_mux}
 
@@ -724,13 +724,13 @@ Figure \ref{fig:mux4_flat} shows the schematic after the elaborated design is fl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Demultiplexer}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-A demultiplexer, often abbreviated as "demux," is a combinational circuit that takes a single input and channels it into one of several output lines based on the value of a selection signal. It is effectively the reverse operation of a multiplexer, consolidating multiple inputs into a single output. A demultiplexer is characterized by its ability to control the routing of the input data to the desired output line, ensuring that only one output is active at a time. The selection signal's binary value governs the active output selection.
+A {\bf {\em demultiplexer}}\index{demultiplexer: channels a one-bit input into one of several output lines based on  a selection signal}, often abbreviated as "demux," is a combinational circuit that takes a single input and channels it into one of several output lines based on the value of a selection signal. It is effectively the reverse operation of a multiplexer, consolidating multiple inputs into a single output. A demultiplexer is characterized by its ability to control the routing of the input data to the desired output line, ensuring that only one output is active at a time. The selection signal's binary value governs the active output selection.
 
-Demultiplexers are useful in digital systems for tasks requiring data distribution. For instance, they are employed in scenarios where a single source of information needs to be directed to one of many destinations. In data routing applications, demultiplexers help in reducing the complexity of data paths and enable efficient communication between components. Moreover, they are integral to memory addressing systems, where they are used to select specific memory locations for reading or writing operations.
+Demultiplexers are useful in digital systems for tasks that require data distribution. For example, they are used in scenarios where a single source of information needs to be directed to one of many destinations. In data routing applications, demultiplexers help reduce the complexity of data paths and enable efficient communication between components. Moreover, they are integral to memory addressing systems, where they are used to select specific memory locations for reading or writing operations.
 
 \placedrawing[H]{figures/02_13_demux.lp}{Demultiplexer as a DCD whose outputs are ANDed with the one bit signal to be distributed according to the $n$-bit input code. }{fig:demux}
 
-Figure \ref{fig:demux} shows the demultiplexer transfers the input signal X to one of the $m=2^n$ outputs, $y_0, y_1, \ldots, y_{m-1}$, indicated by the $n$-bit selection input, $x_0, x_1, \ldots, x_{n-1}$. In Figure \ref{fig:demux} a demultiplexer is built using a decoder which open only one of the $m$ AND gate sending the $X$ input to the selected output.
+Figure \ref{fig:demux} shows the demultiplexer that transfers the input signal X to one of the $m=2^n$ outputs, $y_0, y_1, \ldots, y_{m-1}$, indicated by the $n$-bit selection input, $x_0, x_1, \ldots, x_{n-1}$. In Figure \ref{fig:demux} a demultiplexer is built using a decoder which opens only one of the $m$ AND gates sending the $X$ input to the selected output.
 
 For example: if $$\{x_{n-1} x_{n-2}, \ldots, x_1, x_0\} = 00 \ldots 011$$ then
 $$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
@@ -773,20 +773,20 @@ The \texttt{DeMux16} class instantiates a parameterized demultiplexer from the \
 %*********************************
 \subsection{Seven-Segment Display}
 %*********************************
-A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled a through g, which can be illuminated to form numerical digits (0–9). The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex many-input gate. The circuit highlights how combinational logic can efficiently decode binary inputs into human-readable visual representations.
+A 7-segment display is a common example of a combinational circuit that illustrates the concept of many-input logic gates. It consists of seven individual segments, labeled a through g, which can be illuminated to form numerical digits (0–9). The control logic for a 7-segment display is designed as a combinational circuit that takes a binary-coded decimal (BCD) input, typically 4 bits, and determines which segments should be activated to display the corresponding digit. Each segment is controlled by a Boolean expression derived from the binary input, effectively making the display a complex multi-input gate. The circuit highlights how combinational logic can efficiently decode binary input into human-readable visual representations.
 
 \placedrawing[H]{figures/01_03_7seg.lp}{Trans-coder for seven-segment display. }{fig:7_segment_display}
 
-Figure \ref{fig:7_segment_display} shows the transcoder for a 7-segment display. It receives four-bit coded decimal numbers, from 0 to 9, and convert them in 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{tab:sevenSeg}.
+Figure \ref{fig:7_segment_display} shows the transcoder for a 7-segment display. It receives four-bit coded decimal numbers, 0 to 9, and converts them into 7-bit codes, a to g, indicating the segments to be activated, according to Table \ref{tab:sevenSeg}.
 
-The logic expression for the output {\tt a} is:
+The logic expression for the output {\tt a} is the following:
 \begin{center}
 $a =   B'_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B'_3 \cdot B'_2 \cdot B_1\cdot B'_0  +
         B'_3 \cdot B'_2 \cdot B_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B_0  + $ \\
         $B'_3 \cdot B_2 \cdot B_1\cdot B'_0  + B'_3 \cdot B_2 \cdot B_1\cdot B_0  +
         B_3 \cdot B'_2 \cdot B'_1\cdot B'_0  + B_3 \cdot B'_2 \cdot B'_1\cdot B_0  $
 \end{center}
-or a simpler version by negatin the negated function:
+or a simpler version by negating the negated function:
 $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_1\cdot B'_0)' = (B'_3 \cdot B'_1 \cdot (B_2 \oplus B_0))' = B_3 + B_1 + (B_2 \oplus B_0)'$$
 
 
@@ -914,19 +914,19 @@ SystemVerilog's \texttt{always\_comb} guarantees that the logic produced is pure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Behavioral vs. Structural Descriptions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Digital circuits can be described using two primary approaches: by defining their functional behavior or by specifying their internal structure. A behavioral description focuses on the circuit's input-output relationships, detailing what the circuit does without concern for how it is implemented internally. Conversely, a structural description specifies the arrangement and interconnection of the components that make up the circuit, providing a blueprint for how the desired functionality is achieved. 
+Digital circuits can be described using two primary approaches: by defining their functional behavior or by specifying their internal structure. A behavioral description focuses on the circuit's input-output relationships, detailing what the circuit does without concern for how it is implemented internally. In contrast, a structural description specifies the arrangement and interconnection of the components that make up the circuit, providing a blueprint for how the desired functionality is achieved. 
 
-The design of digital systems is inherently a \textbf{hierarchical process}. It begins with a top-level module that represents the overall system and is populated by submodules. Each submodule is defined similarly, with the process continuing until the simplest modules are reached. These basic modules are described directly, either through functional descriptions or by mapping to primitive hardware elements. This hierarchical organization allows for clear abstraction and separation of concerns, enabling designers to manage complexity effectively and focus on smaller, more manageable parts of the system.
+The design of digital systems is inherently a \textbf{hierarchical process}. It begins with a top-level module that represents the overall system and is populated by submodules. Each submodule is defined similarly, and the process continues until the simplest modules are reached. These basic modules are described directly, either through functional descriptions or by mapping to primitive hardware elements. This hierarchical organization allows for clear abstraction and separation of concerns, enabling designers to manage complexity effectively and focus on smaller, more manageable parts of the system.
 
-One of the defining characteristics of digital design is \textbf{modularity}. In this approach, a complex problem is decomposed into smaller, simpler problems that are solved independently. This process is repeated recursively until the simplest possible components are identified and implemented. Modularity facilitates the reuse of identical modules throughout the design, enabling replication of the same component multiple times. This not only reduces development effort but also ensures consistency and reliability across the system. Furthermore, modular design supports scalability and maintainability, as individual modules can be optimized or replaced without affecting the rest of the system.
+One of the defining characteristics of digital design is \textbf{modularity}. In this approach, a complex problem is decomposed into smaller, simpler problems that are solved independently. This process is repeated recursively until the simplest possible components are identified and implemented. Modularity facilitates the reuse of identical modules throughout the design, enabling replication of the same component multiple times. This not only reduces development effort, but also ensures consistency and reliability across the system. Furthermore, modular design supports scalability and maintainability, as individual modules can be optimized or replaced without affecting the rest of the system.
 
 \placedrawing[h]{figures/01_04_4bit_adder.lp}{{\bf Hierarchical Decomposition Adder Modules.} {\small {\bf a.} Top-level 2-input 4-bit adder. {\bf b.} The structure of a 3-input 4-bit adder.} }{fig:hierarchical_adders}
 
 Figure \ref{fig:hierarchical_adders}a shows an adder module. No indication of how this module is implemented is provided. We infer from its name that it adds two 4-bit numbers. Figure \ref{fig:hierarchical_adders}b shows a 3-input 4-bit adder composed of two 2-input 4-bit adders. While the module {\tt adder} is a {\em behavioral} description,
 the module {\tt threeAdder} is a {\em structural} one. The first
-tells us {\em what} is the function of the module, and the second
+tells us {\em what} the function is of the module, and the second
 tells us {\em how} its functionality is performed by using a
-structure containing two instantiation of a previously defined
+structure containing two instantiations of a previously defined
 subsystems, and an internal connection.
 
 
@@ -935,12 +935,12 @@ subsystems, and an internal connection.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Adders}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Adders are fundamental components in digital computing systems. At the core of processors, adders enable basic addition and form the building blocks for more complex arithmetic units, such as subtractors, multipliers, and dividers. An adder's efficiency directly impacts a processor's overall performance, as addition is one of the most frequently executed operations in computing.
+Adders\index{adder!behavioral adder: describe what the circuit does, i.e., adds two $n$-bit numbers} are fundamental components in digital computing systems. At the core of processors, adders enable basic addition and form the building blocks for more complex arithmetic units, such as subtractors, multipliers, and dividers. An adder's efficiency directly impacts a processor's overall performance, as addition is one of the most frequently executed operations in computing.
 
 %******************************
 \subsection{Behavioral Adders}
 %******************************
-Behavioral adders describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
+Behavioral adders\index{adder!} describe what the circuit should do without specifying how it is implemented at the gate level. In contrast, specific adders, such as a carry-lookahead adder or a Kogge-Stone adder, describe the precise gate-level implementation of the addition operation. When synthesized using a tool like CIRCT, the \texttt{BehavioralAdder} would be converted into a hardware implementation that depends on the synthesis tool's optimization strategies. Typically, the synthesis tool would select an efficient adder architecture based on the target hardware platform and constraints. This could include ripple-carry, carry-lookahead, or other optimized implementations. The use of behavioral descriptions provides flexibility, as the specific implementation details are deferred to the synthesis process, enabling the designer to focus on functionality rather than low-level hardware details.
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
@@ -948,7 +948,7 @@ Behavioral adders describe what the circuit should do without specifying how it 
 %*************************************************
 \includechiselcode[caption={Parameterized Abstract Adder (Chisel: Adder.scala)}, label={lst:chisel_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/adders/Adder.scala}
 
-Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract class \texttt{Adder}, which provides a framework for creating parameterized adder modules in Chisel. The class requires a \texttt{width} parameter, which specifies the bit-width of the inputs and outputs. The \texttt{Adder} class requires a width greater than zero to ensure valid hardware design, and this is enforced by the \texttt{require} statement. The \texttt{io} interface is defined using a \texttt{Bundle} that encapsulates three signals: \texttt{a}, \texttt{b}, and \texttt{sum}. The \texttt{a} and \texttt{b} signals are inputs of type \texttt{UInt} with the specified \texttt{width}, representing the operands of the adder. The \texttt{sum} signal is an output of type \texttt{UInt} with the specified \texttt{width}, representing the computed sum of the inputs.
+Listing \ref{lst:chisel_adder_abstract} shows code that defines an abstract class \texttt{Adder}, which provides a framework for creating parameterized adder\index{adder!parameterized adder: an adder defined by specifying the bit-width of the inputs and outputs} modules in Chisel. The class requires a \texttt{width} parameter, which specifies the bit-width of the inputs and outputs. The \texttt{Adder} class requires a width greater than zero to ensure valid hardware design, and this is enforced by the \texttt{require} statement. The \texttt{io} interface is defined using a \texttt{Bundle} that encapsulates three signals: \texttt{a}, \texttt{b}, and \texttt{sum}. The \texttt{a} and \texttt{b} signals are inputs of type \texttt{UInt} with the specified \texttt{width}, representing the operands of the adder. The \texttt{sum} signal is an output of type \texttt{UInt} with the specified \texttt{width}, representing the computed sum of the inputs.
 
 The class is marked as \texttt{abstract}, which means it cannot be instantiated directly. Instead, specific implementations of the adder, such as ripple-carry or carry-lookahead adders, can extend this base class to reuse the IO definitions and width constraints. Using an abstract base class like \texttt{Adder} provides several benefits. It ensures consistency in IO definitions, as all derived adder implementations inherit the same \texttt{io} interface, guaranteeing a uniform input-output structure across different adder designs. It promotes reusability by defining the \texttt{io} interface and width validation logic once in the base class, reducing code duplication and improving maintainability. The abstract base class introduces a level of abstraction by encapsulating common properties and behaviors, allowing derived classes to focus solely on implementing specific adder designs without redefining shared elements.
 
@@ -1051,7 +1051,7 @@ After yosys elaboration, both a high-level and flatted circuit diagram can be ge
 \subsection{Structural Adders}
 %*****************************
 
-Computers use structural adders to perform arithmetic operations efficiently at the hardware level. A structural adder is a circuit composed of interconnected logic gates designed to compute the sum of binary numbers. These adders allow computations to occur in a predictable, deterministic manner, with a fixed propagation delay determined by the design. Unlike behavioral implementations, structural adders operate at the level of individual bits, ensuring that addition is performed in accordance with the system's clock cycle.
+Computers use structural adders\index{adder!structural adder: adder as the circuit composed of interconnected logic gates designed to compute the sum} to perform arithmetic operations efficiently at the hardware level. A structural adder is a circuit composed of interconnected logic gates designed to compute the sum of binary numbers. These adders allow computations to occur in a predictable, deterministic manner, with a fixed propagation delay determined by the design. Unlike behavioral implementations, structural adders operate at the level of individual bits, ensuring that the addition is performed in accordance with the system's clock cycle.
 
 The concept of carry bits is central to structural adders. In binary arithmetic, when the sum of two bits exceeds the value that a single bit can represent, the excess is propagated as a carry bit to the next more significant bit. This mechanism ensures accuracy in multi-bit addition, but it also introduces challenges, such as carry propagation delays. 
 
@@ -1061,7 +1061,7 @@ In this Section, we only provide an overview of the simplest structural adders. 
 \subsubsection{Half Adder}
 %**********************
 
-Figure \ref{fig:half_adder} shows the simplest adder - the \textit{half adder}. It adds two binary digits and produces a sum and a carry bit. To build a half adder we use an XOR circuit. The XOR circuit calculates the sum modulo 2 but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
+Figure \ref{fig:half_adder} shows the simplest adder, the \textit{half adder}\index{adder!half adder: adds two binary digits and produces a sum and a carry bit}. It adds two binary digits and produces a sum and a carry bit. To build a half adder, we use an XOR circuit. The XOR circuit calculates the sum modulo 2, but does not differentiate between 0+0 and 1+1. This differentiation involves the calculation of the arithmetical overshoot, which we denote by carry (to the next binary order). The Carry signal is activated when both inputs are 1. Therefore, in addition to the XOR gate, we must add an AND gate. The resulting circuit is called a \textit{half adder} because it does not take into account the carry signal provided by the previous binary order.
 
 \placedrawing[H]{figures/02_14_half_adder.lp}{Half adder (HA).The XOR circuit compute the {\em modulo-2} sum while the AND gate compute the carry value.}{fig:half_adder}
 
@@ -1069,13 +1069,13 @@ Figure \ref{fig:half_adder} shows the simplest adder - the \textit{half adder}. 
 \subsubsection{Increment}
 %*********************
 
-Figure \ref{fig:incrementer} shows the schematic for a 4-bit incrementer that uses only half adders. Incrementing means adding 1 to a number. If {\tt inc = 1} the output $out_0 <= in'_0$  and {\tt cr} of $HA_0$ if it is activated command the increment for $HA_1$, and so on.
+Figure \ref{fig:incrementer} shows the schematic for a 4-bit incrementer\index{incrementer: adds 1 to a number} that uses only half adders. Incrementing means adding 1 to a number. If {\tt inc = 1} the output $out_0 <= in'_0$  and {\tt cr} of $HA_0$ if activated command the increment for $HA_1$, etc.
 
 \placedrawing[H]{figures/02_15_increment.lp}{Increment circuit for 4-bit numbers (INC4) implemented by serially connected $4$ HAs.}{fig:incrementer}
 
 If each 2-input AND from $HA_i$ has, for example,  a propagation time, $t_{pAND2} = 1ns = 10^{-9}sec$, and the 2-input XOR has the propagation time, $t_{pXOR2} = 1.5ns$, then the total execution time for the INC4 circuit is:
 $$t_{pINC4} = 3 \times t_{pAND2} + t_{pXOR2} = 4.5ns$$
-Thus, the size of the $n$-bit number increment circuit, $S_{INCn}$, is proportional with the input size. However, the execution time, i.e., depth, $D_{INCn}$, is in the same order of magnitude:
+Thus, the size of the $n$-bit number increment circuit, $S_{INCn}$, is proportional to the input size. However, the execution time, i.e., depth, $D_{INCn}$, is in the same order of magnitude:
 $$S_{INCn} \in O(n)$$
 $$D_{INCn} \in O(n)$$
 
@@ -1084,14 +1084,14 @@ The depth of the circuit can be reduced by increasing the size (but in the limit
 %******************************
 \subsubsection{Full Adder (FA)}
 %******************************
-Half adders cannot handle carry inputs, leading to the development of the \textit{full adder}, which incorporates a carry input along with two operand inputs. The Full Adder (FA) adds two one-bit numbers with the carry provided from the previous binary position. It generates the sum and the carry value for the next binary position. In Figure \ref{fig:full_adder}a, a FA is composed of two HAs and an OR circuit used to propagate the carry generated by the first HA or by the second HA. The first FA adds the two input bits, A and B, while the second FA adds the value of the carry, C, generated by the previous binary order.
+Half adders cannot handle carry inputs, leading to the development of the \textit{full adder}, which incorporates a carry input along with two operand inputs. The Full Adder\index{adder!full adder: adds two one-bit numbers with the carry provided from the previous binary position} (FA) adds two one-bit numbers with the carry provided from the previous binary position. It generates the sum and the carry value for the next binary position. In Figure \ref{fig:full_adder}a, a FA is composed of two HAs and an OR circuit used to propagate the carry generated by the first HA or by the second HA. The first FA adds the two input bits, A and B, while the second FA adds the value of the carry, C, generated by the previous binary order.
 
 \placedrawing[H]{figures/02_16_adder_full.lp}{Adder. {\bf a.} Full Adder (FA). {\bf b.} 4-bit adder (ADD4).}{fig:full_adder}
 
 %*******************************
 \subsubsection{Ripple-Carry Adder} \label{sec:ripple-carry-adder}
 %******************************
-Figure \ref{fig:full_adder}b shows a schematic for a \textit{ripple carry adder} (RCA). Ripple-carry adders are one of the simplest and most fundamental types of binary adders. They work by connecting a series of full adders, each responsible for processing a single bit of the operands. The carry-out from each adder is propagated to the carry-in of the next, creating a "ripple" effect that moves from the least significant bit (LSB) to the most significant bit (MSB). 
+Figure \ref{fig:full_adder}b shows a schematic for a \textit{ripple carry adder}\index{adder!ripple-carry adder: adds two $n$-bit numbers connecting serially $n$ full adders} (RCA). Ripple-carry adders are one of the simplest and most fundamental types of binary adders. They work by connecting a series of full adders, each responsible for processing a single bit of the operands. The carry-out from each adder is propagated to the carry-in of the next, creating a "ripple" effect that moves from the least significant bit (LSB) to the most significant bit (MSB). 
 
 While the design of ripple-carry adders is straightforward and easy to implement in hardware, their performance is limited by the sequential nature of carry propagation. The execution time, i.e., the maximum time interval from when an input changes until all the outputs of the circuit reach the correct final value, can be long. This time interval is due to propagation through logic gates on the longest path. In this case, the longest path is the one from input $C$ to output $C_{out}$. On this path there are 8 logic gates, one AND and one OR for each binary order. The delay for an addition operation increases linearly with the number of bits, as each bit must wait for the carry result from the preceding bit to be resolved. In the general case, the time is proportional to $n$ (it is in $O(n)$). 
 
@@ -1102,13 +1102,14 @@ While the design of ripple-carry adders is straightforward and easy to implement
 %******************************
 \subsection{Behavioral Multiplier}
 %******************************
-Similar to behavioral adders, behavioral multipliers describe what the circuit should do without specifying how it is implemented at the gate level. 
+Similarly to behavioral adders, behavioral multipliers\index{multiplier!behavioral multiplier: describe what the circuit
+does, i.e., multiply two n-bit numbers and provides a $2n$-bit number} describe what the circuit should do without specifying how it is implemented at the gate level. 
 
 \ifthenelse{\boolean{chiselversion}}{
 %*************************************************
 \subsubsection{Parameterized Abstract Multiplier (Chisel)}
 %*************************************************
-\includechiselcode[caption={Parameterized Abstract Multiplier (Chisel: Multiplier.scala)}, label={lst:chisel_mult_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/multipliers/Multiplier.scala}
+\includechiselcode[caption={Parameterized Abstract Multiplier\index{multiplier!parameterized abstract multiplier: define an abstract multiplier} (Chisel: Multiplier.scala)}, label={lst:chisel_mult_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/multipliers/Multiplier.scala}
 
 Listing \ref{lst:chisel_mult_abstract} shows an abstract multiplier. The \texttt{Multiplier} class is an abstract module in Chisel, designed to serve as a base for implementing various multiplier designs. The module defines the basic input-output (I/O) interface and enforces the requirement that the bit-width of the operands, specified by the \texttt{width} parameter, must be greater than zero. This ensures that any concrete multiplier inheriting from this class adheres to a consistent interface and valid configuration.
 
@@ -1153,14 +1154,14 @@ The output \texttt{result} has a width of \texttt{2 * width}, ensuring sufficien
 
 Figure \ref{fig:4bit_multiplier_tt_unsigned} shows the partial truth table for a 4-bit behavioral multiplier using unsigned numbers. The results demonstrate that multiplying two $n$-bit numbers may require up to $2n$ bits to represent the full product.
 
-Consider two $n$-bit binary numbers, $A$ and $B$, where each can be represented in the form:
+Consider two $n$-bit binary numbers, $A$ and $B$, where each can be represented in the following form:
 \[
 A = \sum_{i=0}^{n-1} a_i \cdot 2^i, \quad B = \sum_{i=0}^{n-1} b_i \cdot 2^i
 \]
 
 where $a_i, b_i \in \{0, 1\}$ are the binary digits (bits) of $A$ and $B$, respectively.
 
-The maximum product occurs when both $A$ and $B$ are at their maximum value, i.e., $A = 2^n - 1$ and $B = 2^n - 1$. In this case:
+The maximum product occurs when $A$ and $B$ reach their maximum value, i.e., $A = 2^n - 1$ and $B = 2^n - 1$. In this case:
 \[
 A \times B = (2^n - 1) \times (2^n - 1) = 2^{2n} - 2^n - 2^n + 1 = 2^{2n} - 2^{n+1} + 1
 \]
@@ -1190,9 +1191,9 @@ In the case of 4-bit unsigned numbers, each operand, $A$ and $B$, can represent 
     \label{fig:4bit_multiplier_tt_signed}
 \end{figure}
 
-Figure \ref{fig:4bit_multiplier_tt_signed} shows the partial truth table for signed numbers. Here, the results indicate that $2n$ bits are also required to store the signed product. 
+Figure \ref{fig:4bit_multiplier_tt_signed} shows the partial truth table for signed numbers. Here, the results indicate that the $2n$ bits are also required to store the signed product. 
 
-For signed numbers, represented using two's complement, the analysis differs slightly due to the sign extension for negative operands. In two's complement, the most significant bit (MSB) represents the sign, with $0$ for positive and $1$ for negative numbers. The value of an $n$-bit signed number $A$ is given by:
+For signed numbers, represented using two's complement, the analysis differs slightly due to the sign extension for negative operands. In two's complement, the most significant bit (MSB) represents the sign, with $0$ for positive numbers and $1$ for negative numbers. The value of a $n$-bit signed number $A$ is given by:
 \[
 A = -a_{n-1} \cdot 2^{n-1} + \sum_{i=0}^{n-2} a_i \cdot 2^i
 \]
@@ -1212,26 +1213,26 @@ In this case, the signed product can range from:
 -2^{2n-2} \leq A \times B \leq 2^{2n-2} - 1
 \]
 
-Thus, $2n$ bits are still required to store the full result of signed multiplication to account for both the sign and the magnitude.
+Thus, $2n$ bits are still required to store the full result of signed multiplication to account for both sign and magnitude.
 
 %**************************************************************************
 \subsection{Two's Complement Multiplication and Intermediate Overflows}
 %**************************************************************************
 
-In two's complement multiplication, intermediate overflows that occur during the computation process generally do not affect the correctness of the final result, provided that the final result fits within the target bit range. This behavior arises due to the nature of two's complement arithmetic, which wraps values and preserves correctness when results are truncated to the appropriate bit width.
+In two's complement multiplication\index{multiplier!two's complement multiplication}, intermediate overflows that occur during the computation process generally do not affect the correctness of the final result, provided that the final result fits within the target bit range. This behavior arises due to the nature of two's complement arithmetic, which wraps values and preserves correctness when results are truncated to the appropriate bit width.
 
-During multiplication in hardware implementations, intermediate results may produce higher-order bits that "overflow" beyond the required range. For example, multiplying two 4-bit numbers in two's complement may generate intermediate results that temporarily require more than 4 bits. These overflows occur due to the nature of the multiplication operation but are irrelevant to the correctness of the final result, provided the final result fits in 4 bits.
+During multiplication in hardware implementations, intermediate results may produce higher-order bits that "overflow" beyond the required range. For example, multiplying two 4-bit numbers in two's complement may generate intermediate results that temporarily require more than 4 bits. These overflows occur due to the nature of the multiplication operation, but are irrelevant to the correctness of the final result, provided that the final result fits in 4 bits.
 
-For a signed \(n\)-bit number in two's complement, the range of representable values is \(-2^{n-1}\) to \(2^{n-1} - 1\). As long as the final product lies within this range, any intermediate overflows are inconsequential. For example, multiplying \(-7\) (\(1001\)) and \(3\) (\(0011\)) in 4-bit two's complement results in \(11101101\) in 8 bits. When truncated back to 4 bits, the result is \(1101\), which correctly represents \(-21\).
+For a signed \(n\)-bit number in a complement of two, the range of representable values is \(-2^{n-1}\) to \(2^{n-1} - 1\). As long as the final product lies within this range, any intermediate overflows are inconsequential. For example, multiplying \(-7\) (\(1001\)) and \(3\) (\(0011\)) in a 4-bit two's complement results in \(11101101\) in 8 bits. When truncated to 4 bits, the result is \(1101\), which correctly represents \(-21\).
 
-Consider multiplying \(4\) (\(0100\)) and \(2\) (\(0010\)) and \(-1\) \(1111\) in 4-bit two's complement arithmetic:
+Consider multiplying \(4\) (\(0100\)) and \(2\) (\(0010\)) and \(-1\) \(1111\) in 4-bit two-s complement arithmetic:
 \[
 4 \times 2 = 8
 \]
 \[
 0100 \times 0010 = 0000\_1000 = 1000
 \]
-8 is not representable in 2's complement 4-bits but ignoring the overflow and multiplying by $-1$ gives
+8 is not representable in the 2-bit complement, but ignoring the overflow and multiplying by $-1$ gives
 \[
 1000 \times 1111 = 0111\_1000 = 1000
 \]
@@ -1240,29 +1241,29 @@ When truncated to 4 bits, the result becomes:
 \[
 1000
 \]
-This correctly represents \(-8\) in 4-bit two's complement arithmetic, demonstrating that intermediate overflows do not affect the correctness of the final result.
+This correctly represents \(-8\) in 4-bit two-s complement arithmetic, demonstrating that intermediate overflows do not affect the correctness of the final result.
 
 %**************************************************************************
 \subsection{Handling Extended Results}
 %**************************************************************************
 
-In arithmetic and logical operations, the handling of the extended result, which refers to the extra bits generated during operations such as multiplication or addition, depends on the operation context, the target application, and the architecture. For example, multiplication of two \texttt{n}-bit numbers produces a \texttt{2n}-bit result. In many cases, the result is stored in its entirety, especially in applications that require high precision, such as digital signal processing (DSP) or scientific computing. Architectures like x86 provide instructions that store the low and high halves of the result in separate registers, enabling seamless access to the full \texttt{2n}-bit result.
+In arithmetic and logical operations, the handling of the extended result, which refers to the extra bits generated during operations such as multiplication or addition, depends on the context of the operation, the target application, and the architecture. For example, multiplication of two \texttt{n}-bit numbers produces a \texttt{2n}-bit result. In many cases, the result is stored in its entirety, especially in applications that require high precision, such as digital signal processing (DSP) or scientific computing. Architectures like x86 provide instructions that store the low and high halves of the result in separate registers, enabling seamless access to the full \texttt{2n}-bit result.
 
-Modern instruction set architectures (ISAs) often provide distinct opcodes for accessing either the low or high parts of the extended result. For example, in RISC-V, instructions like \texttt{MUL} produce the lower bits of a multiplication result, while \texttt{MULH} and \texttt{MULHU} are used to extract the higher bits for signed and unsigned operations, respectively. Alternatively, some architectures provide combined instructions that store the full-width result across multiple registers. The choice between retaining or discarding the extended result ultimately depends on application requirements, hardware resource constraints, and the overall design philosophy of the ISA. In many ALU designs, retaining the low bits is the default behavior, with access to the high bits provided through additional instructions or status flags for more specialized use cases.
+Modern instruction set architectures (ISAs) often provide distinct opcodes for accessing either the low or high parts of the extended result. For example, in RISC-V, instructions like \texttt{MUL} produce the lower bits of a multiplication result, while \texttt{MULH} and \texttt{MULHU} are used to extract the higher bits for signed and unsigned operations, respectively. Alternatively, some architectures provide combined instructions that store the full-width result across multiple registers. The choice between retaining or discarding the extended result ultimately depends on the application requirements, hardware resource constraints, and the overall design philosophy of the ISA. In many ALU designs, retaining the low bits is the default behavior, with access to the high bits provided through additional instructions or status flags for more specialized use cases.
 
 %****************************************
 \section{Multi-Function Arithmetic Units}
 %****************************************
 
-A multifunction arithmetic unit performs a variety of arithmetic operations such as addition, subtraction, and sometimes multiplication or division, on the same hardware unit. These units are typically designed to handle both signed and unsigned numbers and often support different operand sizes, such as 8-bit, 16-bit, 32-bit, or 64-bit operations. By sharing hardware resources among multiple operations, multifunction arithmetic units reduce the overall complexity of the system.
+A multifunction arithmetic unit performs a variety of arithmetic operations, such as addition, subtraction, and sometimes multiplication, or division, on the same hardware unit. These units are typically designed to handle both signed and unsigned numbers and often support different operand sizes, such as 8-bit, 16-bit, 32-bit, or 64-bit operations. By sharing hardware resources among multiple operations, multifunction arithmetic units reduce the overall complexity of the system.
 
 A multifunction arithmetic unit includes configurable control signals, sometimes called an operation code or opcode, that dictate the operation to be performed. For example, an opcode may specify whether the operation is addition or subtraction, whether the operands are signed or unsigned, and the size of the operands. 
 
- Adding a sign/unsigned control bit to an arithmetic unit is a simple example of a multifunction arithmetic unity that enable the same hardware to handle both signed and unsigned operations. In the context of binary arithmetic, signed and unsigned numbers differ primarily in their interpretation of the most significant bit (MSB). For unsigned numbers, the MSB contributes solely to the magnitude of the value, while for signed numbers in two's complement representation, the MSB serves a dual purpose: it indicates the sign of the number (0 for positive, 1 for negative) and also contributes to its magnitude in determining the overall value. 
+ Adding a sign/unsigned control bit to an arithmetic unit is a simple example of a multifunction arithmetic unit that enables the same hardware to handle both signed and unsigned operations. In the context of binary arithmetic, signed and unsigned numbers differ primarily in their interpretation of the most significant bit (MSB). For unsigned numbers, the MSB contributes solely to the magnitude of the value, while for signed numbers in two's complement representation, the MSB serves a dual purpose: it indicates the sign of the number (0 for positive, 1 for negative) and also contributes to its magnitude in determining the overall value. 
  
- Adding a control signal for selecting between addition and subtraction further enhances the functionality of the unit. Subtraction can be implemented using the same hardware as addition by negating one of the operands, which involves flipping the bits and adding one. With two control signals—one for signed/unsigned selection and another for addition/subtraction—the unit becomes a multifunction adder/subtractor, capable of performing basic arithmetic operations across a wide range of use cases.
+ Adding a control signal for selecting between addition and subtraction further enhances the functionality of the unit. Subtraction can be implemented using the same hardware as addition by negating one of the operands, which involves flipping the bits and adding one. With two control signals—one for signed/unsigned selection and another for addition/subtraction—the unit becomes a multifunction adder/subtractor, capable of performing basic arithmetic operations in a wide range of use cases.
 
-When additional operations such as bitwise logical operations (AND, OR, XOR) and shifting (logical, arithmetic, and rotate) are incorporated into the same hardware unity, this is typically called an arithmetic logic unit (ALU). The control signals that specify a particular operation are referred to as an opcode. An ALU is the computational heart of a processor.
+When additional operations such as bitwise logical operations (AND, OR, XOR) and shifting (logical, arithmetic, and rotate) are incorporated into the same hardware unity, this is typically called an arithmetic logic unit (ALU). Control signals that specify a particular operation are called opcodes. An ALU is the computational heart of a processor.
 
 %************************
 \subsection{Subtraction}
@@ -1270,7 +1271,7 @@ When additional operations such as bitwise logical operations (AND, OR, XOR) and
 %*************************************
 \subsubsection{Behavioral Adder/Subtractor}
 %**************************************
-Similar to behavioral addition described in Section \ref{sec:behavioral_addition}, we can also provide for behavioral subtraction. A subtractor can share hardware with an adder making an adder/subtractor the simplest multifunction arithmetic unit.
+Similarly to behavioral addition described in Section \ref{sec:behavioral_addition}, we can also provide behavioral subtraction. A subtractor\index{subtractor!behavioral adder/subtractor} can share hardware with an adder making an adder/subtractor the simplest multifunction arithmetic unit.
 
 \ifthenelse{\boolean{chiselversion}}{
 
@@ -1294,7 +1295,7 @@ The arithmetic operation itself is delegated to a reusable module called \texttt
 %*************************************
 \subsubsection{Structural Subtractor}
 %**************************************
-Two's complement subtraction can be performed by taking the 2's complement of the subtrahend and then performing addition.
+Two's complement subtraction\index{subtractor!structural subtractor} can be performed by taking the 2's complement of the subtrahend and then performing addition.
 
 \ifthenelse{\boolean{chiselversion}}{
 
@@ -1450,7 +1451,7 @@ In the example, the adder computes \( 0101 + 1101 = 10010 \), and the result is 
 \section{ \textit{\textbf{Arithmetic \& Logic Unit (ALU)}}}\label{alu1}  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-An Arithmetic \& Logic Unit (ALU) has two kinds of connections: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, is represented the generic form of an ALU with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexer as the result by the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
+An Arithmetic \& Logic Unit\index{ALU: arithmetic \& logic unit} (ALU) has two kinds of connection: data inputs and outputs, for the $n$-bit operands, and command inputs for the operations applied to operands (see Fig \ref{fig37}). In Figure \ref{fig15}, the generic form of an ALU is represented with 8 functions each performed in a distinct module, {\tt func0, ..., func7}, whose outputs are selected by a multiplexer as the result of the {\tt func} code. The two operands, {\tt leftOp[n-1:0], rightOp[n-1:0]}, are applied to all the 8 modules.
 
 \placedrawing[H]{figures/02_18_alu.lp}{ALU.}{fig37}
 
@@ -1511,7 +1512,7 @@ Actual implementations are sometimes optimized by implementing two ore more modu
 
 \placedrawing[H]{figures/02_20_nbit_alu.lp}{A simple Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig7}
 
-The implementation takes into account the fact that a HA is implemented using an AND gate and a XOR gate (see Figure \ref{fig:half_adder}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, a XOR is added for the subtract function and for the two logic functions the outputs of the first HA are directly used.
+The implementation takes into account the fact that an HA is implemented using an AND gate and an XOR gate (see Figure \ref{fig:half_adder}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, an XOR is added for the subtract function, and for the two logic functions, the outputs of the first HA are directly used.
 
 \ifthenelse{\boolean{chiselversion}}{
 
@@ -1542,12 +1543,12 @@ The ALU includes optional debugging functionality, controlled by the \texttt{pri
 
 
 
-\section{Combinational Universal Circuit}
+\section{Combinational Universal Circuit\index{Combinational Universal Circuit}}
 
-Besides the simple, recursively defined circuits there is the huge
-class of the complex or random circuits. Is there a {\em general
+Besides the simple, recursively defined circuits, there is a huge
+class of complex or random circuits. Is there a {\em general
 solution} for these category of circuits? A general solution asks
-a general circuit and this circuit surprisingly exists. Now rises
+for a general circuit, and this circuit surprisingly exists. Now rises
 the problem of how to catch the huge diversity of random in this
 approach. The following theorem will be the first step in solving
 the problem.
@@ -1572,16 +1573,16 @@ recursively defined structure is a solution. EMUX behaves as an
 elementary universal circuit.}}{func_mux}
 
 Therefore, the computation of  any  $n$-variable function can be
-reduced to the computation of two other $(n-1)$-variables
-functions and an EMUX. The circuit, and in the same time the
-algorithm, is represented in Figure \ref{func_mux}. For the
-functions $g$ and $h$ the same rule may applies. And so on until
+reduced to the computation of two other $(n-1)$-variable
+functions and an EMUX. The circuit and, in the same time, the
+algorithm is represented in Figure \ref{func_mux}. For the
+functions $g$ and $h$ the same rule may apply. And so on until
 the two zero-variable functions: the value 0 and the value 1. The
-solution is an $n$-level binary tree of EMUXs having applied to
-the last level zero-variable functions. Therefore, solution is a
+solution is a $n$-level binary tree of EMUXs having applied to
+the last level zero-variable functions. Therefore, a solution is a
 $MUX_{n}$ and a binary string applied on the $2^{n}$ selected
-inputs. The binary sting has the length $2^{n}$. Thus, for each of
-the $2^{2^{n}}$ functions there is a distinct string defining it.
+inputs. The binary sting has length $2^{n}$. Thus, for each of
+the functions $2^{2^{n}}$, there is a distinct string defining it.
 
 $\diamond$
 
@@ -1599,16 +1600,16 @@ attention! The size of the circuit is: $S_{nU\_circuit}(n) \in
 O(2^{n})$.
 
 Thus, {\em circuits are more powerful than Turing Machine} (TM),
-because TM solve only problem having the solution algorithmically
-expressed with a sequence of symbols that does not depend by $n$.
-Beyond the Turing-computable function there are many functions for
+because TM solves only the problem having the solution algorithmically
+expressed with a sequence of symbols that does not depend on $n$.
+Beyond the Turing-computable function, there are many functions for
 which the solution is a {\em family of circuits}.
 
-The solution imposed by the previous theorem is an universal
-circuit for computing the $n$ binary variable functions. Let us
+The solution imposed by the previous theorem is a universal
+circuit to compute the functions of the binary variable $n$. Let us
 call it $n${\bf U-circuit} (see Figure \ref{univ}). The size of
 this circuit is $S_{universal} (n) \in O(2^{n})$ and its
-complexity is $C_{universal}(n) \in O(1)$. The functions is
+complexity is $C_{universal}(n) \in O(1)$. The functions are
 specified by the ``program" $P = m_{p-1}, m_{p-2}, \ldots m_{0}$
 which is applied on the selected inputs of the $n$-input
 multiplexer $MUX_{n}$. It is about a huge simple circuit. The
@@ -1625,16 +1626,16 @@ increases exponentially with $n$.}}{univ}
 We have a chance to use $MUX_{n}$ to implement $f(x_{n-1}, \ldots
 , x_{0})$ only if one of the following conditions is fulfilled:
 \begin{enumerate}
-    \item $n$ is small enough resulting realizable and efficient
+    \item $n$ is small enough to result in realizable and efficient
     circuits
     \item the ``program" is a string with useful regularities
-    (patterns) allowing strong minimization of the resulting circuit.
+    (patterns) that allow for strong minimization of the resulting circuit.
 \end{enumerate}
 
 \begin{exemplu}
-Let be the following Verilog code:
+Let be the following System Verilog code:
 \includeverilogcode[caption={The behavioral description for any 3-input logic function.   File: A08\_threeInputFunctions.sv  (SystemVerilog)}, 
-                    label={lst:nUcircuit}, 
+                    label={lst:nUcirc}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
@@ -1654,22 +1655,22 @@ The ``programmable" circuit for any 4-input Boolean function is
 obviously $MUX_{4}$:
 $$out = f(in0, in1, in2, in3)$$
 where $f$ is ``programmed" by a 16-bit word applied on the
-selected inputs of the multiplexer.
+selected input of the multiplexer.
 
-The bad news is: we can not go to far on this way because the size
+The bad news is that we can not go too far in this way because the size
 of the resulting universal circuits increases exponentially. The
-good news is: usually we do not need universal but particular
-solution. The circuits are, in most of cases,  specific not
-universal. They ``execute" a specific ``program". But, when a
-specific binary word is applied on the selected inputs of a
+good news is that, usually, we do not need a universal but particular
+solution. Circuits are, in most cases, specific and not
+universal. They ``execute" a specific ``program". However, when a
+specific binary word is applied to the selected inputs of a
 multiplexer, the actual circuit is minimized using the following
-{\bf removing rules} and {\bf reduction rules}.
+{\bf removal rules} and {\bf reduction rules}.
 
 An EMUX defined by:
 \begin{verbatim}
     out = x ? in1 : in0;
 \end{verbatim}
-can be {\em removed}, if on its selected inputs specific 2-bit
+can be {\em removed} if on its selected inputs specific 2-bit
 binary words are applied,  according to the following rules:
 \begin{itemize}
     \item {\bf if} $\{in1, in0\} = 00$ {\bf then} $out = 0$
@@ -1681,8 +1682,8 @@ or, if the same variable, $y$, is applied on both selected inputs:
 \begin{itemize}
     \item {\bf if} $\{in1, in0\} = yy$ {\bf then} $out = y$
 \end{itemize}
-An EMUX can be {\em reduced}, if on one its selected inputs a
-1-bit binary word are applied, being substituted with a simpler
+An EMUX can be {\em reduced} if on one of its selected inputs a
+1-bit binary word is applied, being substituted with a simpler
 circuit according to the following rules:
 \begin{itemize}
     \item {\bf if} $\{in1, in0\} = y0$ {\bf then} $out = xy$
@@ -1693,9 +1694,9 @@ circuit according to the following rules:
 
 Results: the first level of $2^{n-1}$ EMUXs of a $MUX_{n}$ is
 reduced, and on the inputs of the second level (of $n^{n-2}$
-EMUXs) is applied a word containing binary values (0s and 1s) and
-binary variables ($x_{0}$s and $x_{0}'$s). For the next levels the
-removing rules or the reducing rules are applied.
+EMUXs) a word is applied containing binary values (0s and 1s) and
+binary variables ($x_{0}$s and $x_{0}'$s). For the next levels, the
+removing or the reducing rules are applied.
 
 \begin{exemplu}
 Let us solve the problem of majority function for three Boolean
@@ -1727,45 +1728,43 @@ result is presented in Figure \ref{maj1}b.
 
 
 
-The next examples refer to big $n$, but ``program" containing
-repetitive patterns.
+The next examples refer to a big $n$, but ``program" that
+contains repetitive patterns.
 
 \begin{exemplu}
-If the "program" is 128-bit string $i_{127} \ldots i_{0} =
+If the "program" is a 128-bit string $i_{127} \ldots i_{0} =
 (10)^{64}$, it corresponds to a function of form:
 $$f(x_{6}, \ldots , x_{0})$$
-where: the first bit, $i_{0}$ is the value associated to the input
+where: the first bit, $i_{0}$ is the value associated with the input
 configuration $x_{6}, \ldots , x_{0} = 0000000$ and the last bit
-$i_{127}$ is the value associated to input configuration $x_{6},
-\ldots , x_{0} = 1111111$ (according with the representation from
-Figure \ref{rec_mux} which is equivalent with Figure
-\ref{func_mux}).
+$i_{127}$ is the value associated with the input configuration $x_{6},
+\ldots , x_{0} = 1111111$.
 
 The obvious regularities of the ``program" leads our mind to see
 what happened with the resulting tree of EMUXs. Indeed, the
 structure collapses under this specific ``program". The upper
-layer of 64 EMUXs are selected by $x_{0}$ and each have on their
+layer of 64 EMUXs is selected by $x_{0}$ and each has on their
 inputs $i_{0} = 1$ and $i_{1} = 0$, generating $x'_{0}$ on their
-outputs. Therefore, the second layer of EMUXs receive on all
+outputs. Therefore, the second layer of EMUXs receives on all
 selected inputs the value $x'_{0}$, and so on until the output
 generates $x'_{0}$. Therefore, the circuit performs the function
 $f(x_{0}) = x'_{0}$ and the structure is reduced to a simple
 inverter.
 
-In the same way the ``program" $(0011)^{32}$ programs the 7-input
+In the same way, ``program" $(0011)^{32}$ programs the 7-input
 MUX to perform the function $f(x_{1}) = x_{1}$ and the structure
 of EMUXs disappears.
 
 For the function $f(x_{1}, x_{0}) = x_{1}x'_{0}$ the ``program" is
 $(0010)^{32}$.
 
-For a 7-input AND the``program" is $0^{127}1$, and the tree of
-MUXs degenerates in 7 EMUXs serially connected each having the
-input $i_{0}$ connected to 0. Therefore, each EMUX become an
-$AND_{2}$ and applying the associativity principle results an
+For a 7-input AND, the``program" is $0^{127}1$, and the tree of
+MUXs degenerates in 7 serially connected EMUXs, each having the
+input $i_{0}$ connected to 0. Therefore, each EMUX becomes an
+$AND_{2}$ and applying the associativity principle results in an
 $AND_{7}$.
 
-In a similar way, the same structure become an $OR_{7}$ if it is
+ Similarly, the same structure becomes an $OR_{7}$ if it is
 ``programmed" with $01^{127}$.
 
  $\diamond$
@@ -1774,14 +1773,14 @@ In a similar way, the same structure become an $OR_{7}$ if it is
 It is obvious that if the ``program" has some uniformity, these
 uniformity allow to minimize the size of the circuit in
 polynomial limits using {\em removing} and {\em reduction} rules.
-{\em The simple ``programs" lead toward small circuits}.
+{\em Simple ``programs" lead to small circuits}.
 
 
 
 
 
 
-\subsection{{\bf {\em Read Only Memory (ROM)}}}\label{ROM}
+\subsection{{\bf {\em Read Only Memory\index{ROM (Read Only Memory): is a $n$-input, $m$-out combinational circuit  based on $m$ $n$-selection inputs multiplexers implemented sharing the same decoder} (ROM)}}}\label{ROM}
 
 The simple solution for the following many-output random circuits
 having the same inputs:
@@ -1798,12 +1797,12 @@ example. {\bf c.} The version using programmable
 connections.}}{mmux} 
 
 \hspace{-5mm}is to connect in parallel many one-output circuits. The
-inefficiency of the solution become obvious when the structure of
-the MUX presented in Figure \ref{mux} is considered. Indeed, if we
+inefficiency of the solution becomes obvious when the structure of
+the MUX presented in Figure \ref{fig:gen_mux} is considered. Indeed, if we
 implement many MUXs with the same selection inputs, then the
-decoder $DCD_{n}$ is replicated many time. One DCD is enough for
-many MUXs if the structure from Figure \ref{mmux}a is adopted. The
-DCD circuit is shared for implementing the functions $f, \; g,
+decoder $DCD_{n}$ is repeated many times. One DCD is enough for
+many MUXs if the structure of Figure \ref{mmux}a is adopted. The
+DCD circuit is shared for the implementation of functions $f, \; g,
 \ldots s$. The shared DCD is used to compute all possible {\em
 minterms} (see {\em Appendix C.4}) needed to compute an
 $n$-variable Boolean function.
@@ -1815,15 +1814,15 @@ thick vertical line is used to represent an $m$-input NAND
 gate.}}{rom}
 
 Figure \ref{mmux}b is an example of using the generic structure
-from Figure \ref{mmux}a to implement a specific many-output
+of Figure \ref{mmux}a to implement a specific multi-output
 function. Each output is defined by a different binary string. A 0
 removes the associated AND, connecting the corresponding OR input
 to 0, and an 1 connects to the corresponding $i$-th input of each
 OR to the $i$-th DCD output. The equivalent resulting circuit is
 represented in Figure \ref{mmux}c, where some OR inputs are
-connected to {\em ground} and other directly to the DCD's output.
-Therefore, we use a technology allowing us to make ``programmable"
-connections of some wires to other (each vertical line must be
+connected to {\em ground} and the other directly to the DCD's output.
+Therefore, we use a technology that allows us to make ``programmable"
+connections of some wires to the other (each vertical line must be
 connected to one horizontal line). The {\em uniform} structure is
 ``programmed" with a more or less {\em random} distribution of
 connections.
@@ -1834,29 +1833,29 @@ seen as addresses, from $00 \ldots 0$ to $11 \ldots 1$} and the
 output columns as the content stored at the corresponding
 addresses.}{tab2.1}
 
-If De Morgan transformation is applied, the circuit from Figure
-\ref{mmux}c is transformed in the circuit represented in Figure
-\ref{rom}a, where instead of an active high outputs DCD an active
-low outputs DCD is considered and the OR gates are substituted
+If the De Morgan transformation is applied, the circuit in Figure
+\ref{mmux}c is transformed into the circuit represented in Figure
+\ref{rom}a, where instead of an active high output DCD an active
+low output DCD is considered, and the OR gates are replaced
 with NAND gates. The DCD's outputs are generated using NAND gates
 to {\em decode} the input binary word, the same as the gates used
 to {\em encode} the output binary word. Thus, a multi-output
 Boolean function works like a {\bf trans-coder}. A trans-coder
-works translating all the binary input words into output binary
-words. The list of input words can by represented as an ordered
+works by translating all the binary input words into output binary
+words. The list of input words can be represented as an ordered
 list of sorted binary numbers starting with 0 and ending with
-$2^{n}-1$. The table from Figure \ref{tab2.1} represents the {\bf
+$2^{n}-1$. The table in Figure \ref{tab2.1} represents the {\bf
 truth table} for the multi-output function used to exemplify our
 approach. The left column contains all binary numbers from 0 (on
-the first line) until $2^{n}-1 = 11 \ldots 1$ (on the last line).
-In the right column the desired function is defined associating to
+the first line) to $2^{n}-1 = 11 \ldots 1$ (on the last line).
+In the right column, the desired function is defined associating to
 each input an output. If the left column is an ordered list, the
-right column has a more or less random content (preferably more
+right column has more or less random content (preferably more
 random for this type of solution).
 
 
 The trans-coder circuit can be interpreted as a {\em fix content
-memory}. Indeed, it works like a memory containing at the location
+memory}. Indeed, it works like a memory that contains at the location
 00...00 the word 11...0, ... at the location 11...10 the word
 10...0, and at the last location the word 01...1. The name of this
 kind of programmable device is {\bf read only memory}, ROM.
@@ -1867,7 +1866,7 @@ kind of programmable device is {\bf read only memory}, ROM.
 This universal solution represents the strongest {\bf segregation}
 between a {\em simple physical structure} - the $n$-input MUX -
 and a {\em complex symbolic structure} - the string of $2^{n}$
-bits applied on the selected inputs which works like a ``program".
+bits applied on the selected inputs that works like a ``program".
 Therefore, this is THE SOLUTION,  MUX is THE CIRCUIT and  can we
 stop here our discussion about digital circuits!? ... {\bf But,
 no}! There are obvious reasons to continue our walk in the world
@@ -1875,8 +1874,8 @@ of digital circuits:
 \begin{itemize}
     \item first: the {\em exponential size} of the resulting physical structure
     \item second: the huge size of the ``programs" which are in a
-    tremendous majority represented by random, incompressible,
-    strings (hard or impossible to be error-free specified).
+    tremendous majority represented by random, incompressible
+ strings (hard or impossible to be error-free specified).
 \end{itemize}
 
 \begin{quote}
@@ -1888,10 +1887,10 @@ simple circuit and the complex binary string, grow exponentially.}
 The complexity and excessive size of most solutions realized as pure combinational circuits push us towards solutions in which we increase the autonomy of physical structures so that, together with the reduction of physical dimensions,  the control of their functionality can also be simplified. We will practice the use of combinational circuits in two situations:
 \begin{itemize}
 \item accepting (big sized) circuits only if they are simple because of their pattern-based structure
-\item accepting complex circuits only if they are reasonably small, easy to design, verify and test.
+\item accepting complex circuits only if they are reasonably small, easy to design, verify, and test.
 \end{itemize}
 
-We will advance towards circuits with gradually {\bf increased autonomy by adding feedback loops}, through which the input of a circuit also receives signals from some of the circuit outputs, so that the functional behavior is partially self-determined. Operating with and on increasingly autonomous systems we will be able to design structures that acquire increasingly complex functionalities with a control effort maintained within controllable limits.
+We will advance towards circuits with gradually {\bf increased autonomy by adding feedback loops}, through which the input of a circuit also receives signals from some of the circuit outputs, so that the functional behavior is partially self-determined. Operating with and on increasingly autonomous systems, we will be able to design structures that acquire increasingly complex functionalities with a control effort maintained within controllable limits.
 
 
 
@@ -1910,7 +1909,7 @@ $\diamond$
 
 {\bf Solution}
 
-Because each symbol is codded on 2 bits, results 2 wave forms: $w_1$ and $w_0$, as follows:
+Because each symbol is codded on 2 bits, the result is in 2 wave forms: $w_1$ and $w_0$, as follows:
 
 W =
 $\begin{bmatrix}

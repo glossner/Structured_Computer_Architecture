@@ -3,7 +3,7 @@
 `define sub   4'b0011 // rf[dest] = rf[left] - rf[right]
 `define addcr 4'b0100 // rf[dest] = (rf[left] + rf[right])[32]
 `define subcr 4'b0101 // rf[dest] = (rf[left] - rf[right])[32]
-`define lsh   4'b1000 // rf[dest] = rf[left] >> 1
+`define rsh   4'b1000 // rf[dest] = rf[left] >> 1
 `define ash   4'b1001 // rf[dest] = {rf[left][31],rf[left][31:1]}
 `define move  4'b1010 // rf[dest] = rf[left]
 `define mult  4'b1011 // rf[dest] = rf[left] * rf[right]

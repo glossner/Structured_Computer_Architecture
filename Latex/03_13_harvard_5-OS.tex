@@ -1,14 +1,7 @@
-\chapter{Computers: Five-Loop, Fifth-Order Systems (5-OS)}\label{lect6a}
+\chapter{Computers\index{computers:  fourth order digital systems (4-OS) with the fourth loop  closed over a 3-OS}: Five-Loop, Fifth-Order Systems (5-OS)\index{5-OS: fifth order system -- executing computer}}\label{lect6a}
 \localtoc
 
 We will practice the processor concept in the context provided by the fifth loop, the one that defines the computer concept in the currently practiced understanding, that of Reduced Instruction Set Computer (RISC) type computing systems. Only for those interested and familiar with System Verilog HDL, at the end of this text there is an appendix that allows the simulation of the system described in this lesson.
-
-
-
-
-
-
-
 
 Let us recall that Alan Turing, defining the machine that bears his name, divided the tape into two parts when he introduced the concept of the Universal Turing Machine (UTM). One part for describing the automaton of the Turing machine $M(T)$ and another for the associated tape, $T$. In other words, the Turing Machine automaton can be viewed as operating with two memories, one for programs and one for data. At the same time, mathematicians also developed the concept of multi-tape TM, which involves two or more tapes with the same number of read heads, which allows accessing multiple symbols stored in different memories in the same execution cycle.
 
@@ -54,7 +47,7 @@ A reduction instruction set maintains only the simplest and  the most frequently
 The Harvard version of the computer allows for a clear segregation of the simple hardware structure from the complex program structure. Hardware is build mainly from simple circuits. See the hardware components of the toyRISC (see \ref{toyrisc} in this book) processor where only few gates in the decoder section (see \ref{interrupt}) can be considered complex circuits, i.e., with the size in the same range with the description size.
 
 
-\section{Cache Memories}
+\section{Cache Memories\index{cache memory:  a temporary storage area that the computer's processor can retrieve data from easily}}
 
 There are three  levels of cache memory in the currently designed processors: Level 1 (L1), Level 2 (L2), and Level 3 (L3).
 
@@ -103,7 +96,7 @@ Second, the association of the abstract model with the name of a famous universi
 
 We believe that we will be able to use more appropriate names if we also take into consideration aspects related to the internal structure of the processors involved in structures with a single external memory as opposed to those with two external memories. The distinction made in \ref{archOrg} between {\em interpreting processor} and {\em executing processor} is significant for the difference between the two types of abstract models. The interpreting processor (CISC) is controlled by a complex automaton that allows and requires the expansion of each instruction read from memory into a {\em micro-program}, while the executive processor (RISC) can use a single execution cycle for each instruction because it can simultaneously access two memories, the program and the data.
 
-From the perspective of the above, we allow ourselves to propose the substitution of the phrase "Harvard architecture" with that of "{\em executive abstract model}", and the phrase "von Neumann architecture" with that of "{\em interpretive abstract model}". We thus obtain names that reflect more significant structural aspects than those related only to the organization of memory external to the processor.
+From the perspective of the above, we allow ourselves to propose the substitution of the phrase "Harvard architecture" with that of "{\em executive abstract model\index{executive abstract model, instead of Harvard architecture}}", and the phrase "von Neumann architecture" with that of "{\em interpretive abstract model\index{interpretive abstract model, instead von Neumann architecture}}" . We thus obtain names that reflect more significant structural aspects than those related only to the organization of memory external to the processor.
 
 
 
@@ -134,7 +127,7 @@ support, the program memory.
 In Figure \ref{fig43}, the organization of the processor {\bf {\em toyRISC}} is represented. It contains two simple loop-connected automata, PC and RALU, serially connected with a complex and small section, DCD. 
 
 
-\subsubsection{PC: a control automaton}
+\subsubsection{PC\index{PC (program control): a simple automaton used to address the program memory}: a control automaton}
 
 The Control section is a simple functional automaton whose
 state, stored in the register called Program Counter, ({\tt pc}), is used
@@ -238,7 +231,7 @@ the Listing \ref{lst:toyRISCdefines}. ISA, in short the architecture of a comput
 The first field of the instruction, {\tt opCode}, contains the information used to determine what is the the action performed by  the current instruction.
 Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign} the entire design is listed. This design is meant to illustrate mainly the competence of the circuits without aiming to reach some performances in execution. In order to maximize the performance, it is necessary to apply special techniques (usually in the category of pipelines) related to the field of quantitative optimization of the organization of the computer system. See more on the quantitative approach in \citep{Hennessy19}.
 
-\subsection{Assembly Code}
+\subsection{Assembly\index{assembly language: the lowest level language in a computing system} Code}
 
 In order to generate the code executable by the toyRISC processor, a code generator  translates the mnemonics into binary code. In Table \ref{mnem}, the mnemonics used to write assembly programs are listed. In the second column the action performed specified and in the last column the binary codes are listed. The binary code is organized in 5 or 4 fields.  The first field represents the operation code, the second the destination address of the result  in the register file ({\tt ddddd} is the binary code of the actual value when it matters), the third field represents the address for the left operand ({\tt lllll} is the binary code of the actual value when it matters). The least significant 16 bits are organized in 2 fields or in one field. In the first case 5 bits ({\tt rrrrr} is the binary code of the actual value when it matters) represents the address of the right operand and the rest 11 bits have no meaning, while in the second case all the 16 bits represents a value ({\tt vvvvvvvvvvvvvvvv} is the binary code of the actual value when it matters).
 
@@ -302,7 +295,7 @@ In the first pass, the absolute positions of the labels are identified through t
 
 \subsubsection{Simulator}
 
-The simulator used to validate the processor design is described in detail in the \ref{riscsim} section, where the processor was instantiated and the data, {\tt dataMemory}, and program, {\tt ProgMemory} memories were added. The interrupt signal {\tt intIn} has been activated, which will be taken into account immediately by the instruction {\tt DI} will allow it.
+The simulator used to validate the processor design is described in detail in the \ref{riscsim} section, where the processor was instantiated and the data, {\tt dataMemory}, and program, {\tt ProgMemory} memories were added. The interrupt signal {\tt intIn} has been activated, which will be taken into account immediately by the instruction {\tt EI} will allow it.
 
 
 \subsubsection{Assembly Programs}
@@ -499,7 +492,7 @@ comparing with the 32-bit one of the ALU.
 
 The increase in speed performance will be illustrated in the next lesson by using pipeline registers.
 
-\section{How is Designed an Instruction Set Architecture}
+\section{How is Designed an Instruction Set Architecture\index{ISA (Instruction Set Architecture): the set of instructions performed by a processor}}
 
 As we already said, we use the term ISA to refer to the actual
 programmer-visible instruction set. The ISA serves as the boundary

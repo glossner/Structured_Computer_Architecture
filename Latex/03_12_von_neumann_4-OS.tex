@@ -1,4 +1,4 @@
-\chapter{Computers: Four-Loop, Fourth-Order Systems (4-OS)}\label{lect6}
+\chapter{Computers\index{computers:  fourth order digital systems (4-OS) with the fourth loop  closed over a 3-OS}: Four-Loop, Fourth-Order Systems (4-OS)\index{4-OS: fourth order system -- interpreting computer}}\label{lect6}
 \localtoc
 
 
@@ -21,7 +21,7 @@ In current language we use the term computation without a rigorous definition. W
 
 \subsection{The Decision Problem}
 
-Despite appearances, computers are not numerical instruments but logical structures that have their theoretical origin in solving decision-making problems. To the question: {\em where and when does the history of computers begin?}, the answer, however strange it may seem, is: {\em somewhere on the island of Crete about two and a half millennia ago}. Indeed, Epimenides of Knossos (the capital of the island of Crete), a semi-mythical Greek seer from the 7th or 6th century BC, caught himself saying that {\em "all Cretans are liars"}. Surprised, because in the next second he could not {\bf decide} whether the assertion he had just made was true or false. Thus was born, if the story is true, a problem that occupied the minds of seekers for millennia until it was rigorously reformulated by David Hilbert (1862–-1943) and definitively settled by Kurt G\" odel (1906--1978).
+Despite appearances, computers are not numerical instruments but logical structures that have their theoretical origin in solving decision-making problems. To the question: {\em where and when does the history of computers begin?}, the answer, however strange it may seem, is: {\em somewhere on the island of Crete about two and a half millennia ago}. Indeed, Epimenides of Knossos\index{Epimenides of Knossos (7th or 6th century BC): a semi-mythical Greek seer credited for the liar paradox} (the capital of the island of Crete), a semi-mythical Greek seer from the 7th or 6th century BC, caught himself saying that {\em "all Cretans are liars"}. Surprised, because in the next second he could not {\bf decide} whether the assertion he had just made was true or false. Thus was born, if the story is true, a problem that occupied the minds of seekers for millennia until it was rigorously reformulated by David Hilbert (1862–-1943)\index{Hilbert, David (1862–-1943): German mathematician and philosopher credited for rigorously stating the decision problem} and definitively settled by Kurt G\" odel (1906--1978)\index{G\" odel, Kurt (1906--1978): Austrian logician, mathematician and philosopher credited for the incompleteness of formal theories}.
 
 Hilbert's address of 1900 to the International Congress of Mathematicians in Paris is perhaps the most influential speech ever given about mathematics \cite{Hilbert1900}. In it, Hilbert outlined 23 major mathematical problems to be studied in the coming century. One of them, the 10th, raises the issue of decision in a particular case. But, in a definitive form the problem is exposed in the book that David Hilbert writes together with Wilhelm Ackermann \cite{Hilbert1928}. This book included a clear statement of the {\em Entscheidungsproblem} (decision problem): 
 \begin{quote}
@@ -36,7 +36,7 @@ Gödel's spectacular result triggered within five years four mathematicians Alon
 
 \subsection{Turing Machine}
 
-In his paper, about "computable numbers" and {\em Entscheidungsproblem}, Alan Turing describes in words what he called a {\em computing machine}. We call it now Turing Machine (TM) and we describe it as a structure with three components (see Figure \ref{tm}a):
+In his paper, about "computable numbers" and {\em Entscheidungsproblem}, Alan Turing\index{Turing, Alan (1912-1954): English mathematician, computer scientist, logician, cryptanalyst, philosopher and theoretical biologist credited for Turing Machine, a mathematical model for computation} describes in words what he called a {\em computing machine}. We call it now Turing Machine (TM) and we describe it as a structure with three components (see Figure \ref{tm}a):
 \begin{itemize}
     \item an infinite {\bf tape}\footnote{It is most likely that Turing was inspired by the telegraph communication systems of the 1930s that used a paper tape to receive messages.}  on/from which symbols belonging to a finite set of symbols -- the machine's alphabet -- can be write or read using
     \item an accessing write/read {\bf head} which can move in each clock cycle one position to left or right under the control of
@@ -87,7 +87,7 @@ directs the machine to either:
 This \textbf{finite state control} is the precursor to binary arithmetic and logical operations on numbers. It implies that any number representation (binary, decimal, or otherwise) can be manipulated using a finite sequence of state transitions based on the machine's rules.
 
 \begin{definition}
-Formally, for a Turing Machine \( M(T) \), we have:
+Formally, for a Turing Machine\index{TM (Turing Machine)} \( M(T) \), we have:
 \[
 M = (Q, \Sigma, \delta, q_0, F)
 \]
@@ -117,7 +117,7 @@ the beginning of which is written the S.D of some computing machine $\cal M$
 then $\cal U$ will compute the same sequence as $\cal M$.} \cite{Turing36}
 \end{quote}
 
-Turing’s concept of a \textbf{Universal Turing Machine}, UTM, suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
+Turing’s concept of a \textbf{Universal Turing Machine}\index{UTM (Universal Turing Machine)}, UTM, suggested that any computable number or function could be represented and processed by a single machine capable of interpreting encoded instructions for any specific computation. This idea led to the realization that numbers can be encoded as \textbf{data} or \textbf{instructions}, providing a basis for multiple forms of number representation and manipulation in modern computers.
 
 If \( p \) is a program (or representation) for a number \( x \), then \( U(p) = x \), where \( U \) is a UTM capable of simulating \( p \). Given that a finite automaton has, by definition, a complex structure, theoretical research has carefully evaluated various versions for the FA associated with the UTM. We mention two limiting cases. One is that of the work of Claude Shannon who publishes a paper describing a UTM with an automaton having only 2 states \cite{Shannon56}. The consequence of this limitation is a combinational circuit on the loop of the 2-state finite automaton of very large size. Another occurs after 50 years. It is  a paper in which the finite automaton has zero states, that is, it is no longer necessary \cite{Stefan06Turing}. This establishes the possibility of simple processors, the RISC type, processors built only from simple recursively defined circuits.  
 
@@ -177,7 +177,7 @@ The memory hierarchy is distributed in the version represented in Figure \ref{co
         \end{itemize}
 \end{enumerate}
 
-\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a von Neumann version of a computing system.}{compSys}
+\placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a von Neumann version of a computing system.}{compSysN}
 
 \section{Memory Management}
 
@@ -195,7 +195,7 @@ Due to this difference, what we now call a memory gap occurred. The fast process
 
 Applying the locality principle allowed the definition of the strategies that govern the conception of a hierarchy of effective memories.
 
-\subsection{Memory Hierarchy}\label{memhier}
+\subsection{Memory Hierarchy\index{memory hierarchy}}\label{memhier}
 
 The hierarchy of memory is based on the fact that when we access a location that is in a memory that is too slow in relation to the speed of processing in the processor, a block or a page of bytes that contains the requested bytes will be transferred to a faster intermediate memory. This transfer is done with the hope that the following accesses will be made in the intermediate memory if the updated page or block in it was large enough.
 
@@ -211,7 +211,7 @@ The main memory is managed by the operating system, its size is in the range of 
 
 The disk memory is managed by the operating system or human operator, its size is $> 128GB$, the access time is $\sim 5 ms$.
 
-\subsection{Virtual Memory Mechanism}\label{lb:vmm}
+\subsection{Virtual Memory Mechanism\index{virtual memory mechanism}}\label{lb:vmm}
 
 How relate two successive levels in the hierarchy? Let us consider two levels in the memory hierarchy, $Level_i$ containing $m$ pages and $Level_{i+1}$ containing $n$ pages, with $n >> m$. Each page in $Level_i$, called {\em physical level} is a copy of a page from $Level_{i+1}$ called {\em virtual level}. In Figure \ref{vmm}a, pages 0, 2, and $m-2$ from the level $i$ were brought from pages 3, 4, and 0 of level $i+1$. Any change in the physical level must actualized in the associated virtual level. The "user"  accesses the virtual level while the virtual mechanism accesses the physical level. It is the job of the virtual memory mechanism to perform transparently the access and to keep coherent the content of the virtual level with the physical level.
 
@@ -248,7 +248,7 @@ Even though a content-addressable memory cell (see Figure \ref{cam_cell}) is mor
 
 It should not be neglected that the smaller size of the associative memory allows for an easier achievement of the speed performance of the structure.
 
-\subsubsection{Translation Lookaside Buffer (TLB)}
+\subsubsection{Translation Lookaside Buffer\index {TLB (Translation Lookaside Buffer)} (TLB)}
 
 With a minimal number of differences, the described virtualization mechanism is applied in managing the relationship between all the hierarchical levels in the memory of the computer system.
 
@@ -298,20 +298,19 @@ The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 cl
 \placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
 
 
-\subsection{DMA}
+\subsection{DMA\index{DMA (Direct Memory Access)}}
 
 \subsubsection{Definition}
 
-Direct memory access (DMA) (see Figure \ref{compSys}) is an important feature of computer systems. It allows  to access the main memory  system independently of the central processor.
+Direct memory access (DMA) (see Figure \ref{compSysN}) is an important feature of computer systems. It allows  to access the main memory  system independently of the central processor.
 
-When the processor is running an input/output program, it is occupied for the entire duration of the read or write operation. Thus the processor is unavailable to perform other work. With DMA, the processor  initiates the transfer only, then it does other operations while the transfer is performed. When the transfer is completed the processor receives an interrupt from the DMA (about interrupt see \ref{interrupt} in this lecture notes).
+When the processor is running an input/output program, it is occupied for the entire duration of the read or write operation. Thus the processor is unavailable to perform other work. With DMA, the processor, in the most complex case, can only initiate the transfer, then perform other operations while the transfer is in progress. When the transfer is complete, the processor receives an interrupt from the DMA (for an interrupt, see \ref{interrupt} in these notes). In simpler situations, such as the one we will exemplify, the process is only partially relieved of control of the transfer.
 
-An example of using the DMA unit is for transferring a page of 4KB from Hard Dist to Main Memory.
-
+An example of using the DMA unit is for transferring a page of 4KB from Hard Dist, as the I/O device, to Main Memory.
 The CPU initializes the DMA by sending the given information through the data bus:
 \begin{itemize}
-    \item the starting address of the memory block where to be read or write.
-    \item the number of words in the memory block
+    \item the starting address of the memory block in the I/O device from where read or to write.
+    \item the number of words in the memory block (usually is a constant in a system)
     \item control bit to define the mode of transfer, read or write.
     \item control bit to begin the DMA transfer
 \end{itemize}
@@ -320,15 +319,17 @@ The DMA controller transfers the data in three modes:
 \begin{itemize}
     \item burst mode:
     \begin{itemize}
-        \item entire data or burst of block containing data is transferred before CPU takes control of the buses back from DMA
+        \item DMA requests and receives the control on the internal bus
+        \item the entire data or the burst of block containing data is transferred before CPU takes control of the buses back from DMA
         \item is the quickest mode of DMA Transfer since at once a huge amount of data is being transferred
         \item since at once only the huge amount of data is being transferred so time will be saved in huge amount
+        \item DMA sends back the control of the intenal bus to the processor
         \item {\bf pros}: fastest mode of DMA Transfer
         \item {\bf cons}: less user friendly because during the DMA transfer CPU will be blocked.
     \end{itemize}
     \item cycle stealing mode for each transfer:
     \begin{itemize}
-        \item slows I/O device because will take some time to prepare data  and within that time CPU keeps the control of the buses.
+        \item slows I/O device because will take some time to prepare data and within that time CPU keeps the control of the buses.
         \item once the data is ready CPU give back control of system buses to DMA for 1-cycle in which the prepared word is transferred to/from memory.
         \item as compared to burst mode this mode is little bit slowest since it requires little bit of time which is actually consumed by I/O device while preparing the data.
         \item {\bf pros}: most Efficient way for DMA Transfer.
@@ -338,13 +339,14 @@ The DMA controller transfers the data in three modes:
     \begin{itemize}
         \item whenever CPU does not require the system buses, then the control of buses will be given to DMA
         \item CPU will not be blocked due to DMA at all
-        \item it is the slowest mode of DMA transfer since DMAC has to wait might be for so long time to just even get the access of system buses from the CPU itself
+        \item it is the slowest mode of DMA transfer since it has to wait might be for so long time to just even get the access of system buses from the CPU itself
         \item less amount of data will be transferred
         \item {\bf pros}: CPU will not be blocked at all
         \item {\bf cons}: Slowest DMA transfer rate.
     \end{itemize}
 \end{itemize}
 
+\begin{comment}
 \placedrawing[h]{figures/06_12_init_trans.lp}{Initiating the transfer between I/O and Memory.}{tranferInit}
 
 The transfer between an I/O device and MEMORY under the control of the DMA is initiated by the next sequence mode:
@@ -354,101 +356,103 @@ The transfer between an I/O device and MEMORY under the control of the DMA is in
     \item DMA acknowledge to I/O with {\bf DACK}
 \end{enumerate}
 and when data transfer is done,  DMA sends an {\em interrupt}, INT, to PROCESSOR (see Figure \ref{tranferInit}).
+\end{comment}
 
 
 \subsubsection{Structure}
 
-The structure of a minimal DMA connected between two buses, BusA and BusB, contains three main modules:
-\begin{itemize}
-        \item a buffer for the data being transferred sometimes between BusA and  BusB and other times between BusB and  BusA
-        \item a presettable counter for the memory address from which or to which data is transferred
-        \item a counter extended automaton to control the transfer process.
-\end{itemize}
-The resulting block schematic is represented in Figure \ref{simpleDMA}, where:
+The structure of a minimal DMA connected between two buses, BusA and BusB, is represented in Figure \ref{simpleDMA}, and contains four main modules:
 
 \placedrawing[h]{figures/06_13_minimal_DMA.lp}{Block schematic for a minimal DMA.}{simpleDMA}
 
 \begin{itemize}
-    \item CEA is the counter extended automaton whose counter is initiated with data from BusA under the Processor command; the automaton of CEA recives and sends signal from/on both buses and generates commands for the multiplexer and FIFO
+    \item CEA is the Counter-Extended Automaton whose counter is initiated with the size of transfer under the Processor command; the automaton of CEA receives and sends signal from/on both buses and generates commands for the multiplexer,  FIFO, and address register.
     \item FIFO is used as a buffer to optimize the transfer time between the two busses where the speed of transfer are very different; the block of data on BusA is transferred faster then the same block of date on BusB because Memory is much faster then the I/O device
-    \item the multiplexor, mux, allows to use the same FIFO for the transfers in both directions, from I/O to Memory or from Memory to I/O
-    \item AddressCounter is used to generate the addresses for Memory; it is loaded by Processor in the initialization process of a transter
+    \item the multiplexer, MUX, allows to use the same FIFO for transfers in both directions, from I/O to Memory or from Memory to I/O
+    \item address register is a presetable counter used to generate the addresses for Memory; it is loaded by Processor in the initialization process of a transter
 \end{itemize}
 Representation from Figure \ref{simpleDMA} is a functional schematics and does not contains the interface circuits between DMA and the two buses.
 
-The critical timing in the transfer is on the bus BusA where DMA compete with Processor in using the bus for communicating with Memory in the computing process. For this reason, the transfer mode on BusA is burst mode facilitated by the  FIFO memory. When I/O transfers a bloc in Memory, first the FIFO memory is loaded with a block of data at the low speed of the I/O device, then the FIFO memory is emptied in a burst performed at the high speed of the Memory module. Symmetrical, the FIFO memory is fast loaded from Memory in burst mode, then the data is transferred  at the low speed imposed by the I/O device on the BusB. The overall time is imposed by the slowest device, the I/O system, but the time during which the processor is deprived of the possibility of using the BusA bus is minimized by the appropriate use of the FIFO memory.
+The critical timing in the transfer is on the bus BusA where DMA compete with Processor in using the bus for communicating with Memory in the computing process. For this reason, the transfer mode on BusA is burst mode facilitated by the  FIFO memory. When I/O transfers a bloc in Memory, first the FIFO memory is loaded with a block of data at the low speed of the I/O device then the FIFO memory is emptied in a burst performed at the high speed of the Memory module. Symmetrically, the FIFO memory is fast loaded from Memory in burst mode then the data is transferred  at the low speed imposed by the I/O device on the BusB. The overall time is imposed by the slowest device, the I/O system, but the time during which the processor is deprived of the possibility of using the BusA bus is minimized by the appropriate use of the FIFO memory.
 
-In addition to the signals (read, write, sel, load, increment) and flags (empty, full) that the CEA generates inside the DMA, the control signals (commands and flags) on the two buses are also managed by the same circuit, as follow:
+In addition to the signals (read, write, sel, load, next) that the CEA generates inside the DMA (flags empty and full from FIFO are ignored because the way this module is used), the control signals (commands and flags) on the two buses are also managed by the same circuit, as follow:
 \begin{itemize}
     \item on BusA:
         \begin{itemize}
-            \item commands: {\tt HLD, INT, readA, writeA, startReadA, startWriteA}
-            \item flags: {\tt HLDA, waitA}
+            \item commands: {\tt HLD, INT, readA, writeA}
+            \item flags: {\tt HLDA, waitA, comA[1:0]}
         \end{itemize}
     \item on BusB:
         \begin{itemize}
-            \item commands: {\tt DACK, readB, writeB, startReadB, startWriteB}
-            \item flags: {\tt DRQ, waitB}
+            \item commands: {\tt readB, writeB, send, get}
+            \item flags: {\tt waitB}
         \end{itemize}
+    \item internal:
+        \begin{itemize}
+            \item commands:
+                \begin{itemize}
+                    \item {\tt load}: loads the {\tt address} register with {\tt dataInA}
+                    \item {\tt read}: reads the FIFO for BusA or BusB
+                    \item {\tt write}: writes in FIFO from BusA or BusB according cu {\tt sel}
+                    \item {\tt next}: increments the {\tt address} register and decrements {\tt blockCounter} which is the extension of the finite automaton in CEA
+                    \item {\tt sel}: is the selection bit for MUX
+                \end{itemize}
+            \item flag: {\tt zero} is activate when {\tt blockCounter = 0}
+        \end{itemize}
+    
 \end{itemize}
-In addition to these signals, the CEA finite state machine also has signals related to the associated presettable counter. These are: the {\tt zero} flag (which indicates that the counter has reached zero by decrementing), and the {\tt preset} (loads the transfer size minus 1 in presetable counter) and {\tt dec} (decrements the counter value on each write or read).
 
 \begin{exemplu}\label{minDMA}
-The process of transferring a block of data from or to a I/O device using a minimal DMA structure is presented. It is considered that the system works with two buses, an internal bus, BusA, and an input-output bus, BusB. On the internal bus we need to protect the computing process from too intensive use of the bus by DMA. For this we will use the BusAt transfer in burst mode. This type of transfer negotiates the takeover of the bus control only once, and the transparent mode increases the transfer time too much.
+The process of transferring a block of data from or to a I/O device using a minimal DMA structure is presented. It is considered that the system works with two buses, an internal bus, BusA, and an input-output bus, BusB. On the internal bus we need to protect the computing process from too intensive use of the bus by DMA. For this we will use the BusAt transfer in burst mode. 
+
+{\em 
+\includeverilogcode[caption={Connection list for Direct Memory Access.  File: A12\_DMA.sv  (SystemVerilog)}, 
+                    label={lst:dmaConnexions}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=100]
+                    {\verilogSourceDir/A12_DMA.sv}
+}
 
 {\em
 {\small
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
 /************************************************************************
-The transfer procedure has only two modes: (1) read from I/O to memory
-a block of maximum 4096 words or (2) write from memory to I/O a block
-of maximum 4096 words.
+The transfer procedures 
 ************************************************************************/
-state0: idle state, waiting for starting a read/write transfer
-        {nextState,com} = startReadA  ? {state1,load} :
-                         (startWriteA ? {state2,load} : (state0,preset))
-
-state1: Processor loads in FIFO the source block address in I/O
-        {nextState,com} = {state3,write}
-
-state3: Processor loads in AddressCounter the starting address in Memory
-        {nextState,com} = {state4,load}
-
-state4: I/O receives from FIFO the pointer to the block
-        (nextState,com} = {state5,read,writeB}
-
-state5: the block to be transferred is loaded iin FIFO
-        {nextState,com} = waitB ? {state5,-}                       :
-                         (zero  ? {state11,readB,write,dec,preset} :
-                                  {state5,readB,write,dec})
-
-state11: DMA request control on BusA
-        {nextState,com} = HLDA ? {state6,HLD} : {state11,HLD}
-
-state6: the bloc is transferred in burst mode from FIFO to Memory
-        {com,nextState} = {writeA,(waitA ? state6 :
-                                  (zero ? {read,incAddr,dec,state0} :
-                                          {read,incAddr,dec,state6}))}
-
-state2: Processor loads in FIFO the destination block address in I/O
-        {nextState,com} = {state7,write}
-
-state7: Processor loads in AddressCounter the starting address in Memory
-        {nextState,com} = {state8,load}
-
-state8: I/O receives from FIFO the pointer to the block
-        (nextState,com} = {state9,read,writeB}
-
-state9: the block is transferred in burst mode from Memory to FIFO
-        {com,nextState} = {readA,(waitA ? state9 :
-                                  (zero ? {write,incAddr,dec,state10} :
-                                          {write,incAddr,dec,state9}))}
-
-state10: the block is transferred from FIFO to I/O
-        {nextState,com} = waitB ? {state10,-}                      :
-                         (zero  ? {state0,writeB,write,dec,preset} :
-                                  {state10,writeB,write,dec})
+idle    - waits for starting a read(comA=01)/write(comA=10) transfer
+        - processor wirtes in FIFO source/destination addres in I/O
+        {nextState,com} = comA[0] ? {initG,write} : 
+                          comA[1] ? {initS,write} : {idle,-} 
+// GET FROM I/O TO MEMORY
+initG   - processor loads (comA=11) in AddrsCounter the starting address 
+        - I/O receives from FIFO the pointer to the block
+        {nextState,com} = comA=11 ? {io2b,read,writeB,get} : {initG,-}
+io2b    - i/O to FIFO bufer
+        {nextState,com} = waitB ? {io2b,-} :             
+                          zero  ? {holdG,readB,write,next}  :
+                                  {io2b,readB,write,next})                      
+holdG   - DMA request control on BusA for load transfer
+        {nextState,com} = HLDA ? {b2mem,-} : {holdG,HLD}
+b2mem   - the bloc is transferred from FIFO to memory
+        {nextState,com} = waitA ? {b2mem, writeA} :
+                          (zero ? {idle,writeA,read,next, INT} :
+                                  {b2mem,writeA,read,next})
+// SENS FROM MEMORY TO I/O
+initS   - processor loads in AddressCounter the starting address 
+        - I/O receives from FIFO the pointer to the block
+        {nextState,com} = writeA ? {holdS,read,writeB,send} : {initS,-}
+holdS   - DMA request control on BusA for send transfer
+        {nextState,com} = HLDA ? {mem2b,-} : {holdS,HLD}
+mem2b   - the block is transferred in burst mode from Memory to FIFO
+        {com,nextState} = waitA ? {mem2b,readA} :
+                          (zero ? {b2io,readA,write,next,INT} :
+                                  {mem2b, readA,write,next})
+b2io    - the block is transferred from FIFO to I/O
+        {nextState,com} = waitB ? {b2io,writeB} :
+                         (zero  ? {idle,writeB,incAdd} :
+                                  {b2io,writeB,incAdd})
 \end{lstlisting}
 \end{shaded*}
 }}
@@ -462,22 +466,23 @@ $\diamond$
 
 There are two types of I/O devices:
 \begin{itemize}
-    \item Storage devices, mainly represented by hard disk, flash memory, optical disk, tape.
-    \item Functional devices, mainly represented by display system, network interface, ...
+    \item Storage devices are mainly represented by hard disks, flash memory, optical disks, tape.
+    \item Functional devices, mainly represented by display systems, network interfaces, ...
 \end{itemize}
-We will briefly present the storage devices that extend the memory hierarchy outside the central computing unit.
+We will briefly present the storage devices that extend the memory hierarchy outside the central processing unit.
 
-\subsubsection{Hard Disk}
+\subsubsection{Hard Disk Drives (HDDs)\index{HDD (Hard Disk Drive)}}
 
 The most common auxiliary memory is the hard disk drive. Its internal structure is represented in Figure \ref{disk}.
-
-\placedrawing[H]{figures/06_11_hard_drive.lp}{Hard Disk Drive Structure [Source: Google-Images]}{disk}
 
 Main parameters:
 \begin{itemize}
     \item storage capacity: 10 $\div$ 30 TB
     \item average access time: 2.5 $\div$ 10 ms
-    \item MTBF: $\sim$285 years (MTBF stands for mean time between failures; it is the predicted elapsed time between inherent failures of a mechanical or electronic system, during normal system operation.)
+    \item MTBF: $\sim$285 years (MTBF stands for mean time between failures; it is the predicted elapsed time between inherent failures of a mechanical or electronic system during normal system operation.)
+
+\placedrawing[H]{figures/06_11_hard_drive.lp}{Hard Disk Drive Structure [Source: Google-Images]}{disk}
+    
     \item bytes per sector: 512 $\div$ 4096
     \item shock tolerance
         \begin{itemize}
@@ -494,16 +499,16 @@ Optical disks are read-only mediums. There are two versions:
     \item DVD: digital video disk (4.7 GB); sometimes written on both sides to double capacity
 \end{itemize}
 
-\subsubsection{Flash Memory}
+\subsubsection{Solid State Drives (SSD)\index{SSD (Solid State Drive)}}
 
 
-Flash memory is a type of EEPROM (electronically erasable programmable readonly memory), which is normally read-only but can be erased. Solid-state devices (SSDs) based on flash memory technology do not have moving parts.
+Flash memory is a type of EEPROM (electronically erasable programmable read only memory), which is normally read only but can be erased. Solid-state devices (SSDs) based on flash memory technology do not have moving parts.
 
 The capacity per flash memory chip increased by about 50\%–60\% per year.
 
-Typical SSDs will have a the time taken for a disk drive to locate the area on the disk where the data to be read is stored between 0.08 and 0.16 ms.
+Typical SSDs will have the time taken for a disk drive to locate the area on the disk where the data to be read is stored between 0.08 and 0.16 ms.
 
-Time to {\bf read} 2 KB from a flash memory takes about 75 $\mu$S,  while DDR SDRAM takes less than 500 ns. Then  flash memory is  about 150 times slower. But compared to HDD is $\sim 400$  times faster. We conclude: the flash memory can not replace DRAM for main memory, but is a good candidate to replace HDD.
+Time to {\bf read} 2 KB from flash memory takes about 75 $\mu$S,  while DDR SDRAM takes less than 500 ns. Then,  flash memory is  about 150 times slower. But compared to HDD is $\sim 400$  times faster. We conclude that flash memory cannot replace DRAM for main memory, but it is a good candidate to replace HDD.
 
 Time to {\bf write} for flash memory is about 1500 times slower then SDRAM, and about 8–15 times faster than HDD.
 

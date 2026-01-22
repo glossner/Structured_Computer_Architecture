@@ -1,4 +1,4 @@
-\chapter{Processors: Three-Loop, Third-Order Systems (3-OS)}\label{lect4}
+\chapter{Processors\index{processors:  third order digital systems (3-OS) with the third loop  closed over a 2-OS}: Three-Loop, Third-Order Systems (3-OS)\index{3-OS: third order system -- processor}}\label{lect4}
 \localtoc
 
 
@@ -6,7 +6,7 @@ In this chapter we will  close the third loop. It can be closed through a combin
 
 We are also interested in investigating what the digital structure capable of recognizing or generating less restrictively generated languages ​​than regular ones, of type 3, looks like. Therefore, before describing the typical structure of three-loop systems, we will describe the minimal particular case that is associated with context-free languages.
 
-\section{Counter-Expanded Automata and Context-Free Languages}
+\section{Counter-Expanded Automata\index{CEA (Counter Expanded Automata): a 3-OS obtained by a finite automaton loop coupled with a up-down counter} and Context-Free Languages}
 
 Let's remember how we solved the problem of recognizing strings of the form $1^n0^m$ using a finite automaton. What should we do if we try to recognize strings of the form $1^n0^n$, strings that have a higher complexity because we have an additional restriction: the number of 1s is the same as the number of 0s? A finite automaton, with a number of states independent of the value of $n$, cannot solve the problem. The solution is to add a reversible counter in the loop of a finite automaton. In Figure \ref{cea} a Counter-Expanded Automaton, CEA. It contains a reversible counter  that returns to the finite automaton  a flag indicating its zero state.
 
@@ -41,7 +41,7 @@ $\diamond$
 Thus, after seeing that regular languages have finite automata as recognition and generation machines, we see that context-free languages have expanded automata with reversible counters as recognition and generation machines. In other words: type 3 languages correspond to two-loop systems -- ${\cal L}_3 \Leftrightarrow$ 3-OS -- and type 2 languages correspond to three-loop systems -- ${\cal L}_2 \Leftrightarrow$ 2-OS.
 
 
-\section{Elementary Processor}
+\section{Elementary Processor\index{EP (elementary processor): a processor performing only one function (instruction)}}
 
 The main gain obtained by closing the third feedback loop is given by the fact that the obtained structure can act on a data structure in the sense of modifying or interpreting it. This can be achieved by using an automaton that modifies its state by applying simple functions to its own state. This automaton, let's call it functional, is coordinated by a control automaton that manages the data flows and the way in which they are stored and modified.
 
@@ -294,7 +294,7 @@ A micro-instruction is organized in fields, according to the command issued by t
             \item[{\bf SUBCR}]: {\tt D(X) <= (L(Y) - R(Z))[23]}, where $X,Y,Z \in [0,32)$
         \end{description}
         \begin{description}
-            \item[{\bf LSH}]: {\tt D(X) <= \{1'b0, L(Y)[31:1]\}}, where $X,Y \in [0,32)$
+            \item[{\bf RSH}]: {\tt D(X) <= \{1'b0, L(Y)[31:1]\}}, where $X,Y \in [0,32)$
         \end{description}
         \begin{description}
             \item[{\bf ASH}]: {\tt D(X) <= \{L(Y)[31], L(Y)[31:1]\}}, where $X,Y \in [0,32)$
@@ -446,7 +446,7 @@ The elementary processor defined above is capable of executing a single function
 
 The internal state of the processor is given by the Cartesian product represented by the contents of the register file. The evolution of the internal state of the processor, under the influence of the sequence of instructions it controls and the data it accesses in the external memory, as well as the effect of this evolution on the data in the external data memory, are controlled by the sequence of instructions designed to be stored in a memory external to the processor. Under these conditions, the operation of a processor is determined by its hardware structure and the software structure of the programs it runs. For this reason, the description of a processor involves the complementary processes of defining the organization and architecture.
 
-\subsection{Architecture vs. Organization}\label{archOrg}
+\subsection{Architecture\index{architecture: the user's image of a processing engine; describes what it does} vs. Organization\index{organization: the structure of a processor; describes how the processor does what it does}}\label{archOrg}
 
 {\small
  \hfill{
@@ -502,7 +502,7 @@ The two machines that configure a processor have distinct functions:
 
 The two types of control generate two types of processors: interpreting processor and executing processor.
 
-\subsection{Interpreting Processor (CISC processor)}
+\subsection{Interpreting Processor (CISC\index{CISC (Complex Instruction Set Computer): a computing system in which the instructions are interpreted by a sequence of microinstructions} processor)}
 
 The first type of processor, the one that interprets the instruction by decomposing it into a sequence of microinstructions, is represented in Figure \ref{fig41}, where the control is performed with a complex automaton. An instruction can involve complex operations implemented sequentially through a series of micro-instructions sent by the controller to the functional automaton that can send back to the controller flags that can characterize the result of the application of each micro-instruction. For this reason, this processor version is called CISC (Complex Instruction Set Computer).
 
@@ -517,7 +517,7 @@ For each instruction the CISC processor must perform:
 
 \hspace{-5mm}so that an instruction is executed in a variable number of at least several clock cycles.
 
-\subsection{Executing Processor (RISC processor)}
+\subsection{Executing Processor (RISC\index{RISC (Reduced Instruction Set Computer): a computing system in which the instructions are executed in constant time (usually one clock cycle)} processor)}
 
 The second type of processor is designed in such a way that it executes each instruction in constant time, usually one clock cycle, but no more than two clock cycles. Because each instruction requires fetching it from memory, and some instructions also require writing or reading data from memory, it is necessary to structure the memory into two sub-memories, one for programs and another for data. This results in the structure in Figure \ref{fig42}, where the processor has two access paths to memory resources.
 In this case, the control automaton can only take care of fetching the instructions from the program memory and the functional automaton will execute sufficiently simple instructions to require only one clock cycle to be operated.

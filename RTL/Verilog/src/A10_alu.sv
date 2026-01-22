@@ -1,4 +1,4 @@
-`include "define.vh"
+`include "A10_defineRALU.vh"
 module ALU( input   logic [3:0]   func  ,
             input   logic [31:0]  left  ,
             input   logic [31:0]  right ,
@@ -16,7 +16,7 @@ module ALU( input   logic [3:0]   func  ,
             `sub   : {crOut, out} <=  dif                           ;
             `addcr : {crOut, out} <= {32'b0, sum[32]}               ;
             `subcr : {crOut, out} <= {32'b0, dif[32]}               ;
-            `lsh   : {crOut, out} <= {left[0], left[31:1]}          ;
+            `rsh   : {crOut, out} <= {left[0], left[31:1]}          ;
             `ash   : {crOut, out} <= {left[31], left[31:1]}         ;
             `move  : {crOut, out} <= {1'b0, left}                   ;
             `mult  : {crOut, out} <= {1'b0, left * right}           ;

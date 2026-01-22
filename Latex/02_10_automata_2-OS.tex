@@ -1,4 +1,4 @@
-\chapter{Automata: Two-Loop, Second-Order Systems (2-OS)}\label{lect3}
+\chapter{Automata\index{automata: second order systems (2-OS) whose autonomous behavior is based on the second loop closed over a memory system (1-OS)}: Two-Loop, Second-Order Systems (2-OS)\index{2-OS: second order system -- automaton}}\label{lect3}
 \localtoc
 
 In this chapter, we will close a second feedback loop in digital systems. This loop will increase the autonomy of the system. If in 0-OS, because we had no loop, the output of the combinational systems is a combination that derives strictly from the current value applied to the input, then in 1-OS a partial autonomy was obtained: the autonomy of the state that could be maintained outside the range of during which the signal that determined it acted. The second loop, which defines 2-OS, will allow the autonomy of the behavior of the system in which it closes. That is, we will obtain the possibility of an evolution of the output even in the absence of a variation of the input signal.
@@ -30,19 +30,19 @@ The typical circuit in 2-OS is the automaton. We will highlight two categories o
 The following definition applies to all kinds of automata.
 
 \begin{definition}
-An automaton, A, is defined by the following 5-tuple:
+An automaton\index{automaton!formal definition -- a state register with a 0-OS loop computing the next state and another 0-OS computing the output}, A, is defined by the following 5-tuple:
 $$A=(X, Y, Q, f, g)$$
 where:
 \begin{description}
-\item[X]: the finite set of input variables \item[Y]: the finite
-set of output variables \item[Q]: the set of state variables
-\item[f]: the state transition function, described by $f:X \times
-Q \rightarrow Q$ \item[g]: the output transition function,  with
+\item[X]: finite set of input variables \item[Y]: finite
+set of output variables \item[Q]: set of state variables
+\item[f]: state transition function, described by $f:X \times
+Q \rightarrow Q$ \item[g]: output transition function,  with
 one of the  following  definitions:
 \begin{itemize}
-    \item $g:X \times Q \rightarrow Y$ for the Mealy type automaton
-    \item $g:Q \rightarrow Y$ for the Moore type automaton
-    \item $g(q)=q$ for $Y \equiv Q$, where $q \in Q$ for the half-automaton, symbolized with $A_{1/2}$.
+    \item $g:X \times Q \rightarrow Y$ for the Mealy type automaton\index{automaton!Mealy automaton}
+    \item $g:Q \rightarrow Y$ for the Moore type automaton\index{automaton!Moore automaton}
+    \item $g(q)=q$ for $Y \equiv Q$, where $q \in Q$ for the half-automaton\index{automaton!half-automaton -- an outputless automaton}, symbolized with $A_{1/2}$.
 \end{itemize}
 \end{description}
 At each clock cycle, the state of the automaton  switches, and the
@@ -52,7 +52,7 @@ input, in Mealy's approach).
 $\diamond$
 \end{definition}
 
-A strict initial automaton is defined by:
+A strict initial automaton\index{automaton!initial automaton} is defined by:
 $$A=(X, Y, Q, f, g; q_{0})$$
 and has a special input, called {\bf reset}, used to set the
 automaton to the initial state $q_{0}$. If the automaton is
@@ -90,7 +90,7 @@ As a consequence, we distinguish more carefully the concept of
 {\em size} and the concept of {\em complexity}. 
 
 \begin{definition}
-The {\bf size} of a digital circuit, $S_{digital \; circuit}$, is
+The {\bf size}\index{size: physical dimension of a digital system} of a digital circuit, $S_{digital \; circuit}$, is
 given by the dimension of the physical resources used to implement
 
 it.
@@ -139,14 +139,14 @@ of errors make useless  a bigger area of the wafer containing
 large circuits.}.
 
 \begin{definition}\label{circCompl}
-The {\bf algorithmic complexity} or simply the {\bf complexity} of a digital circuit, $C_{digital \; circuit}$, has the magnitude
+The {\bf algorithmic complexity}\index{complexity!algorithmic complexity: size of the shortest description} or simply the {\bf complexity} of a digital circuit, $C_{digital \; circuit}$, has the magnitude
 order given by the minimal number of symbols needed to express its
 definition.
 
 $\diamond$
 \end{definition}
 
-Definition \ref{circCompl} is inspired by \cite{Chaitin77}'s definition for the
+Definition \ref{circCompl}\index{complexity!circuit complexity: size of the shortest HDL description} is inspired by \cite{Chaitin77}'s definition for the
 algorithmic complexity of a string of symbols. The
 {\em algorithmic complexity} of a string is related to the
 dimension of the smallest program that generates it.  Our $C_{digital
@@ -154,7 +154,7 @@ dimension of the smallest program that generates it.  Our $C_{digital
 in a certain HDL (in most cases, it is a behavioral description).
 
 \begin{definition}
-A {\bf simple circuit} is a circuit having a complexity
+A {\bf simple circuit}\index{complexity!complex vs. simple circuit} is a circuit having a complexity
 much smaller than   its size:
 $$C_{simple \; circuit} << S_{simple \; circuit}.$$
 Usually, the complexity of a simple circuit is constant:
@@ -209,14 +209,14 @@ This module implements a combinational logic circuit using basic AND and OR oper
 The following Verilog program describes a {\em simple circuit},
 because the program that defines the circuit completely is the same
 for any value of {\em n}.
-{\em 
+
 \includeverilogcode[caption={Example of a simple circuit.  File: A10\_orPrefixes.sv  (SystemVerilog)}, 
                     label={lst:A10_orPrefixes.sv}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_orPrefixes.sv}
-}
+
 The {\em prefixes of the OR} circuit consists of {\em n} $OR_{2}$ gates
 connected in a very regular form. The definition is the same for
 any value of {\em n}.\footnote{To be rigorous, when the
@@ -329,10 +329,10 @@ state and the previous input. {\bf f.} Delayed Moore automaton:
 the output is generated by the previous state.}}{fin_aut}
     
     
-    \item[Mealy immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending on state and input; the latency of the Y output compared to the X input is zero
-    \item[Moore immediate automaton]: is an automaton whose output is calculated by a combinational circuit depending only on the state; the latency of the Y output compared to the X input is one clock cycle
-    \item[Mealy delayed automaton]: is a Mealy immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is one clock cycle
-    \item[Moore delayed automaton]: is a Moore immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is two clock cycles.
+    \item[Mealy immediate automaton]\index{automaton!Mealy immediate automaton}: is an automaton whose output is calculated by a combinational circuit depending on state and input; the latency of the Y output compared to the X input is zero
+    \item[Moore immediate automaton]\index{automaton!Moore immediate automaton}: is an automaton whose output is calculated by a combinational circuit depending only on the state; the latency of the Y output compared to the X input is one clock cycle
+    \item[Mealy delayed automaton]\index{automaton!Mealy delayed automaton}: is a Mealy immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is one clock cycle
+    \item[Moore delayed automaton]\index{automaton!Moore delayed automaton}: is a Moore immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is two clock cycles.
 \end{description}
 Depending on the way the machine is integrated into the system we are designing, we will choose the most suitable version. Latency can sometimes be advantageous.
 
@@ -354,7 +354,7 @@ $\diamond$
 \end{definition}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Finite (complex) Automata}
+\section{Finite (complex) Automata\index{automaton!finite automaton: is a complex automaton}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The term "finite automata" does not imply a distinction from a possible category of "infinite automata." Rather, the adjective "finite" refers specifically to the number of states in the automaton, which remains bounded regardless of the length of the input it processes. A finite automaton is capable of handling an arbitrarily long, or even conceptually infinite, sequence of symbols presented at its input. Thus, the finiteness of the automaton pertains to the structure of its state space, not to any limitation on the length of the input string it can process. In this sense, the automaton's finiteness is contrasted with the metaphorical infinity of the input rather than an actual infinity of the automaton itself.
 
@@ -367,9 +367,9 @@ $\diamond$
 We will illustrate this concept using two representative cases: a recognition automaton and a control automaton.
 
 %********************************
-\subsection{Recognizing automata}
+\subsection{Recognizing automata\index{automaton!recognizig/generatin automaton: is a complex automaton}}
 %*********************************
-Theoretical linguist Noam Chomsky introduced the concept of generative grammar \cite{Chomsky56, Chomsky59, Chomsky63}, a concept used in modern computer science to develop compiler theory, a theory used to translate programs written in a high-level language into the machine language used at the lowest level in a computing machine \cite{Hopcroft2001}. The first step in translation is to recognize the sequence to be translated as belonging to a particular language. The simplest possible example concerns the languages defined in the set $\{0,1\}^*$, that of all strings formed with elements from the set $\{0,1\}$. We will consider, in the following example, a language from the category of regular languages, in the sense of the classification made by N. Chomsky. Regular languages, or type 3, are the simplest languages in the sense that they are generated with the most restrictions: the string is formed by increasing each step independently of the context at one end only. For these languages, a finite automaton (a two-loop digital system) can be used to recognize or generate.
+Theoretical linguist Noam Chomsky\index{Chomsky, Noam (born 1928), American linguist credited for generative grammar, transformational grammar, formal languages  hierarchy} introduced the concept of generative grammar \cite{Chomsky56, Chomsky59, Chomsky63}, a concept used in modern computer science to develop compiler theory, a theory used to translate programs written in a high-level language into the machine language used at the lowest level in a computing machine \cite{Hopcroft2001}. The first step in translation is to recognize the sequence to be translated as belonging to a particular language. The simplest possible example concerns the languages defined in the set $\{0,1\}^*$, that of all strings formed with elements from the set $\{0,1\}$. We will consider, in the following example, a language from the category of regular languages, in the sense of the classification made by N. Chomsky. Regular languages, or type 3, are the simplest languages in the sense that they are generated with the most restrictions: the string is formed by increasing each step independently of the context at one end only. For these languages, a finite automaton (a two-loop digital system) can be used to recognize or generate.
 
 \begin{exemplu}\label{regLang}
 The binary inputs to the language $L = \{1^{n}0^{m} | n,m \geq 1\} \in \{0,1\}^*$,
@@ -565,7 +565,7 @@ $\diamond$
 
 
 %****************************************************************
-\subsection{{\bf {\em Control Automata (CROM)}}}\label{contrAut}
+\subsection{{\bf {\em Control Automata (CROM)}}\index{CROM (Controller with ROM): ROM-based control automaton}}\label{contrAut}
 %****************************************************************
 In addition to recognition and generation functions, finite state machines are used to control systems that evolve under sequences of received commands and return signals to the machine that report significant events for the evolution of the command sequence.
 
@@ -674,9 +674,9 @@ which is defined as a patternless binary structure.
 
 \subsubsection{Microcoding}
 
-In order to define and verify the complex contents of the ROM, we will consider each location as a {\bf {\em microinstruction}} that is used to control the operation of effector systems. In this way the CROM will be defined by the {\bf {\em microprograms}} - the sequences of microinstructions - that it runs.
+In order to define and verify the complex contents of the ROM, we will consider each location as a {\bf {\em microinstruction}}\index{microinstruction: the content of a location, organized in fields\index{fields: a mono- or multi-bit sub-word in a microinstructions}, in the ROM of CROM} that is used to control the operation of effector systems. In this way the CROM will be defined by the {\bf {\em microprograms}}\index{microprogram: a sequence of microinstructions stored in the ROM of CROM} - the sequences of microinstructions - that it runs.
 Thus, the output of ROM can be seen as a {\em microinstruction} defined
-as follows: {\small
+as follows using BNF\index{BNF: Backus-Naur Form or Backus normal form developed by John Backus and Peter Naur} (Backus-Naur Form or Backus normal form) developed by John Backus\index{Backus, John  (1924-2007): American computer scientist and mathematician; he led the team that invented and implemented FORTRAN, the first widely used high-level programming language} and Peter Naur\index{Naur, Peter (1928 - 2016): Danish computer science pioneer}: {\small
 \begin{verbatim}
     <microinstruction>::= <<setLabel> <Mod> <Test> <Command>> ;
     <setLabel>::= lb(<number>);
@@ -823,7 +823,7 @@ A simple automaton has the loop closed through a simple combinatorial circuit. W
 %*********************
 
 %***************************
-\subsubsection{T Flip-Flop}
+\subsubsection{T Flip-Flop\index{T-FF: toggle flip-flop, the simplest 2-state automaton}}
 %***************************
 The smallest and simplest automaton is a half-automaton with two states and a single input (see Figure \ref{t_ff}a). Given an automaton with only two internal states, denoted as \( Q \) and \( Q' \), and a single input bit \( T \), its behavior is constrained to a single logical operation:
 
@@ -841,7 +841,7 @@ The numerical function of the T flip-flop can be interpreted as a modulo-2 count
 %******************************
 \subsubsection{Generic Counter}
 %******************************
-The generic counter is a basic half-automaton augmented with an increment circuit integrated into its feedback loop. At each active clock edge, the incremented value of the state register is loaded into the register. In practical applications, the counter's functionality is extended to support the following operations:
+The generic counter\index{counter!generic counter: the simplest $n$bit automaton} is a basic half-automaton augmented with an increment circuit integrated into its feedback loop. At each active clock edge, the incremented value of the state register is loaded into the register. In practical applications, the counter's functionality is extended to support the following operations:
 
 \placedrawing[h]{figures/04_07_counter.lp}{Counter.}{fig38}
 
@@ -856,7 +856,7 @@ The generic counter is a basic half-automaton augmented with an increment circui
 The structure of the generic counter is represented in Figure \ref{fig38}. If the size of the register is of $n$ bits, then the circuit counts modulo $2^n$.
 
 \begin{exemplu}
-Four-bit presetable and reversible counter.
+Four-bit presetable and reversible counter\index{counter!reversible counter: a counter able cu count up and down}.
 {\em 
 \includeverilogcode[caption={Defines the command for the counter circuit.   File: A10\_counterDefines.vh  (SystemVerilog)}, 
                     label={lst:A10_counterDefines.vh}, 
@@ -869,7 +869,7 @@ Four-bit presetable and reversible counter.
 Listing \ref{lst:A10_counterDefines.vh} shows the commands for the counter automaton.
 \end{exemplu}
  
-\includeverilogcode[caption={A presetable up-down counter.   File: A10\_counter.sv  (SystemVerilog)}, 
+\includeverilogcode[caption={A presetable up-down counter\index{counter!presetable counter: a counter which starts counting from a presetable value}.   File: A10\_counter.sv  (SystemVerilog)}, 
                     label={lst:A10_counter.sv}, 
                     firstline=1, 
                     firstnumber=1, 
@@ -903,7 +903,7 @@ $\diamond$
 
 
 %**********************************************************
-\subsection{{\bf {\em Program Counter}}}\label{progCounter}
+\subsection{{\bf {\em Program Counter}}\index{counter!program counter: generates the program address in a RISC processor}}\label{progCounter}
 %**********************************************************
 
 A specific application of the counter simple automaton is the system used to compute the next address in the process of running a program (see Figure \ref{fig39}). The set of functions specified on the input {\tt next} are:
@@ -940,7 +940,7 @@ The combinational logic for computing the next program counter value is implemen
 Finally, the current value of the program counter \texttt{pc} is assigned to the output \texttt{progAddr}. An alternative assignment (commented out in the code) would directly assign \texttt{nextPC} to \texttt{progAddr} for a non-pipelined implementation.
 
 %***********************************************************************************
-\subsection{{\bf {\em Registers with Arithmetic \& Logic Unit (RALU)}}}\label{rALU}
+\subsection{ {\bf{\em Registers with Arithmetic \& Logic Unit (RALU)}} \index{RALU (Registers with Arithmetic \& Logic Unit)}: a functional, simple automaton used as the main execution unit in a processor} \label{rALU}
 %***********************************************************************************
 
 If we connect in a loop a register file with a arithmetic logic unit we obtain the simplest form of an executive core of a processor (see Figure \ref{ralu}). The external connections of a Register with Arithmetic \& Logic Unit (RALU) type module are:
@@ -1017,16 +1017,16 @@ The following sequence of operations: load two numbers (12 and 5) in the registe
     \vspace{2mm}
     %{\small
     {\tt
-    \begin{tabular}{|c|c|c|c|c|c|c||c|}
+    \begin{tabular}{|r|r|c|c|c|c|c||c|}
     \hline
     func &  in & load & leftAddr & rightAddr & we & destAddr & COMMENT          \\ \hline \hline
-    1111 &  xx &  0   &  00000   &  00000    & 1  &  00000   & R0 <= 0          \\ \hline
-    0010 &  12 &  1   &  xxxxx   &  00000    & 1  &  00001   & R1 <= 12+R0      \\ \hline
-    0010 &   5 &  1   &  xxxxx   &  00000    & 1  &  00010   & R2 <= 5+R0       \\ \hline
-    0010 &  xx &  0   &  00001   &  00010    & 1  &  00011   & R3 <= R1+R2      \\ \hline
-    1001 &  xx &  0   &  00011   &  xxxxx    & 1  &  00011   & R3 <= R3/2       \\ \hline
-    1001 &  xx &  0   &  00011   &  xxxxx    & 1  &  00011   & R3 <= R3/2       \\ \hline
-    0010 &  23 &  1   &  xxxxx   &  00011    & 1  &  00011   & R3 <= R3+23      \\ \hline
+    bwxor: 1111 &  xx &  0   &  00000   &  00000    & 1  &  00000   & R0 <= 0          \\ \hline
+    add: 0010 &  12 &  1   &  xxxxx   &  00000    & 1  &  00001   & R1 <= 12+R0      \\ \hline
+    add: 0010 &   5 &  1   &  xxxxx   &  00000    & 1  &  00010   & R2 <= 5+R0       \\ \hline
+    add: 0010 &  xx &  0   &  00001   &  00010    & 1  &  00011   & R3 <= R1+R2      \\ \hline
+    ash: 1001 &  xx &  0   &  00011   &  xxxxx    & 1  &  00011   & R3 <= R3/2       \\ \hline
+    ash: 1001 &  xx &  0   &  00011   &  xxxxx    & 1  &  00011   & R3 <= R3/2       \\ \hline
+    add: 0010 &  23 &  1   &  xxxxx   &  00011    & 1  &  00011   & R3 <= R3+23      \\ \hline
     xxxx &  xx &  x   &  xxxxx   &  00011    & 0  &  xxxxx   & rightOut = R3    \\ \hline
  \end{tabular}
  }
@@ -1081,7 +1081,7 @@ The first architecture corresponds to Last-In-First-Out (LIFO) memory, commonly 
 
 
 %**************************************************
-\subsubsection{LIFO (Stack) Memory}\label{lb:lifo}
+\subsubsection{LIFO (Stack) Memory\index{LIFO (Last-In-First-Out): stack memory, a string memory with access to one end}}\label{lb:lifo}
 %**************************************************
 \paragraph{Definition}  The definition of LIFO, or stack memory, considers a sequence of symbols, denoted by \texttt{S = <s0, s1, s2, ...>}, which evolves according to a series of operations.  For example, the following sequence illustrates the typical behavior: 
 \begin{verbatim}
@@ -1126,7 +1126,7 @@ The module then instantiates a register file (named \texttt{rf}) that manages th
 It is important to address the question of why an explicit signal to indicate the maximum storage capacity of the stack is not provided. In practice, the depth of the stack is typically designed to be sufficiently large such that overflow conditions are highly unlikely to occur. Nonetheless, mechanisms to signal when the storage capacity is exceeded do exist and can be implemented as needed.
 
 %**************************************************
-\subsubsection{FIFO (Queue) Memory}\label{lb:fifo}
+\subsubsection{FIFO (Queue) Memory\index{FIFO (First-In-First-Out): queue memory, a string memory with access at the two ends}}\label{lb:fifo}
 %**************************************************
 
 \paragraph{Definition} of the FIFO memory is shown in Figure \ref{fifo1}. It has the following connections (see Figure \ref{fifo1}a):
@@ -1364,7 +1364,7 @@ $\diamond$
 
 \begin{problem}\label{lb:salu}
 
-Substitute in a RALU unit the register file with a LIFO (stack). Results a SALU in which the 16 bits used to command the register file are replaced with the 3-bit command {\tt com[2:0]}. It is required:
+Substitute in a RALU unit the register file with a LIFO (stack). Results a SALU\index{SALU (Stack with Arithmetic \& Logic Unit)LU} in which the 16 bits used to command the register file are replaced with the 3-bit command {\tt com[2:0]}. It is required:
 \begin{enumerate}
     \item prove that the SALU circuit belongs to 2-OS
     \item write the System Verilog description of SALU

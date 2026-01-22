@@ -1,9 +1,9 @@
-\chapter{Parallel Computation: N-Loop, N-Order systems (N-OS)}\label{lect6b}
+\chapter{Parallel Computation: N-Loop, N-Order systems (N-OS)\index{N-OS: Nth order system -- cellular system}}\label{lect6b}
 \localtoc
 
 As we saw in the second part of this book, we were able to achieve the requirements of a computing system by successively introducing feedback loops starting from combinational circuits, circuits without loops. Can we continue the process of closing new loops? Could we have an additional gain from these additional loops? We will try to answer these questions in the following.
 
-\section{Cellular Automata (CA)}
+\section{Cellular Automata (CA)\index{CA (cellular automaton)!theoretical infinite CA}}
 
 Each new loop increases, as we have seen in the previous chapters, the complexity and the autonomy of the system. When the number of loops is $N$, for any large $N$, we cannot keep the increase in complexity at a level that corresponds to the number of loops. For this, the loops must close over identical systems to keep the complexity independent of $N$. Thus, even once the size becomes proportional to $N$, the complexity (the size of the shortest description) remains independent of $N$ and we can afford to keep the complexity independent of size. Moore's law ensures exponential growth only for size, but not for complexity. In other words, we can exponentially increase the size of the hardware only if it has a repetitive pattern that keeps the description at a controllable size.
 
@@ -44,7 +44,7 @@ The size of the definition is constant, which means it does not depend by the nu
 $\diamond$
 \end{exemplu}
 
-\section{Controlled Cellular Automaton}\label{contrCellAut}
+\section{Controlled Cellular Automaton\index{CA (cellular automaton)!controlled CA}}\label{contrCellAut}
 
 \subsection{Structure}
 
@@ -73,9 +73,9 @@ Results the system represented in Figure \ref{controledCA} where:
     \item $c_0, c_1, \ldots, c_{p-1}$ which form a cellular automaton, Map, with a finite number of cells, each equipped with a RALU type execution unit.
 \end{itemize}
 
-\subsection{Mapping}
+\subsection{Mapping\index{mapping: applying a function to each element in a collection}}
 
-Mapping an operation involves applying a function to each element in a collection (e.g., a list, array). This can be achieved using constructs like the {\tt map(...)} function in many programming languages.
+Mapping an operation involves applying a function to each element in a collection (e.g., a list array). This can be achieved using constructs like the {\tt map(...)} function in many programming languages.
 \begin{exemplu}
 If you have a vector of numbers {\tt [1, 2, 3, 4]} and want to double each number, the code in Python is:
 {\em 
@@ -93,7 +93,7 @@ $\diamond$
 \end{exemplu}
 Our CCA contains an array of cells which can be namer Map because allows applying the same  function to the elements of a vector distributed along the cells  it is made of.
 
-\subsection{Architecture}
+\subsection{Architecture\index{architecture: the user's image of a processing engine; describes what it does}}
 
 The command issued by SQ is organized in the form of an instruction that contains logical-arithmetic operations, addressing modes of local memory resources in each cell, addresses and constants. The cells are serially connected to the SQ for data transfer between the SQ's memory and the local memory resource distributed in the cells. If in a cellular automaton its global state is represented by an unlimited  vector, in a controlled cellular automaton the internal state is represented by the matrix:
 \[
@@ -138,7 +138,7 @@ b_0 & b_1 & \ldots & b_{p-1}
     \item[{\tt ENDWHERE}:]  the effect on $B$ of the acting {\tt WHERE} is restored
 \end{description}
 
-\subsubsection{Arithmetic \& Logic vector operations}  
+\subsubsection{Arithmetic \& Logic vector operations\index{vector operation: an arithmetic or logical operation involving at least one vector as an operand}}  
 
 Arithmetic \& Logic vector operations are performed on active components of vectors belonging to the active cells where $b_i=1$. Generic forms:
 \begin{description}
@@ -198,7 +198,7 @@ Global shift/rotate operations are performed on all components of vectors distri
     \end{verbatim}
 \end{description}
 
-\section{{\bf First Global Loop} in CA}
+\section{{\bf First Global Loop} in CA}\index{CA (cellular automaton)!CA with the first global loop: reduction loop over controlled CA}
 
 \subsection{Structure}
 
@@ -271,7 +271,7 @@ $\diamond$
 
 In the previous example, $2p-1$ computational results -- $p$ multipliers from Map and $p-1$ adders from Reduce -- are used in $1+log_2 \; p$ cycles to perform $2p-1$ operations. This results, for $p=1024$, in an average of 186 operations/cycle. So, we must be careful! We need algorithms that allow for the most intensive use of hardware resources \cite{antonescu23}.
 
-\section{{\bf Second Global Loop} in CA}
+\section{{\bf Second Global Loop} in CA\index{CA (cellular automaton)!CA with the second global loop: reduction loop over controlled CA}}
 
 \subsection{Structure}
 
@@ -336,9 +336,9 @@ The system architecture is completed by adding the second global loop, with  spe
 \end{description}
 
 
-\section{The mathematical model of partially recursive functions}
+\section{The mathematical model of partially recursive functions\index{partial recursive functions; defined by Stephen Kleene as a mathematical computational model}}
 
-When we closed the fourth loop, starting from combinational circuits, we had the pleasant encounter with the mathematical model of the Turing Machine. Does a similar encounter await us with the closing of the two loops over a cellular automaton? Yes. It is a mathematical model proposed independently in the same year as the Turing Machine: the model of {\bf {\em partially recursive functions}} proposed by Stephen Kleene \cite{Kleene36}.
+When we closed the fourth loop, starting from combinational circuits, we had the pleasant encounter with the mathematical model of the Turing Machine. Does a similar encounter await us with the closing of the two loops over a cellular automaton? Yes. It is a mathematical model proposed independently in the same year as the Turing Machine: the model of {\bf {\em partially recursive functions}} proposed by Stephen Kleene\index{Kleene, Stephen (1909-1994):  founder of  recursion theory, which subsequently helped to provide the foundations of theoretical computer science} \cite{Kleene36}.
 
 \begin{definition}\label{parrec}
 Let be the positive integers $x,y,i \in \mathbb{N}$ and the vector $\vec{x} = \langle x_0, x_1, \ldots, x_{n-1} \rangle \in \mathbb{N}^n$. Any partial recursive function $f: \mathbb{N}^n \rightarrow \mathbb{N}$ can be computed using three {\bf {\em initial functions}}:
@@ -382,11 +382,11 @@ While for the primitive recursion functions the value of $y$ is known at the beg
 The theoretical structure in Figure \ref{2loops} can be transformed into an implementable one by adding a sequencer that converts the size of the structure into execution time. This becomes possible due to the local memories in each cell $M_i$. The result is a structure like the one in Figure \ref{secondLoop}, a structure that can be considered an {\bf {\em abstract model for a parallel computing system}}.
 
 
-\section{Heterogeneous Computing}
+\section{Heterogeneous Computing\index{heterogeneous computing system: a host computer for the complex computation using a hardware accelerator for the intens computation}}
 
 The main application of the MapScanReduce structure is in heterogeneous computing were the distinction between complex computing and intense computing is meaningful.
 
-\subsection{Complexity vs. intensity in computation}
+\subsection{Complexity vs. intensity in computation\index{complexity!complexity vs. intensity in computation}}
 
 let's define the two types of computations. In this respect, we use the {\em algorithmic complexity} \cite{Chaitin70} which helps us make the necessary distinction between size and complexity.
 
@@ -862,7 +862,7 @@ $$\alpha = \frac{k_1 \times 1024^3}{k_2 \times 4^3 \times k_3 \times 256^2} = k 
 $\diamond$
 \end{exemplu}
 
-\section{Parallel Computing Patterns}
+\section{Parallel Computing Patterns\index{parallel computing patterns!}}
 
 Multiplying matrices is a promising example for the capacity to perform in parallel with MapScanReduce accelerator intense computation. It would be interesting to investigate the acceleration capacity of the MapScanReduce framework for a wider range of applications. A good idea could be formed by looking at the computational patterns that have been highlighted in applications designed and run in the last decades. Let us start with the study carried out in \cite{McCool12} from which we use Figure \ref{parallelPatt} where 17 parallel computational patterns are presented. We will see that almost all of them can be performed using the accelerator MapScanReduce. We will not succeed in the case of those patterns that do not represent an intensive computation but a complex one.
 
@@ -882,7 +882,7 @@ We will analyze in turn how the 17 patterns revealed by McCool and his collabora
 
 A first subset of patterns is the one that are implementable with the Controlled Cellular Automaton (see \ref{contrCellAut}) structure used as accelerator. Many of the patterns we consider are executed exclusively involving the Map section. For them to be executed, a sequence of Map operations is required each time.
 
-\subsubsection{Map Pattern}
+\subsubsection{Map Pattern\index{parallel computing patterns!map pattern}}
 
 From the list proposed by McCool \& Co., the Map pattern finds a direct counterpart in the accelerator we are evaluating. In Figure \ref{parallelPatt} the Map pattern is represented using green boxes, which represent data, and blue boxes, which represent hardware structure performing sequences of $bOp$s and $uOp$s. Overall the array of blue boxes represents a Map structure performing a {\tt MAPOP(Va,Vb,Vc,...)} on the vectors stored along the cells of the array. Thus, the Map pattern is has a direct correspondent in we can do with arithmetic \& logic vector operations. 
 
@@ -911,7 +911,7 @@ $\diamond$
 
 There are real premises for the acceleration obtained by using a Map array to be in $O(p)$, but more than that there are many cases when the acceleration is  {\bf {\em superlinear}} compared to a single-core structure, due to the control that is performed by SQ, control that in a single-core implementation is also the responsibility of the processor \cite{antonescu24a}.
 
-\subsubsection{Stencil Pattern}
+\subsubsection{Stencil Pattern\index{parallel computing patterns!stencil pattern}}
 
 The stencil pattern (depicted in  Figure \ref{parallelPatt}) is not directly implemented in the structure of the proposed accelerator, but can be efficiently programmed taking into account the fact that the input data structure is a matrix that can be loaded as part of the ${\bf M_{mp}}$ matrix. The finite neighborhood of each cell can be involved in the calculation of a new value in each cell very efficiently, because the values from the vertical vectors are in the same cell and a global shift operations allows access to the values from the horizontal vector. In fact, any finite neighborhood can be involved in updating  any value in ${\bf M_{mp}}$.
 
@@ -925,7 +925,7 @@ For example, let us consider the matrix stored in vectors from $V_0$ to $V_{n-1}
 \end{verbatim}
 Because the update computation is done in parallel  for all the components of the horizontal vector $V_i$, the acceleration of the computation is in $O(p)$.
 
-\subsubsection{Geometric Decomposition  Pattern}
+\subsubsection{Geometric Decomposition  Pattern\index{parallel computing patterns!geometric decomposition pattern}}
 
 The geometric decomposition pattern works on configurable (overlapping) sub-collections  of data. In Figure \ref{parallelPatt}, four $5 \times 5$ scalars sub-collections are defined. If data is loaded in the accelerator's memory as a matrix of scalars, a sub-collection, $S(i,j,k,q)$, is a matrix loaded in ${\bf M_{mp}}$ between two horizontal vectors , $V_i$ and $V_j$, and two columns (vertical vectors), $C_k = [s_{0k} \; s_{1k} \ldots s_{m-1 \; k}]$ and $C_q = [s_{0q} \; s_{1q} \ldots s_{m-1 \; q}]$. The values for $i$ and $j$ are controlled by the program executed on the sequencer SQ, while the values of $k$ and $q$ are used by the {\em spatial selection} mechanism in Map. The $IX$ vector is used to delimit the index  of the vertical vectors applying spatial selection functions:
 \begin{verbatim}
@@ -935,11 +935,11 @@ The geometric decomposition pattern works on configurable (overlapping) sub-coll
 \end{verbatim}
 Thus, any sub-collection is delimited in the matrix ${\bf M_{mp}}$, if $i,j,k,q \leq m,p$, in constant time. The degree of parallelism depends on the size of the sub-collections.
 
-\subsubsection{Partition  Pattern}
+\subsubsection{Partition  Pattern\index{parallel computing patterns!partition pattern}}
 
 The partition pattern corresponds to a geometric decomposition pattern without overlapping regions. See in Figure \ref{parallelPatt} a partition in four $4 \times 4$ scalars sub-collections. When dealing with sub-collections of varying sizes, it involves  {\em segmentation}. The same mechanisms for defining sections (sub-collections) used for geometric decomposition are considered for splitting, with the additional care to avoid overlap. We can take into account for the horizontal delimitations, in addition to those stated for the geometric decomposition, conditions imposed on the content of the horizontal vectors. The spatial selection functions, specific to the MAP structure, represent a particularly useful feature, specific to MapScanReduce architecture.
 
-\subsubsection{Speculative Execution Pattern}
+\subsubsection{Speculative Execution Pattern\index{parallel computing patterns!speculative execution pattern}}
 
 Within a many-cell system, the speculative selection pattern is an optimization technique which  performs both computations and multiple-condition evaluations, in order to combine condition evaluation with processing. On our machine it is executed as a map pattern involving a {\tt MAPOP(...)} followed by various spatial selections.
 
@@ -951,7 +951,7 @@ $\diamond$
 
 The acceleration obtained for this  pattern is in $O(p)$.
 
-\subsubsection{Recurrence Pattern}
+\subsubsection{Recurrence Pattern\index{parallel computing patterns!recurrence pattern}}
 
 The recurrence pattern represented in the expanded form   in  Figure \ref{recurrence} is characterized by nested loops with data dependencies. These structures can be parallelized by obtaining a dependency graph and creating tasks that can be run in parallel for each layer of the graph (separating hyperplane).
 
@@ -977,7 +977,7 @@ Let us consider, as example the $p \times p$ recurrence pattern depicted in Figu
 In time in $O(p)$ a number of operations in $O(p^2)$ are performed, thus obtaining an acceleration in $O(p)$.
 
 
-\subsubsection{Pipeline  Pattern} 
+\subsubsection{Pipeline  Pattern\index{parallel computing patterns!pipeline pattern}} 
 
 The pipeline pattern refers to having a sequence of stages that flow into one another sequentially. Parallel speedup is achieved by ensuring that all stages carry out their respective operations independently of each other. In a departure from the traditional approach, this architecture implements the Pipeline principle as all major components (SQ, cells in Map, Scan/Reduce network, Data transfer mechanism) work in parallel to one another with data flowing between them.
 
@@ -999,11 +999,11 @@ A possible improvement is to combine the pipeline pattern with the reduce patter
 
 A second subset of patterns is that executed by structures containing a global reduction loop.
 
-\subsubsection{Reduction Pattern}
+\subsubsection{Reduction Pattern\index{parallel computing patterns!reduction pattern}}
 
 The reduction pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. The usual reduction functions are exemplified in subsection \ref{redEx}. They are executed directly by the hardware.
 
-\subsubsection{Fork-Join  Pattern}
+\subsubsection{Fork-Join  Pattern\index{parallel computing patterns!fork-join pattern}}
 
 Fork-join is a control pattern that divides (fork)  work and subsequently combines (join) the results (see Figure \ref{parallelPatt}). This pattern is among the more general and loosely defined ones, making a comprehensive discussion challenging. As a starting point, two approaches can be brought to attention:
 \begin{enumerate}
@@ -1017,11 +1017,11 @@ The acceleration that can be obtained is in $O(p/log \; p)$ due to the latencies
 
 A third subset of patterns is that executed by structures containing the global scan loop.
 
-\subsubsection{Scan Pattern}
+\subsubsection{Scan Patterscan patternn\index{parallel computing patterns!scan pattern}}
 
  The scan pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. In subsection \ref{scanEx} two functions are exemplified. They are executed directly by the hardware.
  
-\subsubsection{Pack Pattern}
+\subsubsection{Pack Pattern\index{parallel computing patterns!pack pattern}}
 
 The pack pattern is facilitated by the Scan section. The selection of the components to be packed is done using the Boolean vector $B$, which is managed by the spatial selection functions. The pattern is defined by  $B = \langle 0 \; 1\; 1\; 0\; 0\; 1\; 1\; 1 \rangle$. The positions in the destination vector of the components to be packed   are computed using the {\tt ADDPX(B)}. The algorithm is:
 \begin{verbatim}
@@ -1039,14 +1039,14 @@ initially:  B  = <1 1 1 1 1 1 1 1>
 
 The pack pattern is an operation accelerated in $O(p/log \; p)$ because of the latency introduced by the scan operations ({\tt ADDPX, PERM}).
 
-\subsubsection{Gather  Pattern}
+\subsubsection{Gather  Pattergather patternn\index{parallel computing patterns!gather pattern}}
 
 The gather pattern specifies in the source vector the source for each position in the destination vector (see Figure \ref{parallelPatt}). The gather pattern is a permutation defined using the order vector as its source and the index vector IX as its destination. We will denote by $(i)$ the content of the source or destination vector at position $i$.
 In Figure \ref{parallelPattr}, the gather operation is defined by the operation permute with the order vector {\tt <(1)(5)(0)(2)(2)(4)>}.
 Because the scalar C has two destinations, in the positions 2 and 3, the operation is performed in two steps using successively two order vectors: {\tt <(1)(5)(0)(2)(3)(4)>} and {\tt <(1)(5)(0)(2)(2)(4)>}.
 Only if each destination has its distinct source, the operation is performed using one permutation operation. The acceleration for this pattern is in $O(p / log \; p)$, if the permutation is known in advance and control bits are precomputed.
 
-\subsubsection{Scatter  Pattern}
+\subsubsection{Scatter  Pattern\index{parallel computing patterns!scatter pattern}}
 
 The scatter pattern specifies the destination for each position. The scatter pattern is a permutation defined using the index vector IX as its source and the order vector as its destination. In Fig. \ref{parallelPatt}:
 \begin{center}
@@ -1057,13 +1057,13 @@ is represented as a deficient scatter because a destination, 2, has two distinct
 
 If the definition of scatter is not deficient, the scatter operation is a permute operation operated in the SCAN section of our accelerator with an acceleration in $O(p/log \; p)$, if the permutation is known in advance and control bits can be precomputed.
 
-\subsubsection{Split  Pattern}
+\subsubsection{Split  Pattern\index{parallel computing patterns!split pattern}}
 
 The split pattern can be conceptualized as two sequential applications of the pack pattern. The first involves a standard pack with selected values going to the left, while the second necessitates computing the $NOT (B)$ vector such that previously unselected values are now selected and can then be packed to the right using {\tt COMPRIGHT(d,l,r)}. In {\tt sequence of operations} for pack pattern the vector {\tt v0} is complemented, instead {\tt VSUB(2,2,1)} is executed {\tt VADD(2,2,(p-REDMAX(V2)-1))} followed by {\tt COMPRIGHT(V2,V1,V2)}.
 
 As with pack, the split pattern is accelerated in $O(p/log \; p)$.
 
-\subsubsection{Expand  Pattern}
+\subsubsection{Expand  Pattern\index{parallel computing patterns!expand pattern}}
 
 For this pattern each cell stores a self-delimited vertical vector of size $0$ to $p$ (refer to  Figure \ref{parallelPatt}).
 
@@ -1081,7 +1081,7 @@ Due to the serial transfer of data to the sequencer's memory, this pattern canno
 
 There follow  a pattern that assume the use of the entire structure of the accelerator MapScanReduce.
 
-\subsubsection{Category Reduction Pattern}
+\subsubsection{Category Reduction Pattern\index{parallel computing patterns!category reduction pattern}}
 
 Category reduction pattern selects the set of elements that make up the string stored in a number of horizontal vectors,  is not directly implemented in the structure of the proposed accelerator, but it can be efficiently programmed. We consider that  the ${\bf M_{mp}}$ matrix distributed within the Map section has the capability to store the input stream $S$, which has the  of length $|S|$ in the form of  $N = \lceil |S|/p \rceil$ $p$-component vectors.
 
@@ -1105,7 +1105,7 @@ Because the mono-core execution of the pattern has the time in $O(|S| \times |D|
 
 Important note: the scan type network used for this pattern processes a Boolean vector, which is why we can approximate that the size of the system remains in $O(p)$.
 
-\subsection{Super-scalar Sequence Pattern}
+\subsection{Super-scalar Sequence Pattern\index{parallel computing patterns!super-scalar pattern}}
 
 The super-scalar pattern describes a complex computation, which is why it requires a special discussion. The content of the square boxes in Figure \ref{parallelPatt} can be:
 \begin{enumerate}

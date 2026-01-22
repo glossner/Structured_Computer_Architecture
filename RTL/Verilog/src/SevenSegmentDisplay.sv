@@ -1,9 +1,9 @@
 // Licensed under CERN-OHL-S v2. See https://cern.ch/cern-ohl for details.
-/*************************************************************************
+/**********************************************************************
 File name:      SevenSegmentDisplay.sv
 Circuit name:   Seven-Segment Display
 Description:
-*************************************************************************/
+**********************************************************************/
 module sevenSegmDys(output  logic [6:0] seg     ,
                     input   logic [3:0] number  );
 

@@ -1,4 +1,4 @@
-\chapter{Instruction-Level Parallelism}\label{lect5}
+\chapter{Instruction-Level Parallelism\index{ILP (Instruction-Level Parallelism): }}\label{lect5}
 \localtoc
 
 There are various form of instruction-level parallelism. We will consider  only the parallelism introduced by the pipeline mechanism and the multiple execution units.
@@ -6,10 +6,10 @@ Thus, chapter deals with the pipeline mechanism, used to accelerate the processo
 
 \section{Pipelining}
 
-Combinational logic circuits (CLCs) that have a very high depth cause the system clock frequency to be reduced. The solution that allows increasing the clock frequency is the introduction of pipeline registers.
+Combinational logic circuits (CLCs) that have a very high depth cause the system clock frequency to be reduced. The solution that allows for an increase in clock frequency is the introduction of pipeline registers.
 
 
-\subsection{Pipeline Acceleration}
+\subsection{Pipeline Acceleration\index{pipeline acceleration}}
 
 In Figure \ref{fig47} the pipeline technique is illustrated. In Figure \ref{fig47}a, the frequency at which the system clock can work is given by the propagation time through the $CLC_{f \circ g}$ to which is added the time associated with the propagation through the registers.
 
@@ -30,9 +30,20 @@ $$t_{CLC_{f}} \simeq t_{CLC_{g}}$$
 
 If the resulting frequency is not high enough, the technique is applied to the deepest circuit or both. The process can continue until the requested speed is reached.
 
-\subsection{{\bf {\em Pipelined Version of toyRISC}}}
+\subsection{Pipeline Latency}
 
-\subsubsection{Structure}
+Increasing the clock frequency is accompanied, in a pipeline structure, by the introduction of additional latency. By latency, we mean the number of clock cycles that occur in the sequential processing of a data string.
+
+For example, in the structure from Figure \ref{fig47}a the latency is 2, due to the two synchronization registers, on the input and output. By introducing a pipeline register in the structure in Figure \ref{fig47}b the latency increases by one unit.
+
+If we process a sufficiently long string of data, {\tt X(1), X(2), ..., X(n)}, then the additional latency introduces an insignificant effect: the processing of the string will be performed in $n+3$ cycles instead of $n+2$ but at a frequency $\alpha$ times higher.
+
+In other words, the introduction of the pipeline register in Figure \ref{fig47}b triggers a parallel process by which the system is involved in processing two successive components of the sequence to be processed. We a
+
+
+\section{{\bf {\em Pipelined Version of toyRISC}}}
+
+\subsection{Structure}
 
 The operating frequency of the toyRISC processor presented section \ref{toyrisc} can be increased by inserting some pipeline registers on the critical path of the combinatorial propagation. A version, adapted to be accelerated, is shown in Figure \ref{fig46} where the two memories, for data and programs, are also represented. The program memory is a synchronous memory (see \ref{syncMem}) connected in our system  combinationally  through the output multiplexers. The data memory is a synchronous pipelined memory (see \ref{sybcPipeMem}) which responds with one cycle latency to the read command.
 
@@ -46,6 +57,9 @@ The three pipeline registers introduced in design divide the execution of an ins
         In the pipeline register {\bf PipeReg\_1} is loaded the information requested to finish the execution of the fetched instruction
     \item[OPERANDS FETCH (OF)]: from the register are fetched the two operands of the instruction using the fields {\tt leftAddr} and {\tt rightAddr} fetched in the previous cycle from the program memory. In {\bf pipeReg\_2} are loaded the two fetched operands and the information needed in the next cycles to end the execution of the instruction. The execution time for this stage is:
         $$t_{OF} = t_{PipeReg1} + t_{regFile} + t_{suPipeReg2}$$
+
+\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
+        
     \item[EXECUTION (EX)]: ALU performs the operation according to the code {\tt opCode}, propagated to this stage through the two previous  pipeline registers,  generate {\tt result} and the predicate {\tt zero = (result == 0)}; the {\tt add} module adds to the program counter the signed value of {\tt value} to perform the branch operation.  The execution time for this stage is:
         $$t_{EX} = t_{PipeReg2} + max((t_{mux}+t_{alu}),  (t_{add}+t_{mux}), t_{dataMemPipeReg}) + t_{suPipeReg3}$$
     \item[WRITE BACK (WB)]: acts on the first two levels in the pipeline: it allows the modification of the {\tt pc} to perform jumps and writes the result of the current operation in the register file. The execution time for this stage is:
@@ -54,10 +68,9 @@ The three pipeline registers introduced in design divide the execution of an ins
 The maximum clock frequency is limited by:
 $$T_{clock} = max(t_{IF}, t_{OF}, t_{EX}, t_{WB})$$
 
-\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
 
 
-\subsection{Latency}
+\subsection{Latency\index{latency}}
 
 In each clock cycle the execution of one instruction  ends with a latency of three clock cycles. The entire structure performs in parallel 4 successive instructions, each stage being involved in the execution of one instruction.
 
@@ -101,7 +114,7 @@ In each clock cycle, an instruction completes with a latency of 3 clock cycles. 
 
 % https://www.geeksforgeeks.org/computer-organization-and-architecture-pipelining-set-2-dependencies-and-data-hazard/
 
-There are three types of dependencies:
+There are three types of dependencies\index{dependencies!}:
 \begin{enumerate}
 \item Structural Dependency
 \item Data Dependency
@@ -112,7 +125,7 @@ These dependencies generate hazardous behaviors of the pipelined processor due t
 
 Structural dependencies are typically represented by those related to processor memory. In the case of our processor, toyRISC, they do not appear because we have an abstract model of the Harvard type with two memories, one for programs and another for data. Thus, in what follows, we will focus on the other two types of dependencies.
 
-\subsection{Data dependency}
+\subsection{Data dependency\index{dependencies!data dependencies in pipelined processors}}
 
 When the current instruction uses values generated by a previous instruction that has not been completed, the effect of data dependency appears. There are 3 types of data dependencies that
 we’ve been talking about:
@@ -226,7 +239,7 @@ $\diamond$
 
 To solve the problem of data dependency just emphasized there are used two solutions: stalling and forwarding.
 
-\subsubsection{Stalling}
+\subsubsection{Stalling\index{stalling: solution for pipelined processor dependency}}
 
 An inefficient solution, for the execution time, is to stall by introducing a {\tt NOP} instruction between {\tt SUB(2,3,4)} and {\tt ADD(0,2,1)}, thus delaying the use of the content of {\tt rf2} with one clock cycle. Result the following sequence of instructions:
 \begin{verbatim}
@@ -259,7 +272,7 @@ whose execution is illustrated in Table \ref{stall}.
 \end{table}
 Now, {\tt ADD2} is preceded by {\tt SUB3} and addition is performed takeing into account the result of the subtract operation.
 
-\subsubsection{Reordering}
+\subsubsection{Reordering\index{reordering: solution for pipelined processor dependency}}
 
 Sometimes, {\bf but only sometimes}, there is a very simple and efficient solution for data dependency: reordering the instructions in the sequence of instructions. In Example \ref{dataDep}, the instruction {\tt XOR(5,0,0)} can be moved, without affecting the result of running the sequence of instructions, between the instructions {\tt SUB} and {\tt ADD}. as follows:
 \begin{verbatim}
@@ -271,7 +284,7 @@ Sometimes, {\bf but only sometimes}, there is a very simple and efficient soluti
 \end{verbatim}
 Thus, the {\tt XOR} instruction is used for stalling instead of the {\tt NOP} instruction, but now the execution time is not affected.
 
-\subsubsection{Forwarding}
+\subsubsection{Forwarding\index{forwarding: solution for pipelined processor dependency}}
 
 By adding hardware, the data dependency can be resolved, {\bf in all cases}, with no time penalty. The solution is to connect {\tt result} not only to the register file input, but also directly to the ALU input when the value just computed is needed for the next instruction. The mechanism is called {\em forwarding} and requires the addition of one input to the  ALU input as left operand or as right operand. But, because there are binary operations (operations with two operands) sometimes both operands arrive to late in the register file to be fetched for the current instruction.
 
@@ -310,8 +323,8 @@ or
 
 The structure of the processor is modified as it is shown in Figure \ref{brDelRed}, where a new level in pipe is added and the operands at  ALU inputs are selected using multiplexers with additional inputs. The selection for the augmented multiplexors are computed combinational as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as operand in the EXECUTE state of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected the  inputs 1  or as {\tt result4} to the inputs 2 to the selection multiplexors at ALU operand inputs. The value of {\tt result3} is used to be forwarded when the dependency is identified with the result of the instructions issued in one clock cycle before the current one. The value of {\tt result4} is used to be forwarded when the dependency is identified with the result of the instructions issued in two clock cycles before the current one.
 
-\begin{exemplu}\label{dataDepSim}
-Data dependency  solved by using forwarding is exemplified starting from Example \ref{dataDepSim}:
+\begin{exemplu}\label{dataDepSimulation}
+Data dependency  solved by using forwarding is exemplified starting from Example \ref{dataDepSimulation}:
 \begin{verbatim}
             NOP         ;
             VAL(0,1)    ;
@@ -344,7 +357,7 @@ $\diamond$
 \end{exemplu}
 
 
-\subsection{Control Dependency}
+\subsection{Control Dependency\index{dependencies!control dependency in pipelined processors}}
 
 The pipelined processor always fetches the instruction immediately after any taken branch.
 
@@ -585,9 +598,9 @@ $\diamond$
 \end{exemplu}
 
 
-\subsubsection{Static Branch Prediction}
+\subsubsection{Static Branch Prediction\index{branch prediction!}}
 
-Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction presumes that backward branches will be taken and that forward branches will not.
+Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction\index{branch prediction!static branch prediction}presumes that backward branches will be taken and that forward branches will not.
 
 In this case, most of the predictions will be correct. Indeed, if we have a jump back to execute a loop that repeats $n$ times, then once in $n+1$ situations the prediction will have to be corrected.
 
@@ -631,7 +644,7 @@ In static prediction, all decisions are made at compile time, before the executi
 
 \subsubsection{Dynamic Branch Prediction}
 
-Dynamic branch prediction predicts branches based on dynamic information collected at run-time. It requires additional hardware. As examples, I have chosen two of the simplest prediction mechanisms.
+Dynamic branch prediction\index{branch prediction!dynamic branch prediction} predicts branches based on dynamic information collected at run-time. It requires additional hardware. As examples, I have chosen two of the simplest prediction mechanisms.
 
 \paragraph{Last-time, one-bit predictor}
 is the simplest solution  which uses a two state automaton whose behavior is described in Figure \ref{bp1}. We will code the state {\tt prediction not taken} with 0, and the state {\tt prediction taken} with 1. The automaton is a {\em saturated} 1-bit counter. If is incremented from 0 goes to 1, if is decremented from 1 goes to 0. But if it is incremented from 1, stays in 1, while decremented from 0 stays in 0. This 2-state automaton says whether the branch was recently taken or not. Based on this, the processor fetches the next instruction from the target address or sequential address. If the prediction is wrong, flushes the pipeline and also flips prediction. So, every time a wrong prediction is made, the prediction bit is flipped.
@@ -749,13 +762,13 @@ then the result if {\tt rf[4] = 17}.
 $\diamond$
 \end{exemplu}
 
-\section{Superscalar Processor}
+\section{Superscalar Processor\index{superscallar processor: a processor  designed with several execution units}}
 
 If the processor is designed with several execution units (for example: one integer ALU, two floating-point units, two load/store units), the potential parallelism thus obtained should be activated at the highest possible level. This means that in each clock cycle a maximum number of resources should be active, if possible all of them.
 
 In this case, the processor, called  {\em superscalar}, can execute instructions in an order imposed by the availability of data and execution units, rather than by their initial sequence in the  program. For example, the {\em PowerPC 970} processor  fetches and decodes up to eight instructions, dispatch up to five to reserve stations (register files), issue up to eight to the execution units and retire up to five per cycle.
 
-\subsection{Register renaming}
+\subsection{Register renaming\index{renaming register: technique applied when sequential execution is no longer mandatory}}
 
 The sequence in which the instructions are executed must be strictly respected when there are data dependencies. But when certain independent sequences can be identified, strictly sequential execution is no longer mandatory, especially in the case of a superscalar processor that allows parallelism at the level of instructions. We can apply in such cases the {\em register renaming} technique.
 
@@ -785,7 +798,7 @@ $\diamond$
 \end{exemplu}
 
 
-\subsection{Out-of-Order Execution}
+\subsection{Out-of-Order Execution\index{out-of-order execution: instruction execution in an order governed by the data availability}}
 
 Out-of-order execution  is a mechanism used in  high-performance  processing units to make use efficiently  of instruction cycles. Using this mechanism, a processor executes instructions in an order governed by the availability of input data and execution units, rather than by their original order in a program. Thus the processor  avoids being idle while waiting for the preceding instruction to complete and can, in the meantime, proceed to execution of the next instructions that are able to run immediately and independently.
 The mechanism is efficient for a processor with multiple execution units {\bf with speed difference between instructions}. It is the case of superscalar processor with ISA performing integer and floating-point arithmetic operations. There are also speed difference between arithmetic and logic instructions and memory access instructions.
@@ -861,9 +874,9 @@ More at: \url{https://www.geeksforgeeks.org/ieee-standard-754-floating-point-num
 For the purpose we are pursuing, it is enough to understand that the operation with represented floating-point numbers involves a pipeline or a sequence of elementary operations of one clock cycle. The number of cycles will be different depending on the operation, minimum for addition and maximum for division.
 \end{comment}
 
-\subsubsection{Tomasulo's Algorithm}
+\subsubsection{Tomasulo's Algorithm\index{Tomasulo's algorithm:  is an algorithm for dynamic scheduling of instructions in out-of-order execution which enables more efficient use of multiple execution units}}\index{Tomasulo, Robert  (1934-2008): an American computer scientist, and the inventor of the Tomasulo algorithm}
 
-The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers (see Chapter \ref{floarReprezentation} in this book). For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for whole or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \citep{Patterson19}:
+The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers (see Chapter \ref{floarReprezentation} in this book). For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for integer or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \citep{Patterson19}:
 \begin{itemize}
     \item Op—The operation to perform on source operands S1 and S2.
 \item Qj, Qk—The reservation stations that will produce the corresponding source

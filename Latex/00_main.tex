@@ -189,7 +189,8 @@ An Order-Based Approach
 }
 \author{{\bf \em John Glossner and Gheorghe M. \c{S}tefan}}
 \date{\today \\ \vspace{1em} \vspace{1em} 
-{\em Preliminary Release v0.2}}
+\placedrawing*[h]{figures/YYY.LP}
+{\em Preliminary Release v0.3}}
 
 
 
@@ -311,17 +312,17 @@ nth-Order 2nd-High Order & N-loop \& 2nd global loop many-cell systems. & Contro
 \label{tab:orders_of_computing_systems}
 \end{table}
 
-Part I of this book provides a mathematical foundation for the number systems used in computing systems. Part II covers orders 0 through 3 - basic combinational logic through a processor. Part III covers the theory and implementation of computing including parallel heterogeneous systems. Part IV refers to practical aspects related to the design of frequently used combinational circuits, the design of processors, and the use of heterogeneous computing systems. 
+Part I of this book provides a mathematical foundation for the number systems used in computing systems. Part II covers orders 0 through 3 - basic combinational logic through a processor. Part III covers the theory and implementation of computing, including parallel heterogeneous systems. Part IV refers to practical aspects related to the design of frequently used combinational circuits, the design of processors, and the use of heterogeneous computing systems. 
 
-This book also differs from one that deals with digital systems in that it pays attention only to those digital systems that contribute directly to the simplest structures that allow the enunciation of general principles related to the architecture of computing systems. A minimal path has been identified, through the exceptionally large set of digital structures, that leads to the generic computing structures that allowed us to achieve the proposed target.
+This book also differs from one that deals with digital systems in that it pays attention only to those digital systems that contribute directly to the simplest structures that allow the enunciation of general principles related to the architecture of computing systems. A minimal path has been identified through the exceptionally large set of digital structures that leads to the generic computing structures that allowed us to achieve the proposed target.
 
 In our opinion, an advantage of the order-based approach is that it roughly follows the historical and structural development of computing systems. We also ground these developments in the theoretical models that provided for their development.
 
-While primarily written for our students, we both have industry experience and have shipped multiple machines in volume. The code we provide bridges the gap between theoretical models and commercial implementations. The code starts very simple using behavioral constructs but progresses towards code that can be used in commercial machines. Over time, it is our hope that these examples continue to expand.
+Although we write primarily for our students, we have both industry experience and have shipped multiple machines in volume. The code we provide bridges the gap between theoretical models and commercial implementations. The code starts very simple using behavioral constructs but progresses towards code that can be used in commercial machines. Over time, it is our hope that these examples continue to expand.
 
-The descriptions of the structures and the simulation of their behavior are written in both SystemVerilog and Chisel HDL. The Chisel code has unit tests and has been tested using Chisel 6.6.0. Some of the SystemVerilog code has unit tests. All SystemVerilog code has been validated using the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}}. It should also execute using online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}}.
+The descriptions of the structures and the simulation of their behavior are written in both SystemVerilog and Chisel HDL. The Chisel code has unit tests and has been tested using Chisel 6.6.0. Some of the SystemVerilog code has unit tests. All SystemVerilog codes have been validated using the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}}. It should also be executed using online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}}.
 
-Because this book's code is executable, it should not contain any syntax errors. The same files that are used for design descriptions are directly imported into the book.
+Because this book's code is executable, it should not contain any syntax errors. The same files used for design descriptions are directly imported into the book.
 
 This preliminary release we know is quite rough. However, it will become polished with time. The best way to help this effort is to send pull requests to \url{https://github.com/glossner/Structured_Computer_Architecture}. 
 
@@ -369,7 +370,8 @@ January 1st, 2025
 \setcounter{secnumdepth}{3}
 \etocsettocstyle{}{} % No title or end content in local table of contents
 
-%\renewcommand{\chaptername}{Section}
+
+\renewcommand*{\indexname}{Glossary}
 
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{exemplu}{Example}[chapter]

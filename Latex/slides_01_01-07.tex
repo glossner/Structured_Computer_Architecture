@@ -529,6 +529,32 @@ Verification: $11 + 13 = 24 = 11000_2$ ✓
 \hline
 \end{tabular}
 \end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Binary Representation: Inexact Values}
+\concept{Example}: Attempting to represent 0.1 in binary
+
+\vspace{0.3cm}
+\begin{enumerate}
+\item Conversion: $0.1 \times 2 = 0.2$ (0), $0.2 \times 2 = 0.4$ (0), $0.4 \times 2 = 0.8$ (0), $0.8 \times 2 = 1.6$ (1)...
+\item Result: $0.1_{10} = 0.000110011[0011]..._2$ (Infinite repeating)
+\item Normalization: $1.100110011... \times 2^{-4}$
+\item \textbf{Truncation Error}: In IEEE 754, the mantissa must be cut at 23 or 52 bits.
+\end{enumerate}
+
+\vspace{0.3cm}
+\concept{Resulting Binary Approximation}: 
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{S} & \textbf{Exponent (-4 + 127)} & \textbf{Mantissa (23-bit)} \\
+\hline
+0 & 01111011 & 10011001100110011001101 \\
+\hline
+\end{tabular}
+\end{center}
+\textit{Note: The final '1' in the mantissa is rounded, creating the drift error.}
 
 \concept{Verification}: $(-1)^0 \times 1.100011_2 \times 2^{130-127} = 1.100011_2 \times 2^3 = 12.375$ ✓
 \end{frame}

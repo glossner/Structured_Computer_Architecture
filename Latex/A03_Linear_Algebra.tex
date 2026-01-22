@@ -366,6 +366,7 @@ One should note that while these advanced features exist, using them efficiently
 
 Table~\ref{isa-table} summarizes some of the key linear algebra-related features of RISC-V, ARM, and x86:
 
+
 \begin{table}[hbt]
 \centering
 \begin{tabular}{|l|c|c|c|}
@@ -389,6 +390,7 @@ Special matrix/tensor & Proposed Matrix Ext, & SME (Matrix Extension in v9); & A
 \caption{Linear Algebra support in modern ISAs. RISC-V relies on an advanced Vector extension and allows custom matrix units. ARM provides NEON for basic SIMD, SVE for scalable vectors, and SME for dedicated matrix ops. x86 started with SSE/AVX vectors and now includes AMX for matrix multiplication acceleration.}
 \label{isa-table}
 \end{table}
+
 
 The above table is a high-level comparison. Each platform has nuances (e.g., rounding modes for FMA, whether integer ops saturate or wrap, etc.) that we skip here. But clearly, all major ISAs have recognized the importance of vectors and matrices, adding instructions or coprocessors to accelerate them. In the end, whether it’s called a “vector extension” or a “matrix extension”, the hardware aim is the same: do more multiply-adds in parallel, because that’s what so many linear algebra problems demand.
 

@@ -1,6 +1,6 @@
 \newpage
 
-\section{toyRISC Generic Implementation}\label{toyRiscDesign}
+\section{toyRISC Generic Implementation}\label{toyRiscImpl}
 
 The toyRISC processor described in section \ref{toyRISCprocessor} in implemented, simulated and tested in this section. The project, starting from the instruction set architecture described in file 0\_DEFINES.vh  (see \ref{lst:toyRISCdefines}, Listing \ref{lst:toyRISCdefines}), consists in:
 \begin{itemize}
@@ -60,7 +60,7 @@ In Figure \ref{toyRiscProc} is represented the schematic provided by the Vivado 
 \subsubsection{Program counter: the simple control automaton} circuit was defined in \ref{progCounter} and  a generic structure, designed in \ref{lst:A10_programCounter.sv}. In Listing \ref{lst:DCDtoyRISC} is described the behavior of the simple automaton responsible for the program address management. It is simple because the loop over the register consists only simple, recursive defined, circuits: adder, incrementer, multiplexer.
 
 \includeverilogcode[caption={Program counter PCtoyRISC. File: PCtoyRISC.sv.  (SystemVerilog)}, 
-                    label={lst:DCDtoyRISC}, 
+                    label={DCDtoyRISC}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=68]
@@ -84,10 +84,10 @@ In Figure \ref{toyRiscProc} is represented the schematic provided by the Vivado 
                     lastline=68]
                     {\verilogSourceDir/A17_registerFile.sv}      
 
-\paragraph{ALU} defined in \ref{alu1} and with a generic version described in Listing \ref{lst:A08_alu.sv} is adapted for the instruction set of toyRISC in Listing \ref{lst:ALU}.
+\paragraph{ALU} defined in \ref{alu1} and with a generic version described in Listing \ref{lst:A08_alu.sv} is adapted for the instruction set of toyRISC in Listing \ref{ALU}.
 
 \includeverilogcode[caption={ALU. File: ALU.sv.  (SystemVerilog)}, 
-                    label={lst:ALU}, 
+                    label={ALU}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=68]
@@ -102,9 +102,9 @@ In Figure \ref{toyRiscProc} is represented the schematic provided by the Vivado 
                     lastline=68]
                     {\verilogSourceDir/A17_bigMux.sv} 
 
-\placedrawing[H]{figures/A17_RISCdetailed.lp}{Top module of toyRISC processor.}{toyRiscProc}
+\placedrawing[H]{figures/A17_RISCdetailed.lp}{Top module of toyRISC processor.}{toyRISCProc}
 
-Figure \ref{toyRiscProc} contains the detailed schematic of toyRISC as represented by the Vivado tool. This representation is intended to give only an idea about the complexity of the project. In the electronic version of the book, this image can be inspected in more detail using the zoom feature of the editor.
+Figure \ref{toyRISCProc} contains the detailed schematic of toyRISC as represented by the Vivado tool. This representation is intended to give only an idea about the complexity of the project. In the electronic version of the book, this image can be inspected in more detail using the zoom feature of the editor.
 
 
 \subsection{Code generator}\label{codeGen}

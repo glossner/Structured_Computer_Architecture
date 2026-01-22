@@ -169,13 +169,13 @@ its value being dominated by the value of $C_L$ and the size (width) of the two 
 
 \section{Physical Implementation of NAND \& NOR Gates}
 
-The 2-input AND circuit, $a \cdot b$, works like a ``gate" opened by the signal $a$ for the signal $b$. Indeed, the gate is ``open" for $b$ only if $a = 1$. This is the reason for which the AND circuit was baptised {\bf {\em gate}}\index{gate}. Then, the use imposed this alias as the generic name for any logic circuit. Thus, AND, OR, XOR, NAND, ... are all called {\em gates}.
+The 2-input AND circuit, $a \cdot b$, works like a ``gate" opened by the signal $a$ for the signal $b$. Indeed, the gate is ``open" for $b$ only if $a = 1$. This is the reason for which the AND circuit was baptised {\bf {\em gate}}. Then, the use imposed this alias as the generic name for any logic circuit. Thus, AND, OR, XOR, NAND, ... are all called {\em gates}.
 
 
 \subsection{The static behavior of gates}
 
 
-For 2-input NAND and 2-input NOR gates the same principle will be
+For 2-input NAND and 2-input NOR gates (gates with {\em fan-in}\index{fan-in: the number of inputs a logic gate has} 2) the same principle will be
 applied, interconnecting 2 pairs of complementary transistors to
 obtain the needed behaviors.
 
