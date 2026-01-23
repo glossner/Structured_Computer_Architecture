@@ -24,8 +24,11 @@ class RegFile(numRegs: Int, width: Int, numReadPorts: Int, numWritePorts: Int, n
   for (i <- 0 until numReadPorts) {
     val bankIndex = (io.readAddr(i) % numBanks.U).asUInt
     val bankOffset = (io.readAddr(i) / numBanks.U).asUInt
-    val readData = regBanks(bankIndex.litValue.toInt).read(bankOffset, true.B)  
-    io.readData(i) := RegNext(readData, 0.U)
+    val bankSel = UIntToOH(bankIndex, numBanks)
+    val readDatas = regBanks.zipWithIndex.map { case (bank, idx) =>
+      bank.read(bankOffset, bankSel(idx))
+    }
+    io.readData(i) := Mux1H(bankSel, readDatas)
   }
 
   // Write Logic: Each write port updates the appropriate bank
@@ -33,8 +36,10 @@ class RegFile(numRegs: Int, width: Int, numReadPorts: Int, numWritePorts: Int, n
     val bankIndex = (io.writeAddr(i) % numBanks.U).asUInt
     val bankOffset = (io.writeAddr(i) / numBanks.U).asUInt
 
-    when(io.writeEnable(i)) {
-      regBanks(bankIndex.litValue.toInt).write(bankOffset, io.writeData(i))
+    for (b <- 0 until numBanks) {
+      when(io.writeEnable(i) && bankIndex === b.U) {
+        regBanks(b).write(bankOffset, io.writeData(i))
+      }
     }
   }
 }
