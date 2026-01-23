@@ -1,16 +1,16 @@
 module {
   hw.module private @BehavioralAdderSubtractor(in %io_a : i4, in %io_b : i4, in %io_subtract : i1, out io_result : i4) {
-    %io_a_0 = sv.wire sym @sym name "io_a" {hw.verilogName = "io_a_0"} : !hw.inout<i4>
+    %io_a_0 = sv.wire sym @sym_0 name "io_a" {hw.verilogName = "io_a_0"} : !hw.inout<i4>
     sv.assign %io_a_0, %io_a : i4
-    %io_b_1 = sv.wire sym @sym_0 name "io_b" {hw.verilogName = "io_b_0"} : !hw.inout<i4>
+    %io_b_1 = sv.wire sym @sym_1 name "io_b" {hw.verilogName = "io_b_0"} : !hw.inout<i4>
     sv.assign %io_b_1, %io_b : i4
-    %io_subtract_2 = sv.wire sym @sym_1 name "io_subtract" {hw.verilogName = "io_subtract_0"} : !hw.inout<i1>
+    %io_subtract_2 = sv.wire sym @sym_2 name "io_subtract" {hw.verilogName = "io_subtract_0"} : !hw.inout<i1>
     sv.assign %io_subtract_2, %io_subtract : i1
     %false = hw.constant false
+    %_io_result_T = sv.wire sym @sym_9 {hw.verilogName = "_io_result_T"} : !hw.inout<i4>
     %0 = sv.read_inout %io_subtract_2 : !hw.inout<i1>
     %_fullResult_T = sv.wire sym @sym_3 {hw.verilogName = "_fullResult_T"} : !hw.inout<i1>
     sv.assign %_fullResult_T, %0 : i1
-    %_io_result_T = sv.wire sym @sym_9 {hw.verilogName = "_io_result_T"} : !hw.inout<i4>
     %1 = sv.read_inout %io_a_0 : !hw.inout<i4>
     %2 = comb.concat %false, %1 : i1, i4
     %3 = sv.wire {hw.verilogName = "_GEN"} : !hw.inout<i5>
@@ -46,28 +46,28 @@ module {
     %21 = sv.read_inout %fullResult : !hw.inout<i4>
     sv.assign %_io_result_T, %21 : i4
     %22 = sv.read_inout %_io_result_T : !hw.inout<i4>
-    %io_result = sv.wire sym @sym_2 {hw.verilogName = "io_result_0"} : !hw.inout<i4>
+    %io_result = sv.wire sym @sym {hw.verilogName = "io_result_0"} : !hw.inout<i4>
     sv.assign %io_result, %22 : i4
     %23 = sv.read_inout %io_result : !hw.inout<i4>
     hw.output %23 : i4
   }
   hw.module @BehavioralAdderSubtractorHW4(in %clock : i1, in %reset : i1, in %io_a : i4, in %io_b : i4, in %io_subtract : i1, out io_sum : i4) {
-    %io_sum = sv.wire sym @sym_2 {hw.verilogName = "io_sum_0"} : !hw.inout<i4>
-    %io_a_0 = sv.wire sym @sym name "io_a" {hw.verilogName = "io_a_0", sv.namehint = "io_a"} : !hw.inout<i4>
+    %io_sum = sv.wire sym @sym {hw.verilogName = "io_sum_0"} : !hw.inout<i4>
+    %io_a_0 = sv.wire sym @sym_0 name "io_a" {hw.verilogName = "io_a_0", sv.namehint = "io_a"} : !hw.inout<i4>
     sv.assign %io_a_0, %io_a : i4
-    %io_b_1 = sv.wire sym @sym_0 name "io_b" {hw.verilogName = "io_b_0", sv.namehint = "io_b"} : !hw.inout<i4>
+    %io_b_1 = sv.wire sym @sym_1 name "io_b" {hw.verilogName = "io_b_0", sv.namehint = "io_b"} : !hw.inout<i4>
     sv.assign %io_b_1, %io_b : i4
-    %io_subtract_2 = sv.wire sym @sym_1 name "io_subtract" {hw.verilogName = "io_subtract_0", sv.namehint = "io_subtract"} : !hw.inout<i1>
+    %io_subtract_2 = sv.wire sym @sym_2 name "io_subtract" {hw.verilogName = "io_subtract_0", sv.namehint = "io_subtract"} : !hw.inout<i1>
     sv.assign %io_subtract_2, %io_subtract : i1
     %0 = sv.read_inout %io_a_0 : !hw.inout<i4>
     %1 = sv.read_inout %io_b_1 : !hw.inout<i4>
     %2 = sv.read_inout %io_subtract_2 : !hw.inout<i1>
-    %io_sum_module.io_result = hw.instance "io_sum_module" @BehavioralAdderSubtractor(io_a: %0: i4, io_b: %1: i4, io_subtract: %2: i1) -> (io_result: i4) {hw.verilogName = "io_sum_module", sv.namehint = "io_sum_module.io_result"}
+    %io_sum_module.io_result = hw.instance "io_sum_module" @BehavioralAdderSubtractor(io_a: %0: i4, io_b: %1: i4, io_subtract: %2: i1) -> (io_result: i4) {hw.verilogName = "io_sum_module"}
     sv.assign %io_sum, %io_sum_module.io_result : i4
     %3 = sv.read_inout %io_sum : !hw.inout<i4>
     hw.output %3 : i4
   }
   om.class @BehavioralAdderSubtractorHW4_Class(%basepath: !om.frozenbasepath) {
-    om.class.fields
+    om.class.fields 
   }
 }

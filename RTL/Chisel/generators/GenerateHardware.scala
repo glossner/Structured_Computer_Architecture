@@ -53,7 +53,28 @@ object GenerateHardware extends App {
   val generatedNetlistPath = "generators/generated/netlist"
   val generatedDiagramsPath = "generators/generated/diagrams"
 
-  val skywaterPdkLib = "/home/jglossner/GitRepos/open_pdks/sources/sky130_fd_sc_hd/timing/sky130_fd_sc_hd__tt_025C_1v80.lib"
+  // Resolve the liberty file from env vars or common install locations.
+  lazy val skywaterPdkLib: String = {
+    val envLib = sys.env.get("SKY130_LIB").orElse(sys.env.get("SKY130_PDK_LIB"))
+    val pdkRoot = sys.env.get("PDK_ROOT").orElse(sys.env.get("SKY130_PDK_ROOT"))
+    val candidates = Seq(
+      envLib,
+      pdkRoot.map(_ + "/open_pdks/sources/sky130_fd_sc_hd/timing/sky130_fd_sc_hd__tt_025C_1v80.lib"),
+      pdkRoot.map(_ + "/pdks/share/pdk/sky130B/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"),
+      Some("/opt/skywater-pdk/open_pdks/sources/sky130_fd_sc_hd/timing/sky130_fd_sc_hd__tt_025C_1v80.lib"),
+      Some("/opt/skywater-pdk/pdks/share/pdk/sky130B/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"),
+      Some("/opt/skywater-pdk/open_pdks/sky130/sky130B/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"),
+      Some("/home/jglossner/GitRepos/open_pdks/sources/sky130_fd_sc_hd/timing/sky130_fd_sc_hd__tt_025C_1v80.lib"),
+    ).flatten
+
+    candidates.find(p => Files.isRegularFile(Paths.get(p))) match {
+      case Some(path) => path
+      case None =>
+        throw new IOException(
+          s"Sky130 liberty file not found. Set SKY130_LIB or PDK_ROOT. Tried: ${candidates.mkString(", ")}"
+        )
+    }
+  }
   val optimizeForASIC = true
 
  
@@ -68,6 +89,15 @@ object GenerateHardware extends App {
       println(s"Processing module ${moduleName}")
       println("###########################################################################")
       println("  ")
+
+      // Ensure output directories exist before any tool writes files.
+      ensureDir(generatedFirRTLPath)
+      ensureDir(generatedSystemVerilogAnnotatedPath)
+      ensureDir(generatedSv2vPath)
+      ensureDir(generatedVerilogElaboratedPath)
+      ensureDir(generatedVerilogElaboratedFlatPath)
+      ensureDir(generatedNetlistPath)
+      ensureDir(generatedDiagramsPath)
 
       // val convertSVGcommand = "rsvg-convert"
       val convertSVGcommand = "convert"       //ImageMagick
@@ -492,6 +522,13 @@ object GenerateHardware extends App {
         case e: Exception =>
           println(s"An error occurred while deleting $file: ${e.getMessage}")
       }
+    }
+  }
+
+  def ensureDir(path: String): Unit = {
+    val dirPath = Paths.get(path)
+    if (!Files.exists(dirPath)) {
+      Files.createDirectories(dirPath)
     }
   }
 

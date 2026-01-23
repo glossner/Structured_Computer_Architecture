@@ -11,8 +11,8 @@ module BehavioralAdderSubtractor (
 	wire [3:0] io_a_0 = io_a;
 	wire [3:0] io_b_0 = io_b;
 	wire io_subtract_0 = io_subtract;
-	wire _fullResult_T = io_subtract_0;
 	wire [3:0] _io_result_T;
+	wire _fullResult_T = io_subtract_0;
 	wire [4:0] _GEN = {1'h0, io_a_0};
 	wire [4:0] _GEN_0 = {1'h0, io_b_0};
 	wire [4:0] _fullResult_T_1 = _GEN - _GEN_0;
