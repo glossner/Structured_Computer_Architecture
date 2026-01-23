@@ -16,6 +16,9 @@ RTL/verilator_testbench/obj_dir
 RTL/verilator_testbench/*.vcd
 RTL/Chisel/.bsp/sbt.json
 
+# Verilator specific
+RTL/Chisel/generators/obj_dir
+
 # Scala-IDE specific
 .scala-build
 .scala_dependencies
