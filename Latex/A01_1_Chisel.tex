@@ -615,10 +615,13 @@ The annotated/debug SystemVerilog generated code should look like:
 Create a Verilator C++ test driver. It is in Chisel/verilator\_testbench
 \includecppcode[caption={Verilator Testbench for WaveFormGenerator}, label={lst:verilator_waveformgenerator_testbench}]{\verilatorSourceDir/WaveFormGenerator_testbench.cpp}
 
-From the Chisel/verilator\_testbench, execute:
+From the RTL/Chisel/generators directory, execute:
 \begin{bashcode}
-verilator --cc ../generated_verilog_annotated/WaveFormGenerator.sv --exe WaveFormGenerator_testbench.cpp --trace
-make -C obj_dir -f VWaveFormGenerator.mk VWaveFormGenerator   
+verilator --cc ../generated_verilog_annotated/WaveFormGenerator.sv \
+  --exe ../../verilator_testbench/WaveFormGenerator_testbench.cpp \
+  --trace --Mdir obj_dir
+
+make -C obj_dir -f VWaveFormGenerator.mk VWaveFormGenerator
 \end{bashcode}
 
 This will output the executable in Chisel/verilator\_testbench/obj\_dir
