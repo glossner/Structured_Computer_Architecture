@@ -1,5 +1,5 @@
 module DMA(
-    // on BusA
+// on BusA
     input   logic [31:0]    dataInA , // data comming from Memory
     output  logic [31:0]    dataOutA, // data going to Memory
     output  logic [31:0]    address , // address from Processor
@@ -10,7 +10,7 @@ module DMA(
     input   logic           HLDA    , // hold acknowledged to DMA
                             waitA   , // wait on bus A
     input   logic [1:0]     comA    , // 01:get 10:send 11:initAddr
-     // onBusB
+// onBusB
     input   logic [31:0]    dataInB , // data comming from I/O
     output  logic [31:0]    dataOutB, // data going to I/O
     output  logic           readB   , // read on bus B from Memory
@@ -18,16 +18,14 @@ module DMA(
                             send    , // send to I/O
                             get     , // get fromI/O
     input   logic           waitB   , // wait on bus B
-    // general signals
+// general signals
     input   logic           rst     , // reset
                             clk     );
-    // internal comands
+// internal comands
     logic sel   ; // select the input of FIFO  from BusA or BusB
     logic read  ; // read from FIFO
     logic write ; // write to FIFO
     logic load  ; // load address
     logic next  ; // increment address
-
-    // here comes the description
-    // ...
+// here comes the description
 endmodule

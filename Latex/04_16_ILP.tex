@@ -55,10 +55,13 @@ The three pipeline registers introduced in design divide the execution of an ins
     \item[INSTRUCTION FETCH (IF)]: the content of the register {\tt pc} (program counter) addresses in the program memory the binary code of an instruction; in the same time the module {\tt next} computes the value for the next {\tt pc}. The execution time for this stage is:
         $$t_{IF} = t_{pc} + max(t_{next}, t_{ACCto Program Memory}) + t_{suPipeReg1}$$
         In the pipeline register {\bf PipeReg\_1} is loaded the information requested to finish the execution of the fetched instruction
+
+\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
+        
     \item[OPERANDS FETCH (OF)]: from the register are fetched the two operands of the instruction using the fields {\tt leftAddr} and {\tt rightAddr} fetched in the previous cycle from the program memory. In {\bf pipeReg\_2} are loaded the two fetched operands and the information needed in the next cycles to end the execution of the instruction. The execution time for this stage is:
         $$t_{OF} = t_{PipeReg1} + t_{regFile} + t_{suPipeReg2}$$
 
-\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
+
         
     \item[EXECUTION (EX)]: ALU performs the operation according to the code {\tt opCode}, propagated to this stage through the two previous  pipeline registers,  generate {\tt result} and the predicate {\tt zero = (result == 0)}; the {\tt add} module adds to the program counter the signed value of {\tt value} to perform the branch operation.  The execution time for this stage is:
         $$t_{EX} = t_{PipeReg2} + max((t_{mux}+t_{alu}),  (t_{add}+t_{mux}), t_{dataMemPipeReg}) + t_{suPipeReg3}$$
@@ -288,9 +291,9 @@ Thus, the {\tt XOR} instruction is used for stalling instead of the {\tt NOP} in
 
 By adding hardware, the data dependency can be resolved, {\bf in all cases}, with no time penalty. The solution is to connect {\tt result} not only to the register file input, but also directly to the ALU input when the value just computed is needed for the next instruction. The mechanism is called {\em forwarding} and requires the addition of one input to the  ALU input as left operand or as right operand. But, because there are binary operations (operations with two operands) sometimes both operands arrive to late in the register file to be fetched for the current instruction.
 
-\placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
-
 Thus, forwarding control is done by a circuit which analyses the binary code of three successive instructions. Three situations can occur:
+
+\placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
 
 \begin{verbatim}
     xxxxxx_00001_xxx...x                // identified in PipeReg_3

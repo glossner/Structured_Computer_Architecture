@@ -3,6 +3,7 @@
 \unitlength 2.4pt
 {\scriptsize
 \begin{picture}(210,88)
+\hspace{-5mm}
 \thinlines
 \drawcenteredtext{12.0}{6.0}{{\bf a.}}
 \Thicklines

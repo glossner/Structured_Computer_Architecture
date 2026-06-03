@@ -30,12 +30,13 @@ module OPSFETCH(input   logic [31:0]    instruction1,
     assign rightAddr    = instruction1[15:11]   ;
 // PipeReg2:
     always_ff @(posedge clk) begin
-        leftOp2     <=  leftOp                                      ;
-        rightOp2    <=  rightOp                                     ;
-        value2      <=  {{16{instruction1[15]}}, instruction1[15:0]};
-        opSel2      <=  opSel                                       ;
-        opCode2     <=  instruction1[31:26]                         ;
-        destAddr2   <=  instruction1[25:21]                         ;
+        leftOp2     <=  leftOp                  ;
+        rightOp2    <=  rightOp                 ;
+        value2      <=  {{16{instruction1[15]}},
+                             instruction1[15:0]};
+        opSel2      <=  opSel                   ;
+        opCode2     <=  instruction1[31:26]     ;
+        destAddr2   <=  instruction1[25:21]     ;
     end
 
     intUnit intunit(.we         (we                     ),

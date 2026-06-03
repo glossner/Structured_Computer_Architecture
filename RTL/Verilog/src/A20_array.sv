@@ -9,7 +9,7 @@ module array(   input   logic [63:0]    i2aData     ,
 // dataTransCom : 101 : odd insert
 // dataTransCom : 110 : even extract
 // dataTransCom : 111 : odd extract
-    logic [`n+1:0]  map2reduce[0:`p-1]  ; // func[1:0], acc
+    logic [`n+1:0]  map2reduce[0:`p-1]  ; 
     logic [0:`p-1]  boolean             ;
     logic [0:`p-1]  first               ;
     logic [0:`p-1]  next                ;
@@ -33,5 +33,5 @@ module array(   input   logic [63:0]    i2aData     ,
                     map2reduce  ,
                     clock       );
 
-    assign red = red2contr[`n-1:0]                              ;
+    assign red = red2contr[`n-1:0];
 endmodule

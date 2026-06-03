@@ -13,15 +13,15 @@ module intAut(  output  logic       inta    ,
     // intState = 101: intExec4
 
     always_ff @(posedge clk)
-     if (reset)                                 intState <= 3'b000  ;
+     if (reset)                             intState <= 3'b000  ;
       else begin
-            if (opCode1 == `eint)               intState <= 3'b001  ;
-            if (opCode1 == `dint)               intState <= 3'b000  ;
-            if (intIn && (intState == 3'b001))  intState <= 3'b010  ;
-            if (intState == 3'b010)             intState <= 3'b011  ;
-            if (intState == 3'b011)             intState <= 3'b100  ;
-            if (intState == 3'b100)             intState <= 3'b101  ;
-            if (intState == 3'b101)             intState <= 3'b000  ;
-         end
+        if (opCode1 == `eint)               intState <= 3'b001  ;
+        if (opCode1 == `dint)               intState <= 3'b000  ;
+        if (intIn && (intState == 3'b001))  intState <= 3'b010  ;
+        if (intState == 3'b010)             intState <= 3'b011  ;
+        if (intState == 3'b011)             intState <= 3'b100  ;
+        if (intState == 3'b100)             intState <= 3'b101  ;
+        if (intState == 3'b101)             intState <= 3'b000  ;
+       end
     assign inta = intState == 3'b011    ;
 endmodule

@@ -3,6 +3,7 @@
 \unitlength 3.8pt
 {\scriptsize 
 \begin{picture}(130,38)
+\hspace{-2cm}
 \thinlines
 \drawcenteredtext{100.0}{26.0}{{\bf {\em map}}}
 \Thicklines

@@ -4,15 +4,15 @@
 `define hjmpz    6'b000010 // pc <= (rf[left]==0) ? pc+val:pc+1
 `define hjmpnz   6'b000011 // pc <= (rf[left]==0) ? pc+1:pc+val
 `define hpsend   6'b100000 // pc <= (host2int[31:24]==
-                           // {`prun,`ctl}) ? pc+1 : pc; h2iPwrite = 1;
+                           // {`prun,`ctl}) ? pc+1:pc; h2iPwrite=1;
                            // rf[left] <= rf[left]+!i2hPfull
-`define hdget    6'b100010 // pc <= (leftOut==rightOut) ? pc+1 : pc;
+`define hdget    6'b100010 // pc <= (leftOut==rightOut) ? pc+1:pc;
                            // i2hDread = 1;
                            // rf[left] <= rf[left]+!i2hDfull
-`define hdsend   6'b100001 // pc <= (leftOut==rightOut) ? pc+1 : pc;
+`define hdsend   6'b100001 // pc <= (leftOut==rightOut) ? pc+1pc;
                            // h2iDwrite = 1;
                            // rf[left] <= rf[left]+!i2hDfull
-`define hintwait 6'b000111 // pc <= (int) ? pc+1 : pc
+`define hintwait 6'b000111 // pc <= (int) ? pc+1:pc
 `define hajmp    6'b001000 // pc <= val
 `define hhalt    6'b001001 // pc <= pc
 `define hsttcc   6'b001010 // start host cycle counter

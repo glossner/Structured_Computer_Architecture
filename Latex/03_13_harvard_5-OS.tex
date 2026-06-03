@@ -14,7 +14,7 @@ Let us to go back to the UTM concept. At this theoretical level, the processing 
     \item the size of "program", a flexible structure because it can be redesigned as many time as it is needed
     \item the size of the description of the UTM's finite automaton, a fixed structure because because it is frozen in a physical implementation.
 \end{enumerate}
-From the designing point of view, we care about the size of the automaton, more precisely, about the complexity of the associated combinational circuit. Any hardware complexity deserves to be reduced due to the effort involved in {\em specification, design, verification, validation} and {\em testing}. Consequently, minimizing the complexity of the control provided, at the origin of the UTM, by the finite automaton is welcome. Reducing the number of states of the finite automaton does not entail a reduction in complexity. This was proven by Claude Shannon's approach \cite{Shannon56}, which reduced the number of states to only 2, but with the consequence of increasing the size of the binary circuit of the loop that calculates the next state. Only the definition of a finite automaton with zero states \cite{Stefan06}, therefore the elimination of the finite automaton, justifies, only belatedly, the elimination of the complexity introduced by the control.
+From the designing point of view, we care about the size of the automaton, more precisely, about the complexity of the associated combinational circuit. Any hardware complexity deserves to be reduced due to the effort involved in {\em specification, design, verification, validation} and {\em testing}. Consequently, minimizing the complexity of the control provided, at the origin of the UTM, by the finite automaton is welcome. Reducing the number of states of the finite automaton does not entail a reduction in complexity. This was proven by Claude Shannon's approach \cite{Shannon56}, which reduced the number of states to only 2, but with the consequence of increasing the size of the binary circuit of the loop that calculates the next state. Only the definition of a finite automaton with zero states \cite{Stefan06Turing}, therefore the elimination of the finite automaton, justifies, only belatedly, the elimination of the complexity introduced by the control.
 
 Consequently, we distinguish two ways of acting on an instruction read from program memory:
 \begin{itemize}
@@ -30,9 +30,10 @@ The Harvard abstract model assumes a fifth loop. The processor together with the
 
 \placedrawing[H]{figures/13_01_harvard_model.lp}{The Harvard abstract model  of computer.}{fig45}
 
+\placedrawing[H]{figures/13_02_computer_organization.lp}{The organization of a Harvard version of a computing system.}{compSys}
+
 We will continue to focus, for obvious reasons, on RISC-type processors (see \ref{toyrisc} in this book) that allow the implementation of the Harvard abstract model.
 
-\placedrawing[H]{figures/13_02_computer_organization.lp}{The organization of a Harvard version of a computing system.}{compSys}
 
 The main difference compared with the von Neumann abstract version is due to the dual connection of the processor to the memory system. Tho independent connections, one for data and another for programs, allow the processor to access in the same cycle an instruction and, if needed, a data word to be processed in the RALU subsystem. In this way the memory hierarchy deepens with severe consequences for memory access speed. A miss in the L1 cache is resolved much faster because a much faster memory is used than the main one. The same effect is produced by a third level of cache if used.
 
@@ -106,8 +107,9 @@ From the perspective of the above, we allow ourselves to propose the substitutio
 \section{{\bf {\em ToyRISC Processor}}}\label{toyrisc}
 
 The executing processor is simpler than an interpreting processor.
-The complexity of computation moves almost completely from the physical structure of the processor into the programs executed by the processor, because this kind of processor (called Reduced Instruction Set Computer, RISC)  has an organization containing mainly simple, recursively defined circuits.
+The complexity of computation moves almost completely from the physical structure of the processor into the programs executed by the processor, because this kind of processor (called Reduced Instruction Set Computer, RISC)  has an organization containing mainly simple, recursively defined circuits (see Figure \ref{fig43}).
 
+\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}}-based computer as a 5-OS. (To keep the image simple, the representation of command and control signals was avoided.)}{fig43}
 \subsection{Organization}
 
 The Harvard abstract model of a RISC executing machine  determines the internal structure of the
@@ -120,7 +122,7 @@ memory. The control automaton does not ``know" the function to be
 performed, it ``knows"  only how to ``fetch the function" from an external storage
 support, the program memory.
 
-\placedrawing[H]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}}-based computer as a 5-OS. (To keep the image simple, the representation of command and control signals was avoided.)}{fig43}
+
 
 {\bf Important note}: the organization presented in the following is designed only from the circuit point of view with emphasis on the {\em competence} of the system. In order to maximize the performance the design must apply specific techniques to increase the frequency of the clock cycle. This concern goes beyond the aims of this lecture. We will partially address these issues in the next lesson. Books on the organization and architecture of computing systems deal extensively with issues of maximizing performance. Books on the architecture and organization of computers written by John Hennessy and David Patterson are recommended  \cite{Hennessy19, Patterson19}.
 
@@ -233,7 +235,16 @@ Each instruction is executed in one clock cycle. In Appendix \ref{toyRiscDesign}
 
 \subsection{Assembly\index{assembly language: the lowest level language in a computing system} Code}
 
-In order to generate the code executable by the toyRISC processor, a code generator  translates the mnemonics into binary code. In Table \ref{mnem}, the mnemonics used to write assembly programs are listed. In the second column the action performed specified and in the last column the binary codes are listed. The binary code is organized in 5 or 4 fields.  The first field represents the operation code, the second the destination address of the result  in the register file ({\tt ddddd} is the binary code of the actual value when it matters), the third field represents the address for the left operand ({\tt lllll} is the binary code of the actual value when it matters). The least significant 16 bits are organized in 2 fields or in one field. In the first case 5 bits ({\tt rrrrr} is the binary code of the actual value when it matters) represents the address of the right operand and the rest 11 bits have no meaning, while in the second case all the 16 bits represents a value ({\tt vvvvvvvvvvvvvvvv} is the binary code of the actual value when it matters).
+In order to generate the code executable by the toyRISC processor, a code generator  translates the mnemonics into binary code. In Table \ref{tab:riscISA}, the mnemonics used to write assembly programs are listed. In the second column the action performed specified and in the last column the binary codes are listed. The binary code is organized in 5 or 4 fields.  The first field represents the operation code, the second the destination address of the result  in the register file ({\tt ddddd} is the binary code of the actual value when it matters), the third field represents the address for the left operand ({\tt lllll} is the binary code of the actual value when it matters). The least significant 16 bits are organized in 2 fields or in one field. In the first case 5 bits ({\tt rrrrr} is the binary code of the actual value when it matters) represents the address of the right operand and the rest 11 bits have no meaning, while in the second case all the 16 bits represents a value ({\tt vvvvvvvvvvvvvvvv} is the binary code of the actual value when it matters).
+
+\subsubsection{Toy Assembler}
+
+The binary codes in the \ref{tab:riscISA} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in SystemVerilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. This generator is listed  in the \ref{codeGen} section (see Listing \ref{lst:RISCcodeGenerator}). The line:
+\begin{verbatim}
+        `include "program.sv"
+\end{verbatim}
+Is included twice on lines 370 and 372.
+In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
 
 \begin{table}[H]
 \footnotesize
@@ -284,14 +295,7 @@ In order to generate the code executable by the toyRISC processor, a code genera
 \end{longtable}
 \end{table}
 
-\subsubsection{Toy Assembler}
 
-The binary codes in the \ref{tab:riscISA} table are generated, for reasons of maintaining a simple design and simulation environment, using a program also written in System Verilog. This program, {\tt RISCcodeGenerator.sv}, receives a sequence of instructions in the file {\tt program.sv} and generates the executable binary code in the program memory {\tt progMemory}. This generator is listed  in the \ref{codeGen} section (see Listing \ref{lst:RISCcodeGenerator}). The line:
-\begin{verbatim}
-        `include "program.sv"
-\end{verbatim}
-Is included twice on lines 370 and 372.
-In the first pass, the absolute positions of the labels are identified through the {\tt LB} task in the {\tt labelTab} table, and in the second pass through the {\tt ULB} task, the relative jump is calculated, which is correctly completed in the code binary. The two tasks are necessary because some relative jumps are at advanced locations compared to the position of the jump instruction.
 
 \subsubsection{Simulator}
 
@@ -302,6 +306,9 @@ The simulator used to validate the processor design is described in detail in th
 
 \begin{exemplu}\label{exADD}
 Let by a following simple program:
+
+\newpage
+
 {\em 
 \includeverilogcode[caption={toyRISC program: initializes the first 5 registers and adds them in register 0.  File: A11\_RISCprogram1.sv  (SystemVerilog)}, 
                     label={lst:A11_RISCprogram1.sv}, 
@@ -356,31 +363,9 @@ Let us take an example to show how the interrupt acts. The interrupt is applied 
                     {\verilogSourceDir/A11_RISCprogram2.sv}
 }
 
-The toy assembler generates in {\tt progMemory} the following executable code:
-
-{\small
-\begin{verbatim}
-progMemory[0]    = 01011111111000000000000000001010
-progMemory[1]    = 01011100010000000000000000010111
-progMemory[2]    = 01011100000000000000000000001101
-progMemory[3]    = 00100000000000000000000000000000
-progMemory[4]    = 11001000000000000000000000000010
-progMemory[5]    = 11001000000000000000000000000000
-progMemory[6]    = 11001000000000000000000000000100
-progMemory[7]    = 00011000000000000000000000000000
-progMemory[8]    = 11001000000000000000000000000000
-progMemory[9]    = 11001000000000000000000000000000
-progMemory[10] 	 = 00100100000000000000000000000000
-progMemory[11] 	 = 01011100011000000000000000101100
-progMemory[12] 	 = 00010100000111100000000000000000
-progMemory[13] 	 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-\end{verbatim}
-}
 The simulation provides:
 {\small
 \begin{verbatim}
-pc=  0  RF=[x, x, x, x]     ei=0 inta=0
-pc=  1  RF=[x, x, x, x]     ei=0 inta=0
 pc=  2  RF=[x, x, 23, x]    ei=0 inta=0
 pc=  3  RF=[13, x, 23, x]   ei=0 inta=0
 pc=  4  RF=[13, x, 23, x]   ei=1 inta=1
@@ -489,10 +474,9 @@ multiplexer, and the {\em set-up time} on the file register's data
 inputs. The way from the output of the file register through {\bf
 Next PC} circuit is ``shorter" because it contains a 16-bit adder,
 comparing with the 32-bit one of the ALU.
-
 The increase in speed performance will be illustrated in the next lesson by using pipeline registers.
 
-\section{How is Designed an Instruction Set Architecture\index{ISA (Instruction Set Architecture): the set of instructions performed by a processor}}
+\section{How an Instruction Set Architecture is Designed\index{ISA (Instruction Set Architecture): the set of instructions performed by a processor}}
 
 As we already said, we use the term ISA to refer to the actual
 programmer-visible instruction set. The ISA serves as the boundary
@@ -549,8 +533,7 @@ between the software engineer  and hardware engineer. We will list and comment f
 \begin{problem}
 Install on your computer the design of the toyRISC processor using modules listed in Section \ref{toyRiscDesign}, and run the simple program which loads in the first 4 registers the numbers 11, 22, 33, 44.
 
-$\diamond$
-\end{problem}
+
 
 {\bf Solution}
 
@@ -584,6 +567,9 @@ pc= 4  RF=[11, 22, 33, 44]
 \end{verbatim}
 }
 
+$\diamond$
+\end{problem}
+
 \begin{problem}
 Add to the list of monitoring signals the last two register in the register file in order to verify the way the interrupt signal is managed. Write a program which contains the subroutine of 5 instruction at the location 20 in the program memory. Enable the interrupt action in the sixth step of the main program. Make also all the necessary adjustment in module {\tt testRISC.sv} to allow verifying the interrupt action.
 
@@ -592,7 +578,7 @@ $\diamond$
 
 
 \begin{problem}
-The add-prefix function receives the sequence of numbers $[n_0, n_1, \ldots, n_{m-1}]$ and returns $$[n_0, n_0 + n_1, n_0 + n_1 + n_2, \ldots, \sum_0^{m-1} n_i]$$
+The add-prefix function receives the sequence of numbers $[n_0, n_1, \ldots, n_{m-1}]$ and returns $[n_0, n_0 + n_1, n_0 + n_1 + n_2, \ldots, \sum_0^{m-1} n_i]$
 Write the program that load in the first 16 registers a sequence of different numbers and compute the add-prefix sequence in the last 16 registers.
 
 $\diamond$
@@ -606,10 +592,15 @@ In registers 0 and 1 are stored the positive integers A an B. Write in assembly 
 
 $\diamond$
 \end{problem}
-What instruction or instructions should be added to the architecture to simplify the program in Problem \ref{div}?
 
 \begin{problem}
-Load in data memory the first 32 Fibbonacci numbers and then add them in register 3.
+What instruction or instructions should be added to the architecture to simplify the program in Problem \ref{div}?
+
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Load in data memory the first 32 Fibbonacci numbers and  add them in register 3.
 
 $\diamond$
 \end{problem}

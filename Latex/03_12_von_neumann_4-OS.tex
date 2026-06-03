@@ -170,11 +170,7 @@ The memory hierarchy is distributed in the version represented in Figure \ref{co
 \begin{enumerate}
     \item Register File in the processor, having a capacity of 32W $\div$ 1024W, accessed for reading or writing in a single clock cycle
     \item Cache memory, having a capacity of 1MB $\div$ 8MB
-    \item Hard Disk connected through:
-        \begin{itemize}
-            \item Bus Bridge
-            \item DMA
-        \end{itemize}
+    \item Hard Disk connected through: Bus Bridge and DMA
 \end{enumerate}
 
 \placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a von Neumann version of a computing system.}{compSysN}
@@ -215,7 +211,7 @@ The disk memory is managed by the operating system or human operator, its size i
 
 How relate two successive levels in the hierarchy? Let us consider two levels in the memory hierarchy, $Level_i$ containing $m$ pages and $Level_{i+1}$ containing $n$ pages, with $n >> m$. Each page in $Level_i$, called {\em physical level} is a copy of a page from $Level_{i+1}$ called {\em virtual level}. In Figure \ref{vmm}a, pages 0, 2, and $m-2$ from the level $i$ were brought from pages 3, 4, and 0 of level $i+1$. Any change in the physical level must actualized in the associated virtual level. The "user"  accesses the virtual level while the virtual mechanism accesses the physical level. It is the job of the virtual memory mechanism to perform transparently the access and to keep coherent the content of the virtual level with the physical level.
 
-\placedrawing[H]{figures/06_04_virtual_memory.lp}{Virtual memory mechanism. {\bf a.} Page correspondence. {\bf b.} Translation mechanism.  }{vmm}
+
 
 The addressing mechanism is represented in Figure \ref{vmm}b, where the access to the physical memory is done mediated by a translation mechanism performed by the {\em Page translate} block.  The "user" issues a virtual address having two parts:
 \begin{itemize}
@@ -223,6 +219,8 @@ The addressing mechanism is represented in Figure \ref{vmm}b, where the access t
     \item offset in the page
 \end{itemize}
 When a new page is loaded into physical memory, the content of this translator is updated according to the correspondence shown in the figure \ref{vmm}a.
+
+\placedrawing[H]{figures/06_04_virtual_memory.lp}{Virtual memory mechanism. {\bf a.} Page correspondence. {\bf b.} Translation mechanism.  }{vmm}
 
 Page translation mechanism is implemented in various form.
 
@@ -284,9 +282,13 @@ The input-output system includes certain specific mechanisms that we will briefl
 
 \subsection{Bus: the Interconnection Fabric}
 
-A {\bf {\em Bus}} is a communication system that transfers data between components inside a computer, or between computers. There are two types of buses: serial (those that transfer data bib by bit) and parallel (those that transfer data word by word of n bits). The main problem that arises is that of the synchronization of the transfer. We will discuss it under its essential aspects for the synchronous transfer of n-bit words.
+A {\bf {\em Bus}} is a communication system that transfers data between components inside a computer, or between computers. 
 
+There are two types of buses: serial (those that transfer data bib by bit) and parallel (those that transfer data word by word of n bits). The main problem that arises is that of the synchronization of the transfer. We will discuss it under its essential aspects for the synchronous transfer of n-bit words.
 In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Figure \ref{compSys}) between Main Memory and 2nd Level Cache are presented. Three important moments are marked in the mentioned waveforms:
+
+\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
+
 \begin{description}
     \item[$t_1$]: the active edge of clock takes a read command (Read = 0) from the address Read Address. Both Read and Read Address must be stable at least minimum {\bf {\em  set-up time}} before the active edge of clock (the positive one) and {\bf {\em hold time}} after the positive edge of clock
     \item[$t_2$]: the active edge of clock can take the data from the output of Main Memory only if the signal Wait is not active (Wait = 0) thus completing the read cycle. The signal Wait is necessary when the Main Memory is not a fast enough memory, or the clock frequency is too high.
@@ -295,7 +297,6 @@ In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Fi
 
 The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 clock cycles in the example illustrated by Figure \ref{bus}. Usually, this latency is very high, reaching hundreds of cycles.
 
-\placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
 
 
 \subsection{DMA\index{DMA (Direct Memory Access)}}
@@ -418,15 +419,15 @@ The process of transferring a block of data from or to a I/O device using a mini
 {\small
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={always_ff, always_comb, logic, loop, repeat, doInParallel, for}]
-/************************************************************************
+/*********************************************************************
 The transfer procedures 
-************************************************************************/
+*********************************************************************/
 idle    - waits for starting a read(comA=01)/write(comA=10) transfer
         - processor wirtes in FIFO source/destination addres in I/O
         {nextState,com} = comA[0] ? {initG,write} : 
                           comA[1] ? {initS,write} : {idle,-} 
 // GET FROM I/O TO MEMORY
-initG   - processor loads (comA=11) in AddrsCounter the starting address 
+initG   - processor loads (comA=11) AddrCounter <= starting address 
         - I/O receives from FIFO the pointer to the block
         {nextState,com} = comA=11 ? {io2b,read,writeB,get} : {initG,-}
 io2b    - i/O to FIFO bufer
@@ -442,7 +443,7 @@ b2mem   - the bloc is transferred from FIFO to memory
 // SENS FROM MEMORY TO I/O
 initS   - processor loads in AddressCounter the starting address 
         - I/O receives from FIFO the pointer to the block
-        {nextState,com} = writeA ? {holdS,read,writeB,send} : {initS,-}
+        {nextState,com} = writeA ? {holdS,read,writeB,send}:{initS,-}
 holdS   - DMA request control on BusA for send transfer
         {nextState,com} = HLDA ? {mem2b,-} : {holdS,HLD}
 mem2b   - the block is transferred in burst mode from Memory to FIFO

@@ -1,7 +1,6 @@
 module hFullAdder(  input   logic a, b, crIn,
                     output  logic sum, crOut);
     logic sum0, cr0, cr1;
-
     halfAdder   ha0(.a  (a      ),
                     .b  (b      ),
                     .sum(sum0   ),

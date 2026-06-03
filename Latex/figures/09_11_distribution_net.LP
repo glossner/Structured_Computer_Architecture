@@ -3,6 +3,7 @@
 \unitlength 2.2pt
 {\tiny
 \begin{picture}(204,68)
+\hspace{-2mm}
 \thicklines
 \drawcenteredtext{102.0}{62.0}{from SQ}
 \drawthickdot{54.0}{36.0}

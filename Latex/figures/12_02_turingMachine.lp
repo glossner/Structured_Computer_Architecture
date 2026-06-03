@@ -67,3 +67,4 @@
 \drawcenteredtext{84.0}{38.0}{\{up, down, nop\}}
 \end{picture}
 }
+\vspace{-1cm}

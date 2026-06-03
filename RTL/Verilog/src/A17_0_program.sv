@@ -11,7 +11,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Interrupt mechanism
 /*
             VAL(31,13)      ;
@@ -35,7 +34,6 @@
             RET(30)         ;
             VAL(4,33)       ;
 //*/
-
 // Conditioned jump operation
 /*
             VAL(1,0)    ;
@@ -47,7 +45,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Data memory use
 /*
             VAL(0,1)    ;

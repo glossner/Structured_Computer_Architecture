@@ -81,3 +81,4 @@
 \drawcenteredtext{48.0}{6.0}{{\bf a.}}
 \end{picture}
 }
+\vspace{-1cm}

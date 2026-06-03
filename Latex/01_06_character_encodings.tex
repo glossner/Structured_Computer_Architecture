@@ -75,8 +75,8 @@ While Unicode defines code points, it does not specify how these points are stor
 
 Example UTF-8 encodings:
 \[
-\text{A: } 01000001_2 \; (1 \text{ byte}), \quad \text{Ω: } 11001110\;10101001_2 \; (2 \text{ bytes}), \quad \text{你好: } 11100100\;10111100\;10000000_2 \; 11100101\;10100111\;10101101_2 \; (6 \text{ bytes}).
-\]
+\text{A: } 01000001_2 \; (1 \text{ byte}),  \quad \text{Ω: } 11001110\;10101001_2 \; (2 \text{ bytes})\]
+\[\text{你好: } 11100100\;10111100\;10000000_2 \; 11100101\;10100111\;10101101_2 \; (6 \text{ bytes}).\]
 
 \paragraph{UTF-16.}
 UTF-16 uses 2 or 4 bytes per character. Characters in the Basic Multilingual Plane (BMP) are stored in 2 bytes, while supplementary characters require 4 bytes. UTF-16 is popular in Windows systems and programming environments like Java.
@@ -105,7 +105,7 @@ Table \ref{tab:char_encodings} summarizes the key differences between encoding s
 \centering
 \renewcommand{\arraystretch}{1.3} % Adjust row height for better readability
 \setlength{\tabcolsep}{5pt} % Adjust column spacing for better layout
-\begin{tabular}{|p{3.5cm}|p{2cm}|p{3.5cm}|p{5cm}|} % Define column widths
+\begin{tabular}{|p{3.2cm}|p{2cm}|p{3.5cm}|p{5cm}|} % Define column widths
 \hline
 \textbf{Encoding Scheme} & \textbf{Bits per Character} & \textbf{Characters Supported} & \textbf{Key Features} \\ \hline
 EBCDIC & 8 & 256 & IBM mainframes, legacy compatibility \\ \hline

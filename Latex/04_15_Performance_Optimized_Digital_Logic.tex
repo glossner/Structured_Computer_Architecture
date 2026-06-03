@@ -60,17 +60,17 @@ This logic represents a chain of conditional checks in hardware.
 In Chisel, a \texttt{switch} statement is a construct used for multi-way branching based on a condition or value. The hardware synthesized from a \texttt{switch} statement depends on the conditions and the synthesis toolchain. Generally, it can result in one of the following hardware structures:
 
 A \textbf{multiplexer tree} is generated if the \texttt{switch} conditions are mutually exclusive, with each case corresponding to a distinct value of the selector. For instance:
-\[
-\texttt{
-val result = Wire(UInt(8.W)) \\
-switch(selector) \{ \\
-\quad is("b00".U) \{ result := a \} \\
-\quad is("b01".U) \{ result := b \} \\
-\quad is("b10".U) \{ result := c \} \\
-\quad is("b11".U) \{ result := d \} \\
-\}
-}
-\]
+
+\begin{lstlisting}[language=Scala]
+val result = Wire(UInt(8.W)) 
+switch(selector) { 
+ is("b00".U) { result := a } 
+ is("b01".U) { result := b } 
+ is("b10".U) { result := c } 
+ is("b11".U) { result := d } 
+ }
+\end{lstlisting}
+
 This should synthesize into a 4-to-1 multiplexer controlled by the value of \texttt{selector}.
 
 When the \texttt{switch} includes overlapping or non-mutually-exclusive conditions, \textbf{priority logic} is typically generated. Priority logic evaluates cases sequentially, giving precedence to earlier conditions. For wide selectors or more complex logic, synthesis tools may generate \textbf{decoder logic} to translate the selector into one-hot or prioritized enable signals that control the corresponding cases.
@@ -180,9 +180,9 @@ A comparison of multi-porting strategies is shown in the following table:
 \textbf{Method} & \textbf{Latency} & \textbf{Scalability} & \textbf{Area Efficiency} \\
 \hline
 \texttt{Vec[Reg]} (FF-based) & Zero-cycle reads & Poor for large sizes & High area and power \\
-Multi-Banked SRAM & 1-cycle read delay & Good, but requires conflict resolution & Efficient for large files \\
+Multi-Banked SRAM & 1-cycle read delay & Good, requires conflict resolution & Efficient for large files \\
 Register Replication & 1-cycle read delay & Scalable but increases power & High area cost \\
-Bypass Networks & Zero-cycle forwarding & Enhances performance & Increases control logic complexity \\
+Bypass Networks & Zero-cycle forwarding & Enhances performance & Increases control  complexity \\
 \hline
 \end{tabular}
 \end{center}

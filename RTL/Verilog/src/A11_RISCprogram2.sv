@@ -1,4 +1,4 @@
-            VAL(31,10)  ; // loads in register 31 the subrutine address
+            VAL(31,10)  ; // loads in rf[31] the subrutine address
             VAL(2,23)   ;
             VAL(0,13)   ;
             EI          ; // enable the action of the interrupt

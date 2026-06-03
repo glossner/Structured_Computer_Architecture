@@ -10,7 +10,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Adding with value
 /*
             VAL(0,2)    ;
@@ -22,7 +21,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Interrupt mechanism
 /*
             VAL(31,13)  ;
@@ -47,7 +45,6 @@
             RET(30)         ;
             NOP             ;
 //*/
-
 // Conditioned branch 1
 /*
             VAL(0,5)    ;
@@ -61,7 +58,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Conditioned branch 2
 /*
             VAL(0,-3)   ;
@@ -74,7 +70,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Data memory use
 /*
             VAL(1,55)   ;
@@ -88,7 +83,6 @@
             HALT        ;
             HALT        ;
 //*/
-
 // Change sign operation
 /*
             VAL(2, 7);
@@ -99,7 +93,6 @@
             HALT;
             HALT;
 //*/
-
 // Min/max operations
 /*
             VAL(0, 5);
@@ -110,7 +103,6 @@
             HALT;
 
 //*/
-
 // Test if RF[0] is divisible by 4?
 /*      
             VAL(0,9);
@@ -127,7 +119,6 @@
     LB(33); HALT;
             HALT;
 //*/    //yes/no: rf[3] = 1/0.
-
 // Absolute difference 
 /*
             VAL(0,5);
@@ -137,7 +128,6 @@
             HALT;
             HALT;
 //*/
-
 /*
             VAL(1,-1);
             LSH(1,1);

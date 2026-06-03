@@ -48,7 +48,7 @@ The instruction set is defined in Listing \ref{lst:toyRISCdefines}.
 In Figure \ref{toyRiscProc} is represented the schematic provided by the Vivado tool for the top module of toyRISC.
 
 
-\subsubsection{Decode module: the small complex part} is the only complex part of torRISC. It contains a finite automaton and some glue gates Therefore, it is a complex circuit, but quantitatively it is insignificant.
+\subsubsection{Decode module: the small complex part} DCD is the only complex part of torRISC. It contains a finite automaton and some glue gates Therefore, it is a complex circuit, but quantitatively it is insignificant.
 
 \includeverilogcode[caption={Decoder DCDtoyRISC. File: DCDtoyRISC.sv.  (SystemVerilog)}, 
                     label={lst:DCDtoyRISC}, 
@@ -118,15 +118,7 @@ In assembly language, the toyRISC processor can only be used if there is a binar
                     lastline=450]
                     {\verilogSourceDir/A17_RISCcodeGenerator.sv} 
 
-\begin{verisum}{\em :
 
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-    \item[task] taskName; {\bf input} [...:...] inputName; ... {\bf begin} taskBody {\bf end  endtask} : describes the task {\tt taskName} of parameters {\tt inputName} ... which performs the actions defined by {\tt taskBody}.
-\end{description}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
 
 
 \subsection{Simulator}\label{riscsim}

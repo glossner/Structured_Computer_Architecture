@@ -101,6 +101,13 @@ pRISC, which comes from {\em parallel RISC}\footnote{The name was proposed by Ji
                     lastline=68]
                     {\verilogSourceDir/A20_pRISC.sv}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Images/hetArray.png} 
+    \caption{Map array.}
+    \label{fig:hetArray}
+\end{figure}
+
 While the controller is a well-established structure, the cellular area deserves explicit detail. It contains, see Figure \ref{fig:hetArray} and Listing \ref{lst:array} three functional components:
 \begin{itemize}
     \item the linear array of cells, {\tt map}, which includes the $log$-depth distribution network used to send in each clock cycle form controller to each cell an instruction with the associated value
@@ -108,12 +115,6 @@ While the controller is a well-established structure, the cellular area deserves
     \item the second loop which applies to the vector provided by the map section a scan function and sends back the resulting vector to the array.
 \end{itemize}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{Images/hetArray.png} 
-    \caption{Map array.}
-    \label{fig:hetArray}
-\end{figure}
 
 \includeverilogcode[caption={Array. File: 3\_array.sv.  (SystemVerilog)}, 
                     label={lst:array}, 
@@ -538,7 +539,7 @@ Each assembly-level instruction is made by concatenating the operation micro-cod
 %\begin{table}[H]
 {\scriptsize
 {\centering
-\begin{longtable}{|l||l|l|l|l|l|l|l|l|}
+\begin{longtable}{|p{7mm}|p{16.5mm}|p{12mm}|l|l|l|l|l|l|}
 \caption{Instructions with operands from the Instruction Set Architecture.}
 \label{table:isa_instructions} \\
 \hline
@@ -677,21 +678,21 @@ Let's consider a 16-cell system. The reduction function add is used to add in th
 The result of simulation is:
 {\small
 \begin{verbatim}
-   t=43 pc=   0  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=45 pc=   1  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=47 pc=   2  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=49 pc=   3  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=51 pc=   4  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=53 pc=   5  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=55 pc=   6  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=57 pc=   7  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=59 pc=   8  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=61 pc=   9  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=63 pc=  10  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=65 pc=  11  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=67 pc=  12  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=69 pc=  13  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=71 pc=  13  cAcc=120 ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+ t=43 pc=   0  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=45 pc=   1  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=47 pc=   2  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=49 pc=   3  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=51 pc=   4  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=53 pc=   5  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=55 pc=   6  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=57 pc=   7  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+ t=59 pc=   8  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+ t=61 pc=   9  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+ t=63 pc=  10  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+ t=65 pc=  11  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+ t=67 pc=  12  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+ t=69 pc=  13  cAcc=x   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+ t=71 pc=  13  cAcc=120 ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 \end{verbatim}
 }
 The 8 lines of code {\tt cNOP; NOP;} are due to the latencies introduced by the distribution net from controller to Map an to the reduction net from Map to controller.
@@ -708,21 +709,21 @@ If we ned to write a program to be executed in Map arrays with $p$ cells, then t
 The result of simulation for $p=16$ is:
 {\small
 \begin{verbatim}
-   t=31 pc=   0  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=33 pc=   1  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=35 pc=   2  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=37 pc=   3  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=39 pc=   4  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=41 pc=   5  cAcc=3   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=43 pc=   4  cAcc=3   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=45 pc=   5  cAcc=2   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
-   t=47 pc=   4  cAcc=2   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=49 pc=   5  cAcc=1   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=51 pc=   4  cAcc=1   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=53 pc=   5  cAcc=0   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=55 pc=   6  cAcc=0   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=57 pc=   7  cAcc=-1  ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
-   t=59 pc=   7  cAcc=120 ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+t=31 pc=   0  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=33 pc=   1  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=35 pc=   2  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=37 pc=   3  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=39 pc=   4  cAcc=x   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=41 pc=   5  cAcc=3   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=43 pc=   4  cAcc=3   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=45 pc=   5  cAcc=2   ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x] 
+t=47 pc=   4  cAcc=2   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+t=49 pc=   5  cAcc=1   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+t=51 pc=   4  cAcc=1   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+t=53 pc=   5  cAcc=0   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+t=55 pc=   6  cAcc=0   ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+t=57 pc=   7  cAcc=-1  ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] 
+t=59 pc=   7  cAcc=120 ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 \end{verbatim}
 }
 The execution time is the same but the cod is shorted and, more important, is general, for any $p$.
@@ -762,24 +763,24 @@ The program which loads in the even cells the index multiplied by 2 and in the o
 The result of the execution is:
 {\scriptsize
 \begin{verbatim}
-   t=39 pc=   0  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=41 pc=   1  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=43 pc=   2  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=45 pc=   3  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=47 pc=   4  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=49 pc=   5  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=51 pc=   6  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
-   t=53 pc=   7  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [1111111111111111]
-   t=55 pc=   8  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [1111111111111111]
-   t=57 pc=   9  ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]      B = [1111111111111111]
-   t=59 pc=  10  ACC=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]            B = [1111111111111111]
-   t=61 pc=  11  ACC=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]            B = [1010101010101010]
-   t=63 pc=  11  ACC=[0, 1, 2, 1, 4, 1, 6, 1, 8, 1, 10, 1, 12, 1, 14, 1]         B = [1010101010101010]
-   t=65 pc=1023  ACC=[0, 1, 4, 1, 8, 1, 12, 1, 16, 1, 20, 1, 24, 1, 28, 1]       B = [1010101010101010]
-   t=67 pc=1023  ACC=[0, 1, 4, 1, 8, 1, 12, 1, 16, 1, 20, 1, 24, 1, 28, 1]       B = [0101010101010101]
-   t=69 pc=1023  ACC=[0, 1, 4, 3, 8, 5, 12, 7, 16, 9, 20, 11, 24, 13, 28, 15] 	  B = [0101010101010101]
-   t=71 pc=1023  ACC=[0, 3, 4, 9, 8, 15, 12, 21, 16, 27, 20, 33, 24, 39, 28, 45] B = [0101010101010101]
-   t=73 pc=1023  ACC=[0, 3, 4, 9, 8, 15, 12, 21, 16, 27, 20, 33, 24, 39, 28, 45] B = [1111111111111111]
+ t=39 pc=   0  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=41 pc=   1  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=43 pc=   2  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=45 pc=   3  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=47 pc=   4  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=49 pc=   5  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=51 pc=   6  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [xxxxxxxxxxxxxxxx]
+ t=53 pc=   7  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [1111111111111111]
+ t=55 pc=   8  ACC=[x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x]            B = [1111111111111111]
+ t=57 pc=   9  ACC=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]      B = [1111111111111111]
+ t=59 pc=  10  ACC=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]            B = [1111111111111111]
+ t=61 pc=  11  ACC=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]            B = [1010101010101010]
+ t=63 pc=  11  ACC=[0, 1, 2, 1, 4, 1, 6, 1, 8, 1, 10, 1, 12, 1, 14, 1]         B = [1010101010101010]
+ t=65 pc=1023  ACC=[0, 1, 4, 1, 8, 1, 12, 1, 16, 1, 20, 1, 24, 1, 28, 1]       B = [1010101010101010]
+ t=67 pc=1023  ACC=[0, 1, 4, 1, 8, 1, 12, 1, 16, 1, 20, 1, 24, 1, 28, 1]       B = [0101010101010101]
+ t=69 pc=1023  ACC=[0, 1, 4, 3, 8, 5, 12, 7, 16, 9, 20, 11, 24, 13, 28, 15]    B = [0101010101010101]
+ t=71 pc=1023  ACC=[0, 3, 4, 9, 8, 15, 12, 21, 16, 27, 20, 33, 24, 39, 28, 45] B = [0101010101010101]
+ t=73 pc=1023  ACC=[0, 3, 4, 9, 8, 15, 12, 21, 16, 27, 20, 33, 24, 39, 28, 45] B = [1111111111111111]
 \end{verbatim}
 }
 
@@ -842,24 +843,24 @@ The program multiplying a matrix with a vector written on host calls the compone
 }
 Running the program for $p = 16$ results:
 \begin{verbatim}
-    vect[0]    0   1   2   3   4   5   6   7   8   9  10  11  12  13   14   15
-    vect[1]    1   2   3   4   5   6   7   8   9  10  11  12  13  14   15   16
-    vect[2]    2   3   4   5   6   7   8   9  10  11  12  13  14  15   16   17
-    vect[3]    3   4   5   6   7   8   9  10  11  12  13  14  15  16   17   18
-    vect[4]    4   5   6   7   8   9  10  11  12  13  14  15  16  17   18   19
-    vect[5]    5   6   7   8   9  10  11  12  13  14  15  16  17  18   19   20
-    vect[6]    6   7   8   9  10  11  12  13  14  15  16  17  18  19   20   21
-    vect[7]    7   8   9  10  11  12  13  14  15  16  17  18  19  20   21   22
-    vect[8]    8   9  10  11  12  13  14  15  16  17  18  19  20  21   22   23
-    vect[9]    9  10  11  12  13  14  15  16  17  18  19  20  21  22   23   24
-    vect[10]  10  11  12  13  14  15  16  17  18  19  20  21  22  23   24   25
-    vect[11]  11  12  13  14  15  16  17  18  19  20  21  22  23  24   25   26
-    vect[12]  12  13  14  15  16  17  18  19  20  21  22  23  24  25   26   27
-    vect[13]  13  14  15  16  17  18  19  20  21  22  23  24  25  26   27   28
-    vect[14]  14  15  16  17  18  19  20  21  22  23  24  25  26  27   28   29
-    vect[15]  15  16  17  18  19  20  21  22  23  24  25  26  27  28   29   30
-    vect[16]   3   3   3   3   3   3   3   3   3   3   3   3   3   3    3    3
-    vect[17] 360 408 456 504 552 600 648 696 744 792 840 888 936 984 1032 1080
+ vect[0]    0   1   2   3   4   5   6   7   8   9  10  11  12  13   14   15
+ vect[1]    1   2   3   4   5   6   7   8   9  10  11  12  13  14   15   16
+ vect[2]    2   3   4   5   6   7   8   9  10  11  12  13  14  15   16   17
+ vect[3]    3   4   5   6   7   8   9  10  11  12  13  14  15  16   17   18
+ vect[4]    4   5   6   7   8   9  10  11  12  13  14  15  16  17   18   19
+ vect[5]    5   6   7   8   9  10  11  12  13  14  15  16  17  18   19   20
+ vect[6]    6   7   8   9  10  11  12  13  14  15  16  17  18  19   20   21
+ vect[7]    7   8   9  10  11  12  13  14  15  16  17  18  19  20   21   22
+ vect[8]    8   9  10  11  12  13  14  15  16  17  18  19  20  21   22   23
+ vect[9]    9  10  11  12  13  14  15  16  17  18  19  20  21  22   23   24
+ vect[10]  10  11  12  13  14  15  16  17  18  19  20  21  22  23   24   25
+ vect[11]  11  12  13  14  15  16  17  18  19  20  21  22  23  24   25   26
+ vect[12]  12  13  14  15  16  17  18  19  20  21  22  23  24  25   26   27
+ vect[13]  13  14  15  16  17  18  19  20  21  22  23  24  25  26   27   28
+ vect[14]  14  15  16  17  18  19  20  21  22  23  24  25  26  27   28   29
+ vect[15]  15  16  17  18  19  20  21  22  23  24  25  26  27  28   29   30
+ vect[16]   3   3   3   3   3   3   3   3   3   3   3   3   3   3    3    3
+ vect[17] 360 408 456 504 552 600 648 696 744 792 840 888 936 984 1032 1080
 \end{verbatim}
 
 The execution time resulting form the code listed in Listing \ref{lst:theKernel} is:
@@ -1067,7 +1068,6 @@ vect[12]   21  16  30  13  27  29  24   6  21   3  17   8   1  29  16  13
 vect[13]    8  21  22   3  24  13   6  27   8  29  30  16   0  13   1   3
 vect[14]   16   8  17  29   6   3  27  24  16  13  22   1  11   3   0   9
 vect[15]    1  16  30  13  27   9  24   6  21   3  17   0  14  29  11  25
-
 vect[16]   21   8  16  21   8  16  21   8  16  21   8  16  21   8  16   1
 vect[17]   16  21   8  16  21   8  16  21   8  16  21   8  16  21   8  16
 vect[18]   30  22  17  30  22  17  30  22  17  30  22  17  30  22  17  30

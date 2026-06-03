@@ -14,7 +14,7 @@ During the Renaissance, Leonardo da Vinci (1452–1519) designed mechanical knig
 
 The Jacquard loom (1804) pioneered programmability \cite{essinger2004jacquard}. Charles Babbage (1791–1871) and Ada Lovelace envisioned the Analytical Engine \cite{menabrea1842sketch}. In the late 19th century, Hermann Hollerith developed the punched card system for data processing \cite{hollerith1890tabulating}.
 
-Turing's work (1936) established the Turing Machine \cite{turing1936computable}, while von Neumann explored self-replicating automata \cite{von1951general}. Chomsky classified formal languages \cite{chomsky1956three}. In the mid-20th century, Shannon's work on Boolean circuits laid the foundation for digital logic \cite{shannon48}.
+Turing's work (1936) established the Turing Machine \cite{turing1936computable}, while von Neumann explored self-replicating automata \cite{von1951general}. Chomsky classified formal languages \cite{Chomsky56}. In the mid-20th century, Shannon's work on Boolean circuits laid the foundation for digital logic \cite{shannon48}.
 
 John Conway’s \textit{Game of Life} (1970) popularized cellular automata \cite{gardner1970mathematical}. Today, automata influence AI, linguistics, robotics, and formal verification \cite{hopcroft2006automata}. Quantum computing and bio-inspired automata are emerging fields extending automata theory’s applications \cite{nielsen2010quantum}.
 
@@ -149,8 +149,7 @@ $\diamond$
 Definition \ref{circCompl}\index{complexity!circuit complexity: size of the shortest HDL description} is inspired by \cite{Chaitin77}'s definition for the
 algorithmic complexity of a string of symbols. The
 {\em algorithmic complexity} of a string is related to the
-dimension of the smallest program that generates it.  Our $C_{digital
-\; circuit}$ can be associated with the shortest unambiguous circuit description
+dimension of the smallest program that generates it.  Our $C_{digital \; circuit}$ can be associated with the shortest unambiguous circuit description
 in a certain HDL (in most cases, it is a behavioral description).
 
 \begin{definition}
@@ -206,16 +205,18 @@ This module implements a combinational logic circuit using basic AND and OR oper
 
 
 \begin{exemplu}
-The following Verilog program describes a {\em simple circuit},
+The following SystemVerilog program describes a {\em simple circuit},
 because the program that defines the circuit completely is the same
 for any value of {\em n}.
 
+{\em
 \includeverilogcode[caption={Example of a simple circuit.  File: A10\_orPrefixes.sv  (SystemVerilog)}, 
                     label={lst:A10_orPrefixes.sv}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A10_orPrefixes.sv}
+                    }
 
 The {\em prefixes of the OR} circuit consists of {\em n} $OR_{2}$ gates
 connected in a very regular form. The definition is the same for
@@ -261,19 +262,6 @@ This pattern continues until \texttt{out[n-1]}, which contains the OR of all bit
 The module effectively computes a cumulative OR function over the input vector, making it useful in applications such as prefix sum computations, data compression, or bitmask operations where a running OR of previous elements is required. Since it uses a simple loop in an \texttt{always\_comb} block, it can be synthesized efficiently in hardware without requiring clocked registers.
 
 
-\begin{verisum}{\em :
-
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-    \item[and, or, xor, not]: are reserved names for predefined circuits that can be instantiated under specific names
-    \item[parameter]: used to define a local parameter
-    \item[integer] k: defined a positive integer
-    \item[for]: defined the well-known loop running under the index {\tt k}
-\end{description}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
-
 Composing circuits generates not only the largest structures but also the
 {\em deepest} ones. The depth of the circuit is related to the
 associated propagation time.
@@ -315,7 +303,11 @@ Starting from the generic definition, Figure \ref{fin_aut} represents the generi
 
 The structures found in current practice are:
 \begin{description}
-    \item[half automaton]: is an automaton whose output is identical to the internal state (the combinational circuit that transforms the state into the output is missing); the latency of the Y output compared to the X input is one clock cycle
+    \item[half automaton]: is an automaton whose output is identical to the internal state (the combinational circuit that transforms the state into the output is missing); the latency of the Y output compared to the X input is one clock cycle 
+
+    \item[Mealy immediate automaton]\index{automaton!Mealy immediate automaton}: is an automaton whose output is calculated by a combinational circuit depending on state and input; the latency of the Y output compared to the X input is zero
+    \item[Moore immediate automaton]\index{automaton!Moore immediate automaton}: is an automaton whose output is calculated by a combinational circuit depending only on the state; the latency of the Y output compared to the X input is one clock cycle
+    \item[Mealy delayed automaton]\index{automaton!Mealy delayed automaton}: is a Mealy immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is one clock cycle
 
 \placedrawing[H]{figures/04_01_automata_types.lp}{{\bf Automata types.} {\small {\bf
 a.} The structure of the half-automaton ($A_{1/2}$), the no-output function
@@ -328,10 +320,6 @@ Delayed Mealy automaton: the output is generated by the previous
 state and the previous input. {\bf f.} Delayed Moore automaton:
 the output is generated by the previous state.}}{fin_aut}
     
-    
-    \item[Mealy immediate automaton]\index{automaton!Mealy immediate automaton}: is an automaton whose output is calculated by a combinational circuit depending on state and input; the latency of the Y output compared to the X input is zero
-    \item[Moore immediate automaton]\index{automaton!Moore immediate automaton}: is an automaton whose output is calculated by a combinational circuit depending only on the state; the latency of the Y output compared to the X input is one clock cycle
-    \item[Mealy delayed automaton]\index{automaton!Mealy delayed automaton}: is a Mealy immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is one clock cycle
     \item[Moore delayed automaton]\index{automaton!Moore delayed automaton}: is a Moore immediate automaton with the output delayed through a pipeline register; the latency of the Y output compared to the X input is two clock cycles.
 \end{description}
 Depending on the way the machine is integrated into the system we are designing, we will choose the most suitable version. Latency can sometimes be advantageous.
@@ -377,13 +365,6 @@ are recognized by a finite half-automaton.
 Let's define and design it. The transition diagram defining the
 behavior of the half-automaton is presented in Figure \ref{rega},
 where the state set $Q$ contains:
-
-\placedrawing[H]{figures/04_02_transition_diagram.lp}{{\bf Transition diagram.} {\small
-The transition diagram for the half-automaton, which recognizes
-strings of form $1^{n}0^{m}$, for $n \geq 1$ and $m \geq 1$. Each
-circle represents a state, and each (marked) arrow represents a
-(conditioned) transition.}}{rega}
-
 \begin{itemize}
     \item $q_{0}$ - is the {\em initial} state in which:
         \begin{itemize}
@@ -395,6 +376,13 @@ circle represents a state, and each (marked) arrow represents a
             \item if 1 is received, the output is {\tt rec1} and the state remains the same
             \item if 0 is received, the output is {\tt rec0} the the state becomes $q_{2}$
         \end{itemize}
+
+\placedrawing[H]{figures/04_02_transition_diagram.lp}{{\bf Transition diagram.} {\small
+The transition diagram for the half-automaton, which recognizes
+strings of form $1^{n}0^{m}$, for $n \geq 1$ and $m \geq 1$. Each
+circle represents a state, and each (marked) arrow represents a
+(conditioned) transition.}}{rega}
+        
     \item $q_{2}$ - this state acknowledges a well formed string:
         \begin{itemize}
             \item if 1 is received, the output is {\tt fail} and the state switches in $q_{3}$
@@ -411,6 +399,15 @@ automaton is to {\bf assign binary codes} to each state.
 In this stage, we have absolute freedom. Any assignment can be
 used. The only difference will be in the resulting structure but
 not in the resulting behavior.
+
+Let be the codes, symbolized by $Q_1$ and $Q_2$, assigned in square brackets
+in Figure \ref{rega}. For the outputs, the symbols $Y_1$ and $Y_2$ are used with the following meanings:
+\begin{verbatim}
+        rec0: 01
+        rec1: 10
+        fail: 11
+\end{verbatim}
+The input signal is symbolized by $X$.
 
 \begin{table}[H]
   \begin{center}
@@ -432,19 +429,6 @@ not in the resulting behavior.
   \end{center}
 \end{table}
 
-\placedrawing[h]{figures/04_03_4state_finite_automaton.lp}{{\bf A 4-state finite
-automaton.} {\small The structure of the finite
-automaton used to recognize binary string belonging to the
-$1^{n}0^{m}$ set of strings.}}{aut1}
-
-Let be the codes, symbolized by $Q_1$ and $Q_2$, assigned in square brackets
-in Figure \ref{rega}. For the outputs, the symbols $Y_1$ and $Y_2$ are used with the following meanings:
-\begin{verbatim}
-        rec0: 01
-        rec1: 10
-        fail: 11
-\end{verbatim}
-The input signal is symbolized by $X$.
 
 The results of the transition table, for the functions $f$ and $g$, are presented in
 Table \ref{table1}. The resulting transition functions of the resulting immediate Mealy automaton are:
@@ -460,10 +444,15 @@ on the {\em reset} input of D-FF0.
 
 The recognition process begins with the application of the {\tt reset} signal through which the automaton goes to the initial state, $q_0$, coded by $Q_1, Q_0 = 10$. A correct string must start with 1, otherwise the automaton goes to the final state, $q_3$, which signals {\tt fail}. In state $q_1$, the automaton receives 1s until the first 0 is applied to the input, and the automaton passes to state $q_2$ in which it signals, through {\tt rec0}, that the string received is correct. If the state $q_2$ it is received in 1, then the string is cataloged as not belonging to those recognized by blocking the automaton in state $q_3$.
 
+\placedrawing[H]{figures/04_03_4state_finite_automaton.lp}{{\bf A 4-state finite
+automaton.} {\small The structure of the finite
+automaton used to recognize binary string belonging to the
+$1^{n}0^{m}$ set of strings.}}{aut1}
+
 $\diamond$
 \end{exemplu}
 
-Designing a finite automaton using a description in System Verilog HDL involves writing the following files:
+Designing a finite automaton using a description in SystemVerilog HDL involves writing the following files:
 \begin{itemize}
 \item {\tt defines.vh} in which the binary values that the state, input and output variables take are defined
 \item {\tt topAutomaton.sv} in which the module that describes the automaton defining the state register, instantiating the combinational calculation module of the loop, {\tt loopCLC}, and the module {\tt outCLC} that describes the output circuit is defined
@@ -506,10 +495,9 @@ Listing \ref{lst:A10_regLang.sv} implements a Mealy automaton within a module na
 
 State updates occur in an \texttt{always\_ff} block that is triggered on the positive edge of the clock. Within this block, the current state is set to the initial state (defined by the macro \texttt{\`init}) when the reset signal is active. Otherwise, the state is updated to the value of \texttt{nextState}, which is determined by the automaton’s state-transition logic.
 
-The next state and output logic are implemented in separate modules. The module instantiation \texttt{loopCLC lC( in, state, nextState )} is responsible for computing the next state based on the current state and the input signal. In parallel, the instantiation \texttt{outCLC oC( state, in, out )} computes the output, which depends on both the current state and the input signal. Because the output is a function of both the state and the input, this design characterizes a Mealy automaton, where outputs may change asynchronously with respect to the state update clock edge.
+The next state and output logic are implemented in separate modules. The module instantiation \texttt{loopCLC lC(in, state, nextState)} is responsible for computing the next state based on the current state and the input signal. In parallel, the instantiation \texttt{outCLC oC(state, in, out)} computes the output, which depends on both the current state and the input signal. Because the output is a function of both the state and the input, this design characterizes a Mealy automaton, where outputs may change asynchronously with respect to the state update clock edge.
 
-\includeverilogcode[caption={Combinational circuit used to compute the loop for the
-                immediate Mealy automaton used to recognize the language $L = (a^nb^m | n,m >0)$.  File: A10\_loopCLC.sv  (SystemVerilog)}, 
+\includeverilogcode[caption={Combinational circuit used to compute the loop for the immediate Mealy automaton used to recognize the language $L = (a^nb^m | n,m >0)$.  File: A10\_loopCLC.sv  (SystemVerilog)}, 
                     label={lst:A10_loopCLC.sv}, 
                     firstline=1, 
                     firstnumber=1, 
@@ -551,17 +539,6 @@ The \texttt{regLang} module, which contains the core finite state machine logic,
 
 $\diamond$
 
-\begin{verisum}{\em :
-
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-    \item[`define]: used to define global variable
-    \item[`include] "fileName.vh" : used to include code already defined
-    \item[`name]: used to assert a name already defined using {\tt `define}.
-\end{description}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
 
 
 %****************************************************************
@@ -709,11 +686,6 @@ Using the definition of {\tt microinstruction}, the content of the file {\tt the
 
 {\em 
 \begin{verilogcode}
-/**********************************************************************
-Function: Dummy microprogram
-File name: theDefinition.sv
-Description: a dummy microprogram used to test the code generator.
-**********************************************************************/
     lb(1);  com13; com22; com31; val(24); eol;
             cjmp(3); flag2; com21; com32; eol;
             cjmp(1); flag1; eol;
@@ -960,7 +932,6 @@ If we connect in a loop a register file with a arithmetic logic unit we obtain t
 \end{description}
 According to the connection list, RALU performs no more than 8 functions, on 32-bit words stored in a 32-word register file.
 
-\placedrawing[h]{figures/04_09_ralu.lp}{32-bit RALU.}{ralu}
 
 
 \includeverilogcode[caption={Defining the functions for a RALU.   File: A10\_defineRALU.vh  (SystemVerilog)}, 
@@ -970,7 +941,7 @@ According to the connection list, RALU performs no more than 8 functions, on 32-
                     lastline=30]
                     {\verilogSourceDir/A10_defineRALU.vh}
 
-
+\placedrawing[h]{figures/04_09_ralu.lp}{32-bit RALU.}{ralu}
 
 \includeverilogcode[caption={RALU.   File: A10\_RALU.sv  (SystemVerilog)}, 
                     label={lst:A10_RALU.sv}, 
@@ -1149,8 +1120,6 @@ In Figures from \ref{fifo1}b to \ref{fifo1}e is exemplified the way FIFO works, 
     \item[{\tt read}]: A is extracted from FIFO and the queue "advances" one step (see Figure \ref{fifo1}e)
 \end{description}
 
-\placedrawing[H]{figures/06_10_fifo.lp}{{\bf a.} Block schematic of FIFO. {\bf b.} {\tt write A} operation. {\bf c.} {\tt write D.} {\bf d.} {\tt write F}. {\bf e.} {\tt read}.}{fifo1}
-
 There are two main types of FIFO:
 \begin{itemize}
     \item synchronous FIFO: the sending system and the receiving system run with the same clock signal 
@@ -1158,9 +1127,15 @@ There are two main types of FIFO:
     
     \item asynchronous FIFO: the sending system and the receiving system run with different clock signals
 \end{itemize}
+
+\placedrawing[H]{figures/06_10_fifo.lp}{{\bf a.} Block schematic of FIFO. {\bf b.} {\tt write A} operation. {\bf c.} {\tt write D.} {\bf d.} {\tt write F}. {\bf e.} {\tt read}.}{fifo1}
+
 Asynchronous FIFOs are used to solve the problem of crossing data between systems running in different clock domains. The module BUS Bridge (see Figure \ref{compSys}) contains an asynchronous FIFO.
 
 \paragraph{Structure} of a synchronous FIFO memory is shown in Figure \ref{fifo}, where:
+
+
+\placedrawing[H]{figures/draw0_28.lp}{{\bf FIFO memory.} {\small Two pointers, evolving in the same direction, and a two-port RAM implement a LIFO (queue) memory. The limit flags are computed combinational from the addresses used to write and to read the memory.}}{fifo}
 
 \begin{itemize}
     \item {\bf RAM} is a $2^{n}$ $m$-bit words two-port asynchronous random access memory, one
@@ -1176,18 +1151,10 @@ Asynchronous FIFOs are used to solve the problem of crossing data between system
     identical.
 \end{itemize}
 
-\placedrawing[H]{figures/draw0_28.lp}{{\bf FIFO memory.} {\small Two
-pointers, evolving in the same direction, and a two-port RAM
-implement a LIFO (queue) memory. The limit flags are computed
-combinational from the addresses used to write and to read the
-memory.}}{fifo}
-
-
-
-
 A FIFO memory operates as a circular buffer, where data is addressed by two pointers: the write pointer, {\tt w\_addr[n-1:0]}, and the read pointer, {\tt r\_addr[n-1:0]}. These pointers progress in the same direction, ensuring sequential access to stored data. The memory is considered \textit{full} when, following a write operation, the write pointer becomes equal to the read pointer. In this case, the {\tt full} signal is asserted (\texttt{full = 1}). Conversely, the memory is deemed \textit{empty} when, after a read operation, the read pointer becomes equal to the write pointer, in which case the {\tt empty} signal is asserted (\texttt{empty = 1}).
 
 To distinguish between the full and empty states when both pointers have the same value, an additional bit, the $(n+1)$-th bit, is utilized in each counter. If {\tt w\_addr[n]} and {\tt r\_addr[n]} differ, then {\tt w\_addr[n-1:0]} being equal to {\tt r\_addr[n-1:0]} indicates a \textit{full} condition. Otherwise, when {\tt w\_addr[n]} and {\tt r\_addr[n]} are the same, this equality signifies an \textit{empty} condition.
+
 
 The comparison between the two address pointers is performed by a purely combinational circuit, which introduces potential timing hazards affecting the {\tt full} and {\tt empty} outputs. As a result, these signals must be used with caution when designing systems that incorporate this FIFO memory. However, this issue is mitigated because the entire system operates within the same clock domain, ensuring that both ends of the FIFO and the rest of the system are synchronized to the same {\tt clock} signal. A FIFO implementation operating under this condition is referred to as a \textit{synchronous FIFO}.
 
@@ -1236,7 +1203,7 @@ $\diamond$
 \begin{problem}
 Let be the automaton defined by the graph represented in Figure \ref{graph}.
 
-\placedrawing[h]{figures/04_10_graph.lp}{}{graph}
+\placedrawing[h]{figures/04_10_graph.lp}{Graph for a 5-state finite automaton.}{graph}
 
 {\em
 \includeverilogcode[caption={Binary codes for input, output and state variables.   File: A10\_defines3.vh  (SystemVerilog)}, 

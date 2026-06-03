@@ -1,7 +1,6 @@
 module ALU( output  logic   [31:0]  out                     ,
             input   logic   [31:0]  leftIn, rightIn, value  ,
             input   logic   [5:0]   opCode                  );
-
     always_comb
         case(opCode)
             `add    : out = leftIn + rightIn              ;

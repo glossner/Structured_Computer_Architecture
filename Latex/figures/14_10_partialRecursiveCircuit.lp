@@ -3,6 +3,7 @@
 \unitlength 3pt
 {\scriptsize
 \begin{picture}(120,48)
+\hspace{-1cm}
 \thicklines
 \drawpath{24.0}{18.0}{70.0}{10.0}
 \drawpath{70.0}{10.0}{102.0}{14.0}

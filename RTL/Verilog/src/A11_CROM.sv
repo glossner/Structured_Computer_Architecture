@@ -43,9 +43,10 @@ module  CROM(   input   logic [7:0]     Func        ,
                 aluFunc     ,
                 Read        ,
                 Write       );
-    always_ff @(posedge clock)  casex({Init, test})
-                                    2'b1x: stateReg <= Func         ;
-                                    2'b01: stateReg <= nextState    ;
-                                    2'b00: stateReg <= stateReg + 1 ;
-                                endcase
+    always_ff @(posedge clock)  
+        casex({Init, test})
+            2'b1x: stateReg <= Func         ;
+            2'b01: stateReg <= nextState    ;
+            2'b00: stateReg <= stateReg + 1 ;
+        endcase
 endmodule

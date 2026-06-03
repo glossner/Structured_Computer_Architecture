@@ -5,11 +5,10 @@
     reg [15:0]  v               ;
     reg [9:0]   addrCounter     ;
     reg [9:0]   labelTab[0:1023];
-
     function endLine;
      begin
-        // for the pipelineed versions
-        //dut.memSys.progMemory[addrCounter][31:0] =
+		// for the pipelined version
+		//dut.memSys.progMemory[addrCounter][31:0] =
         progMemory[addrCounter][31:0] = // for the generic version
             {   opCode  ,
                 d       ,
@@ -18,12 +17,10 @@
             addrCounter = addrCounter + 1   ;
      end
     endfunction
-
     // sets labelTab in the first pass
     // associating 'counter' with 'labelIndex'
     function LB ;
         input [5:0] labelIndex;
-
         labelTab[labelIndex] = addrCounter;
     endfunction
     // uses the content of labelTab in the second pass
@@ -32,7 +29,6 @@
 
         v = labelTab[labelIndex] - addrCounter;
     endfunction
-
 // CONTROL INSTRUCTIONS
     function NOP; // no operation
         begin   opCode  = `addv ;
@@ -42,7 +38,6 @@
                 endLine         ;
         end
     endfunction
-
     function RJMP; // relative jump
         input   [15:0]  label   ;
 
@@ -53,7 +48,6 @@
                 endLine         ;
         end
     endfunction
-
     function BRZ; // branch if zero
         input   [4:0]   left    ;
         input   [9:0]   label   ;
@@ -65,7 +59,6 @@
                 endLine         ;
         end
     endfunction
-
     function BRNZ; // branch if not zero
         input   [4:0]   left    ;
         input   [9:0]   label   ;
@@ -77,7 +70,6 @@
                 endLine         ;
         end
     endfunction
-
     function RET; // return from subroutine
         input   [4:0] left  ;
 
@@ -88,7 +80,6 @@
                 endLine         ;
         end
     endfunction
-
     function HALT; // halt running
         begin   opCode  = `halt ;
                 d       = 5'b0  ;
@@ -97,7 +88,6 @@
                 endLine         ;
         end
     endfunction
-
     function EI; // enable interrupt
         begin   opCode  = `eint ;
                 d       = 5'b0  ;
@@ -106,7 +96,6 @@
                 endLine         ;
         end
     endfunction
-
     function DI; // disable interrupt
         begin   opCode  = `dint ;
                 d       = 5'b0  ;
@@ -115,7 +104,6 @@
                 endLine         ;
         end
     endfunction
-
 // ARITHMETIC & LOGIC INSTRUCTIONS
     function ADD; // addition
         input   [4:0]   dest    ;
@@ -129,7 +117,6 @@
                 endLine                 ;
         end
     endfunction
-
     function SUB; // subtract
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -142,7 +129,6 @@
                 endLine                 ;
         end
     endfunction
-
     function ADDV; // addition with value
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -155,7 +141,6 @@
                 endLine         ;
         end
     endfunction
-
     function MULT; // multiplication
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -168,7 +153,6 @@
                 endLine                 ;
         end
     endfunction
-
     function MULTV; // multiplication with value
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -181,7 +165,6 @@
                 endLine         ;
         end
     endfunction
-
     function ADDC; // carry from addition
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -194,7 +177,6 @@
                 endLine                 ;
         end
     endfunction
-
     function SUBC; // carry from subtract
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -207,7 +189,6 @@
                 endLine                 ;
         end
     endfunction
-
     function ADDVC; // carry from addition with value
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -220,7 +201,6 @@
                 endLine         ;
         end
     endfunction
-
     function LSH; // logic shift with one position
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -232,7 +212,6 @@
                 endLine         ;
         end
     endfunction
-
     function ASH; // arithmetic shift with one porition
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -244,7 +223,6 @@
                 endLine         ;
         end
     endfunction
-
     function MOVE; // data move inside register file
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -256,7 +234,6 @@
                 endLine         ;
         end
     endfunction
-
     function SWAP; // swap in register
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -268,7 +245,6 @@
                 endLine         ;
         end
     endfunction
-
     function NOT; // bitwise NOT
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -280,7 +256,6 @@
                 endLine         ;
         end
     endfunction
-
     function AND; // bitwise AND
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -293,7 +268,6 @@
                 endLine                 ;
         end
     endfunction
-
     function OR; // bitwise OR
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -306,7 +280,6 @@
                 endLine                 ;
         end
     endfunction
-
     function XOR; // bitwise XOR
         input   [4:0]   dest    ;
         input   [4:0]   left    ;
@@ -319,7 +292,6 @@
                 endLine                 ;
         end
     endfunction
-
 // DATA TRANSFER INSTRUCTIONS
     function READ; // data read
         input   [4:0]   left    ;
@@ -331,7 +303,6 @@
                 endLine         ;
         end
     endfunction
-
     function LOAD; // data load
         input   [4:0]   dest    ;
 
@@ -342,7 +313,6 @@
                 endLine         ;
         end
     endfunction
-
     function STORE; // data store
         input   [4:0]   left    ;
         input   [4:0]   right   ;
@@ -354,7 +324,6 @@
                 endLine                 ;
         end
     endfunction
-
     function VAL; // value load
         input   [4:0]   dest    ;
         input   [15:0]  value   ;

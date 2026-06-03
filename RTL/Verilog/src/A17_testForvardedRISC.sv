@@ -4,11 +4,8 @@ module testRISC;
     logic   intIn   ;
     logic   reset   ;
     logic   clk     ;
-
     integer i   ;
-
     `include "0_RISCcodeGenerator.sv"
-
     initial begin               clk = 0     ;
                     forever #1  clk = ~clk  ;
             end
@@ -23,16 +20,15 @@ module testRISC;
                 #4      reset       = 0 ;
                 #100    $finish     ;
         end
-
     toyRISCsystem dut(  inta    ,
                         intIn   ,
                         reset   ,
                         clk     );
-
     // MONITOR FOR PROGRAM LAOD & CONTROLLER
     initial begin
-     $monitor("t=%0d pc=%d  RF=[%0d, %0d, %0d, %0d, %0d, %0d, %0d, %0d]
-              dataWrite=%0b DM=[%0d, %0d, %0d, %0d] intState=%b inta=%b",
+     $monitor
+      ("t=%0d pc=%d  RF=[%0d, %0d, %0d, %0d, %0d, %0d, %0d, %0d]
+       dataWrite=%0b DM=[%0d, %0d, %0d, %0d] intState=%b inta=%b",
                 $time,
                 dut.processor.pc,
                 dut.processor.regFile.rf[0],

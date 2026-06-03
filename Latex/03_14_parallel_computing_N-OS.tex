@@ -13,10 +13,10 @@ In Figure \ref{nos} a system of order $N$, N-OS, is represented. The size of thi
 
 %\subsection{Theoretical Cellular Automaton}
 
+
+\placedrawing[H]{figures/09_06_cellular_automaton.lp}{One-dimensional cellular automaton.}{ca}
+
 Digital systems theory introduces, for the case we are interested in, the concept of {\bf {\em cellular automaton}}.
-
-\placedrawing[h]{figures/09_06_cellular_automaton.lp}{One-dimensional cellular automaton.}{ca}
-
 The theoretical concept of a cellular automaton is represented in Figure \ref{ca} in its simplest form. It consists of an unlimited number of {\bf {\em identical linearly connected cells}}. Each cell is a automaton. All cells switch synchronously according to their internal states and to the signals received from the left cell and the right cell.
 
 \begin{exemplu}\label{lb:cellAut}
@@ -109,7 +109,7 @@ $$V_i = [s_{i0} \; s_{i1} \; \ldots \; s_{i(p-1)}]$$ for $i = 0, \ldots, m-1$ so
 $$V_i \Leftarrow V_j + V_k$$
 which involves $p$ additions is executed in constant time, i.e, is executed in {\bf {\em parallel}}.
 
-If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated  to obtain a computationally efficient structure. The memory gap problem (see subsection \ref{memGap}) can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
+If a cellular automaton with $n$ cells, with state $$Q = [s_0, s_1, \ldots, s_{n-1}]$$ modifies its internal state in constant time, belonging to $O(1)$, a controlled cellular automaton,  with the state defined by the matrix $M_{mp}$, for $m \times p = n$, performs the transformation of its internal state in a time belonging to $O(m)$. This is how the space/time relationship can be negotiated  to obtain a computationally efficient structure. The memory gap problem  can find a partial solution through a good negotiation between $m$ and $p$ in the controlled cellular automaton structure.
 
 The state of SQ is represented by an array of scalar values: {\tt MSQ = [v0 v1 ... ]}, i.e., the data memory of the controller SQ. 
 
@@ -275,10 +275,11 @@ In the previous example, $2p-1$ computational results -- $p$ multipliers from Ma
 
 \subsection{Structure}
 
-The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{fig:scanRedTop}) \cite{antonescu20} \cite{antonescu24}.
+The second global loop is a scan loop that takes a vector from Map, processes it, and returns the resulting vector back to Map. Figure \ref{secondLoop} shows, MapScanReduce structure, the structure that results from introducing a scan loop into a MapReduce system. In current implementations, the reduction network can be included in the scan network (see Figure \ref{red}) \cite{antonescu20} \cite{antonescu24}.
 
 \placedrawing[h]{figures/09_09_second_global_loop.lp}{MapScanReduce structure obtained  by closing the second global loop over a controlled cellular automaton.}{secondLoop}
 
+\begin{comment}
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Images/scanRedTop.png}
@@ -288,8 +289,8 @@ The second global loop is a scan loop that takes a vector from Map, processes it
     \caption{An 8-input scan circuit with the output for the reduction function. {\bf a}. The top module. {\bf b}. Detailed representation to emphasize {\tt reduceOut}. }
     \label{fig:scanRedTop}
 \end{figure}
+\end{comment}
 
-%\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation \cite{antonescu20} \cite{antonescu24}.} {red}
 
 We use the term {\em scan} by extension, starting from the already established use for prefix-type networks.
 
@@ -306,6 +307,9 @@ $$p_1 = p_0 + s_1 = s_0 + s_1$$
 $$p_2 = p_1 + s_2 = s_0 +s_1 + s_2$$
 $$\ldots$$
 $$p_{n-1} = p_{n-2} + s_{n-1} = s_0 + s_1 + \ldots \; s_{n-1}$$
+
+\placedrawing[H]{figures/09_13_scan_net.lp}{ An 8-input scan circuit adapted for an 8-input prefix operation.} {red}
+
 
 $\diamond$
 \end{exemplu}
@@ -375,7 +379,7 @@ The similarity between Figures \ref{firstLoop} and \ref{compCirc} encourages us 
     \item we not know for how big $y$ a primitive recursion  computation is requested
     \item we not know for how big $y$, if any, the computation of a partial recursive function ends.
 \end{enumerate}
-While for the primitive recursion functions the value of $y$ is known at the beginning of computation, for the partial recursive functions the value of $y$, if any, is the result of the computation. For computing primitive recursive functions only  the map composition with the reduction network are sufficient, while for partial functions adding the scan network is mandatory. The simplest form of  the reduction network is one which provide the Boolean bitwise OR of the input components. For the scan network the minimal function receives a Boolean vector and provides the Boolean vector {\tt FIRST} which highlights only the first 1.
+While for the primitive recursion functions the value of $y$ is known at the beginning of computation, for the partial recursive functions the value of $y$, if any, is the result of the computation. For computing primitive recursive functions only  the map composition with the reduction network are sufficient, while for partial functions adding the scan network is mandatory. The simplest form of  the reduction network is one which provide the Boolean bitwise OR of the input components. For the scan network the minimal function receives a Boolean vector and provides the Boolean vector {\tt FIRST} which highlights only the first component having the value 1.
 
 \placedrawing[h]{figures/14_10_partialRecursiveCircuit.lp}{{\bf The circuit version of the enhanced composition}. {\small In the map composition right connections are added considering specific map compositions. The scan circuit, a $log$-layer map compositions, is connected with the generic map composition.}}{2loops}
 
@@ -778,16 +782,16 @@ A vector algorithm for matrix transpose uses the pseudo-diagonal concept, as fol
 {\footnotesize
 \begin{shaded*}
 \begin{lstlisting}[language=Verilog, caption= , morekeywords={activate, where, wait, loop, repeat, doInParallel, for}]
-/*******************************************************************************
+/****************************************************************************
     Algorithm for matrix transpose
         Initial matrix, V, with components: v(i,j), for i,j = 0, 1, ... m-1
         Final matrix, W, with components:   w(i,j), for i,j = 0, 1, ... m-1
         Working vector: A = [a(0) a(1) ... a(m-1)]
     Note: addition and subtract operations are modulo m operations
-********************************************************************************/
+****************************************************************************/
 for(k=0; k<m; k=k+1) begin
   (step 1) A <= [v(0+k,0)v[1+k,1]...v[m-1+k,m-1] // A <= PD(k.V)
-  (step 2) A <= [a(0-k)a(1-k)...a(m-1-k)]        // A <= (A rotate k times right)
+  (step 2) A <= [a(0-k)a(1-k)...a(m-1-k)]        // A rotate k times right
   (step 3) for(j=0; j<m; j=j+1) w(j+k,j) <= a(j) // PD(m-k,W) <= A
 end
 \end{lstlisting}
@@ -896,7 +900,7 @@ Let be an $8$-cell Map with
 and we have to generate in the even indexed cells of V10 the sum of  the even indexed cell from V12 and V15 and in odd cells of V10 the difference between the odd cells of V12 and V15. The sequence of operations is:
 \begin{verbatim}
     ACTIVATE            | B = <1 1 1 1 1 1 1 1>: set all cells active
-    V2 <= VAL(1)        | V2 = <1 1 1 1 1 1 1 1>: load 1 in all positions of V2
+    V2 <= VAL(1)        | V2 = <1 1 1 1 1 1 1 1>: load V2 with 1s
     V3 <= AND(IX,V2)    | V3 = <0 1 0 ... 1>: bwAND between IX and V2 
     WHERE(V3==0)        | B = < 1 0 1 ... 0>
     V10 <= ADD(V12,V15) | V10 = <6 x 9 x 13 x 8 x>
@@ -1017,7 +1021,7 @@ The acceleration that can be obtained is in $O(p/log \; p)$ due to the latencies
 
 A third subset of patterns is that executed by structures containing the global scan loop.
 
-\subsubsection{Scan Patterscan patternn\index{parallel computing patterns!scan pattern}}
+\subsubsection{Scan Pattern\index{parallel computing patterns!scan pattern}}
 
  The scan pattern is also performed directly by the proposed accelerator due to the Reduce network which is part of its hardware. In subsection \ref{scanEx} two functions are exemplified. They are executed directly by the hardware.
  
@@ -1039,10 +1043,10 @@ initially:  B  = <1 1 1 1 1 1 1 1>
 
 The pack pattern is an operation accelerated in $O(p/log \; p)$ because of the latency introduced by the scan operations ({\tt ADDPX, PERM}).
 
-\subsubsection{Gather  Pattergather patternn\index{parallel computing patterns!gather pattern}}
+\subsubsection{Gather Pattern\index{parallel computing patterns!gather pattern}}
 
 The gather pattern specifies in the source vector the source for each position in the destination vector (see Figure \ref{parallelPatt}). The gather pattern is a permutation defined using the order vector as its source and the index vector IX as its destination. We will denote by $(i)$ the content of the source or destination vector at position $i$.
-In Figure \ref{parallelPattr}, the gather operation is defined by the operation permute with the order vector {\tt <(1)(5)(0)(2)(2)(4)>}.
+In Figure \ref{parallelPatt}, the gather operation is defined by the operation permute with the order vector {\tt <(1)(5)(0)(2)(2)(4)>}.
 Because the scalar C has two destinations, in the positions 2 and 3, the operation is performed in two steps using successively two order vectors: {\tt <(1)(5)(0)(2)(3)(4)>} and {\tt <(1)(5)(0)(2)(2)(4)>}.
 Only if each destination has its distinct source, the operation is performed using one permutation operation. The acceleration for this pattern is in $O(p / log \; p)$, if the permutation is known in advance and control bits are precomputed.
 
@@ -1149,6 +1153,13 @@ For the circuit description to be valid for any $p$ we will need to make a recur
                     lastline=68]
                     {\verilogSourceDir/A14_distribute.sv}
 
+ \includeverilogcode[caption={Elementary distribution module.  File: elDistribute.sv. }, 
+                    label={lst:elDistribute}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=68]
+                    {\verilogSourceDir/A14_elDistribute.sv}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Images/distribute.png} 
@@ -1156,13 +1167,6 @@ For the circuit description to be valid for any $p$ we will need to make a recur
     \label{fig:distribute}
 \end{figure}
 $\diamond$
-
-\includeverilogcode[caption={Elementary distribution module.  File: elDistribute.sv. }, 
-                    label={lst:elDistribute}, 
-                    firstline=1, 
-                    firstnumber=1, 
-                    lastline=68]
-                    {\verilogSourceDir/A14_elDistribute.sv}
 
 
 \begin{problem}

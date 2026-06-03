@@ -1,5 +1,9 @@
 \documentclass[11pt]{book}
 
+\makeatletter
+\let\cleardoublepage\clearpage
+\makeatother
+
 \usepackage{lipsum}
 \usepackage{comment}
 \usepackage{verbatim}
@@ -14,11 +18,16 @@
 \usepackage{makeidx}
 \usepackage{mathptmx}
 
+
+
 \usepackage{amsfonts}
 \usepackage[hyphens]{url}
+\usepackage[utf8]{inputenc}
 
 \usepackage{fontspec}
 \setmainfont{Times New Roman}
+\usepackage{fontspec} % necesar pentru Unicode
+%\setmainfont{Noto Sans CJK SC} 
 %\usepackage{cmbright}
 %\usepackage{lmodern}
 %\usepackage{epic,eepic}
@@ -103,7 +112,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\setlength{\textheight}{22cm} \setlength{\textwidth}{16cm}
+\setlength{\textheight}{8.25in} \setlength{\textwidth}{6in}
 \topmargin 323mm \advance \topmargin -\textheight \divide
 \topmargin by 4 \advance \topmargin -1.0in \leftmargin 216mm
 \advance \leftmargin -\textwidth \divide \leftmargin by 2 \advance
@@ -184,13 +193,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Title
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Structured Computer Architecture:\\
-An Order-Based Approach
+\title{{\Huge {\bf Structured Computer Architecture\\
+An Order-Based Approach}}
 }
-\author{{\bf \em John Glossner and Gheorghe M. \c{S}tefan}}
-\date{\today \\ \vspace{1em} \vspace{1em} 
+\author{{\LARGE {\bf \em John Glossner and Gheorghe M. \c{S}tefan}}}
+\date{
+%\date{\today \\ \vspace{1em} \vspace{1em} 
 \placedrawing*[h]{figures/YYY.LP}
-{\em Preliminary Release v0.3}}
+{\em First Edition}
+}
 
 
 
@@ -200,7 +211,7 @@ An Order-Based Approach
 % Front matter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \pagenumbering{roman}
-\part*{FRONT MATTER}
+%\part*{FRONT MATTER}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright
@@ -228,10 +239,25 @@ Chisel Scala code is licensed under the Solderpad Hardware License v2.1. See htt
 
 \vspace{\baselineskip}\par
 \addcontentsline{toc}{section}{Hand Written Verilog Code License - CERN-OHL-S v2}
-\noindent Hand written SystemVerilog and Verilog code is licensed under CERN-OHL-S v2. See https://cern.ch/cern-ohl for details.
+\noindent SystemVerilog and Verilog code are licensed under CERN-OHL-S v2. See https://cern.ch/cern-ohl for details.
 
 \section*{Typesetting}
 This document was prepared with \LaTeX $\, 2_{\epsilon}$
+
+\bigskip
+
+\bigskip
+
+ISBN 9798195042912
+
+Imprint: Independently published
+
+\bigskip
+
+Cover design by: Elisabeth Jacob
+
+Artwork generated using AI, inspired by the abstract style of Paul Klee.
+
 
 \sloppy
 
@@ -244,7 +270,7 @@ This document was prepared with \LaTeX $\, 2_{\epsilon}$
 John: {\it To my beloved wife Lisa who is and has been my life partner since high school.}
 
 \vspace{\baselineskip}\par \noindent
-Gheorghe: 
+George: {\it To Mihaela.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Epigraph
@@ -293,7 +319,7 @@ Unlike other Computer Architecture textbooks, this book approaches the subject f
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.2} % Increase row height for vertical centering
-\begin{tabular}{|>{\centering\arraybackslash}m{2.5cm} | >{\centering\arraybackslash}m{4.2cm} | >{\centering\arraybackslash}m{3.7cm} | >{\centering\arraybackslash}m{3.8cm}|}
+\begin{tabular}{|>{\centering\arraybackslash}m{1.8cm} | >{\centering\arraybackslash}m{4.2cm} | >{\centering\arraybackslash}m{3.7cm} | >{\centering\arraybackslash}m{3.8cm}|}
 \hline
 \textbf{Order} & \textbf{Definition} & \textbf{Components} & \textbf{Example} \\ \hline
 
@@ -303,17 +329,17 @@ Unlike other Computer Architecture textbooks, this book approaches the subject f
 
 2nd-Order & Two-loop automata circuits. & Mealy, Moore automaton & FSMs, Counters,  ALUs with register files. \\ \hline
 
-3rd-Order & Three-loops processing units. & ALU, control units, registers. & Elementary processor, Simple microprocessor. \\ \hline
+3rd-Order & Three-loop processing units. & ALU, control units, registers. & Elementary processor, Simple microprocessor. \\ \hline
 
 4th-Order & Four-loop computer with one memory & Program and Data in single memory. & von Neumann abstract model computer. \\ \hline
 
 5th-Order & Five-loop computer with two memories. & Separate Program and Data memories. & Harvard abstract model computer. \\ \hline
 
-nth-Order High-Order 0  & N-loop, no global loop many-cell systems. & Controller, Map Array & Map Parallel Accelerator  \\ \hline
+nth-Order  & N-loop, no global loop many-cell systems. & Controller, Map Array & Map Parallel Accelerator  \\ \hline
 
-nth-Order 1st-High Order & N-loop \&  1st global loop many-cell systems. & Controller, Map Array, Reduce loop & MapReduce Parallel Accelerator  \\ \hline
+1st  Global Loop & N-loop \&  1st global loop many-cell systems. & Controller, Map Array, Reduce loop & MapReduce Parallel Accelerator  \\ \hline
 
-nth-Order 2nd-High Order & N-loop \& 2nd global loop many-cell systems. & Controller, Map Array, Reduce loop, Scan loop & MapScanReduce Parallel Accelerator \\ \hline
+2nd  Global Loop & N-loop \& 2nd global loop many-cell systems. & Controller, Map Array, Reduce loop, Scan loop & MapScanReduce Parallel Accelerator \\ \hline
 
 \end{tabular}
 \caption{Orders of Digital Systems from Gates to Parallel Accelerators.}
@@ -337,7 +363,7 @@ This preliminary release we know is quite rough. However, it will become polishe
 \vspace{\baselineskip}\par \noindent
 John Glossner and Gheorghe M. \c{S}tefan
 \vspace{\baselineskip}\par \noindent
-January 1st, 2025
+June 3rd, 2026
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Acknowledgments
@@ -350,6 +376,7 @@ January 1st, 2025
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \shorttoc{Contents}{1} % Only sections
 
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Table of Contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -426,7 +453,7 @@ January 1st, 2025
 \include{04_17_0_ToyRISC}
 %\include{04_18_RISCV}
 %\include{04_19_RISCV_multithreaded}
-%\include{04_20_pRISC_heterogeneous}
+\include{04_20_pRISC_heterogeneous}
 
 
 %\include{09_open_problems}
@@ -444,12 +471,12 @@ January 1st, 2025
 %\include{Axx_simulations}
 %\include{Axy_verilogFIFO} %it is proposed as problem in automata chapter
 
-\include{Latex/A03_Linear_Algebra}
+%\include{Latex/A03_Linear_Algebra}
 
 % To Remove Code Listings from the Listings section, uncomment {lol}
 %\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
 %\addtocontents{lol}{\protect\setcounter{tocdepth}{-1}}
-\input{A99_Code_Listings}
+%\input{A99_Code_Listings}
 %\addtocontents{toc}{\protect\setcounter{tocdepth}{4}} % Restore TOC depth
 %\addtocontents{lol}{\protect\setcounter{tocdepth}{2}}
 

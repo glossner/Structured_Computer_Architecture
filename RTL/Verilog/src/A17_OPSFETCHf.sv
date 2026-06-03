@@ -1,17 +1,16 @@
-module OPSFETCH(    input   logic [31:0]    instruction1,
-                    input   logic [31:0]    instruction4,
-                    input   logic [9:0]     pc1         ,
-                    input   logic           inta        ,
-                    input   logic           we4         ,
-                    input   logic [31:0]    result4     ,
-                    input   logic [3:0]     opSel       ,
-                    output  logic           zero        ,
-                    output  logic [31:0]    leftOp      ,
-                    output  logic [31:0]    leftOp2     ,
-                    output  logic [31:0]    rightOp2    ,
-                    output  logic [3:0]     opSel2      ,
-                    output  logic [31:0]    instruction2,
-                    input   logic           clk         );
+module OPSFETCH(    input   logic [31:0]    instruction1   ,
+                    input   logic [31:0]    instruction4   ,
+                    input   logic [9:0]     pc1            ,
+                    input   logic           inta           ,
+                    input   logic           we4            ,
+                    input   logic [31:0]    result4        ,
+                    input   logic [3:0]     opSel          ,
+                    output  logic           zero           ,
+                    output  logic [31:0]    leftOp, leftOp2, 
+		    output  logic [31:0]    rightOp2       ,
+                    output  logic [3:0]     opSel2         ,
+                    output  logic [31:0]    instruction2   ,
+                    input   logic           clk            );
     logic   [31:0]  rf[0:31]    ;
     logic   [31:0]  rightOp     ;
     logic           we          ;
@@ -19,16 +18,13 @@ module OPSFETCH(    input   logic [31:0]    instruction1,
     logic   [31:0]  result      ;
     logic   [4:0]   leftAddr    ;
     logic   [4:0]   rightAddr   ;
-
     always_ff @(posedge clk) if (we) rf[destAddr] <= result ;
-
     assign leftOp       = ((destAddr == leftAddr) && we) ?
                             result : rf[leftAddr]   ;
     assign rightOp      = ((destAddr == rightAddr) && we) ?
                             result : rf[rightAddr]  ;
     assign zero         = leftOp == 0           ;
     assign rightAddr    = instruction1[15:11]   ;
-
     // PipeReg2:
     always_ff @(posedge clk)
         begin
@@ -37,7 +33,6 @@ module OPSFETCH(    input   logic [31:0]    instruction1,
             opSel2          <=  opSel           ;
             instruction2    <=  instruction1    ;
         end
-
     intUnit intunit(.we         (we                     ),
                     .destAddr   (destAddr               ),
                     .result     (result                 ),

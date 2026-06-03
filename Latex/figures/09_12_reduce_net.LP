@@ -3,6 +3,7 @@
 \unitlength 2.2pt
 {\tiny
 \begin{picture}(208,80)
+\hspace{-2mm}
 \thicklines
 \drawvector{140.0}{60.0}{8.0}{0}{-1}
 \drawframebox{134.0}{48.0}{20.0}{8.0}{}

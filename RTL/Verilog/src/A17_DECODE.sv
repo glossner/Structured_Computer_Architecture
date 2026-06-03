@@ -21,14 +21,14 @@ module DECODE(  input   logic [5:0] opCode1     ,
     intState = 100: intExec3
 */
     always_ff @(posedge clk)
-     if (reset)                                 intState <= 3'b000  ;
+     if (reset)                             intState <= 3'b000  ;
       else  begin
-            if (opCode1 == `eint)               intState <= 3'b001  ;
-            if (opCode1 == `dint)               intState <= 3'b000  ;
-            if (intIn && (intState == 3'b001))  intState <= 3'b010  ;
-            if (intState == 3'b010)             intState <= 3'b011  ;
-            if (intState == 3'b011)             intState <= 3'b100  ;
-            if (intState == 3'b100)             intState <= 3'b000  ;
+        if (opCode1 == `eint)               intState <= 3'b001  ;
+        if (opCode1 == `dint)               intState <= 3'b000  ;
+        if (intIn && (intState == 3'b001))  intState <= 3'b010  ;
+        if (intState == 3'b010)             intState <= 3'b011  ;
+        if (intState == 3'b011)             intState <= 3'b100  ;
+        if (intState == 3'b100)             intState <= 3'b000  ;
         end
     assign inta = intState == 3'b010    ;
     logic [5:0] jmpSel  ;
@@ -61,7 +61,7 @@ module DECODE(  input   logic [5:0] opCode1     ,
     assign dataRead     = opCode2 == `read  ;
 
 // Write enable signal for WRITEBACK stage in pipeline
-    assign we           = ((opCode2[5:4] == 2'b11)  |
-                          (opCode2 == `load)        |
-                          (opCode2 == `val)) & !(intState > 3'b001) ;
+    assign we = ((opCode2[5:4] == 2'b11)  |
+                (opCode2 == `load)        |
+                (opCode2 == `val)) & !(intState > 3'b001) ;
 endmodule

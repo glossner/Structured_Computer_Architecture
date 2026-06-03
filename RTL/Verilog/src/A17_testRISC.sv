@@ -4,15 +4,11 @@ module testRISC;
     logic           intIn   ;
     logic           reset   ;
     logic           clk     ;
-
     integer i   ;
-
     `include "RISCcodeGenerator.sv"
-
     initial begin               clk = 0     ;
                     forever #1  clk = ~clk  ;
             end
-
     initial begin
             intIn       = 1 ;
             reset       = 1 ;
@@ -23,7 +19,6 @@ module testRISC;
         #4  reset       = 0 ;
         #40 $finish     ;
     end
-
     logic   [31:0]  instr       ;
     logic   [9:0]   nextPC      ;
     logic   [31:0]  dataIn      ;
@@ -31,17 +26,14 @@ module testRISC;
     logic   [9:0]   addr        ;
     logic           dataRead    ;
     logic           dataWrite   ;
-
     logic   [31:0]  dataMemory[0:1023]  ;
     logic   [31:0]  progMemory[0:1023]  ;
     logic   [31:0]  dataMemOut          ;
-
     always_ff @(posedge clk) begin
         if (dataRead) dataIn <= dataMemory[addr]    ;
         if (dataWrite) dataMemory[addr] <= dataOut  ;
         instr <= progMemory[nextPC]                 ;
     end
-
     toyRISC dut(instr       ,
                 nextPC      ,
                 intIn       ,
@@ -53,7 +45,6 @@ module testRISC;
                 dataWrite   ,
                 reset       ,
                 clk         );
-
     // MONITOR FOR PROGRAM LAOD & CONTROLLER
     initial begin
      $monitor

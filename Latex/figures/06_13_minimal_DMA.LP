@@ -122,3 +122,4 @@
 \drawcenteredtext{78.0}{6.0}{DMA}
 \end{picture}
 }
+\vspace{-0.5cm}

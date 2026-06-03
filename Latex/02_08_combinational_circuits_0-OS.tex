@@ -279,7 +279,7 @@ Any simulation is based on the generation of waveforms with which the simulated 
 %*********************************************************
 \subsubsection{SystemVerilog Implementation of Waveforms}
 %*********************************************************    
-\includeverilogcode[caption={Waveform Generator Code (Hand Written SystemVerilog)},     label={lst:verilog_waveformgenerator}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/waveFormGenerator.sv}
+\includeverilogcode[caption={Waveform Generator Code (Hand Written SystemVerilog)},     label={lst:verilog_waveformgenerator}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/waveFormGenerator.sv}
 
     Listing \ref{lst:verilog_waveformgenerator} shows the System Verilog\index{System Verilog: a Hardware Description Language preceded by Verilog} module, \texttt{waveFormGenerator}. It generates two output waveforms\index{waveform: electronic signal  indicating the time domain image of a measured signal}: a \texttt{randomWave} signal and a \texttt{clock} signal. The \texttt{randomWave} signal transitions between predefined states based on explicit delays specified using the \texttt{\#} operator. It begins at \texttt{0}, transitions to \texttt{1} after 2 time units, back to \texttt{0} after 6 more time units, to \texttt{1} after 4 additional time units, and finally to \texttt{0} after 8 time units. The simulation halts 5 time units later using the \texttt{\$stop} command. The \texttt{clock} signal is a periodic waveform toggling its state every 2 time units, implemented with a \texttt{forever} loop.
 
@@ -553,9 +553,11 @@ x_1 & x_0 &  y_3 &  y_2 & y_1 & y_0 \\
 \label{fig:decoder_truth_table}
 \end{figure}
 
+\placedrawing[H]{figures/02_10_recursive_decoder.lp}{Recursively defined 3-input decoder (DCD). {\bf a.} Elementary decoder (eDCD). {\bf b.} Two-input decoder (DCD2). {\bf c.} Three-input DCD (DCD3).}{fig:decoder_and_gates}
+
 A decoder takes an \(n\)-bit binary input and generates \(2^n\) output lines, with exactly one line active (logic high) for any given input combination. The structure of a decoder includes an array of logic gates that process the input bits and their complements to generate the appropriate output signals. For example, Figure \ref{fig:decoder_truth_table} shows the truth table for a 2-to-4 decoder. Figure \ref{fig:decoder_and_gates}a shows an elementary decoder\index{elementary decoder: a one-input decoder} that outputs both $x_n$ and $\overline{x_n}$. Figure \ref{fig:decoder_and_gates}a shows that the two input bits (\(x_1\) and \(x_0\)) and their negations (\(\overline{x_0}\) and \(\overline{x_1}\)) are used to drive four output signals (\(y_3, y_2, y_1, y_0\)). 
 
-\placedrawing[H]{figures/02_10_recursive_decoder.lp}{Recursively defined 3-input decoder (DCD). {\bf a.} Elementary decoder (eDCD). {\bf b.} Two-input decoder (DCD2). {\bf c.} Three-input DCD (DCD3).}{fig:decoder_and_gates}
+
 
 Decoders are widely used in digital systems for applications such as memory addressing, instruction decoding in processors, and enabling control signals in multiplexers. 
 
@@ -567,13 +569,13 @@ Decoders are widely used in digital systems for applications such as memory addr
 %*********************************************************
 \subsubsection{Decoder (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={Parameterized Decoder (SystemVerilog: dcdParameterized.sv)},     label={lst:verilog_decoder_parameterized}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcdParameterized.sv}
+\includeverilogcode[caption={Parameterized Decoder (SystemVerilog: dcdParameterized.sv)},     label={lst:verilog_decoder_parameterized}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/dcdParameterized.sv}
 
 Listing \ref{lst:verilog_decoder_parameterized} shows a parameterized decoder implemented in SystemVerilog, which provides a scalable solution for decoding binary inputs to a one-hot encoded output. The design uses the shift operation to map the binary input to a specific bit position in the output. By using the parameter \texttt{INPUT\_WIDTH}, the module can dynamically adjust the size of the binary input and its corresponding one-hot output, with the output width automatically calculated as \(2^{\texttt{INPUT\_WIDTH}}\). This ensures that the decoder is flexible and reusable across various designs.
 
 The key operation in the decoder is the left shift, expressed as \texttt{out = 1'b1 << in}, where the binary input \texttt{in} determines how many positions the single high bit is shifted. This eliminates the need for case statements or nested conditional logic. The shift operation is synthesis-friendly, allowing hardware tools to map the logic to a simple decoder circuit directly. 
 
-\includeverilogcode[caption={4-to-16 Behavioral Decoder (SystemVerilog:dcd.sv)},     label={lst:verilog_decoder_4_to_16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dcd.sv}
+\includeverilogcode[caption={4-to-16 Behavioral Decoder (SystemVerilog:dcd.sv)},     label={lst:verilog_decoder_4_to_16}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/dcd.sv}
 
 Listing \ref{lst:verilog_decoder_4_to_16} shows a directly implemented 4-to-16 decoder.
 
@@ -641,9 +643,11 @@ Multiplexers are used because they minimize the number of physical connections a
 %**********************************
 \subsection{Elementary Multiplexer}
 %**********************************
-\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexer (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
 
 Any combinational circuit can be expressed using only NAND functions. But a more interesting "fundamental brick" could be a circuit corresponding to the ubiquitous {\bf {\em if-then-ellse}} statement. It is the elementary multiplexer\index{elementary multiplexer: a 2 selected inputs multiplexer} (eMUX) represented in Figure \ref{fig:mux}, and shows the following:
+
+\placedrawing[H]{figures/02_11_mux.lp}{Elementary multiplexer (eMUX). {\bf a.} The circuit structure: an eDCD serially connected with an AND-OR circuit. {\bf b.} The logic symbol.}{fig:mux}
+
 
 \begin{center} O = {\bf if} (S) {\bf then} I1 {\bf else} I0 \end{center}
 
@@ -662,9 +666,11 @@ Figure \ref{fig:gen_mux} shows a multiplexer with many-inputs. It takes bits fro
 %*********************************************************
 \subsubsection{Multiplexer (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={16-to-1 single bit Multiplexer (SystemVerilog: mux.sv)},     label={lst:verilog_mux4}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/mux.sv}
+
 
 Listing \ref{lst:verilog_mux4} implements a 16-to-1 single bit multiplexer. The module takes three inputs: a 16-bit vector \texttt{muxIn}, a 4-bit selector \texttt{muxSel}, and produces a single 1-bit output \texttt{muxOut}. The selector \texttt{muxSel} determines which bit of the 16-bit input vector is routed to the output. This is achieved through the indexing operation \texttt{muxIn[muxSel]}, which dynamically selects the bit of \texttt{muxIn} corresponding to the value of \texttt{muxSel}.
+
+\includeverilogcode[caption={16-to-1 single bit Multiplexer (SystemVerilog: mux.sv)},     label={lst:verilog_mux4}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/mux.sv}
 
 This design is both compact and efficient, leveraging Verilog's built-in array indexing capabilities. It allows the multiplexer to be easily scaled by adjusting the widths of \texttt{muxIn} and \texttt{muxSel}. Such multiplexers are fundamental building blocks in digital systems, often used to select between multiple data sources or routes in logic circuits, enabling dynamic and efficient data flow management.
 }% End Verilog Code
@@ -703,7 +709,7 @@ Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{\diagramsDir/Mux4.png} 
+    \includegraphics[width=0.6\textwidth]{\diagramsDir/Mux4.png} 
     \caption{Generated Schematic of a yosys Elaborated Chisel 4-to-1 Multiplexer.}
     \label{fig:mux4} 
 \end{figure}
@@ -712,7 +718,7 @@ Figure \ref{fig:mux4} shows the hierarchical schematic after yosys elaboration.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.25]{\diagramsDir/Mux4_flat.png} 
+    \includegraphics[scale=0.23]{\diagramsDir/Mux4_flat.png} 
     \caption{Generated Schematic of a yosys Elaborated and Flattened Chisel 4-to-1 Multiplexer.}
     \label{fig:mux4_flat} 
 \end{figure}
@@ -741,10 +747,13 @@ $$\{y_{m-1} y_{m-2} \ldots y_0 y_1\} = 00 \ldots 0X000$$
 \ifthenelse{\boolean{verilogversion}}{
 %*********************************************************
 \subsubsection{Demultiplexer (SystemVerilog)}
-%*********************************************************    
-\includeverilogcode[caption={1-to-16 bit Demultiplexer (SystemVerilog: dMux.sv)}, label={lst:verilog_demux16}, firstline=8, firstnumber=8, lastline=999]{\verilogSourceDir/dMux.sv}
+%*********************************************************   
 
 Listing \ref{lst:verilog_demux16} shows SystemVerilog code that implements a simple demultiplexer module, named \texttt{dMux}. This demultiplexer takes a input signal \texttt{dMuxEnable} and routes one-bit of it to one of the 16 output lines, represented by the vector \texttt{dMuxOut}, based on the 4-bit selection signal \texttt{dMuxIn}. Instead of left-shifting the number 1 as in the decoder, the one-bit value $X$ is left-positioned. The operation is performed using a left-shift operation, where the input signal \texttt{dMuxEnable} is shifted by the value of \texttt{dMuxIn}, effectively enabling only one bit in the 16-bit output vector.
+
+\includeverilogcode[caption={1-to-16 bit Demultiplexer (SystemVerilog: dMux.sv)}, label={lst:verilog_demux16}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/dMux.sv}
+
+
 
 The \texttt{dMuxEnable} input acts as a control signal, ensuring that no outputs are active when it is low. 
 
@@ -819,7 +828,7 @@ $$a =  (a')' =  (B'_3 \cdot B'_2 \cdot B'_1\cdot B_0  + B'_3 \cdot B_2 \cdot B'_
 %*********************************************************
 \subsubsection{Seven Segment Display (SystemVerilog)}
 %*********************************************************    
-\includeverilogcode[caption={Seven Segment Display (SystemVerilog: SevenSegmentDisplay.sv)},     label={lst:verilog_sevensegmentdisplay}, firstline=7, firstnumber=7, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
+\includeverilogcode[caption={Seven Segment Display (SystemVerilog: SevenSegmentDisplay.sv)},     label={lst:verilog_sevensegmentdisplay}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/SevenSegmentDisplay.sv}
 
 Listing \ref{lst:verilog_sevensegmentdisplay} shows SystemVerilog code that implements a seven-segment display decoder. The module, named \texttt{sevenSegmDys}, has a 4-bit binary input, \texttt{number}, and a 7-bit output, \texttt{seg}, which controls the state of the seven segments (labeled a through g) of the display. 
 
@@ -864,29 +873,31 @@ In Chisel, there are several constructs that can produce hardware in various for
 
 \includechiselcode[caption={Seven Segment Display Using MuxCase (Chisel: SevenSegmentDisplayMuxCase.scala)},     label={lst:chisel_sevensegmentdisplay_muxcase}, firstline=43, firstnumber=43, lastline=54]{\chiselSourceDir/SevenSegmentDisplayMuxCase.scala}
 
-When the designer wants \textbf{\textit{to guarantee parallel generation of hardware, \texttt{MuxCase} is preferred.}} Listing \ref{lst:chisel_sevensegmentdisplay_muxcase} shows the Chisel code using \texttt{MuxCase} instead of \texttt{when}.
-
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.25]{\diagramsDir/SevenSegmentDisplayMuxCase_not_asic.png} 
+    \includegraphics[scale=0.23]{\diagramsDir/SevenSegmentDisplayMuxCase_not_asic.png} 
     \caption{Generated Schematic of SevenSegmentDisplay Using MuxCase.}
     \label{fig:7seg_schematic_muxcase} 
 \end{figure}
 
-Figure \ref{fig:7seg_schematic_muxcase} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code. Note that all multiplexers are reduced to parallel logic. However, it is also a lot of logic.
+When the designer wants \textbf{\textit{to guarantee parallel generation of hardware, \texttt{MuxCase} is preferred.}} Listing \ref{lst:chisel_sevensegmentdisplay_muxcase} shows the Chisel code using \texttt{MuxCase} instead of \texttt{when}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.5]{\diagramsDir/SevenSegmentDisplayMuxCase_synth_flat.png} 
+    \includegraphics[scale=0.43]{\diagramsDir/SevenSegmentDisplayMuxCase_synth_flat.png} 
     \caption{Generated Schematic of SevenSegmentDisplay Using MuxCase and Skywater 130nm ASIC Technology files.}
     \label{fig:7seg_schematic_muxcase_asic} 
 \end{figure}
+
+Figure \ref{fig:7seg_schematic_muxcase} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code. Note that all multiplexers are reduced to parallel logic. However, it is also a lot of logic.
+
+
 
 Figure \ref{fig:7seg_schematic_muxcase_asic} shows the schematic generated after yosys synthesis of the \texttt{MuxCase} Chisel code with optimization guided by the Skywater CMOS 130nm technology library. Note that most of the gates are now NAND/NOR which are more efficient in CMOS implementations. 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.5]{\diagramsDir/SevenSegmentDisplayMuxCase_synth.png} 
+    \includegraphics[scale=0.41]{\diagramsDir/SevenSegmentDisplayMuxCase_synth.png} 
     \caption{Generated Schematic of SevenSegmentDisplay Using MuxCase Showing Exact Standard Cell Skywater 130nm ASIC Cells.}
     \label{fig:7seg_schematic_muxcase_asic_130} 
 \end{figure}
@@ -1004,7 +1015,7 @@ In the case of 4-bit unsigned numbers, observe that each operand, $A$ and $B$, c
 \subsubsection{2-input 4-bit Behavioral Adder (SystemVerilog)} 
 %*************************************************
 
-\includeverilogcode[caption={Behavorial 2-input 4-bit Adder (SystemVerilog: adder.sv)},     label={lst:verilog_adder}, firstline=9, firstnumber=9, lastline=999]{\verilogSourceDir/adder.sv}
+\includeverilogcode[caption={Behavorial 2-input 4-bit Adder (SystemVerilog: adder.sv)},     label={lst:verilog_adder}, firstline=2, firstnumber=1, lastline=999]{\verilogSourceDir/adder.sv}
 
 Listing \ref{lst:verilog_adder} shows a 2-input 4-bit adder implemented in SystemVerilog. It is designed to perform 4-bit unsigned addition. It takes two 4-bit inputs, \texttt{in0} and \texttt{in1}, and produces a 4-bit output, \texttt{out}, representing the sum of the two inputs. The addition operation is performed using the \texttt{assign} statement, which continuously evaluates the sum of \texttt{in0} and \texttt{in1} and assigns the result to \texttt{out}.
 
@@ -1284,7 +1295,7 @@ The core computation is performed using a \texttt{Mux} construct, which selects 
 
 The result of the operation is assigned to the \texttt{io.result} output. To ensure that the output adheres to the specified bit width, the \texttt{fullResult} is truncated using \texttt{(width - 1, 0)}, which extracts only the least significant \texttt{width} bits of the result. This ensures that the output does not exceed the desired width, even in cases of overflow or underflow. 
 
-\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=17, firstnumber=17, lastline=17]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
+\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=4, firstnumber=1, lastline=99]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
 
 Listing \ref{lst:chisel_addersubtractor_behavioral4} shows an instantiation of a Chisel 4-bit behavioral adder/subtractor. The \texttt{BehavioralAdderSubtractor4} module defines an input-output interface (\texttt{io}) consisting of two 4-bit unsigned inputs (\texttt{a} and \texttt{b}), a 1-bit control signal (\texttt{subtract}), and a 4-bit unsigned output (\texttt{sum}). 
 
@@ -1304,7 +1315,7 @@ Two's complement subtraction\index{subtractor!structural subtractor} can be perf
 Listing \ref{lst:chisel_2s_subtractor} lines 17 through 22 show subtraction by first negating the subtrahend.
 }
 
-\placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Substractor}{fig:adder_subtracter}
+\placedrawing[H]{figures/02_17_adder_subtractor.lp}{Adder/Subtractor}{fig:adder_subtracter}
 
 Figure \ref{fig:adder_subtracter} shows how subtraction can be performed using the same adder hardware shown in Figure \ref{fig:full_adder}b. XOR gates are used to negate the subtrahend. Setting the initial carry to 1 provides the 2's complement of the subtrahend.
 
@@ -1468,51 +1479,10 @@ An Arithmetic \& Logic Unit\index{ALU: arithmetic \& logic unit} (ALU) has two k
                     {\verilogSourceDir/A08_alu.sv}
 
 
-\begin{verisum}{\em :
+Actual implementations are sometimes optimized by implementing two or more modules sharing partially the same circuits. 
 
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-    \item[\{a,b\}]: concatenates the binary word  {\tt b} to the binary word {\tt a}
-    \item[{\bf -}]:  is the operator {\tt minus}
-    \item[\&]: is the operator {\tt bitwise AND}
-    \item[${\bf \vert}$]: is the operator {\tt bitwise OR}
-    \item[${\bf \hat{}}$]: is the operator {\tt bitwise XOR}
-    \item[${\bf >>}$]: is the operator {\tt shift right logical}
-\end{description}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
-
-Actual implementations are sometimes optimized by implementing two ore more modules sharing partially the same circuits. A small and simple example is represented in Figure \ref{fig7}, where: {\small
-\begin{itemize}
-\item {\tt func[2:0]} to select the function:
-    \begin{description}
-        \item[{\tt func = 000}] {\tt add: \{crOut, result\} = leftOp + rightOp + crIn}
-        \item[{\tt func = 100}] {\tt sub: \{crOut, result\} = leftOp - rightOp - crIn}
-        \item[{\tt func = 010}] {\tt and: \{crOut, result\} = \{1'b0, leftOp \& rightOp\}} (bitwise AND)
-        \item[{\tt func = 001}] {\tt xor: \{crOut, result\} = \{1'b0, leftOp $\oplus$ rightOp\}} (bitwise XOR)
-        \item[{\tt func = 011}] {\tt shr: \{crOut, result\} = \{leftOp[0], serialIn, leftOp[n-1:1]\}}
-    \end{description}
-\item {\tt leftOp[n-1:0]}
-\item {\tt rightOp[n-1:0]}
-\item {\tt crIn}
-\item {\tt crOut}
-\item {\tt serialIn}: the value loaded in the most significant position in the shift right operation, {\tt shr}, allowing the following types of shifts:
-    \begin{itemize}
-        \item {\tt shr: \{crOut, result\} = \{leftOp[0], 1'b0, leftOp[n-1:1]\}}
-        \item {\tt ash: \{crOut, result\} = \{leftOp[0], leftOp[n-1], leftOp[n-1:1]\}}
-        \item {\tt rot: \{crOut, result\} = \{leftOp[0], leftOp[0], leftOp[n-1:1]\}}
-        \item {\tt csh: \{crOut, result\} = \{leftOp[0], crIn, leftOp[n-1:1]\}}
-    \end{itemize}
-\item {\tt result[n-1:0]}
-\end{itemize}
-}
 
 }% End Verilog
-
-\placedrawing[H]{figures/02_20_nbit_alu.lp}{A simple Arithmetic \& Logic Unit for $n$-bit words (ALUn).}{fig7}
-
-The implementation takes into account the fact that an HA is implemented using an AND gate and an XOR gate (see Figure \ref{fig:half_adder}). Thus, in each of the $n$ slices of ALU only an adder/subtractor is implemented, an XOR is added for the subtract function, and for the two logic functions, the outputs of the first HA are directly used.
 
 \ifthenelse{\boolean{chiselversion}}{
 
@@ -1633,14 +1603,14 @@ We have a chance to use $MUX_{n}$ to implement $f(x_{n-1}, \ldots
 \end{enumerate}
 
 \begin{exemplu}
-Let be the following System Verilog code:
-\includeverilogcode[caption={The behavioral description for any 3-input logic function.   File: A08\_threeInputFunctions.sv  (SystemVerilog)}, 
+Let be the following System Verilog code: {\em 
+\includeverilogcode[caption={The behavioral description for any 3-input combinational logic function. File: A08\_threeInputFunctions.sv  (SystemVerilog)}, 
                     label={lst:nUcirc}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=30]
                     {\verilogSourceDir/A08_threeInputFunctions.sv}
-
+}
  The circuit {\tt three\_input\_functions} can be programmed,
 using the 8-bit string {\tt func} as ``program", to perform anyone
 3-input Boolean function. It is obviously a $MUX_{3}$ performing
@@ -1704,14 +1674,15 @@ variable. The function $maj(x_{2}, x_{1}, x_{0})$ returns 1 if the
 majority of inputs are 1, and 0 if not. In Figure \ref{maj} a
 ``programmable" circuit is used to solve the problem.
 
+Because we intend to use the circuit only for the function
+$maj(x_{2}, x_{1}, x_{0})$ the first layer of EMUXs can be removed
+resulting the circuit represented in Figure \ref{maj1}a.
+
 \placedrawing[H]{figures/draw1_100.lp}{{\bf The majority function.}
 {\small The majority function for 3 binary variables is solved by
 a 3-level binary tree of EMUXs. The actual ``program" applied on
 the ``leafs" will allow to minimize the tree.}}{maj}
 
-Because we intend to use the circuit only for the function
-$maj(x_{2}, x_{1}, x_{0})$ the first layer of EMUXs can be removed
-resulting the circuit represented in Figure \ref{maj1}a.
 
 \placedrawing[H]{figures/draw1_101.lp}{{\bf The reduction process.}
 {\small {\bf a.} For any function the first level of EMUSs is
@@ -1784,6 +1755,12 @@ polynomial limits using {\em removing} and {\em reduction} rules.
 
 The simple solution for the following many-output random circuits
 having the same inputs:
+
+\placedrawing[H]{figures/draw2_12.lp}{{\bf Many-output random circuit.}
+{\small {\bf a.} One DCD and many AND-OR circuits. {\bf b.} An
+example. {\bf c.} The version using programmable
+connections.}}{mmux} 
+
 \begin{quote}
 $f(x_{n-1}, \ldots x_{0})$ \\
 $g(x_{n-1}, \ldots x_{0})$ \\
@@ -1791,12 +1768,8 @@ $\ldots$ \\
 $s(x_{n-1}, \ldots x_{0})$
 \end{quote}
 
-\placedrawing[h]{figures/draw2_12.lp}{{\bf Many-output random circuit.}
-{\small {\bf a.} One DCD and many AND-OR circuits. {\bf b.} An
-example. {\bf c.} The version using programmable
-connections.}}{mmux} 
 
-\hspace{-5mm}is to connect in parallel many one-output circuits. The
+\hspace{-6mm}is to connect in parallel many one-output circuits. The
 inefficiency of the solution becomes obvious when the structure of
 the MUX presented in Figure \ref{fig:gen_mux} is considered. Indeed, if we
 implement many MUXs with the same selection inputs, then the
@@ -1807,10 +1780,12 @@ DCD circuit is shared for the implementation of functions $f, \; g,
 minterms} (see {\em Appendix C.4}) needed to compute an
 $n$-variable Boolean function.
 
-\placedrawing[h]{figures/draw2_13.lp}{{\bf The internal structure of a
+
+
+\placedrawing[H]{figures/draw2_13.lp}{{\bf The internal structure of a
 Read Only Memory (ROM) used as trans-coder.} {\small {\bf a.} The
 internal structure. {\bf b.} The simplified logic symbol where a
-thick vertical line is used to represent an $m$-input NAND
+thick vertical line  represents an $m$-input NAND
 gate.}}{rom}
 
 Figure \ref{mmux}b is an example of using the generic structure
@@ -1827,7 +1802,8 @@ connected to one horizontal line). The {\em uniform} structure is
 ``programmed" with a more or less {\em random} distribution of
 connections.
 
-\placedrawing[h]{figures/draw2_14.lp}{{\bf The truth table for a
+
+\placedrawing[H]{figures/draw2_14.lp}{{\bf The truth table for a
 multi-output Boolean function.} {\small The input rows can be
 seen as addresses, from $00 \ldots 0$ to $11 \ldots 1$} and the
 output columns as the content stored at the corresponding
@@ -1859,6 +1835,9 @@ memory}. Indeed, it works like a memory that contains at the location
 00...00 the word 11...0, ... at the location 11...10 the word
 10...0, and at the last location the word 01...1. The name of this
 kind of programmable device is {\bf read only memory}, ROM.
+
+
+
 
 
 \subsection{Concluding about Universal Circuit}
@@ -1976,7 +1955,7 @@ $$cr = a \cdot b$$
 
 Using Vivado toll the elaborated design represented in Figure \ref{halfadd} is provided.
 
-\placedrawing[H]{figures/02_22_half_adder.lp}{}{halfadd}
+\placedrawing[H]{figures/02_22_half_adder.lp}{Half adder.}{halfadd}
 
 \begin{problem}
 Design in System Verilog the structural solution at the gate level for a full-half adder using two solutions:
@@ -2002,7 +1981,7 @@ For the first solution we have the following design:
                     
 Using Vivado toll the elaborated design represented in Figure \ref{fulladd} is provided.
 
-\placedrawing[H]{figures/02_23_full_adder.lp}{}{fulladd}
+\placedrawing[H]{figures/02_23_full_adder.lp}{Full adder.}{fulladd}
 
 For the second solution we have the following design:
 
@@ -2015,7 +1994,7 @@ For the second solution we have the following design:
 
 Using Vivado toll the elaborated design represented in Figure \ref{hfulladd} is provided.
 
-\placedrawing[H]{figures/02_24_full_adder_from_half_adders.lp}{}{hfulladd}
+\placedrawing[H]{figures/02_24_full_adder_from_half_adders.lp}{Hierarchical Full-Adder.}{hfulladd}
 
 For testing the functionality of the full-adder the following module is designed:
 
@@ -2026,7 +2005,7 @@ For testing the functionality of the full-adder the following module is designed
                     lastline=30]
                     {\verilogSourceDir/A08_testFullAdder.sv}
 
-\placedrawing[H]{figures/02_25_full_adder_waveform.lp}{}{sfulladd}
+\placedrawing[H]{figures/02_25_full_adder_waveform.lp}{Wave forms for the full adder.}{sfulladd}
 
 \section{Exercises}
 
@@ -2129,9 +2108,4 @@ $\diamond$
 \end{problem}
 
 
-\begin{problem}
-Design structurally at the gate level in System Verilog the slice of the simple ALU defined in Figure \ref{fig7}.
-
-$\diamond$
-\end{problem}
 

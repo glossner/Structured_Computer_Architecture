@@ -13,20 +13,20 @@ In this textbook, we will not cover every possible 1-OS circuit. We cover only t
 
 The simplest 1-OS circuit allows for storing the simplest event: the temporary transition of a digital signal from 1 to 0, or the temporary transition of some circuit from 0 to 1. A latch is a circuit that performs this function.
 
-\placedrawing[H]{figures/03_01_latches.lp}{{\bf The elementary latches.}
-{\small Using the loop, closed from the output to one input, elementary storage elements are built. {\bf a}. {\em AND
-loop} provides a {\em reset-only} latch. {\bf b}. {\em OR loop}
-provides the {\em set-only} version of a storage element. {\bf c}.
-The heterogeneous elementary {\em set-reset} latch results
-combining the {\em reset-only} latch with the {\em set-only}
-latch. {\bf d}. The waveforms describe the behavior of the previous three latch circuits.}}{latches}
-
-
 %************************************
 \subsection{Closing the first loop}
 %**************************************
 
 Closing a feedback loop requires that an output of a logic circuit be connected to one of its inputs. In Figure \ref{latches}a, the output of an AND gate is connected to one of the inputs, and the pulse (Reset)' is applied to the other input. If the transition to zero lasts long enough so that the signal propagates through the circuit to the second input, then the output is fixed at the zero value, and the signal (Reset)' from the input can disappear. The transition event from the input is fixed to the output forever.
+
+\placedrawing[H]{figures/03_01_latches.lp}{{\bf The elementary latches.}
+{\small {\bf a}. {\em AND
+loop} provides a {\em reset-only} latch. {\bf b}. {\em OR loop}
+provides the {\em set-only} version of a storage element. {\bf c}.
+The  {\em set-reset} latch results
+combining the {\em reset-only} latch with the {\em set-only}
+latch. {\bf d}. The waveforms describe the behavior of the previous three latch circuits.}}{latches}
+
 
 Now, let us take an OR gate and connect its output to one of the inputs. Then, we can apply a transition from 0 to 1. If the duration of the input signal allows propagation of its effect on the reaction loop, the output of the circuit will be permanently fixed to the value 1.
 
@@ -45,15 +45,15 @@ Using both an AND and an OR, we obtain a circuit with two states between which i
 In digital electronics, asynchronous SR latches can be problematic.  {\bf The first latch problem}: the inputs to indicate {\em how} the latch switches are the same as the inputs to
 indicate {\em when} the latch switches. This immediate reactivity means they are highly susceptible to noise and glitches, especially when dealing with mechanical switches or noisy signals. A common issue is \textit{bouncing}, where the input rapidly fluctuates between high and low states due to imperfect physical contacts or noisy environments. This can cause an asynchronous SR latch to switch states unpredictably.
 
+\placedrawing[H]{figures/03_03_clocked_latches.lp}{{\bf Elementary clocked latch.}
+{\small {\bf a}. The internal
+structure. {\bf b}. The logic symbol.}}{ck_latch}
+
 The first problem is solved in Figure \ref{ck_latch}a by conditioning the application of signals S'and R' to the latch in Figure \ref{symLatches}a by an additional signal that we will call the clock, CK. Thus, we will use the S and R inputs to specify how the circuit switches and the CK input to specify when the circuit switches. In this way, the decoupling of "{\em when}" from "{\em how}" is obtained. By synchronizing state changes with the clock, the system avoids unintended transitions caused by transient inputs or noise. 
 
 For the clocked latch, two NAND gates are added (see Figure \ref{ck_latch}) to allow the S and R inputs to be conditioned by the clock.
 
-\placedrawing[H]{figures/03_03_clocked_latches.lp}{{\bf Elementary clocked latch.}
-{\small The transparent RS clocked latch is sensitive
-(transparent) to the input signals during the active level of the
-clock (the high level in this example). {\bf a}. The internal
-structure. {\bf b}. The logic symbol.}}{ck_latch}
+
 
 %***************************
 \subsection{D Latch\index{latch!data latch (DL): a clocked latch with {\tt S = D} and {\tt R = D'}}}
@@ -68,9 +68,7 @@ For the second problem, we have a solution achieved through a restriction. We co
 
 \placedrawing[h]{figures/03_04_data_latch.lp}{{\bf The data latch.} {\small
 Imposing the restriction $R=S'$ to an RS latch results in the {\bf D
-latch} without non-predictable transitions ($R=S=1$ is not anymore
-possible). {\bf a.} The structure. {\bf b.} The logic symbol. {\bf
-c.} An improved version for the data latch internal
+latch} without non-predictable transitions. {\bf a.} The structure. {\bf b.} The logic symbol. {\bf c.} An improved version for the data latch internal
 structure. {\bf d.} The optimal structure using an elementary multiplexer.}}{d_latch}
 
 In the context of a latch, \textit{transparency} refers to the period during which the output follows the input directly. When the enable signal is active, any change at the input is immediately reflected at the output, making the latch behave like a simple wire. 
@@ -84,13 +82,10 @@ For the time interval in which the clock is active, CK = 1, it means that the la
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The clocked latch, in the SR version as well as in the D version (data latch), allows switching at any time during the transparency. This can result in an instability and/or unwanted changes in the output signal. Many applications require switching at a precise time, typically determined by the active, positive, or negative transition of the clock signal. Applying the {\em primary-secondary principle}\index{Primary-Secondary principle: the circuit configuration that ensures, by connecting two latches in series, the edge switching of the resulting storage element} will allow this behavior.
-
 Figure \ref{m_s}a shows a structure in which transparency is blocked by two RS latches that have the clock applied in antiphase. On the active level of the clock, the positive one, the first latch, the primary latch, is transparent. This allows it to be switched according to the S and R inputs without affecting the output of the circuit because the second latch is not transparent. On the inactive level of the clock, the second latch copies the state of the first latch, which cannot be changed. In this way, the entire circuit switches as a consequence of the negative transition of the clock signal. So, the active edge of the clock applied to the primary-secondary structure is the negative one. In Figure \ref{m_s}b, the logical symbol of the structure in Figure \ref{m_s}a is represented.
 
 \placedrawing[H]{figures/03_05_master_slave.lp}{{\bf The primary-secondary principle.}
-{\small Serially connecting two RS latches, activated with
-different levels of the clock signal, results in a non-transparent
-storage element. {\bf a.} The structure of an RS primary-secondary
+{\small  {\bf a.} The structure of an RS primary-secondary
 flip-flop, active on the falling edge of the clock signal. {\bf
 b.} The logic symbol of the RS flip-flop triggered by the {\em negative edge} of clock. {\bf
 c.} The logic symbol of the RS flip-flop triggered by the {\em positive edge} of clock.}}{m_s}
@@ -187,7 +182,7 @@ The previously exemplified {\tt threeAdder.sv} module performs the addition of t
                     lastline=60]
                     {\verilogSourceDir/A09_pipelinedThreeAdder.sv}
 }  
-Two modules of {\tt adder} defined Example \ref{adder}
+Two modules of {\tt adder} 
 are instantiated as {\tt inAdder} and {\tt outAdder}, they are
 interconnected using the pipeline  register {\tt pipeReg}. The register {\tt subcReg} is used to synchronize the {\tt in2} input with the pipelined result provided by {\tt inAdder}.
 
@@ -217,32 +212,29 @@ The waveforms that define the operation of the structure in Figure \ref{ram} are
 \begin{description}
     \item[$t_{ASU}$]: address set-up time represents the time interval in which the address must be stable before the activation of the WE signal to allow the decoder in the DMUX to do its work.
     \item[$t_{DSU}$]: data set-up time represents the time interval in which DIN must be stable before de-activating the WE signal to allow the correct closing of the reaction loop in the selected latch.
-    \item[$t_{DH}$]: data hold represents the time interval in which DIN must be stable after deactivating the WE signal to allow the correct closing of the reaction loop in the selected latch.
-
-\placedrawing[H]{figures/03_10_async_ram.lp}{{\bf Read and write cycles for an
-asynchronous RAM.} {\small Reading is a combinational process of
-selecting. The access time, $t_{ACC}$, is given by the propagation
-through a big MUX. The write enable signal must be strictly
-included in the time interval when the address is stable (see
-$t_{ASU}$ and $t_{AH}$). Data must be stable related to the
-positive transition of $WE'$ (see $t_{DSU}$ and $t_{DH}$).}}{wave}
-
-    
+    \item[$t_{DH}$]: data hold represents the time interval in which DIN must be stable after deactivating the WE signal to allow the correct closing of the reaction loop in the selected latch.   
     \item[$t_{W}$]: width of the write enable signal which ensures correct writing in the selected latch
     \item[$t_{AH}$]: address hold time is the time interval in which the address must be maintained after the WE signal is provided
     \item[$t_{ACC}$]: access time is the time interval after which the content of the selected cell is accessible at the output
 \end{description}
+
+\placedrawing[H]{figures/03_10_async_ram.lp}{{\bf Read and write cycles for an
+asynchronous RAM.} {\small  The access time, $t_{ACC}$, is given by the propagation
+through  MUX. The write enable signal must be strictly
+included in the time interval when the address is stable (see
+$t_{ASU}$ and $t_{AH}$). Data must be stable related to the
+positive transition of $WE'$.}}{wave}
 All the times previously listed are minimum values.
+
+\placedrawing[H]{figures/03_11_async_mbit_ram.lp}{{\bf The asynchronous $m$-bit word
+RAM.} {\small Expanding the number of bits per word means to
+connect in parallel one-bit word memories which share the same
+decoder.}}{bigword}\textcolor[rgb]{0.00,0.00,0.00}{}
 
 How can you build a RAM memory that stores words of $m$ bits? The generic solution is presented in Figure \ref{bigword} where for each bit a column containing latches $2^p$ is defined.
 
 In Figure \ref{bigword}, $DCD_p$ is shared between the DMUX and the MUX in Figure \ref{ram}. The ANDs associated with the demultiplexing function are selected with the WE signal. The AND-OR structure is repeated $m$ times, once in each $COLUMN_i$ column.
 
-\placedrawing[H]{figures/03_11_async_mbit_ram.lp}{{\bf The asynchronous $m$-bit word
-RAM.} {\small Expanding the number of bits per word means to
-connect in parallel one-bit word memories which share the same
-decoder. Each COLUMN contains storing latches and  AND-OR
-circuits for one bit.}}{bigword}\textcolor[rgb]{0.00,0.00,0.00}{}
 
 %******************************************
 \subsection{Synchronous RAM}\index{RAM (Random-Access Memory)!synchronous  RAM}\label{syncMem}
@@ -345,16 +337,7 @@ The internal structure of a file register is characterized by two multiplexers t
                     lastline=30]
                     {\verilogSourceDir/A09_regFile.sv}
 
-\begin{verisum}{\em :
 
-\hspace{-0.8cm} \rule[5mm]{16cm}{0.25mm} \vspace{-0.7cm}
-
-\begin{description}
-    \item[logic] [m-1:0] mem[0:n-1]: defines a block of memory of $n$ $m$-bit words
-    \item[always\_ff]: defines a block which describes the behavior of register-like sequential circuits; it is followed always at least by {\tt {\bf @(posedge} clock)} or {\tt {\bf @(negedge} clock)} specifying the clock signal and its active edge. The non-blocking assignment, {\tt <=}, is used to assure the sequential behavior. While {\tt always\_comb} describes the behavior of a combinational circuit, {\tt always\_ff} ({\tt ff} comes from flip-flop) describes the behavior of the sequential, clock triggered, circuit called {\tt register}. Now {\tt logic} represents a register instead of an output of a combinational circuit like in the case of {\tt always\_comb}.
-\end{description}
-\rule[5mm]{16cm}{0.25mm} }
-\end{verisum}
 
 \ifthenelse{\boolean{chiselversion}}{
 \includechiselcode[caption={Register File (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}, firstline=24, firstnumber=24, lastline=999]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
@@ -402,12 +385,6 @@ The basic cell of a CAM consists of:
     applied to the input of the cell.
 \end{itemize}
 
-\placedrawing[H]{figures/06_05_content_addressable_cell.lp}{{\bf Content Addressable Cell.}
-{\small {\bf a.} The structure: data latches whose content is
-compared against the input data using 4 XORs and one NAND. Write
-is performed applying the clock with stable data input. {\bf b.}
-The logic symbol.}}{cam_cell}
-
 In Figure \ref{cam_cell} there are 4 D latches as storage elements
 and four XORs connected to a 4-input NAND used as comparator. The
 cell has two functions:
@@ -420,6 +397,13 @@ cell has two functions:
     with the cell content that generates the signal $AO'=0$ if
     the input matches the content.
 \end{itemize}
+
+\placedrawing[H]{figures/06_05_content_addressable_cell.lp}{{\bf Content Addressable Cell.}
+{\small {\bf a.} The structure: data latches whose content is
+compared against the input data using 4 XORs and one NAND.  {\bf b.}
+The logic symbol.}}{cam_cell}
+
+
 
 \placedrawing[H]{figures/06_06_content_addressable_memory.lp}{{\bf The Content Addressable Memory
 ({\em CAM}).} {\small {\bf a.} A 4-word CAM is built using 4
@@ -830,7 +814,7 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Simulate the behavior of the register file described in Section \ref{fastregFile} to prove the read-during-write operation.
+Simulate the behavior of the register file described in Section \ref{registerFile} to prove the read-during-write operation.
 
 $\diamond$
 \end{problem} 

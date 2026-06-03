@@ -75,9 +75,9 @@ module DECODE(  input   logic [31:0]    instruction1,
          else if (leftFwdO) opSel[3:2] = 2'b10  ;
                else         opSel[3:2] = 2'b00  ;
 // end forwarding section
-    assign dataWrite = opCode3 == `store                             ;
-    assign dataRead  = opCode3 == `read                              ;
-    assign memSel    = opCode3 == `read                              ;
+    assign dataWrite = opCode3 == `store                          ;
+    assign dataRead  = opCode3 == `read                           ;
+    assign memSel    = opCode3 == `read                           ;
     assign we        = ((opCode3[4] == 1'b1) |
-                        (opCode3 == `read)) & !(intState > 3'b001)   ;
+                        (opCode3 == `read)) & !(intState > 3'b001);
 endmodule

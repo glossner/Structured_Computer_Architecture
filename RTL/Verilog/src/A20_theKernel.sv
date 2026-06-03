@@ -15,16 +15,16 @@
             cJMP(14);   NOP; // hSQMMAC(dest,left,right)
             cJMP(15);   NOP; // hTRANS(dest,left)
             cJMP(16);   NOP; // hPRANDOM(dest)
-//********** START COUNTER *******************************************
+//********** START COUNTER ****************************************
     LB(1);  cSTART;         VLOAD(22);
             cJMP(32);       NOP;
-//********** STOP COUNTER ********************************************
-    LB(2);  cSTOP;          VLOAD(33);
+//********** STOP COUNTER *****************************************
+   LB(2);  cSTOP;          VLOAD(33);
             cJMP(32);       NOP;
-//********** INTERRUPT REQEST ****************************************
+//********** INTERRUPT REQEST *************************************
     LB(3);  cSETINT;        VLOAD(44);
             cJMP(32);       NOP;
-//********** SQUARE MATRIX X GENERATE ********************************
+//********** SQUARE MATRIX X GENERATE *****************************
     LB(4);  cPARAM;         NOP;
             cNOP;           CLOAD;
             cVLOAD(`p-1);   VSUB(1);
@@ -33,7 +33,7 @@
     LB(17); cNOP;           RISTORE(1);
             cBRNZDEC(17);   VADD(1);
             cJMP(32);       NOP;
-//********** SQUARE MATRIX N GENERATE ********************************
+//********** SQUARE MATRIX N GENERATE *****************************
     LB(5);  cPARAM;         NOP;
             cNOP;           CLOAD;
             cVLOAD(`p-1);   VSUB(1);
@@ -42,7 +42,7 @@
     LB(18); cNOP;           RISTORE(1);
             cBRNZDEC(18);   VADD(1);
             cJMP(32);       NOP;
-//********** SEND MATRIX *********************************************
+//********** SEND MATRIX ******************************************
     LB(6);  cPARAM;         NOP;
             cPARAM;         CLOAD;
             cNOP;           ADDRLD;
@@ -55,7 +55,7 @@
             cNOP;           NOP;
             cDATAEXT(`p/2); NOP;
             cJMP(19);       RISENDIO(1);
-//********** GET MATRIX **********************************************
+//********** GET MATRIX *******************************************
     LB(7);  cPARAM;         GETIO(0);
             cPARAM;         CLOAD;
             cNOP;           NOP;
@@ -69,7 +69,7 @@
             cNOP;           NOP;
             cNOP;           NOP;
             cJMP(20);       NOP;
-//********** MAIN MATRIX GENERATE ************************************
+//********** MAIN MATRIX GENERATE *********************************
     LB(8);  cPARAM;         NOP;
             cNOP;           CLOAD;
             cPARAM;         ADDRLD;
@@ -85,7 +85,7 @@
             cGRSHIFT;       RISTORE(1);
             cBRNZDEC(22);   NOP;
             cJMP(32);       NOP;
-//********** ADD SQUARE MATRICES *************************************
+//********** ADD SQUARE MATRICES **********************************
     LB(9);  cPARAM;         NOP;
             cSTORE(3);      NOP;    // dest at mem[3]
             cPARAM;         NOP;
@@ -113,18 +113,18 @@
             cSTORE(6);      NOP;
             cBRNZ(23);      NOP;
             cJMP(32);       NOP;
-//************ INDEX VECTOR GENERATE *********************************
+//************ INDEX VECTOR GENERATE ******************************
     LB(10); cPARAM;         IXLOAD;
             cJMP(32);       CSTORE;
-//************ N VECTOR GENERATE *************************************
+//************ N VECTOR GENERATE **********************************
     LB(11); cPARAM;         NOP;
             cPARAM;         CLOAD;
             cJMP(32);       CSTORE;
-//************ MATRIX-VECTOR MULTIPLY ********************************
-    LB(12); cPARAM;                 NOP;        // dest address
-            cSTORE(1);              NOP;        // mem[1] dest address
-            cPARAM;                 NOP;        // matrix address
-            cVADD(`p);              REDADD;     // end matrix
+//************ MATRIX-VECTOR MULTIPLY *****************************
+    LB(12); cPARAM;                 NOP;    // dest address
+            cSTORE(1);              NOP;    // mem[1] dest address
+            cPARAM;                 NOP;    // matrix address
+            cVADD(`p);              REDADD; // end matrix
             cNOP;                   CLOAD;
             cPARAM;                 ADDRLD;
             cNOP;                   NOP;
@@ -135,7 +135,7 @@
     LB(27); cBRNZDEC(27);           NOP;
             cLOAD(1);               GETSR;
             cJMP(32);               CSTORE;
-//********** MULTIPLY SQUARE MATRICES ********************************
+//********** MULTIPLY SQUARE MATRICES *****************************
     LB(13); cPARAM;                 REDADD;
             cVSUB(1);               NOP;
             cSTORE(3);              NOP;    // dest => 3
@@ -167,7 +167,7 @@
             cSTORE(1);              NOP;
             cVLOAD(`p-1);           RILOAD(0);
             cJMP(25);               NOP;
-//********** MULTIPLY & ACCUMULATE SQUARE MATRICES *******************
+//********** MULTIPLY & ACCUMULATE SQUARE MATRICES ****************
     LB(14); cPARAM;                 REDADD;
             cVSUB(1);               NOP;
             cSTORE(3);              NOP;    // dest => 3
@@ -200,7 +200,7 @@
             cSTORE(1);              NOP;
             cVLOAD(`p-1);           RILOAD(0);
             cJMP(26);               NOP;
-//********** TRANSPOSE ***********************************************
+//********** TRANSPOSE ********************************************
     LB(15); //cSTART;                   NOP;
             cPARAM;                 IXLOAD;
             cSTORE(0);              SENDSR; // mem[0]=dest
@@ -247,7 +247,7 @@
             cBRZDEC(32);            NOP;
             cSTORE(3);              NOP;
             cJMP(38);               NOP;
-//********** PSEUDO-RANDOM MATRIX ************************************
+//********** PSEUDO-RANDOM MATRIX *********************************
     LB(16); cPARAM;                 ACTIVATE;
             cNOP;                   CLOAD;
             cNOP;                   ADDRLD;
