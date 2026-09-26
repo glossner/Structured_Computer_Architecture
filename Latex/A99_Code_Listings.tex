@@ -84,5 +84,23 @@
 \subsection{ALUs}
 \includechiselcode[caption={64-bit ALU (Chisel: ALU64.scala)}]{\chiselSourceDir/ALUs/ALU64.scala}
 
+\subsection{Memory \& Register Files}
+\subsubsection{Vector-Based Register File}
+\includechiselcode[caption={Register File using Vector of Registers (Chisel: RegFile2R1WVec.scala)}]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
+\subsubsection{SRAM-Based Register File}
+\includechiselcode[caption={Synchronous SRAM Register File (Chisel: RegFile2R1WSRAM.scala)}]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
+\subsubsection{RISC-V Architectural Register File}
+\includechiselcode[caption={RISC-V 32-Register Architectural Register File (Chisel: RiscvRegFile.scala)}]{\chiselSourceDir/memory/RiscvRegFile.scala}
+
+\subsection{Automata}
+\subsubsection{Mealy Language Recognizer}
+\includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}]{\chiselSourceDir/automata/LanguageRecognizer.scala}
+\subsubsection{Greatest Common Divisor (GCD)}
+\includechiselcode[caption={Greatest Common Divisor Complex Automaton (Chisel: GCD.scala)}]{\chiselSourceDir/GCD.scala}
+\subsubsection{RISC-V Program Counter}
+\includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}]{\chiselSourceDir/automata/ProgramCounter.scala}
+\subsubsection{RISC-V RALU Execution Subsystem}
+\includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}]{\chiselSourceDir/automata/RALU.scala}
+
 }% End Chisel Version
 

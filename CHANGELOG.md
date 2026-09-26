@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-26
 
 ### Added
+- **Phase 1 RISC-V Hardware Bridge & Automata (Chapters 9 & 10)**:
+  - Implemented `RiscvRegFile.scala` (32-register × 32-bit RV32 register file with hardwired `x0 === 0.U`) and unit test suite `RiscvRegFileTest.scala`.
+  - Implemented `LanguageRecognizer.scala` (type-safe Mealy FSM for regular language $a^+ b^+$ with `ChiselEnum`) and unit test suite `LanguageRecognizerTest.scala`.
+  - Implemented `ProgramCounter.scala` (RV32 instruction sequencer supporting Plus4, Branch, JALR with LSB zeroing, and Stall) and unit test suite `ProgramCounterTest.scala`.
+  - Implemented `RALU.scala` (2-OS execution engine loop coupling register file, ALU, immediate mux, and write-back) and unit test suite `RALUTest.scala`.
+  - Updated `Latex/02_09_memory_circuits_1-OS.tex` and `Latex/02_10_automata_2-OS.tex` with dual-language switches (`verilogversion` and `chiselversion`), ensuring clean single-language and dual-target PDF generation.
+  - Added new memory and automata code listings to `Latex/A99_Code_Listings.tex`.
 - **Comprehensive Subject Index & Glossary**:
   - Expanded index into a 490-entry Subject Index and Glossary covering mathematical foundations, OS abstraction levels (0-OS through N-OS), microarchitectures, and hardware description languages.
   - Implemented hierarchical sub-entries (`!`), architectural definition glosses (`term: definition`), cross-references (`|see`), and historical biographical entries.
