@@ -10,11 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-26
 
 ### Added
+- **Performance Optimized Digital Logic (Chapter 15)**:
+  - Formulated analytical Generate/Propagate equations, unrolled CLA carry recurrences, 3:2 compressor logic, and associative prefix operator logic.
+  - Added architectural comparison table for high-performance adders (RCA, CLA, CSA, Kogge-Stone, Brent-Kung).
+  - Integrated Chisel code listings for combinational register files (`RegFile2R1WVec.scala`) and multi-banked register files (`RegFile.scala`).
+  - Added detailed sequential timing closure analysis contrasting Mealy and Moore machine critical path constraints and glitch sensitivity.
+  - Added index markers across all major topics in Chapter 4.15.
 - **LaTeX Changelog**:
   - Added `Latex/changelog.tex` documenting changes since the First Edition PDF release by topic.
   - Included `changelog.tex` in `Latex/00_main.tex` front matter.
 
 ### Changed
+- **Chapter 15 Code Formatting & Structure**:
+  - Standardized code snippets to `chiselcode` environments, eliminating math-mode code blocks.
+  - Unified fragmented adder sections into a cohesive `High-Performance Adders` section.
+  - Fixed raw markdown artifacts and punctuation errors in register file descriptions.
 - **LaTeX Chisel & Testing Modernization**:
   - Updated Chisel version reference regarding `switch` deprecation in `Latex/02_08_combinational_circuits_0-OS.tex`.
   - Added Scala 2.13.18 version specification alongside Chisel 7.15.0 in `Latex/00_main.tex`.
