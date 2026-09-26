@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-26
 
 ### Added
+- **Comprehensive Subject Index & Glossary**:
+  - Expanded index into a 490-entry Subject Index and Glossary covering mathematical foundations, OS abstraction levels (0-OS through N-OS), microarchitectures, and hardware description languages.
+  - Implemented hierarchical sub-entries (`!`), architectural definition glosses (`term: definition`), cross-references (`|see`), and historical biographical entries.
+  - Added custom MakeIndex style file `Latex/index_style.ist` supporting alphabetical division headers and compact column alignment.
+  - Added robust cross-platform font detection in `Latex/00_main.tex` falling back to Liberation Serif when Times New Roman is not installed.
 - **Performance Optimized Digital Logic (Chapter 15)**:
   - Formulated analytical Generate/Propagate equations, unrolled CLA carry recurrences, 3:2 compressor logic, and associative prefix operator logic.
   - Added architectural comparison table for high-performance adders (RCA, CLA, CSA, Kogge-Stone, Brent-Kung).

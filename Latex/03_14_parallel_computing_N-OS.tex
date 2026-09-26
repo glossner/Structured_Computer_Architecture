@@ -866,7 +866,7 @@ $$\alpha = \frac{k_1 \times 1024^3}{k_2 \times 4^3 \times k_3 \times 256^2} = k 
 $\diamond$
 \end{exemplu}
 
-\section{Parallel Computing Patterns\index{parallel computing patterns!}}
+\section{Parallel Computing Patterns\index{parallel computing patterns: recurring computational idioms for parallel architecture}}\label{parPatterns}
 
 Multiplying matrices is a promising example for the capacity to perform in parallel with MapScanReduce accelerator intense computation. It would be interesting to investigate the acceleration capacity of the MapScanReduce framework for a wider range of applications. A good idea could be formed by looking at the computational patterns that have been highlighted in applications designed and run in the last decades. Let us start with the study carried out in \cite{McCool12} from which we use Figure \ref{parallelPatt} where 17 parallel computational patterns are presented. We will see that almost all of them can be performed using the accelerator MapScanReduce. We will not succeed in the case of those patterns that do not represent an intensive computation but a complex one.
 

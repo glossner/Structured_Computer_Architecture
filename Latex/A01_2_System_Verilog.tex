@@ -1,4 +1,4 @@
-\section{SystemVerilog}
+\section{SystemVerilog\index{SystemVerilog: IEEE standard hardware description and verification language}\index{hardware description language (HDL): language describing digital circuits}\index{IEEE 1800 SystemVerilog standard}}
 
 %%%%%%%%%%%%%%%%%%%%%%
 \subsection{Introduction}
@@ -26,12 +26,12 @@ SystemVerilog enhances Verilog by introducing new data types, operators, and con
 %%%%%%%%%%%%%%%%
 
 %***********************
-\subsection{Data Types}
+\subsection{Data Types\index{SystemVerilog!data types}}
 %**********************
 SystemVerilog introduces new data types in addition to those available in Verilog.
 
 %***********************************
-\subsubsection{Built-in Data Types}
+\subsubsection{Built-in Data Types\index{SystemVerilog!built-in types (logic, bit, byte, int, longint)}}
 %**********************************
 \paragraph{\texttt{logic}} Replaces \texttt{reg} and can be driven by continuous assignments.
 
@@ -50,7 +50,7 @@ SystemVerilog introduces new data types in addition to those available in Verilo
 \paragraph{\texttt{time}} 64-bit unsigned integer.
 
 %*********************************
-\subsubsection{User-Defined Types}
+\subsubsection{User-Defined Types\index{SystemVerilog!user-defined types (typedef, enum, struct, union)}}
 %*********************************
 \paragraph{\texttt{typedef}} Used to create new type names. Example: \texttt{typedef logic [7:0] byte\_t;}
 
@@ -61,7 +61,7 @@ SystemVerilog introduces new data types in addition to those available in Verilo
 \paragraph{\texttt{union}} Overlapping data storage. Example: \texttt{union \{int i; byte b[4];\} u;}
 
 %******************
-\subsection{Arrays}
+\subsection{Arrays\index{SystemVerilog!arrays (packed, unpacked, dynamic, associative, queue)}}
 %******************
 \subsubsection{Packed and Unpacked Arrays}
 
@@ -94,7 +94,7 @@ SystemVerilog extends Verilog operators with new ones.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %**************************************
-\subsection{Enhanced Procedural Blocks}
+\subsection{Enhanced Procedural Blocks\index{SystemVerilog!procedural blocks (always\_comb, always\_ff, always\_latch)}}
 %**************************************
 \paragraph{\texttt{always\_comb}} Replaces \texttt{always @(*)} for combinational logic.
 
@@ -124,7 +124,7 @@ SystemVerilog introduces new control flow constructs.
 \paragraph{\texttt{`\$ifdef}, \texttt{`\$ifndef}, \texttt{`\$elsif}, \texttt{`\$else}, \texttt{`\$endif}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Interfaces and Modports}
+\subsection{Interfaces and Modports\index{SystemVerilog!interfaces and modports}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Interfaces encapsulate communication between modules.
@@ -163,7 +163,7 @@ Tasks can consume time and have input/output/inout arguments.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%
-\subsection{Packages}
+\subsection{Packages\index{SystemVerilog!packages and imports}}
 %%%%%%%%%%%%%%%%%%%
 Packages allow the grouping of declarations that can be shared across modules.
 \begin{verilogcode}
@@ -192,7 +192,7 @@ SystemVerilog introduces classes for verification purposes \cite{stapko2008advan
 \end{itemize}
 
 %*************************
-\subsection{Randomization}
+\subsection{Randomization\index{SystemVerilog!constrained random verification}}
 %*************************
 \begin{itemize}
     \item Constraint random variables using \texttt{rand}, \texttt{randc}.
@@ -205,7 +205,7 @@ SystemVerilog introduces classes for verification purposes \cite{stapko2008advan
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %**********************
-\subsection{Assertions}
+\subsection{Assertions\index{SystemVerilog!assertions (SVA)}}
 %**********************
 SystemVerilog assertions (SVA) are used for design verification \cite{foster2003assertions}.
 \begin{itemize}
@@ -216,7 +216,7 @@ SystemVerilog assertions (SVA) are used for design verification \cite{foster2003
 \end{itemize}
 
 %********************
-\subsection{Coverage}
+\subsection{Coverage\index{SystemVerilog!functional coverage (covergroup, coverpoint)}}
 %********************
 Coverage metrics help measure how much of the design has been tested.
 \begin{itemize}

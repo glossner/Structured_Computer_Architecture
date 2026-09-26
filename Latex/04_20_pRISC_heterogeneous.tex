@@ -1,4 +1,4 @@
-\chapter{Using the Heterogeneous System hRISC}\label{hrisc}
+\chapter{Using the Heterogeneous System hRISC\index{hRISC: heterogeneous system combining mono-core host and many-core pRISC accelerator}\index{heterogeneous computing: system combining diverse processing cores or accelerators}}\label{hrisc}
 \localtoc
 
 This chapter brings together in a heterogeneous configuration (see \ref{hetCompSystem}), under the name {\bf {\em hRISC}}, the mono-core RISC structure with the many-core pRISC structure. The two structures are assembled into a system in order to simulate the functioning of a heterogeneous computer thus structured. Then, the micro-architectures associated with the system components will be described.  The architecture of the entire system is then defined. Programming examples are provided at the end when the development of a function library core at the lowest level in the system are also presented.
@@ -81,7 +81,7 @@ The role of the interfaces (see Figure \ref{fig:hetInterfaces} and Listing \ref{
 
 
 
-pRISC, which comes from {\em parallel RISC}\footnote{The name was proposed by Jim Peek \cite{Peek83} who as a master's student led the team of students who, at the initiative of professors David Patterson and Carlo Sequin, designed the first RISC processor in 1980 at Berkeley University (\url{https://www.computerhistory.org/revolution/digital-logic/12/286/1593}).} is the central component of the heterogeneous system we present. It is represented in Figure \ref{fig:pRISC} and codified in Listing \ref{lst:pRISC}, and consists of:
+pRISC\index{pRISC: parallel RISC architecture combining controller sequencer and linear cellular array}, which comes from {\em parallel RISC}\footnote{The name was proposed by Jim Peek\index{Peek, Jim: proposed pRISC parallel RISC name} \cite{Peek83} who as a master's student led the team of students who, at the initiative of professors David Patterson\index{Patterson, David (1947--): RISC and memory hierarchy pioneer} and Carlo Sequin\index{Sequin, Carlo: Berkeley RISC pioneer}, designed the first RISC processor in 1980 at Berkeley University (\url{https://www.computerhistory.org/revolution/digital-logic/12/286/1593}).} is the central component of the heterogeneous system we present. It is represented in Figure \ref{fig:pRISC} and codified in Listing \ref{lst:pRISC}, and consists of:
 \begin{itemize}
     \item {\tt controller}: a RISC-based computer used as sequencer
     \item {\tt array}: a two-loop linear cellular array of execution units.
@@ -108,11 +108,11 @@ pRISC, which comes from {\em parallel RISC}\footnote{The name was proposed by Ji
     \label{fig:hetArray}
 \end{figure}
 
-While the controller is a well-established structure, the cellular area deserves explicit detail. It contains, see Figure \ref{fig:hetArray} and Listing \ref{lst:array} three functional components:
+While the controller is a well-established structure, the cellular area deserves explicit detail. It contains, see Figure \ref{fig:hetArray} and Listing \ref{lst:array} three functional components\index{Map-Scan-Reduce (MSR) network: parallel architecture network supporting map, scan, and reduce functions}:
 \begin{itemize}
-    \item the linear array of cells, {\tt map}, which includes the $log$-depth distribution network used to send in each clock cycle form controller to each cell an instruction with the associated value
-    \item the first loop which reduces the vector, issued by the linear array of cells, to a scalar sent to the controller
-    \item the second loop which applies to the vector provided by the map section a scan function and sends back the resulting vector to the array.
+    \item the linear array of cells, {\tt map}\index{map array: linear array of parallel execution cells}, which includes the $log$-depth distribution network used to send in each clock cycle form controller to each cell an instruction with the associated value
+    \item the first loop which reduces the vector, issued by the linear array of cells, to a scalar sent to the controller\index{reduce network: logarithmic network aggregating vector outputs to a scalar}
+    \item the second loop which applies to the vector provided by the map section a scan function and sends back the resulting vector to the array\index{scan network: prefix computation network over cellular array vectors}.
 \end{itemize}
 
 

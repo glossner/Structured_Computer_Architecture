@@ -17,7 +17,7 @@ The most common methods for representing negative numbers in binary include:
 Each method modifies the interpretation of the most significant bit (MSB) to indicate the sign of the number, allowing the binary system to represent both positive and negative values. In the following sections, we explore each of these methods in detail, highlighting their advantages, disadvantages, and applications.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Signed-Magnitude Representation}
+\section{Signed-Magnitude Representation}\index{signed-magnitude: representation using explicit sign bit and magnitude}\index{sign bit: bit indicating sign in signed representations}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The signed-magnitude representation is one of the simplest methods for representing negative numbers in binary. It extends the unsigned binary system by reserving the most significant bit (MSB) as a \textit{sign bit}, while the remaining bits represent the magnitude of the number. This approach allows for both positive and negative integers to be encoded within the same binary system.
 
@@ -78,7 +78,7 @@ The following are the mathematical properties of this representation:
      \]
      \end{itemize}
 
-    \item Dual Representation of Zero:
+    \item Dual Representation of Zero\index{dual zeros: existence of $+0$ and $-0$ in signed representations}:
      \[
      0000_2 \; (\text{positive zero, } +0) \quad \text{and} \quad 1000_2 \; (\text{negative zero, } -0).
      \]
@@ -204,7 +204,7 @@ Disadvantages:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{One's Complement Representation}
+\section{One's Complement Representation}\index{one's complement@one's complement: binary signed representation where negative is bitwise inversion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The one's complement representation is a method for representing signed integers in binary. It improves upon the signed-magnitude representation by eliminating the dual representation of zero, while still maintaining a straightforward method for negating numbers. In one's complement, negative numbers are represented by inverting (complementing) all the bits of their positive counterparts.
 
@@ -384,7 +384,7 @@ Advantages:
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Two's Complement Representation}
+\section{Two's Complement Representation}\index{two's complement: binary signed representation where negative is inverted bits plus 1}\index{two's complement!definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The two's complement representation is the most widely used method for representing signed integers in modern computing systems. It resolves the inefficiencies of signed-magnitude and one's complement, providing a simple and consistent way to represent both positive and negative integers, while ensuring efficient arithmetic operations. In two's complement, negative numbers are represented by the bitwise complement of their positive counterparts, plus one.
 
@@ -433,7 +433,7 @@ The following are the mathematical properties of this representation:
         \item The remaining \( n-1 \) bits represent the magnitude, with negative numbers represented as the two's complement (bitwise complement plus 1) of their positive counterparts.
     \end{itemize}
 
-    \item Range:
+    \item Range\index{two's complement!range}\index{two's complement!asymmetric range}:
     \begin{itemize}
         \item The representable range of numbers is:
      \[
@@ -586,7 +586,7 @@ Note that there is a unique representation for zero (\( 0000 \)).
 
 
 %*****************************************************************
-\subsection{Intermediate Overflow in 2's Complement Arithmetic}
+\subsection{Intermediate Overflow in 2's Complement Arithmetic}\index{intermediate overflow: temporary overflow in multi-step arithmetic that cancels out}\index{two's complement!intermediate overflow}
 %*****************************************************************
 In 2's complement arithmetic, it is permissible for intermediate results to overflow during a sequence of arithmetic operations, as long as the final result falls within the representable range. This is because 2's complement arithmetic operates modulo \( 2^n \), where \( n \) is the number of bits, and modular arithmetic ensures correctness under these conditions.
 
@@ -676,7 +676,7 @@ Disadvantages:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Excess-\( k \) Representation}
+\section{Excess-\( k \) Representation}\index{excess-k representation@excess-$k$ representation: biased representation of numbers}\index{excess-k representation!definition@excess-$k$ representation!definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The excess-\( k \) (or biased) representation is a method for representing signed integers in binary by introducing a bias (offset) \( k \) to the actual value. This approach effectively maps both positive and negative integers to non-negative binary representations, simplifying certain arithmetic and logical operations. Excess-\( k \) is widely used in applications such as floating-point exponent representation, where a purely positive range of values is advantageous.
 
@@ -1028,7 +1028,7 @@ Less intuitive for human interpretation.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Binary Coded Decimal (BCD) Representation}
+\section{Binary Coded Decimal (BCD) Representation}\index{binary coded decimal (BCD): encoding decimal digits as 4-bit binary values}\index{BCD|see{binary coded decimal (BCD)}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Binary Coded Decimal (BCD) is a class of binary encoding for decimal numbers where each decimal digit is represented by a fixed number of binary bits, typically four. This encoding allows decimal digits to be stored and manipulated directly in a binary system, avoiding conversion between decimal and binary representations. BCD is widely used in financial applications, calculators, and digital systems where precision and human-readability of decimal values are critical \cite{Hennessy19, stallings2020}.
 
@@ -1305,25 +1305,25 @@ BCD:
 In addition to the widely known methods of signed-magnitude, one's complement, two's complement, and excess-\( k \), other binary representations for signed numbers have been used historically or in specialized systems. These alternative representations often address specific challenges, such as reducing error, improving computational efficiency, or handling broader dynamic ranges.
 
 
-\paragraph{Sign-and-Logarithm Representation: } 
+\paragraph{Sign-and-Logarithm Representation: }\index{sign-and-logarithm representation: encoding numbers as sign bit and log magnitude} 
 Numbers are represented using a sign bit and the logarithm of their absolute value. This method is particularly useful for encoding a wide dynamic range of values with fewer bits. Sign-and-logarithm representations have been used in early scientific computations and audio processing systems where efficiency in representation outweighed complexity in arithmetic. However, addition and subtraction operations are computationally expensive, as they require converting numbers back to linear scale. This method is conceptually similar to floating-point representations but lacks their generality \cite{hamming1980}.
 
-\paragraph{Gray Code: } 
+\paragraph{Gray Code: }\index{Gray code: binary code where consecutive values differ by only one bit} 
 Gray code is a binary numeral system where consecutive numbers differ by only one bit. Although Gray code is typically used in signal encoding and rotary encoders, it has been adapted for signed number representations in niche applications. This representation reduces errors in digital communication systems by minimizing bit transitions. However, arithmetic operations in Gray code are nontrivial and require conversion to standard binary \cite{gray1953}.
 
-\paragraph{Offset Binary (Biased Binary: )} 
+\paragraph{Offset Binary (Biased Binary: )}\index{offset binary: representation applying fixed bias to signed numbers} 
 Offset binary, also known as biased binary, is similar to excess-\( k \) but applies a fixed bias directly to the binary representation of both positive and negative numbers. This representation is often used in digital signal processing (DSP) systems to encode signals symmetrically around zero. Applications include Analog-to-Digital Converters (ADCs) and Digital-to-Analog Converters (DACs). The primary drawback is that arithmetic operations require normalization to adjust for the bias, similar to excess-\( k \) \cite{oppenheim2014}.
 
-\paragraph{Base-2 Signed-Digit (SD) Representation: } 
+\paragraph{Base-2 Signed-Digit (SD) Representation: }\index{signed-digit representation: redundant binary representation enabling carry-free addition} 
 A signed-digit representation allows each digit to independently represent a value of \(-1\), \( 0 \), or \( +1 \). This system enables carry-free addition, making it highly efficient for certain high-speed arithmetic systems and redundant number systems. However, it requires special encoding and decoding processes, which complicates implementation. This method is primarily used in specific high-performance computing applications \cite{koren2002}.
 
-\paragraph{Balanced Ternary: }
+\paragraph{Balanced Ternary: }\index{balanced ternary: ternary representation with digits -1, 0, and +1}
 Balanced ternary is a non-binary numeral system that uses three digits: \(-1\), \( 0 \), and \( +1 \). While not strictly binary, it has been considered for signed representations in early computing systems. One notable example is the Soviet Setun computer, which used balanced ternary due to its efficiency in certain calculations. However, its lack of compatibility with modern binary-based digital systems limits its applicability today \cite{lukyanov1961}.
 
 \paragraph{Segmented Representations: }
 In segmented representations, numbers are divided into multiple segments, with some segments used to encode the sign and others for magnitude or auxiliary components. These representations are rarely used in general-purpose systems but have been employed in specialized hardware architectures for non-standard data types. Segmented representations are complex to decode and implement for arithmetic operations, which has limited their adoption \cite{smith1991}.
 
-\paragraph{Residue Number System (RNS): }
+\paragraph{Residue Number System (RNS): }\index{residue number system (RNS): carry-free representation based on modular residues}\index{RNS|see{residue number system (RNS)}}
 The residue number system represents numbers as a set of residues modulo several pairwise coprime integers. This system supports signed numbers by choosing appropriate moduli. RNS is advantageous for high-speed computation in specialized domains such as cryptography and signal processing. While addition, subtraction, and multiplication are efficient in RNS, comparison and division operations are significantly more complex, which limits its use in general computing \cite{heydari2016}.
 
 \paragraph{Summary: } 

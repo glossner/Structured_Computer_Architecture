@@ -12,15 +12,15 @@ The toyRISC processor described in section \ref{toyRISCprocessor} in implemented
 
 The structure of the toyRISC processor is a three-level hierarchy of circuits:
 \begin{description}
-    \item[toyRISC]: the very simple RISC processor used to illustrate the principle of a processing unit as a system based on a loop connected two automata (Program Counter and Register with ALU) serially connected to the module DCD containing an automaton, used to manage the interrupt signal, and few combinational circuits used as a small decode unit
+    \item[toyRISC]\index{toyRISC: educational RISC processor architecture}\index{toyRISC!generic implementation}: the very simple RISC processor used to illustrate the principle of a processing unit as a system based on a loop connected two automata (Program Counter and Register with ALU) serially connected to the module DCD containing an automaton, used to manage the interrupt signal, and few combinational circuits used as a small decode unit
         \begin{description}
-            \item[DCDtoyRISC]: the complex part of toyRISC which is a very small 2-state automaton and few gates; has a quantitatively insignificant share in the structural economy of the entire system
-            \item[PCtoyRISC]: is a simple circuit used to manage the program control
-            \item[RALUtoyRISC]: is a simple circuit used as execution unit; from a quantitative point of view it has the highest share in the economy of the system
+            \item[DCDtoyRISC]\index{toyRISC!decode unit (DCDtoyRISC)}: the complex part of toyRISC which is a very small 2-state automaton and few gates; has a quantitatively insignificant share in the structural economy of the entire system
+            \item[PCtoyRISC]\index{toyRISC!program counter (PCtoyRISC)}: is a simple circuit used to manage the program control
+            \item[RALUtoyRISC]\index{toyRISC!execution unit (RALUtoyRISC)}: is a simple circuit used as execution unit; from a quantitative point of view it has the highest share in the economy of the system
                 \begin{description}
-                    \item[regFile]: defined in \ref{registerFile} and generically described  in \ref{lst:A09_regFile.sv}
-                    \item[ALU]: defined in \ref{alu1} and generically described  in \ref{lst:A08_alu.sv}
-                    \item[bigMux]: defined in \ref{genericMux}
+                    \item[regFile]\index{toyRISC!register file (regFile)}: defined in \ref{registerFile} and generically described  in \ref{lst:A09_regFile.sv}
+                    \item[ALU]\index{toyRISC!arithmetic logic unit (ALU)}: defined in \ref{alu1} and generically described  in \ref{lst:A08_alu.sv}
+                    \item[bigMux]\index{toyRISC!multiplexer (bigMux)}: defined in \ref{genericMux}
                 \end{description}     
         \end{description}
 \end{description}
@@ -107,7 +107,7 @@ In Figure \ref{toyRiscProc} is represented the schematic provided by the Vivado 
 Figure \ref{toyRISCProc} contains the detailed schematic of toyRISC as represented by the Vivado tool. This representation is intended to give only an idea about the complexity of the project. In the electronic version of the book, this image can be inspected in more detail using the zoom feature of the editor.
 
 
-\subsection{Code generator}\label{codeGen}
+\subsection{Code generator\index{toyRISC!code generator (RISCcodeGenerator)}\index{two-pass assembler: symbol resolution using address calculation across two passes}}\label{codeGen}
 
 In assembly language, the toyRISC processor can only be used if there is a binary code generator, however simple, to translate the mnemonic sequences (see Table \ref{tab:riscISA}) into executable code. The Listing \ref{lst:RISCcodeGenerator} file describes in System Verilog (for the simplicity of the application) the translation mechanism of all the mnemonics defined for touRISC. In addition to the translation into binary itself, the problem of program jumps to labels defined by the program designer is also solved. Since jumps can be defined both at addresses previous to and after the address at which they are invoked, the translation is done in two passes.
 
@@ -121,7 +121,7 @@ In assembly language, the toyRISC processor can only be used if there is a binar
 
 
 
-\subsection{Simulator}\label{riscsim}
+\subsection{Simulator\index{toyRISC!simulator (testRISC)}}\label{riscsim}
 
 The simulator used to verify the operation of the toyRISC processor, described in the Listing file \ref{lst:testRISC}, generates the context in which the processor works by accessing a program memory and a data memory. The simulator uses the code generator to load the processor's program memory with the executable code. Then the execution of the loaded program is triggered by resetting the processor. If the program is correctly written and the processor has no design errors, then the simulation stops after a finite number of steps with the processor executing the {\tt HALT} instruction. The simulator displays the trace left in the processor structure by the execution of the program by monitoring the program counter, the content of some registers in the register file, and the evolution of the interrupt system signals. The user can add additional signal monitoring to the simulator.
 

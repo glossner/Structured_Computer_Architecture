@@ -117,7 +117,7 @@ In each clock cycle, an instruction completes with a latency of 3 clock cycles. 
 
 % https://www.geeksforgeeks.org/computer-organization-and-architecture-pipelining-set-2-dependencies-and-data-hazard/
 
-There are three types of dependencies\index{dependencies!}:
+There are three types of dependencies\index{pipeline dependencies: structural, data, and control hazards}:
 \begin{enumerate}
 \item Structural Dependency
 \item Data Dependency
@@ -601,7 +601,7 @@ $\diamond$
 \end{exemplu}
 
 
-\subsubsection{Static Branch Prediction\index{branch prediction!}}
+\subsubsection{Static Branch Prediction\index{branch prediction!static branch prediction}}
 
 Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction\index{branch prediction!static branch prediction}presumes that backward branches will be taken and that forward branches will not.
 

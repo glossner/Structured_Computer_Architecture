@@ -1,4 +1,4 @@
-\chapter{Summary of Number Systems and Representations}
+\chapter{Summary of Number Systems and Representations}\index{number representations!mathematical properties vs computational limits}
 %\localtoc
 %**************************************************************
 %\section{Summary of Numbers and their Representations}
@@ -6,8 +6,8 @@
 While representations encode numbers from a specific set, they may not fully exhibit the properties of that set. For example:
 
 \begin{itemize}
-    \item Closure: In two's complement, the result of adding two numbers can overflow and exceed the representable range, even though addition within \( \mathbb{Z} \) is closed.
-    \item Symmetry: The set \( \mathbb{Z} \) is symmetric around \( 0 \), but representations like two's complement have an asymmetric range due to the extra negative value (\( -2^{n-1} \)).
+    \item Closure\index{two's complement!closure violation in finite precision}: In two's complement, the result of adding two numbers can overflow and exceed the representable range, even though addition within \( \mathbb{Z} \) is closed.
+    \item Symmetry\index{two's complement!asymmetry}: The set \( \mathbb{Z} \) is symmetric around \( 0 \), but representations like two's complement have an asymmetric range due to the extra negative value (\( -2^{n-1} \)).
     \item Arithmetic Operations: Subtraction in excess-\( k \) may require decoding and re-encoding, as direct subtraction of encoded values can produce incorrect results.
 \end{itemize}
 

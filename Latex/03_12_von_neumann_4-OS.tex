@@ -23,7 +23,7 @@ In current language we use the term computation without a rigorous definition. W
 
 Despite appearances, computers are not numerical instruments but logical structures that have their theoretical origin in solving decision-making problems. To the question: {\em where and when does the history of computers begin?}, the answer, however strange it may seem, is: {\em somewhere on the island of Crete about two and a half millennia ago}. Indeed, Epimenides of Knossos\index{Epimenides of Knossos (7th or 6th century BC): a semi-mythical Greek seer credited for the liar paradox} (the capital of the island of Crete), a semi-mythical Greek seer from the 7th or 6th century BC, caught himself saying that {\em "all Cretans are liars"}. Surprised, because in the next second he could not {\bf decide} whether the assertion he had just made was true or false. Thus was born, if the story is true, a problem that occupied the minds of seekers for millennia until it was rigorously reformulated by David Hilbert (1862–-1943)\index{Hilbert, David (1862–-1943): German mathematician and philosopher credited for rigorously stating the decision problem} and definitively settled by Kurt G\" odel (1906--1978)\index{G\" odel, Kurt (1906--1978): Austrian logician, mathematician and philosopher credited for the incompleteness of formal theories}.
 
-Hilbert's address of 1900 to the International Congress of Mathematicians in Paris is perhaps the most influential speech ever given about mathematics \cite{Hilbert1900}. In it, Hilbert outlined 23 major mathematical problems to be studied in the coming century. One of them, the 10th, raises the issue of decision in a particular case. But, in a definitive form the problem is exposed in the book that David Hilbert writes together with Wilhelm Ackermann \cite{Hilbert1928}. This book included a clear statement of the {\em Entscheidungsproblem} (decision problem): 
+Hilbert's address of 1900 to the International Congress of Mathematicians in Paris is perhaps the most influential speech ever given about mathematics \cite{Hilbert1900}. In it, Hilbert outlined 23 major mathematical problems to be studied in the coming century. One of them, the 10th, raises the issue of decision in a particular case. But, in a definitive form the problem is exposed in the book that David Hilbert writes together with Wilhelm Ackermann \cite{Hilbert1928}. This book included a clear statement of the {\em Entscheidungsproblem}\index{Entscheidungsproblem: Hilbert's decision problem in formal logic} (decision problem): 
 \begin{quote}
     {\em is there an algorithm that takes a statement formulated in a formal system and answers with "yes" or "no" whether the statement is true or false in the given system?}
 \end{quote}
@@ -32,7 +32,7 @@ The first answer comes in 1931 from the logician  Kurt Gödel:
 {\bf {\em in a formal system one can correctly construct true structures whose truth cannot be proven or disproved}} \cite{Goedel1931} \cite{Goedel31}.
 \end{quote}
 
-Gödel's spectacular result triggered within five years four mathematicians Alonzo Church \cite{Church36}, Stephen Kleene \cite{Kleene36}, Emil Post \cite{Post36}, and Alan Turing \cite{Turing36, Turing1937} (listed alphabetically) to independently provide works that founded computer science. We focus in this chapter on Turing's work.
+Gödel's spectacular result triggered within five years four mathematicians Alonzo Church\index{Church, Alonzo: logician who formulated lambda calculus and Church-Turing thesis}\index{Church-Turing thesis: conjecture that all effective computation is computable by Turing machine} \cite{Church36}, Stephen Kleene \cite{Kleene36}, Emil Post \cite{Post36}, and Alan Turing \cite{Turing36, Turing1937} (listed alphabetically) to independently provide works that founded computer science. We focus in this chapter on Turing's work.
 
 \subsection{Turing Machine}
 
@@ -134,7 +134,7 @@ Formally: for any computation done by a TM $M(T)$ can be used the UTM $${\cal U}
 
 Turing’s formal model set the stage for understanding how numbers can be systematically represented, stored, and manipulated by computational systems, laying foundational principles that influence number representations in modern computing.
 
-\section{von Neumann Abstract Model}
+\section{von Neumann Abstract Model}\index{von Neumann architecture: computer architecture with shared memory for instructions and data}\index{von Neumann, John (1903--1957): mathematician and computer architecture pioneer}
 
 TM is a mathematical model. The actual computing machines need an {\bf {\em intermediate model}}: an {\bf abstract} one, able to solve the problem of computation using real entities. In this "moment" comes the  serendipitous  meeting between math and tech, between UTM and digital circuits. In the abstract model proposed by the mathematician John von Neumann the finite automaton and the accessing head are integrated in what we call a processor which communicate with the memory which contains  programs and data (see Figure \ref{fig44}). 
 
@@ -183,15 +183,15 @@ The evolution of the performance of the three components of a computer system (s
 
 \placedrawing[H]{figures/06_02_processor_memory_gap.lp}{Processor-Memory Performance Gap  \cite{Patterson97}.}{pmPGap}
 
-Due to this difference, what we now call a memory gap occurred. The fast processor cannot wait for the slow memory to deliver or receive its data. And the memory gap imposed the memory hierarchy of the computing system based on the locality principle.
+Due to this difference, what we now call a memory gap\index{memory wall: increasing disparity between processor clock speed and memory latency}\index{memory gap|see{memory wall}}\index{Patterson, David (1947--): RISC and memory hierarchy pioneer} occurred. The fast processor cannot wait for the slow memory to deliver or receive its data. And the memory gap imposed the memory hierarchy of the computing system based on the locality principle.
 
-\paragraph{Locality principle}\label{locprinc} says that if a certain location is accessed in the data or program memory, then the next accesses will be made with a high probability in a reasonably small vicinity.
+\paragraph{Locality principle}\label{locprinc}\index{locality principle: temporal and spatial tendency of program access patterns}\index{locality principle!temporal locality}\index{locality principle!spatial locality} says that if a certain location is accessed in the data or program memory, then the next accesses will be made with a high probability in a reasonably small vicinity.
 
 %\bigskip
 
 Applying the locality principle allowed the definition of the strategies that govern the conception of a hierarchy of effective memories.
 
-\subsection{Memory Hierarchy\index{memory hierarchy}}\label{memhier}
+\subsection{Memory Hierarchy\index{memory hierarchy: tiered storage organization from fast registers to slow auxiliary storage}}\label{memhier}
 
 The hierarchy of memory is based on the fact that when we access a location that is in a memory that is too slow in relation to the speed of processing in the processor, a block or a page of bytes that contains the requested bytes will be transferred to a faster intermediate memory. This transfer is done with the hope that the following accesses will be made in the intermediate memory if the updated page or block in it was large enough.
 
@@ -207,7 +207,7 @@ The main memory is managed by the operating system, its size is in the range of 
 
 The disk memory is managed by the operating system or human operator, its size is $> 128GB$, the access time is $\sim 5 ms$.
 
-\subsection{Virtual Memory Mechanism\index{virtual memory mechanism}}\label{lb:vmm}
+\subsection{Virtual Memory Mechanism\index{virtual memory: architectural technique abstracting physical memory using page translation}}\label{lb:vmm}
 
 How relate two successive levels in the hierarchy? Let us consider two levels in the memory hierarchy, $Level_i$ containing $m$ pages and $Level_{i+1}$ containing $n$ pages, with $n >> m$. Each page in $Level_i$, called {\em physical level} is a copy of a page from $Level_{i+1}$ called {\em virtual level}. In Figure \ref{vmm}a, pages 0, 2, and $m-2$ from the level $i$ were brought from pages 3, 4, and 0 of level $i+1$. Any change in the physical level must actualized in the associated virtual level. The "user"  accesses the virtual level while the virtual mechanism accesses the physical level. It is the job of the virtual memory mechanism to perform transparently the access and to keep coherent the content of the virtual level with the physical level.
 
@@ -230,7 +230,7 @@ A more efficient solution is to use an associative memory to make the translatio
 
 \subsection{Associative Memory-Based Lookaside Page Translator (TLB)}
 
-The associative memory (see \ref{assocMemory} in this book)  allows us to design a translation lookaside buffer (TLB) with a size given by the number of pages in the physical memory, unlike the one based on a RAM type memory which has a size given by the much larger number of pages in the virtual memory.
+The associative memory (see \ref{assocMemory} in this book)  allows us to design a translation lookaside buffer (TLB)\index{translation lookaside buffer (TLB): cache of recent virtual-to-physical address translations}\index{TLB|see{translation lookaside buffer}}\index{associative memory!translation lookaside buffer (TLB)} with a size given by the number of pages in the physical memory, unlike the one based on a RAM type memory which has a size given by the much larger number of pages in the virtual memory.
 
 \subsubsection{RAM-Based Translation Lookaside Buffer (TLB)}
 
@@ -238,7 +238,7 @@ One simple solution for {\em Page translate} block in Figure \ref{vmm}b is to us
 
 \subsubsection{Associative Memory-Based Translation Lookaside Buffer (TLB)}
 
-A less simple solution than using a RAM is to use an associative memory (AM). The dimensioning of this version requires a solution in which the entire physical structure is usable. The storage array has $m$ locations of $log_2 m$ bits each and the {\em programmable decoder} (the CAM) also has $m$ locations of $log-2 n$ bits each. So the entire structure has a dimension in $O(m \times (log \; m + log \; n)$ compared to solutions using RAM which impose a dimension in $O(n \times (log \; m + log \; n))$.
+A less simple solution than using a RAM is to use an associative memory (AM). The dimensioning of this version requires a solution in which the entire physical structure is usable. The storage array has $m$ locations of $log_2 m$ bits each and the {\em programmable decoder} (the CAM)\index{content-addressable memory (CAM)!TLB implementation} also has $m$ locations of $log-2 n$ bits each. So the entire structure has a dimension in $O(m \times (log \; m + log \; n)$ compared to solutions using RAM which impose a dimension in $O(n \times (log \; m + log \; n))$.
 
 The gain in size, i.e., the area occupied by the two solutions, with RAM or with AM, is:
 $$\frac{S_{TLB}(RAM)}{S_{TLB}(AM)}  \in O(n/m)$$
@@ -246,7 +246,7 @@ Even though a content-addressable memory cell (see Figure \ref{cam_cell}) is mor
 
 It should not be neglected that the smaller size of the associative memory allows for an easier achievement of the speed performance of the structure.
 
-\subsubsection{Translation Lookaside Buffer\index {TLB (Translation Lookaside Buffer)} (TLB)}
+\subsubsection{Translation Lookaside Buffer (TLB)}
 
 With a minimal number of differences, the described virtualization mechanism is applied in managing the relationship between all the hierarchical levels in the memory of the computer system.
 
@@ -280,7 +280,7 @@ In what follows, we will consider the simple example in which the hierarchy cont
 
 The input-output system includes certain specific mechanisms that we will briefly describe first. Then we will briefly describe the most important input-output devices.
 
-\subsection{Bus: the Interconnection Fabric}
+\subsection{Bus: the Interconnection Fabric\index{bus: shared communication pathway connecting system components}\index{bus!serial bus}\index{bus!parallel bus}}
 
 A {\bf {\em Bus}} is a communication system that transfers data between components inside a computer, or between computers. 
 
@@ -290,7 +290,7 @@ In Figure \ref{bus}, the waveforms for data transfer on the Internal Bus (see Fi
 \placedrawing[H]{figures/06_09_read_write_waveform.lp}{The waveforms for a read cycle followed by a write cycle.}{bus}
 
 \begin{description}
-    \item[$t_1$]: the active edge of clock takes a read command (Read = 0) from the address Read Address. Both Read and Read Address must be stable at least minimum {\bf {\em  set-up time}} before the active edge of clock (the positive one) and {\bf {\em hold time}} after the positive edge of clock
+    \item[$t_1$]: the active edge of clock takes a read command (Read = 0) from the address Read Address. Both Read and Read Address must be stable at least minimum {\bf {\em  set-up time}}\index{setup time: minimum time data input must remain stable before clock edge} before the active edge of clock (the positive one) and {\bf {\em hold time}}\index{hold time: minimum time data input must remain stable after clock edge} after the positive edge of clock
     \item[$t_2$]: the active edge of clock can take the data from the output of Main Memory only if the signal Wait is not active (Wait = 0) thus completing the read cycle. The signal Wait is necessary when the Main Memory is not a fast enough memory, or the clock frequency is too high.
     \item[$t_3$]: the active edge of clock takes Valid Input Data to write it at Write Address because Write signal is active (Write' = 0).
 \end{description}
@@ -299,7 +299,7 @@ The Wait signal is deactivated (Wait = 0) at $t_2$ introducing a latency of 2 cl
 
 
 
-\subsection{DMA\index{DMA (Direct Memory Access)}}
+\subsection{DMA\index{direct memory access (DMA): I/O mechanism transferring data without CPU intervention}\index{DMA|see{direct memory access}}}
 
 \subsubsection{Definition}
 
@@ -318,7 +318,7 @@ The CPU initializes the DMA by sending the given information through the data bu
 
 The DMA controller transfers the data in three modes:
 \begin{itemize}
-    \item burst mode:
+    \item burst mode:\index{DMA!burst mode}
     \begin{itemize}
         \item DMA requests and receives the control on the internal bus
         \item the entire data or the burst of block containing data is transferred before CPU takes control of the buses back from DMA
@@ -328,7 +328,7 @@ The DMA controller transfers the data in three modes:
         \item {\bf pros}: fastest mode of DMA Transfer
         \item {\bf cons}: less user friendly because during the DMA transfer CPU will be blocked.
     \end{itemize}
-    \item cycle stealing mode for each transfer:
+    \item cycle stealing mode for each transfer:\index{DMA!cycle stealing mode}
     \begin{itemize}
         \item slows I/O device because will take some time to prepare data and within that time CPU keeps the control of the buses.
         \item once the data is ready CPU give back control of system buses to DMA for 1-cycle in which the prepared word is transferred to/from memory.
@@ -336,7 +336,7 @@ The DMA controller transfers the data in three modes:
         \item {\bf pros}: most Efficient way for DMA Transfer.
         \item {\bf cons}: CPU won’t be blocked entire time.
     \end{itemize}
-    \item transparent or interleaving mode:
+    \item transparent or interleaving mode:\index{DMA!transparent mode}
     \begin{itemize}
         \item whenever CPU does not require the system buses, then the control of buses will be given to DMA
         \item CPU will not be blocked due to DMA at all
@@ -472,7 +472,7 @@ There are two types of I/O devices:
 \end{itemize}
 We will briefly present the storage devices that extend the memory hierarchy outside the central processing unit.
 
-\subsubsection{Hard Disk Drives (HDDs)\index{HDD (Hard Disk Drive)}}
+\subsubsection{Hard Disk Drives (HDDs)\index{hard disk drive (HDD): magnetic rotating platter secondary storage}\index{HDD|see{hard disk drive}}}
 
 The most common auxiliary memory is the hard disk drive. Its internal structure is represented in Figure \ref{disk}.
 
@@ -480,7 +480,7 @@ Main parameters:
 \begin{itemize}
     \item storage capacity: 10 $\div$ 30 TB
     \item average access time: 2.5 $\div$ 10 ms
-    \item MTBF: $\sim$285 years (MTBF stands for mean time between failures; it is the predicted elapsed time between inherent failures of a mechanical or electronic system during normal system operation.)
+    \item MTBF: $\sim$285 years (MTBF\index{mean time between failures (MTBF): reliability metric of expected operating time}\index{MTBF|see{mean time between failures}} stands for mean time between failures; it is the predicted elapsed time between inherent failures of a mechanical or electronic system during normal system operation.)
 
 \placedrawing[H]{figures/06_11_hard_drive.lp}{Hard Disk Drive Structure [Source: Google-Images]}{disk}
     
@@ -492,7 +492,7 @@ Main parameters:
         \end{itemize}
 \end{itemize}
 
-\subsubsection{Optical Disks}
+\subsubsection{Optical Disks\index{optical disk: reflective optical storage medium (CD/DVD)}}
 
 Optical disks are read-only mediums. There are two versions:
 \begin{itemize}
@@ -500,10 +500,10 @@ Optical disks are read-only mediums. There are two versions:
     \item DVD: digital video disk (4.7 GB); sometimes written on both sides to double capacity
 \end{itemize}
 
-\subsubsection{Solid State Drives (SSD)\index{SSD (Solid State Drive)}}
+\subsubsection{Solid State Drives (SSD)\index{solid-state drive (SSD): non-volatile flash-based secondary storage}\index{SSD|see{solid-state drive}}}
 
 
-Flash memory is a type of EEPROM (electronically erasable programmable read only memory), which is normally read only but can be erased. Solid-state devices (SSDs) based on flash memory technology do not have moving parts.
+Flash memory\index{flash memory: electrically erasable programmable non-volatile semiconductor memory} is a type of EEPROM\index{EEPROM: electrically erasable programmable read-only memory} (electronically erasable programmable read only memory), which is normally read only but can be erased. Solid-state devices (SSDs) based on flash memory technology do not have moving parts.
 
 The capacity per flash memory chip increased by about 50\%–60\% per year.
 
@@ -513,7 +513,7 @@ Time to {\bf read} 2 KB from flash memory takes about 75 $\mu$S,  while DDR SDRA
 
 Time to {\bf write} for flash memory is about 1500 times slower then SDRAM, and about 8–15 times faster than HDD.
 
-\subsubsection{Tapes}
+\subsubsection{Tapes\index{magnetic tape: sequential magnetic medium used for backup and archive}}
 
 Magnetic-tape data storage is a system for storing  information on magnetic tape using digital recording.
 
