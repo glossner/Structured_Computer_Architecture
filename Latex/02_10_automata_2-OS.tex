@@ -955,7 +955,7 @@ Finally, the current value of the program counter \texttt{pc} is assigned to the
 \ifthenelse{\boolean{chiselversion}}{
 
 \subsubsection{Chisel Program Counter for RISC-V}
-\includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}, label={lst:chisel_program_counter}]{\chiselSourceDir/automata/ProgramCounter.scala}
+\includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}, label={lst:chisel_program_counter}, firstline=7, firstnumber=7]{\chiselSourceDir/automata/ProgramCounter.scala}
 
 Listing \ref{lst:chisel_program_counter} shows the Chisel implementation of the Program Counter control automaton, designed specifically for standard 32-bit RISC-V (RV32) instruction sequencing. The module maintains the instruction address in a 32-bit register \texttt{pcReg} initialized to \texttt{initPC} (defaulting to \texttt{0x00000000}) and computes the next execution address across four architectural modes:
 \begin{itemize}
@@ -1045,7 +1045,7 @@ Listing \ref{lst:chisel_ralu} implements the RALU subsystem in Chisel by modular
 \end{itemize}
 
 
-\includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}, label={lst:chisel_ralu}]{\chiselSourceDir/automata/RALU.scala}
+\includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}, label={lst:chisel_ralu}, firstline=9, firstnumber=9]{\chiselSourceDir/automata/RALU.scala}
 }% End Chisel 
 
 

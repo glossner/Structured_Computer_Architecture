@@ -21,15 +21,14 @@ class ProgramCounter(val width: Int = 32, val initPC: BigInt = 0) extends Module
     val pcPlus4    = Output(UInt(width.W))
   })
 
-  val pcReg      = RegInit(initPC.U(width.W))
-  val nextPCWire = WireDefault(pcReg + 4.U)
+  val pcReg = RegInit(initPC.U(width.W))
 
-  switch(io.mode) {
-    is(Mode.Plus4)  { nextPCWire := pcReg + 4.U }
-    is(Mode.Branch) { nextPCWire := pcReg + io.branchImm }
-    is(Mode.Jalr)   { nextPCWire := Cat(io.jalrTarget(width - 1, 1), 0.U(1.W)) }
-    is(Mode.Stall)  { nextPCWire := pcReg }
-  }
+  val nextPCWire = MuxCase(pcReg + 4.U, Seq(
+    (io.mode === Mode.Plus4)  -> (pcReg + 4.U),
+    (io.mode === Mode.Branch) -> (pcReg + io.branchImm),
+    (io.mode === Mode.Jalr)   -> Cat(io.jalrTarget(width - 1, 1), 0.U(1.W)),
+    (io.mode === Mode.Stall)  -> pcReg
+  ))
 
   pcReg      := nextPCWire
   io.pc      := pcReg
