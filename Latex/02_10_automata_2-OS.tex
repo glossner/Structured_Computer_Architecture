@@ -539,7 +539,7 @@ The \texttt{regLang} module, which contains the core finite state machine logic,
 }% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
+
 \subsubsection{Chisel Implementation of Language Recognizer}
 
 \includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}, label={lst:chisel_language_recognizer}]{\chiselSourceDir/automata/LanguageRecognizer.scala}
@@ -805,7 +805,7 @@ ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
 \end{verilogcode}
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
+
 %***********************************************************************
 \subsubsection{Multi-Cycle Complex Automaton: Greatest Common Divisor}\label{chiselGCD}
 %***********************************************************************
@@ -953,7 +953,7 @@ Finally, the current value of the program counter \texttt{pc} is assigned to the
 }% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
+
 \subsubsection{Chisel Program Counter for RISC-V}
 \includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}, label={lst:chisel_program_counter}]{\chiselSourceDir/automata/ProgramCounter.scala}
 
@@ -1044,7 +1044,7 @@ Listing \ref{lst:chisel_ralu} implements the RALU subsystem in Chisel by modular
     \item \textbf{Loop Closure \& Write-Back}: A write-back multiplexer selects between the computed ALU output and external data (such as a memory load via \texttt{extData}), routing the result to \texttt{rdAddr} on the positive clock edge when \texttt{regWrite} is asserted.
 \end{itemize}
 
-\clearpage
+
 \includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}, label={lst:chisel_ralu}]{\chiselSourceDir/automata/RALU.scala}
 }% End Chisel 
 

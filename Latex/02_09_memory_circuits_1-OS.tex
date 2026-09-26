@@ -126,7 +126,7 @@ The time behavior is characterized by two time intervals:
 \end{description}
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
+
 \includechiselcode[caption={Parameterized Register (Chisel: Register.scala)}, label={lst:chisel_register}, firstline=8, firstnumber=8, lastline=27]{\chiselSourceDir/memory/Register.scala}
 
 Listing \ref{lst:chisel_register} shows parameterized Chisel code that implements an \textit{n}-bit register with an enable and reset signal. In Chisel, registers are created using the built-in \texttt{Reg} and \texttt{RegInit} classes, which define stateful elements that store values across clock cycles. The \texttt{RegInit(0.U(n.W))} statement initializes a register of width \textit{n} to zero. This ensures that the register has a defined state at power-up or reset.
@@ -260,7 +260,7 @@ The data output is also related to the same edge.}}{swave}
 
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
+
 In Chisel, memory can be implemented using built-in constructs such as \texttt{Mem} and \texttt{SyncReadMem}. For SRAM-like behavior, \texttt{SyncReadMem} is preferred since it introduces synchronous reads.
 
 \includechiselcode[caption={Parameterized SRAM (Chisel: SRAM.scala)}, label={lst:chisel_sram}, firstline=8, firstnumber=8]{\chiselSourceDir/memory/SRAM.scala}
@@ -296,7 +296,7 @@ A skilled designer will almost always be able to hide the effect of latency and 
                     {\verilogSourceDir/A09_syncPipeRAM.sv}
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
+
 \includechiselcode[caption={Parameterized Pipelined SRAM (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_sram_pipelined}, firstline=9, firstnumber=9]{\chiselSourceDir/memory/PipelinedSRAM.scala}
 
 Listing \ref{lst:chisel_sram_pipelined} implements a pipelined synchronous SRAM, where memory read operations have a one-cycle delay before the output is available. This delay is achieved using the \texttt{RegNext} construct, which ensures that the read data is stored in a register before being passed to the output.
@@ -309,7 +309,6 @@ A key aspect of this implementation is the use of \texttt{RegNext}. This introdu
 
 The registered read data is assigned to the output using \texttt{io.dataOut := readReg}. This guarantees that the memory data is presented in a stable and predictable manner. The registered output ensures that data remains valid across clock cycles, making this design beneficial for both ASIC and FPGA implementations that require synchronous memory operations with controlled timing.
 
-\clearpage
 \subsubsection{RISC-V Byte-Addressable Data Memory (Chisel)}
 Standard RAM models operate on monolithic machine words. However, the RISC-V ISA specifies byte-granularity memory operations: store byte (\texttt{SB}), store halfword (\texttt{SH}), and store word (\texttt{SW}), as well as signed and unsigned loads (\texttt{LB}, \texttt{LBU}, \texttt{LH}, \texttt{LHU}, \texttt{LW}).
 
@@ -320,7 +319,6 @@ Listing \ref{lst:chisel_riscv_datamemory} implements a byte-addressable synchron
     \item \textbf{Load Data Sign/Zero Extension}: Read bytes are reassembled and conditionally routed through sign-extension or zero-padding logic matching \texttt{funct3}, providing architectural load data directly to the write-back stage.
 \end{itemize}
 
-\clearpage
 \includechiselcode[caption={RISC-V Byte-Addressable Data Memory (Chisel: RiscvDataMemory.scala)}, label={lst:chisel_riscv_datamemory}, firstline=7, firstnumber=7]{\chiselSourceDir/memory/RiscvDataMemory.scala}
 
 } %End Chisel
@@ -359,7 +357,6 @@ Listing \ref{lst:A09_regFile.sv} implements a synchronous register file in Syste
 }% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
-\clearpage
 \subsubsection{Chisel Implementations of Register Files}
 
 \includechiselcode[caption={Register File using Vector of Registers (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}, firstline=9, firstnumber=9]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
@@ -368,12 +365,12 @@ Listing \ref{lst:chisel_regfile} implements a register-based register file. In C
 
 A \texttt{Vec} of \texttt{Reg} is a collection of registers, each implemented as a distinct flip-flop. This approach is particularly suitable for small register files, such as general-purpose registers in a CPU core or pipeline buffers. Since each register is directly accessible, read operations are purely combinational, resulting in zero-cycle latency. This makes \texttt{Vec} of \texttt{Reg} ideal when low-latency register access is a requirement. Additionally, this structure allows multiple concurrent reads and writes, making it beneficial for designs where multiple functional units require simultaneous register access. However, as the number of registers increases, the area and power consumption grow significantly due to the need for dedicated flip-flops for every bit in the register file. This makes \texttt{Vec} of \texttt{Reg} inefficient for large-scale register files.
 
-\clearpage
+
 \includechiselcode[caption={Synchronous SRAM Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_regfile_sram}, firstline=12, firstnumber=12]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
 
 Listing \ref{lst:chisel_regfile_sram} shows an SRAM-based register file implemented with Chisel's \texttt{SyncReadMem}. It models a synchronous memory array where read data is registered, providing a one-cycle read latency. This structure substantially reduces silicon area for large storage arrays, vector register files, and multi-banked architectures.
 
-\clearpage
+
 \includechiselcode[caption={RISC-V 32-Register Architectural Register File (Chisel: RiscvRegFile.scala)}, label={lst:chisel_riscv_regfile}, firstline=9, firstnumber=9]{\chiselSourceDir/memory/RiscvRegFile.scala}
 
 Listing \ref{lst:chisel_riscv_regfile} presents an architectural register file compliant with the standard 32-bit RISC-V (RV32I) unprivileged specification. The module provides 32 registers of 32 bits ($x0 \dots x31$) with dual asynchronous read ports (\texttt{rs1}, \texttt{rs2}) and a single synchronous write port (\texttt{rd}). Crucially, register $x0$ is hardwired to zero: combinational reads from address $0$ strictly return \texttt{0.U}, while writes addressed to $x0$ are guarded and ignored (\texttt{io.rd =/= 0.U}), fulfilling a foundational invariant of the RISC-V ISA.
