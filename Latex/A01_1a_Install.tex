@@ -165,8 +165,8 @@ The testbench for the code is:
 %*****************************
 \subsection{Run the Testbench}
 %*****************************
-If you have cloned the textbook, build.sbt will be in your Chisel/ directory.
-\includechiselcode[caption={Waveform Generator Testbench Code (Chisel)}, label={lst:build_sbt}]{RTL/Chisel/build.sbt}
+If you have cloned the textbook, build.sbt will be in your RTL/Chisel/ directory.
+\includechiselcode[caption={Chisel Build Configuration (build.sbt)}, label={lst:build_sbt}]{RTL/Chisel/build.sbt}
 
 The following commands will run the test bench
 \begin{bashcode}
@@ -176,27 +176,26 @@ sbt test
 
 The IDE being used is Visual Studio Code with the Scala(Metals) extension installed. Your output should look something like:
 \begin{bashcode}
-(base) jglossner@jglossner-Alienware-Aurora-R7:~/GitRepos/Structured_Computer_Architecture/Chisel\$ sbt test
-downloading sbt launcher 1.10.6
-[info] welcome to sbt 1.10.5 (Oracle Corporation Java 23)
-[info] loading settings for project chisel-build-build from metals.sbt ...
-[info] loading project definition from /home/jglossner/GitRepos/Structured_Computer_Architecture/Chisel/project/project
-[info] loading settings for project chisel-build from metals.sbt ...
-[info] loading project definition from /home/jglossner/GitRepos/Structured_Computer_Architecture/Chisel/project
-[success] Generated .bloop/chisel-build.json
-[success] Total time: 1 s, completed Nov 30, 2024, 11:12:37 AM
+(base) jglossner@jglossner-Alienware-Aurora-R7:~/GitRepos/Structured_Computer_Architecture/RTL/Chisel\$ sbt test
+[info] welcome to sbt 1.11.7 (Eclipse Adoptium Java 25.0.2)
+[info] loading project definition from /home/jglossner/GitRepos/Structured_Computer_Architecture/RTL/Chisel/project
 [info] loading settings for project root from build.sbt ...
-[info] set current project to %NAME% (in build file:/home/jglossner/GitRepos/Structured_Computer_Architecture/Chisel/)
+[info] set current project to %NAME% (in build file:/home/jglossner/GitRepos/Structured_Computer_Architecture/RTL/Chisel/)
 [info] WaveFormGeneratorSpec:
 [info] - WaveFormGenerator should generate the correct waveforms
 [info] GCDSpec:
 [info] - Gcd should calculate proper greatest common denominator
-[info] Run completed in 8 seconds, 403 milliseconds.
-[info] Total number of tests run: 2
-[info] Suites: completed 2, aborted 0
-[info] Tests: succeeded 2, failed 0, canceled 0, ignored 0, pending 0
+[info] RegFile2R1WSRAMTest:
+[info] - should properly handle pipelined operations with synchronous reads
+[info] ALU64Test:
+[info] - should correctly compute addition and subtraction for all opcodes and test Flags
+...
+[info] Run completed in 24 seconds, 356 milliseconds.
+[info] Total number of tests run: 20
+[info] Suites: completed 20, aborted 0
+[info] Tests: succeeded 20, failed 0, canceled 0, ignored 0, pending 0
 [info] All tests passed.
-[success] Total time: 9 s, completed Nov 30, 2024, 11:12:46 AM
+[success] Total time: 25 s
 \end{bashcode}
 
 %*****************************************

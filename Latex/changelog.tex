@@ -1,0 +1,15 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Changelog
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Changelog}
+\addcontentsline{toc}{chapter}{Changelog}
+
+This section summarizes notable changes to the textbook, code listings, and hardware testbenches since the release of the First Edition PDF (\texttt{Structured\_Computer\_Architecture\_1st\_edition\_2026\_06\_03.pdf}, June 3, 2026).
+
+\begin{itemize}
+    \item \textbf{Build Infrastructure \& Chisel/Scala Toolchain}: Upgraded Chisel hardware construction library to version 7.15.0 and Scala to version 2.13.18 in \texttt{RTL/Chisel/build.sbt}, and updated compiler plugins for CIRCT firtool 1.158.0.
+    \item \textbf{RTL \& Simulation Testbenches}: Adapted testbenches for Chisel 7 simulation semantics (explicit reset pulse for \texttt{WaveFormGeneratorSpec} and deterministic thread isolation initialization in \texttt{RegFileMT2R1WSRAMTest}), achieving 100\% pass across all 20 unit test suites.
+    \item \textbf{Generated Verilog Artifacts}: Re-emitted clean and annotated synthesizable SystemVerilog models (\texttt{GCD.sv} and \texttt{WaveFormGenerator.sv}) using the CIRCT firtool 1.158.0 backend.
+    \item \textbf{Textbook Documentation \& Appendices}: Updated Chisel and Scala version references across Chapter 2 and Appendix A, updated Appendix A testing documentation to reflect Chisel's built-in \texttt{EphemeralSimulator}, and corrected build configuration code listing captions and directory references in the installation guide.
+    \item \textbf{Front Matter \& Typography}: Integrated Overleaf typographical refinements in \texttt{Latex/00\_main.tex}, updated circuit drawing assets in \texttt{Latex/figures/DRAW0\_28.LP}, and aligned copyright and edition preface metadata.
+\end{itemize}

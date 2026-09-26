@@ -303,19 +303,20 @@ class MyBundle extends Bundle {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Testing and Verification}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{ChiselTest Framework}
-%********************************
-ChiselTest provides tools for testing Chisel modules \cite{chiseltest}.
+\subsection{Chisel Simulator Framework}
+%**************************************
+Chisel provides built-in simulation tools via \texttt{EphemeralSimulator} for testing hardware modules with ScalaTest.
 \begin{chiselcode}
-import chiseltest._
+import chisel3._
+import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
 
-class MyModuleTest extends AnyFlatSpec with ChiselScalatestTester {
+class MyModuleTest extends AnyFlatSpec {
   "MyModule" should "perform correctly" in {
-    test(new MyModule) { c =>
-      c.io.in.poke(0.U)
-      c.clock.step(1)
-      c.io.out.expect(0.U)
+    simulate(new MyModule) { dut =>
+      dut.io.in.poke(0.U)
+      dut.clock.step()
+      dut.io.out.expect(0.U)
     }
   }
 }
