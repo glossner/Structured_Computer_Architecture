@@ -77,7 +77,7 @@
 
 % Patch \lstlistoflistings for spacing
 \makeatletter
-\patchcmd{\lstlistoflistings}
+\patchcmd{\lstlistoflistings}%%%%%%%%%%%%%%%%%%
   {\@starttoc{lol}}
   {\vspace{\cftbeforeloltitleskip}\@starttoc{lol}\vspace{\cftafterloltitleskip}}
   {}{}
@@ -182,8 +182,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \fancyhead{} % Clear all header fields
 %\fancyhead[RO,LE]{\footnotesize \textbf{Gheorghe M. \c{S}tefan: \emph{Structured Computer Architecture}}} % Right on odd pages, left on even pages
-\fancyhead[RO,LE]{\footnotesize \textbf{\emph{Structured Computer Architecture}}} % Right on odd pages, left on even pages
-\fancyhead[LO]{\scriptsize \leftmark} % Chapter title in the left header on odd pages
+\fancyhead[LE]{\footnotesize } % Right on odd pages, left on even pages
+\fancyhead[RO]{\footnotesize } % Right on odd pages, left on even pages
+\fancyhead[LO]{\scriptsize \rightmark} % Chapter title in the left header on odd pages
 \fancyhead[RE]{\scriptsize \leftmark} % Chapter title in the right header on even pages
 \fancyfoot{} % Clear all footer fields
 \fancyfoot[RO]{\footnotesize \thepage} % Right for odd pages
