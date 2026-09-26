@@ -83,145 +83,146 @@ class RiscvFetchExecuteTest extends AnyFlatSpec {
   def jal(rd: Int, offset: Int)          = jType(offset, rd, 0x6f)
   def jalr(rd: Int, rs1: Int, offset: Int)= iType(offset, rs1, 0x0, rd, 0x67)
 
-  "RiscvFetchExecute" should "execute RV32I base arithmetic and Zmmul with zero RAW hazard on back-to-back dependencies" in {
+  "RiscvFetchExecute" should "execute RV32I base arithmetic and Zmmul in single-cycle Fetch-Execute" in {
     val prog = Seq(
       addi(1, 0, 15),       // PC=0:  x1 = 15
       addi(2, 0, 25),       // PC=4:  x2 = 25
-      add(3, 1, 2),         // PC=8:  x3 = x1 + x2 = 40 (RAW dependency on x1, x2)
-      sub(4, 3, 1),         // PC=12: x4 = x3 - x1 = 25 (RAW dependency on x3)
-      mul(5, 1, 2)          // PC=16: x5 = x1 * x2 = 375 (Zmmul extension!)
+      add(3, 1, 2),         // PC=8:  x3 = x1 + x2 = 40
+      sub(4, 3, 1),         // PC=12: x4 = x3 - x1 = 25
+      mul(5, 1, 2)          // PC=16: x5 = x1 * x2 = 375 (Zmmul extension)
     )
 
     simulate(new RiscvSystem(prog)) { dut =>
       dut.reset.poke(true.B); dut.clock.step(); dut.reset.poke(false.B)
 
-      // Cycle 1: Pipeline fill (Fetch PC=0)
+      // Cycle 0: PC=0: addi x1, x0, 15
+      assert(dut.io.pc.peek().litValue == 0, "PC must be 0")
+      assert(dut.io.aluOut.peek().litValue == 15, "x1 ALU out must be 15")
       dut.clock.step()
 
-      // Cycle 2: Execute PC=0 (ADDI x1, x0, 15)
-      assert(dut.io.pc.peek().litValue == 0, "Execute PC must be 0")
-      assert(dut.io.aluOut.peek().litValue == 15, "ADDI result must be 15")
+      // Cycle 1: PC=4: addi x2, x0, 25
+      assert(dut.io.pc.peek().litValue == 4, "PC must be 4")
+      assert(dut.io.aluOut.peek().litValue == 25, "x2 ALU out must be 25")
       dut.clock.step()
 
-      // Cycle 3: Execute PC=4 (ADDI x2, x0, 25)
-      assert(dut.io.pc.peek().litValue == 4, "Execute PC must be 4")
-      assert(dut.io.aluOut.peek().litValue == 25, "ADDI result must be 25")
+      // Cycle 2: PC=8: add x3, x1, x2 (uses x1=15, x2=25)
+      assert(dut.io.pc.peek().litValue == 8, "PC must be 8")
+      assert(dut.io.aluOut.peek().litValue == 40, "x3 ALU out must be 40 (15+25)")
       dut.clock.step()
 
-      // Cycle 4: Execute PC=8 (ADD x3, x1, x2: 15 + 25 = 40) - RAW dependency resolved without bubble!
-      assert(dut.io.pc.peek().litValue == 8, "Execute PC must be 8")
-      assert(dut.io.aluOut.peek().litValue == 40, "ADD result must be 40")
+      // Cycle 3: PC=12: sub x4, x3, x1 (uses x3=40, x1=15)
+      assert(dut.io.pc.peek().litValue == 12, "PC must be 12")
+      assert(dut.io.aluOut.peek().litValue == 25, "x4 ALU out must be 25 (40-15)")
       dut.clock.step()
 
-      // Cycle 5: Execute PC=12 (SUB x4, x3, x1: 40 - 15 = 25) - Back-to-back RAW resolved!
-      assert(dut.io.pc.peek().litValue == 12, "Execute PC must be 12")
-      assert(dut.io.aluOut.peek().litValue == 25, "SUB result must be 25")
+      // Cycle 4: PC=16: mul x5, x1, x2 (uses x1=15, x2=25)
+      assert(dut.io.pc.peek().litValue == 16, "PC must be 16")
+      assert(dut.io.aluOut.peek().litValue == 375, "x5 ALU out must be 375 (15*25)")
       dut.clock.step()
 
-      // Cycle 6: Execute PC=16 (MUL x5, x1, x2: 15 * 25 = 375)
-      assert(dut.io.pc.peek().litValue == 16, "Execute PC must be 16")
-      assert(dut.io.aluOut.peek().litValue == 375, "MUL result must be 375")
+      assert(dut.io.pc.peek().litValue == 20, "PC must advance to 20")
     }
   }
 
-  it should "execute branch instructions and flush fetched instruction on branch taken" in {
+  it should "execute branch instructions and redirect PC immediately" in {
     val prog = Seq(
-      addi(1, 0, 10),      // PC=0:  x1 = 10
-      addi(2, 0, 10),      // PC=4:  x2 = 10
-      beq(1, 2, 8),        // PC=8:  BEQ x1, x2, +8 (target = 8 + 8 = 16)
-      addi(3, 0, 99),      // PC=12: In fetch buffer when branch taken -> MUST BE FLUSHED!
-      addi(4, 0, 42)       // PC=16: x4 = 42
+      addi(1, 0, 10),       // PC=0:  x1 = 10
+      addi(2, 0, 10),       // PC=4:  x2 = 10
+      beq(1, 2, 8),         // PC=8:  if (x1 == x2) jump to PC + 8 = 16
+      addi(3, 0, 1),        // PC=12: skipped
+      addi(3, 0, 99)        // PC=16: x3 = 99
     )
 
     simulate(new RiscvSystem(prog)) { dut =>
       dut.reset.poke(true.B); dut.clock.step(); dut.reset.poke(false.B)
 
-      dut.clock.step() // Cycle 1: Fetch PC=0
-      dut.clock.step() // Cycle 2: Execute PC=0 (x1=10)
-      dut.clock.step() // Cycle 3: Execute PC=4 (x2=10)
-
-      // Cycle 4: Execute PC=8 (BEQ taken)
-      assert(dut.io.pc.peek().litValue == 8, "Execute PC must be 8 for BEQ")
+      // Cycle 0: PC=0
+      assert(dut.io.pc.peek().litValue == 0)
       dut.clock.step()
 
-      // Cycle 5: Flushed bubble (NOP) while target PC=16 is being fetched
-      assert(dut.io.inst.peek().litValue == 0x00000013, "Must execute NOP bubble during flush")
+      // Cycle 1: PC=4
+      assert(dut.io.pc.peek().litValue == 4)
       dut.clock.step()
 
-      // Cycle 6: Execute target PC=16
-      assert(dut.io.pc.peek().litValue == 16, "Target PC must be 16")
-      assert(dut.io.aluOut.peek().litValue == 42, "Target instruction result must be 42")
+      // Cycle 2: PC=8: BEQ x1, x2, +8
+      assert(dut.io.pc.peek().litValue == 8)
+      dut.clock.step()
+
+      // Cycle 3: Branch taken -> PC redirects directly to 16
+      assert(dut.io.pc.peek().litValue == 16, "PC must branch directly to 16")
+      assert(dut.io.aluOut.peek().litValue == 99, "ALU out must be 99 at target")
+      dut.clock.step()
+
+      assert(dut.io.pc.peek().litValue == 20)
     }
   }
 
   it should "execute JAL function call and JALR return sequence" in {
     val prog = Seq(
-      jal(1, 8),           // PC=0:  JAL x1, +8 (call subroutine at PC=8, x1 = 4)
-      addi(3, 0, 100),     // PC=4:  Return destination: x3 = 100
-      addi(2, 0, 77),      // PC=8:  Subroutine body: x2 = 77
-      jalr(0, 1, 0)        // PC=12: JALR x0, x1, 0 (return to PC=4)
+      addi(1, 0, 5),        // PC=0:  x1 = 5
+      jal(1, 8),            // PC=4:  jump to PC+8=12, save link PC+4=8 into x1 (ra)
+      addi(2, 0, 111),      // PC=8:  return target
+      jalr(2, 1, 0)         // PC=12: jump to x1+0=8, save link PC+4=16 into x2
     )
 
     simulate(new RiscvSystem(prog)) { dut =>
       dut.reset.poke(true.B); dut.clock.step(); dut.reset.poke(false.B)
 
-      dut.clock.step() // Cycle 1: Fetch PC=0
-
-      // Cycle 2: Execute PC=0 (JAL x1, +8)
-      assert(dut.io.pc.peek().litValue == 0, "Execute PC must be 0")
+      // Cycle 0: PC=0
+      assert(dut.io.pc.peek().litValue == 0)
       dut.clock.step()
 
-      // Cycle 3: Discard flush bubble, fetch target PC=8
+      // Cycle 1: PC=4: JAL x1, +8
+      assert(dut.io.pc.peek().litValue == 4)
       dut.clock.step()
 
-      // Cycle 4: Execute Subroutine body at PC=8
-      assert(dut.io.pc.peek().litValue == 8, "JAL target must execute at PC=8")
-      assert(dut.io.aluOut.peek().litValue == 77, "Subroutine x2 = 77")
+      // Cycle 2: PC=12: JAL target reached, x1 has link address 8
+      assert(dut.io.pc.peek().litValue == 12, "PC must be at JAL target 12")
       dut.clock.step()
 
-      // Cycle 5: Execute JALR at PC=12
-      assert(dut.io.pc.peek().litValue == 12, "JALR must execute at PC=12")
+      // Cycle 3: PC=8: JALR target reached (return to 8)
+      assert(dut.io.pc.peek().litValue == 8, "PC must return to 8 via JALR")
+      assert(dut.io.aluOut.peek().litValue == 111, "ALU out must be 111 at return point")
       dut.clock.step()
 
-      // Cycle 6: Discard flush bubble, fetch return target PC=4
-      dut.clock.step()
-
-      // Cycle 7: Execute return instruction at PC=4
-      assert(dut.io.pc.peek().litValue == 4, "JALR must return to PC=4")
-      assert(dut.io.aluOut.peek().litValue == 100, "Returned execution x3 = 100")
+      assert(dut.io.pc.peek().litValue == 12)
     }
   }
 
-  it should "support data memory store and load instructions with interlock" in {
+  it should "support data memory store and load instructions with unbuffered memory" in {
     val prog = Seq(
-      addi(1, 0, 42),      // PC=0: x1 = 42
-      sw(1, 0, 64),        // PC=4: SW x1, 64(x0) -> store 42 at address 64
-      lw(2, 0, 64),        // PC=8: LW x2, 64(x0) -> load from address 64 into x2
-      addi(3, 2, 8)        // PC=12: x3 = x2 + 8 = 50 (RAW dependency on loaded x2!)
+      addi(1, 0, 16),       // PC=0:  x1 = 16 (data memory word address)
+      addi(2, 0, 0x42),     // PC=4:  x2 = 0x42 (data word)
+      sw(2, 1, 0),          // PC=8:  Store Word: mem[16] = 0x42
+      lw(3, 1, 0),          // PC=12: Load Word: x3 = mem[16]
+      addi(4, 3, 10)        // PC=16: x4 = x3 + 10 = 0x42 + 10 = 76
     )
 
     simulate(new RiscvSystem(prog)) { dut =>
       dut.reset.poke(true.B); dut.clock.step(); dut.reset.poke(false.B)
 
-      dut.clock.step() // Cycle 1: Fetch PC=0
-      dut.clock.step() // Cycle 2: Execute PC=0 (ADDI x1, x0, 42)
-
-      // Cycle 3: Execute PC=4 (SW x1, 64(x0))
-      assert(dut.io.pc.peek().litValue == 4, "PC must be 4")
-      assert(dut.io.aluOut.peek().litValue == 64, "Effective store address must be 64")
+      // Cycle 0: PC=0: x1 = 16
+      assert(dut.io.pc.peek().litValue == 0)
       dut.clock.step()
 
-      // Cycle 4: Execute PC=8 (LW x2, 64(x0)) - initiates load
-      assert(dut.io.pc.peek().litValue == 8, "PC must be 8")
-      assert(dut.io.aluOut.peek().litValue == 64, "Effective load address must be 64")
+      // Cycle 1: PC=4: x2 = 0x42
+      assert(dut.io.pc.peek().litValue == 4)
       dut.clock.step()
 
-      // Cycle 5: Load writeback cycle (loadStall holds pipeline to receive data)
+      // Cycle 2: PC=8: SW x2, 0(x1)
+      assert(dut.io.pc.peek().litValue == 8)
       dut.clock.step()
 
-      // Cycle 6: Execute PC=12 (ADDI x3, x2, 8) - reads loaded x2=42 + 8 = 50!
-      assert(dut.io.pc.peek().litValue == 12, "PC must be 12")
-      assert(dut.io.aluOut.peek().litValue == 50, "x3 = x2 (42) + 8 must be 50")
+      // Cycle 3: PC=12: LW x3, 0(x1) -> reads 0x42 combinationally
+      assert(dut.io.pc.peek().litValue == 12)
+      dut.clock.step()
+
+      // Cycle 4: PC=16: ADDI x4, x3, 10 -> x3=0x42, result=76
+      assert(dut.io.pc.peek().litValue == 16)
+      assert(dut.io.aluOut.peek().litValue == 76, "x4 ALU out must be 0x42 + 10 = 76")
+      dut.clock.step()
+
+      assert(dut.io.pc.peek().litValue == 20)
     }
   }
 }
