@@ -1,1 +1,363 @@
-\chapter{RISC-V TBD}
+% Licensed under the Solderpad Hardware License v 2.1
+% See: https://solderpad.org/licenses/SHL-2.1/
+
+\chapter{The RISC-V Processor: Architecture, Implementation, and Verification}\label{riscvProcessor}
+\index{RISC-V: open standard instruction set architecture}\index{RISC-V!architecture, implementation, and verification}
+\localtoc
+
+\section{Introduction to the RISC-V Architecture}\label{riscvIntro}
+\index{RISC-V!design philosophy}\index{open standard instruction set}
+
+The RISC-V (pronounced ``risk-five'') instruction set architecture represents a fundamental paradigm shift in computer architecture. Unlike proprietary instruction set architectures (such as x86 and ARM) whose definitions are tightly controlled by commercial entities, RISC-V is an open, royalty-free standard governed by RISC-V International. Conceived in 2010 at the University of California, Berkeley, RISC-V was developed to provide a clean, modern, extensible, and mathematically structured instruction set architecture suitable for academic instruction, research, and high-performance commercial silicon.
+
+The architectural philosophy of RISC-V is guided by four foundational principles:
+\begin{enumerate}
+    \item \textbf{Simplicity and Regularity}: The instruction set is structured around a small, frozen base integer instruction set (\texttt{RV32I} for 32-bit addresses, \texttt{RV64I} for 64-bit addresses). Instructions maintain a uniform 32-bit length, fixed opcode locations, and symmetric register source and destination fields.
+    \item \textbf{Strict Modularity}: Rather than obligating every implementation to support an expansive, monolithic feature set, RISC-V organizes capabilities into modular standard extensions. A minimalist embedded core may implement only the base integer instructions (\texttt{RV32I}), while an accelerator or application processor can incrementally add standard extensions for multiplication and division (\texttt{M}), atomic memory operations (\texttt{A}), single-precision floating-point (\texttt{F}), double-precision floating-point (\texttt{D}), and vector processing (\texttt{V}).
+    \item \textbf{Clear Separation of Privileged and Unprivileged Architecture}: Instruction execution, computational semantics, and user-level register manipulation are strictly decoupled from machine-mode control, exception management, physical memory protection, and virtual memory translation.
+    \item \textbf{Extensibility Without Fragmentation}: The base instruction set reserves dedicated opcode spaces and major instruction formats specifically for custom, application-specific instructions without conflicting with standardized extensions.
+\end{enumerate}
+
+\subsection{Architectural State and Programmer's Model}
+\index{RISC-V!programmer's model}\index{register file!RISC-V architectural state}
+
+The unprivileged programmer's model for the 32-bit base integer architecture (\texttt{RV32I}) consists of:
+\begin{itemize}
+    \item \textbf{Thirty-two General-Purpose Registers ($x0$--$x31$)}: Each register has a width of $\text{XLEN} = 32$ bits. Register $x0$ is hardwired to the constant zero ($x0 \equiv 0$) on both read and write operations; writes to $x0$ have no effect, and reading $x0$ always yields zero. Registers $x1$ through $x31$ are general-purpose registers that hold integer values, pointers, and temporary evaluation results.
+    \item \textbf{Program Counter (\texttt{pc})}: A 32-bit register holding the byte address of the instruction currently being fetched and executed.
+    \item \textbf{Linear Byte-Addressable Memory}: The address space comprises $2^{32}$ bytes, organized in a little-endian byte ordering wherein the least significant byte of a multi-byte word resides at the lowest memory address.
+\end{itemize}
+
+Table \ref{tab:riscv_abi_registers} summarizes the standard RISC-V register conventions (Application Binary Interface, or ABI).
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Register} & \textbf{ABI Name} & \textbf{Description} & \textbf{Saver} \\
+\hline
+\texttt{x0}       & \texttt{zero}     & Hardwired zero & --- \\
+\texttt{x1}       & \texttt{ra}       & Return address & Caller \\
+\texttt{x2}       & \texttt{sp}       & Stack pointer & Callee \\
+\texttt{x3}       & \texttt{gp}       & Global pointer & --- \\
+\texttt{x4}       & \texttt{tp}       & Thread pointer & --- \\
+\texttt{x5}--\texttt{x7}   & \texttt{t0}--\texttt{t2}   & Temporaries & Caller \\
+\texttt{x8}       & \texttt{s0}/\texttt{fp} & Saved register / Frame pointer & Callee \\
+\texttt{x9}       & \texttt{s1}       & Saved register & Callee \\
+\texttt{x10}--\texttt{x11} & \texttt{a0}--\texttt{a1}   & Function arguments / Return values & Caller \\
+\texttt{x12}--\texttt{x17} & \texttt{a2}--\texttt{a7}   & Function arguments & Caller \\
+\texttt{x18}--\texttt{x27} & \texttt{s2}--\texttt{s11}  & Saved registers & Callee \\
+\texttt{x28}--\texttt{x31} & \texttt{t3}--\texttt{t6}   & Temporaries & Caller \\
+\hline
+\end{tabular}
+\caption{RISC-V unprivileged general-purpose registers and standard ABI roles.}\label{tab:riscv_abi_registers}
+\end{table}
+
+
+\section{The Instruction Set Architecture: RV32I and Zmmul}\label{riscvISA}
+\index{RV32I: RISC-V base 32-bit integer ISA}\index{Zmmul: standard multiplication extension}
+
+\subsection{Instruction Formats}
+\index{RISC-V!instruction formats}\index{instruction encoding!RISC-V formats}
+
+All RISC-V base instructions are exactly 32 bits in width and are aligned on 4-byte memory boundaries. To maximize decoding speed and eliminate unnecessary multiplexers in high-performance hardware, RISC-V employs six primary instruction formats (Figure \ref{fig:riscv_formats}):
+
+\begin{figure}[htbp]
+\centering
+\small
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{Format} & \textbf{Bits 31:25} & \textbf{Bits 24:20} & \textbf{Bits 19:15} & \textbf{Bits 14:12} & \textbf{Bits 11:7} & \textbf{Bits 6:0} \\
+\hline
+\textbf{R-type} & \texttt{funct7} (7) & \texttt{rs2} (5) & \texttt{rs1} (5) & \texttt{funct3} (3) & \texttt{rd} (5) & \texttt{opcode} (7) \\
+\textbf{I-type} & \multicolumn{2}{c|}{\texttt{imm[11:0]} (12)} & \texttt{rs1} (5) & \texttt{funct3} (3) & \texttt{rd} (5) & \texttt{opcode} (7) \\
+\textbf{S-type} & \texttt{imm[11:5]} (7) & \texttt{rs2} (5) & \texttt{rs1} (5) & \texttt{funct3} (3) & \texttt{imm[4:0]} (5) & \texttt{opcode} (7) \\
+\textbf{B-type} & \texttt{imm[12|10:5]} (7) & \texttt{rs2} (5) & \texttt{rs1} (5) & \texttt{funct3} (3) & \texttt{imm[4:1|11]} (5) & \texttt{opcode} (7) \\
+\textbf{U-type} & \multicolumn{4}{c|}{\texttt{imm[31:12]} (20)} & \texttt{rd} (5) & \texttt{opcode} (7) \\
+\textbf{J-type} & \multicolumn{4}{c|}{\texttt{imm[20|10:1|11|19:12]} (20)} & \texttt{rd} (5) & \texttt{opcode} (7) \\
+\hline
+\end{tabular}
+\caption{The six fundamental RISC-V instruction formats.}\label{fig:riscv_formats}
+\end{figure}
+
+Notice the structural regularity across all six formats:
+\begin{itemize}
+    \item The major 7-bit opcode field ($\text{inst}[6:0]$) is always positioned in bits 6 through 0.
+    \item Destination register address ($\text{rd}$) is always located in bits 11 through 7.
+    \item First source register address ($\text{rs1}$) is always located in bits 19 through 15.
+    \item Second source register address ($\text{rs2}$) is always located in bits 24 through 20.
+    \item The 3-bit sub-operation specifier ($\text{funct3}$) is always located in bits 14 through 12.
+    \item The sign bit of all immediate values is unconditionally mapped to bit 31 ($\text{inst}[31]$), allowing sign-extension hardware to operate concurrently with instruction decoding.
+\end{itemize}
+
+\subsection{Instruction Classes}
+\index{RISC-V!instruction classes}
+
+The \texttt{RV32I} base instruction set comprises 40 machine instructions categorized into four functional groups:
+
+\subsubsection{1. Register-Register and Register-Immediate Computational Operations}
+\index{ALU!RISC-V operations}\index{computational instructions}
+\begin{itemize}
+    \item \textbf{Arithmetic}: Addition (\texttt{ADD}, \texttt{ADDI}) and Subtraction (\texttt{SUB}). Unsigned arithmetic is performed using identical two's complement adder circuits.
+    \item \textbf{Logical}: Bitwise Boolean operations AND (\texttt{AND}, \texttt{ANDI}), OR (\texttt{OR}, \texttt{ORI}), and exclusive-OR (\texttt{XOR}, \texttt{XORI}).
+    \item \textbf{Shifts}: Logical Shift Left (\texttt{SLL}, \texttt{SLLI}), Logical Shift Right (\texttt{SRL}, \texttt{SRLI}), and Arithmetic Shift Right (\texttt{SRA}, \texttt{SRAI}). In 32-bit mode, the shift amount is masked to the lower 5 bits ($\text{shamt}[4:0]$).
+    \item \textbf{Comparisons}: Set Less Than signed (\texttt{SLT}, \texttt{SLTI}) and Set Less Than unsigned (\texttt{SLTU}, \texttt{SLTIU}), writing 1 to \texttt{rd} if $\text{rs1} < \text{rs2}$ (or $\text{rs1} < \text{imm}$) and 0 otherwise.
+    \item \textbf{Upper Immediates}: Load Upper Immediate (\texttt{LUI}), which places a 20-bit immediate in bits 31:12 of \texttt{rd}, and Add Upper Immediate to PC (\texttt{AUIPC}), which computes $\text{pc} + (\text{imm} \ll 12)$ for position-independent addressing.
+\end{itemize}
+
+\subsubsection{2. Control Transfer Instructions}
+\index{branch instructions!RISC-V}\index{jump instructions!JAL and JALR}
+\begin{itemize}
+    \item \textbf{Conditional Branches (B-type)}: Branch if Equal (\texttt{BEQ}), Branch if Not Equal (\texttt{BNE}), Branch if Less Than signed (\texttt{BLT}), Branch if Greater Than or Equal signed (\texttt{BGE}), Branch if Less Than unsigned (\texttt{BLTU}), and Branch if Greater Than or Equal unsigned (\texttt{BGEU}). The target address is computed as $\text{pc} + \text{imm}$, where the 12-bit signed immediate represents a multiple of 2 bytes with bit 0 implicitly 0.
+    \item \textbf{Unconditional Jumps (J-type and I-type)}: Jump and Link (\texttt{JAL}) computes target address $\text{pc} + \text{imm}$ and writes $\text{pc} + 4$ to destination register \texttt{rd}. Jump and Link Register (\texttt{JALR}) computes target address $(\text{rs1} + \text{imm})$ and writes $\text{pc} + 4$ to \texttt{rd}. Per the RISC-V specification, the least significant bit of the JALR target is explicitly cleared to zero:
+    \begin{equation}
+        \text{target}_{\text{JALR}} = (\text{rs1} + \text{imm}) \ \& \ \sim 1
+    \end{equation}
+\end{itemize}
+
+\subsubsection{3. Memory Load and Store Instructions}
+\index{memory!RISC-V load and store}\index{byte addressing}
+\begin{itemize}
+    \item \textbf{Loads (I-type)}: Load Byte signed (\texttt{LB}), Load Halfword signed (\texttt{LH}), Load Word (\texttt{LW}), Load Byte unsigned (\texttt{LBU}), and Load Halfword unsigned (\texttt{LHU}). The memory address is computed as $\text{rs1} + \text{imm}$. Unsigned variants zero-extend the sub-word data, while signed variants sign-extend to 32 bits.
+    \item \textbf{Stores (S-type)}: Store Byte (\texttt{SB}), Store Halfword (\texttt{SH}), and Store Word (\texttt{SW}). Data from source register \texttt{rs2} is written to effective address $\text{rs1} + \text{imm}$.
+\end{itemize}
+
+\subsubsection{4. The Zmmul Standard Extension}
+\index{Zmmul: multiplication extension}\index{hardware multiplier!RISC-V}
+The standard \texttt{Zmmul} extension defines the integer multiplication subset of the standard M extension without requiring hardware division circuitry:
+\begin{itemize}
+    \item \texttt{MUL}: Computes the low 32 bits of $\text{rs1} \times \text{rs2}$.
+    \item \texttt{MULH}: Computes the high 32 bits of signed $\times$ signed product $\text{rs1} \times \text{rs2}$.
+    \item \texttt{MULHSU}: Computes the high 32 bits of signed $\times$ unsigned product $\text{rs1} \times \text{rs2}$.
+    \item \texttt{MULHU}: Computes the high 32 bits of unsigned $\times$ unsigned product $\text{rs1} \times \text{rs2}$.
+\end{itemize}
+
+
+\section{Harvard 5-OS Hardware Architecture and Microarchitecture}\label{riscvArch}
+\index{Harvard architecture!RISC-V 5-OS}\index{processor architecture!5-OS loops}
+
+In accordance with the structural classification of computing systems developed in Chapter \ref{lect6a}, the RISC-V processor is implemented as a \textbf{5th-Order System (Harvard 5-OS)} comprising five coupled structural feedback loops:
+\begin{enumerate}
+    \item \textbf{1st loop (1-OS) --- Memory State Loop}: Closed by the architectural register file (\texttt{RiscvRegFile}). Source operands read from \texttt{rs1} and \texttt{rs2} are processed and rewritten synchronously to destination register \texttt{rd} on the rising clock edge when \texttt{regWrite} is asserted, preserving state across instruction steps. Register $x0$ is hardwired to zero on both read and write.
+    \item \textbf{2nd loop (2-OS) --- Autonomous Subsystem Loops}: Operates two internal autonomous automata:
+    \begin{itemize}
+        \item The \textbf{Program Counter Automaton} (\texttt{ProgramCounter}), updating execution address $\text{pc} \leftarrow \text{pc} + 4$.
+        \item The \textbf{Registers with Arithmetic Logic Unit} (\texttt{RALU}), closing the internal computational feedback loop between the register file and the \texttt{RiscvALU}.
+    \end{itemize}
+    \item \textbf{3rd loop (3-OS) --- Executive-Control Loop}: Represents the interactive coupling between the RALU execution subsystem and the Program Counter automaton:
+    \begin{itemize}
+        \item The \texttt{RiscvALU} computes relational flags (\texttt{zeroFlag}, \texttt{lessThanFlag}, \texttt{lessThanUFlag}) that drive branch condition multiplexers, dynamically updating the PC automaton when branch conditions evaluate true.
+        \item The PC automaton routes the subroutine link address ($\text{pc} + 4$) to the RALU write-back path to be preserved in link register \texttt{ra} ($x1$) for call sequences (\texttt{JAL}, \texttt{JALR}).
+    \end{itemize}
+    \item \textbf{4th loop (4-OS) --- Program Memory Loop}: The PC automaton presents execution address \texttt{io.imem.addr} to the Program Memory. Instruction word \texttt{io.imem.inst} is delivered combinationally to the instruction decoder (\texttt{RiscvDecoder}) to configure datapath multiplexers.
+    \item \textbf{5th loop (5-OS) --- Data Memory Loop}: The RALU drives computed effective address $\text{rs1} + \text{imm}$ and store data \texttt{rs2Data} to byte-addressable memory (\texttt{RiscvDataMemory}), and receives load data into the register write-back multiplexer.
+\end{enumerate}
+
+\subsection{Single-Cycle Fetch-Execute Cycle}
+\index{Fetch-Execute cycle!single-cycle RISC-V}
+
+The processor executes each instruction within a single clock cycle across five coordinated logical functions:
+\begin{enumerate}
+    \item \textbf{Instruction Fetch (IF)}: The \texttt{ProgramCounter} presents address \texttt{pc.io.pc} onto \texttt{io.imem.addr}. Unbuffered memory combinationally returns the 32-bit instruction word \texttt{inst}.
+    \item \textbf{Instruction Decode (ID)}: \texttt{RiscvDecoder} unpacks register addresses (\texttt{rd}, \texttt{rs1}, \texttt{rs2}), while \texttt{RiscvImmGen} produces sign-extended 32-bit immediate \texttt{d.imm}. Direct-wire bit extraction maps $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ directly into \texttt{c.aluOp}.
+    \item \textbf{Operand Fetch \& Execution (EX)}: \texttt{RALU} reads operands \texttt{rs1Data} and \texttt{rs2Data}. Multiplexers select between \texttt{rs2Data} and \texttt{d.imm} based on \texttt{c.aluSrc}. \texttt{RiscvALU} computes the 32-bit result and evaluation flags.
+    \item \textbf{Memory Access \& Write-Back (MEM/WB)}: Memory access controls (\texttt{memRead}, \texttt{memWrite}, \texttt{funct3}) are driven to \texttt{io.dmem}. The write-back multiplexer selects between \texttt{aluResult}, memory load data, $\text{pc} + 4$ (for jumps), and upper immediate constants, writing to destination register \texttt{rd} on the rising clock edge.
+    \item \textbf{Next PC Generation (PC)}: When a branch condition is satisfied or a jump is decoded, target address $\text{pc} + \text{imm}$ or $\text{rs1} + \text{imm}$ is loaded into the PC automaton via \texttt{Mode.Jalr} (enforcing LSB $= 0$). Otherwise, the PC automaton increments by $+4$.
+\end{enumerate}
+
+\subsection{Chisel Hardware Implementation}
+\index{Chisel!RiscvFetchExecute implementation}
+
+Listing \ref{lst:chisel_riscv_core_ch18} presents the complete Chisel implementation of the single-cycle processor core.
+
+\includechiselcode[caption={RISC-V RV32I\_Zmmul 5-OS Fetch-Execute Processor Core (Chisel: RiscvFetchExecute.scala)}, label={lst:chisel_riscv_core_ch18}, firstline=10, firstnumber=10, lastline=125]{\chiselSourceDir/riscv/RiscvFetchExecute.scala}
+
+
+\section{Architectural Conformance Verification}\label{riscvConformance}
+\index{conformance testing!RISC-V architectural tests}\index{verification!Spike co-simulation}
+
+A critical challenge in processor engineering is guaranteeing that a hardware implementation strictly conforms to the formal instruction set specification. While ad-hoc assembly tests can verify basic functionality, they rarely test corner cases such as arithmetic overflow boundary conditions, sign extension edge cases, misaligned immediate offsets, and bit-level side effects.
+
+To establish absolute correctness, the \texttt{RiscvFetchExecute} processor is verified against the official \textbf{RISC-V Architectural Conformance Suite} (\texttt{riscv-arch-test}) developed by RISC-V International.
+
+\subsection{Verification Methodology: Pure Chisel/Scala Simulation}
+\index{EphemeralSimulator!architectural testbench}
+
+Rather than emitting intermediate Verilog files and compiling a C++ simulator using external tools (such as Verilator), the verification harness is implemented directly in Scala using Chisel's built-in \texttt{EphemeralSimulator}. This achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework:
+\begin{itemize}
+    \item \textbf{4MB Emulated Memory System}: A simulation memory buffer is initialized at base address \texttt{0x80000000} (the canonical RISC-V boot vector).
+    \item \textbf{Mailbox Completion Protocol}: The testbench continuously executes instructions and monitors data memory writes. When the processor writes to the memory-mapped mailbox register \texttt{tohost} (\texttt{0x80004000}), the test completes. A write value of \texttt{0x1} signifies success, whereas any other non-zero value indicates a failure code.
+    \item \textbf{Golden Reference Signature Comparison}: Upon test completion, memory contents between linker symbols \texttt{begin\_signature} and \texttt{end\_signature} are extracted word-by-word into a test signature. This signature is compared against the golden reference signature produced by \textbf{Spike}, the official RISC-V reference golden model.
+\end{itemize}
+
+Listing \ref{lst:chisel_conformance_spec} illustrates the Chisel/Scala conformance test runner.
+
+\includechiselcode[caption={Chisel/Scala Conformance Test Suite (RiscvConformanceSpec.scala)}, label={lst:chisel_conformance_spec}, firstline=12, firstnumber=12, lastline=150]{\chiselTestBenchSourceDir/riscv/RiscvConformanceSpec.scala}
+
+\subsection{Conformance Results}
+\index{conformance testing!results summary}
+
+All 42 official architectural conformance test suites execute and pass against the \texttt{RiscvFetchExecute} processor in Chisel/Scala simulation with a 100\% exact signature match. Table \ref{tab:conformance_results} details the test results.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Category} & \textbf{Test Suites} & \textbf{Status} & \textbf{Cycle Count} & \textbf{Signature Words} \\
+\hline
+\textbf{Arithmetic (R-type)} & \texttt{add-01}, \texttt{sub-01}, \texttt{sll-01}, \texttt{slt-01}, & \textbf{PASS} & 509--3,931 & 91--724 \\
+                             & \texttt{sltu-01}, \texttt{xor-01}, \texttt{srl-01}, \texttt{sra-01}, & & & \\
+                             & \texttt{or-01}, \texttt{and-01} & & & \\
+\hline
+\textbf{Immediate (I-type)}  & \texttt{addi-01}, \texttt{slli-01}, \texttt{slti-01}, \texttt{sltiu-01}, & \textbf{PASS} & 410--2,671 & 89--701 \\
+                             & \texttt{xori-01}, \texttt{srli-01}, \texttt{srai-01}, \texttt{ori-01}, & & & \\
+                             & \texttt{andi-01} & & & \\
+\hline
+\textbf{Upper Immediates}     & \texttt{lui-01}, \texttt{auipc-01} & \textbf{PASS} & 240--494 & 65--66 \\
+\hline
+\textbf{Jumps}               & \texttt{jal-01}, \texttt{jalr-01} & \textbf{PASS} & 1,043--1,558 & 34--35 \\
+\hline
+\textbf{Branches (B-type)}   & \texttt{beq-01}, \texttt{bne-01}, \texttt{blt-01}, & \textbf{PASS} & 5,532--6,857 & 582--728 \\
+                             & \texttt{bge-01}, \texttt{bltu-01}, \texttt{bgeu-01} & & & \\
+\hline
+\textbf{Loads (I-type)}      & \texttt{lb-align-01}, \texttt{lbu-align-01}, \texttt{lh-align-01}, & \textbf{PASS} & 616--632 & 34--35 \\
+                             & \texttt{lhu-align-01}, \texttt{lw-align-01} & & & \\
+\hline
+\textbf{Stores (S-type)}     & \texttt{sb-align-01}, \texttt{sh-align-01}, \texttt{sw-align-01} & \textbf{PASS} & 609--630 & 70--73 \\
+\hline
+\textbf{Synchronization}     & \texttt{fence-01} & \textbf{PASS} & 117 & 3 \\
+\hline
+\textbf{Zmmul Multiplication}& \texttt{mul-01}, \texttt{mulh-01}, \texttt{mulhsu-01}, \texttt{mulhu-01} & \textbf{PASS} & 3,465--4,034 & 616--754 \\
+\hline
+\multicolumn{2}{|l|}{\textbf{Total / Summary}} & \textbf{42/42 PASS} & \textbf{86,964 cycles} & \textbf{16,140 verified words} \\
+\hline
+\end{tabular}
+\caption{Official RISC-V architectural conformance verification results for \texttt{RiscvFetchExecute}.}\label{tab:conformance_results}
+\end{table}
+
+\subsection{Architectural Nuances Uncovered by Conformance Testing}
+\index{conformance testing!architectural nuances}\index{JALR!LSB mask requirement}
+
+Executing the official conformance test suite against \texttt{RiscvFetchExecute} exposed subtle edge cases that are frequently overlooked in textbook processor designs:
+\begin{enumerate}
+    \item \textbf{JALR Target Calculation and ALU Operand Routing}:
+    Under \texttt{JALR}, the processor computes the target address by adding register $\text{rs1}$ to sign-extended 12-bit immediate \texttt{imm}, and subsequently clears bit 0. In an early implementation, the instruction decoder failed to assert \texttt{c.aluSrc} for opcode \texttt{JALR}. Consequently, the ALU multiplexer erroneously routed $\text{rs2}$ into operand B, evaluating target $\text{rs1} + \text{rs2}$ rather than $\text{rs1} + \text{imm}$. Conformance test \texttt{jalr-01} immediately identified this discrepancy.
+    \item \textbf{Shift Amount Clamping}:
+    The RISC-V specification dictates that for all 32-bit shift instructions (\texttt{SLL}, \texttt{SRL}, \texttt{SRA}, \texttt{SLLI}, \texttt{SRLI}, \texttt{SRAI}), only the least significant 5 bits of the shift operand ($\text{shamt}[4:0]$) are utilized. If higher bits are allowed to influence the shifter, shifts with values $\ge 32$ produce zero or invalid results.
+    \item \textbf{Signed vs. Unsigned Relational Comparisons}:
+    The comparison instructions (\texttt{SLT} vs. \texttt{SLTU}, \texttt{BLT} vs. \texttt{BLTU}, \texttt{BGE} vs. \texttt{BGEU}) test extreme integer values, including negative numbers ($\text{MSB} = 1$) compared against small positive numbers. Unsigned comparisons must treat \texttt{0xFFFFFFFF} as $2^{32}-1$, whereas signed comparisons treat it as $-1$. The \texttt{RiscvALU} properly segregates signed (\texttt{.asSInt}) and unsigned (\texttt{.asUInt}) relational logic.
+    \item \textbf{Sub-Word Alignment and Sign Extension}:
+    For load instructions (\texttt{LB}, \texttt{LH}, \texttt{LBU}, \texttt{LHU}), data memory delivers a full 32-bit word. The memory subsystem must extract the appropriate byte or halfword using lower address bits $\text{addr}[1:0]$ and either sign-extend or zero-extend the result into bits 31:8 (or 31:16).
+    \item \textbf{Register $x0$ Invariance}:
+    The architecture strictly requires that $x0$ remains 0 under all conditions. Instructions targeting $x0$ as destination (\texttt{rd = 0}) must discard the write-back data, and reads of $x0$ must return zero combinationally even if a concurrent write is attempted.
+\end{enumerate}
+
+
+\section{Comparative Study: Educational vs. Industrial Single-Cycle Cores}\label{riscvComparison}
+\index{ZeroNyte: industrial single-cycle core}\index{processor architecture!comparative analysis}
+
+To bridge the gap between academic formal models and industrial silicon implementations, it is instructive to compare the textbook \texttt{RiscvFetchExecute} core with \textbf{ZeroNyte}, a tapeout-verified single-cycle RV32I core developed in the KryptoNyte project that similarly passes all official conformance tests. Table \ref{tab:core_comparison} presents a comprehensive structural comparison.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|p{6cm}|p{6cm}|}
+\hline
+\textbf{Dimension} & \textbf{ZeroNyte (Industrial Core)} & \textbf{RiscvFetchExecute (Textbook Core)} \\
+\hline
+\textbf{Architectural Model} & Single-cycle Fetch-Execute & Single-cycle Harvard 5-OS \\
+\hline
+\textbf{ISA Scope} & Base RV32I integer & RV32I + \texttt{Zmmul} (Hardware Multiplier) \\
+\hline
+\textbf{Reset Vector} & Hardwired \texttt{0x80000000} & Parameterized (\texttt{initPC}, default 0) \\
+\hline
+\textbf{Instruction Decoder} & Function-based decode table mapping to synthetic 5-bit enum & Direct-wire bit extraction $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ \\
+\hline
+\textbf{Branch Evaluation} & Dedicated parallel comparators in datapath (\texttt{r1 === r2Reg}, \texttt{< SInt}, \texttt{< UInt}) & Loop 3 ALU flag sharing (\texttt{zeroFlag}, \texttt{lessThanFlag}, \texttt{lessThanUFlag}) \\
+\hline
+\textbf{Memory Alignment} & CPU-side \texttt{StoreUnit} and load unpackers & Memory-side encapsulation inside \texttt{RiscvDataMemory} \\
+\hline
+\textbf{Register File} & Inherits \texttt{RegFileMTMem} (\textit{is-a} OOP pattern) with Chisel \texttt{Mem} & Discrete composition with \texttt{RegInit(VecInit(...))} inside \texttt{RALU} \\
+\hline
+\textbf{Bus Interfaces} & TileLink-UL master port + legacy port & Decoupled Harvard \texttt{ImemPort} and \texttt{DmemPort} \\
+\hline
+\textbf{Interrupts / CSRs} & 8-source interrupt controller with priority and claim/complete & Decoupled for clean modular presentation \\
+\hline
+\textbf{Debug Support} & JTAG TAP interface and co-simulation ports & Observability bundle (\texttt{pc}, \texttt{inst}, \texttt{aluOut}, \texttt{regWrite}) \\
+\hline
+\end{tabular}
+\caption{Architectural comparison between industrial ZeroNyte and textbook RiscvFetchExecute.}\label{tab:core_comparison}
+\end{table}
+
+\subsection{Key Design Trade-offs}
+
+\subsubsection{1. Branch Condition Evaluation: Dedicated Comparators vs. Loop 3 Flag Sharing}
+In \texttt{ZeroNyte}, branch conditions are evaluated using dedicated equality and magnitude comparators operating directly on register file read ports \texttt{r1} and \texttt{r2Reg} in parallel with the ALU. This design choice removes the ALU adder carry chain from the critical path of the branch target generation logic. In contrast, \texttt{RiscvFetchExecute} strictly adheres to the theoretical Loop 3 architecture: the ALU executes a subtraction operation and outputs comparison flags (\texttt{zeroFlag}, \texttt{lessThanFlag}, \texttt{lessThanUFlag}) that drive the PC automaton. This maximizes hardware reuse and preserves the formal 5-OS abstraction at the expense of a slightly longer combinational path.
+
+\subsubsection{2. Memory Boundary: CPU-Side StoreUnit vs. Encapsulated Byte Memory}
+In high-performance SoCs, external memory systems (such as AXI4 or TileLink crossbars) accept word-aligned addresses accompanied by byte-enable masks. Consequently, \texttt{ZeroNyte} incorporates a dedicated \texttt{StoreUnit} on the CPU side to compute byte write masks and shift store data into the appropriate byte lanes. Conversely, \texttt{RiscvFetchExecute} maintains a clean boundary: the core simply transmits unshifted data, address, and \texttt{funct3} across \texttt{DmemPort}, delegating lane steerage and sign extension entirely to the memory subsystem (\texttt{RiscvDataMemory}).
+
+\subsubsection{3. Object-Oriented Register File Inheritance}
+\texttt{ZeroNyte} illustrates the classic object-oriented \textit{is-a} relationship in hardware description:
+\begin{verbatim}
+class RegFile2R1WMem(width: Int = 32, depth: Int = 32)
+  extends RegFileMTMem(width, depth, numThreads = 1,
+                       numReadPorts = 2, numWritePorts = 1)
+\end{verbatim}
+Here, the 2-read 1-write register file \textit{is a} specialized instance of a multi-threaded memory-based generator. In \texttt{RiscvFetchExecute}, the register file is instantiated directly inside \texttt{RALU}, emphasizing pedagogical simplicity and structural transparency.
+
+
+\section{Summary}\label{riscvSummary}
+
+This chapter presented the complete architecture, hardware implementation, and verification of the RISC-V open standard processor:
+\begin{itemize}
+    \item The RISC-V ISA organizes instruction execution across regular 32-bit formats with uniform register positions and immediate sign bits.
+    \item The \texttt{RV32I\_Zmmul} processor is structured as a Harvard 5-OS computing system, integrating five reusable hardware modules developed across prior chapters: \texttt{ProgramCounter}, \texttt{RiscvDecoder}, \texttt{RiscvImmGen}, \texttt{RiscvRegFile}, \texttt{RiscvALU}, and \texttt{RiscvDataMemory}.
+    \item Using pure Chisel/Scala simulation with \texttt{EphemeralSimulator}, the processor was rigorously verified against all 42 official RISC-V architectural conformance tests, achieving a 100\% exact match against Spike golden reference signatures.
+    \item A comparative study against the industrial \texttt{ZeroNyte} core demonstrated how the formal 5-OS model maps to production silicon practices, including TileLink bus integration, dedicated branch comparators, and object-oriented hardware design.
+\end{itemize}
+
+
+\section{Problems}\label{riscvProblems}
+
+\begin{problem}
+Explain why the RISC-V instruction format places the sign bit of all immediate values in bit 31 ($\text{inst}[31]$) across all instruction formats (I, S, B, U, J). How does this design choice benefit hardware decoders?
+
+\textbf{Solution}:
+By fixing the immediate sign bit at $\text{inst}[31]$, the hardware immediate generator can immediately begin sign-extending the most significant bit across upper datapath wires (e.g., replicating $\text{inst}[31]$ into bits 31:12 or 31:20) concurrently with opcode decoding, before the instruction format is even identified. This reduces decoding latency and simplifies fan-out buffering.
+$\diamond$
+\end{problem}
+
+\begin{problem}
+In the implementation of \texttt{JALR}, the RISC-V specification dictates that the least significant bit of the computed target address must be forced to zero: $\text{target} = (\text{rs1} + \text{imm}) \ \& \ \sim 1$.
+\begin{enumerate}
+    \item What software purpose does this requirement serve?
+    \item Where is this masking implemented in the \texttt{RiscvFetchExecute} processor?
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item Forcing bit 0 to 0 guarantees that control never transfers to an unaligned byte address that would cause an instruction-address-misaligned exception. It also enables software to use pointer arithmetic where low bits store tag flags, stripping the flag during return or indirect call.
+    \item In \texttt{ProgramCounter.scala}, when \texttt{io.mode === Mode.Jalr}, the next PC is assigned as:
+    \texttt{pc := Cat(io.jalrTarget(width - 1, 1), 0.U(1.W))}, explicitly forcing bit 0 to zero.
+\end{enumerate}
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Describe the trade-off between evaluating branch conditions using dedicated comparators (as in \texttt{ZeroNyte}) versus reusing the ALU comparison flags (as in \texttt{RiscvFetchExecute}). Which approach minimizes total silicon area, and which approach minimizes critical path delay?
+
+\textbf{Solution}:
+Reusing ALU comparison flags minimizes total silicon area because the existing 32-bit subtractor in the ALU generates the zero, signed less-than, and unsigned less-than condition flags without duplicating comparator logic. However, evaluating branch conditions through dedicated parallel comparators directly on the register file outputs minimizes critical path delay, because branch resolution can proceed concurrently with ALU execution and avoid the carry propagation delay of the ALU adder.
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Extend the \texttt{RiscvFetchExecute} datapath to support the hardware division instructions of the standard M extension (\texttt{DIV}, \texttt{DIVU}, \texttt{REM}, \texttt{REMU}). Explain why single-cycle execution of 32-bit division is generally avoided in high-performance physical silicon.
+
+\textbf{Solution}:
+32-bit non-restoring or radix-4 divider algorithms require iterative subtraction steps that cannot complete within the single-cycle clock period of an integer ALU without severely degrading the maximum operating clock frequency ($f_{\text{max}}$). Practical implementations implement division as a multi-cycle iterative automaton or decoupled coprocessor.
+$\diamond$
+\end{problem}
