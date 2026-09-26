@@ -151,9 +151,9 @@ Chisel allows hardware generation using Scala code.
     \item \textit{Dynamic Hardware Generation}: Create variable hardware structures based on parameters or conditions.
 \end{itemize}
 
-\subsection{Testing with ChiselTest}
+\subsection{Testing and Simulation}
 
-Chisel provides a testing framework integrated with ScalaTest, enabling sophisticated testing methodologies.
+Chisel provides a simulation and testing framework integrated with ScalaTest, enabling sophisticated testing methodologies.
 
 \subsection{Features Unique to SystemVerilog}
 
@@ -206,7 +206,7 @@ This section provides guidance for designers transitioning between SystemVerilog
     \item \textit{Classes and Modules}: Map Chisel modules to \texttt{module} definitions.
     \item \textit{Bundles}: Translate \texttt{Bundle} classes to \texttt{struct} or module port groups.
     \item \textit{Functional Constructs}: Implement Scala functional constructs using procedural code or generate statements.
-    \item \textit{Testing}: Replace ChiselTest with SystemVerilog testbenches and verification constructs.
+    \item \textit{Testing}: Replace Chisel simulation testbenches with SystemVerilog testbenches and verification constructs.
 \end{itemize}
 
 \subsection{Common Pitfalls and Tips}

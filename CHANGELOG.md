@@ -9,7 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-09-26
 
+### Added
+- **LaTeX Changelog**:
+  - Added `Latex/changelog.tex` documenting changes since the First Edition PDF release by topic.
+  - Included `changelog.tex` in `Latex/00_main.tex` front matter.
+
 ### Changed
+- **LaTeX Chisel & Testing Modernization**:
+  - Updated Chisel version reference regarding `switch` deprecation in `Latex/02_08_combinational_circuits_0-OS.tex`.
+  - Added Scala 2.13.18 version specification alongside Chisel 7.15.0 in `Latex/00_main.tex`.
+  - Updated testing framework documentation from legacy `ChiselTest` to `EphemeralSimulator` in `Latex/A01_1_Chisel.tex` and `Latex/A01_3_Chisel_vs_System_Verilog.tex`.
+  - Corrected `RTL/Chisel/` path, `build.sbt` listing caption, and updated `sbt test` terminal transcript in `Latex/A01_1a_Install.tex`.
 - **Chisel & Scala Version Upgrade**:
   - Upgraded `chiselVersion` to `7.15.0` and `scalaVersion` to `2.13.18` in `RTL/Chisel/build.sbt`.
   - Updated `chisel-plugin` compiler plugin cross-version resolution for Scala 2.13.18.
