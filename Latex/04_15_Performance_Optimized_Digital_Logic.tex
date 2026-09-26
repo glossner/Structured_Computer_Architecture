@@ -1,118 +1,187 @@
 \chapter{Performance Optimized Digital Logic}\label{chapt:perf_digital_logic}
 \localtoc
 
-\section{Comparison of \texttt{when} and \texttt{MuxCase} in Chisel} \label{sec:muxcase}
+In previous chapters, we introduced the fundamental principles of zero-order combinational circuits (Chapter \ref{lect1}), first-order memory components, and second-order automata (Chapter \ref{lect3}). While those foundational chapters focused primarily on behavioral and structural correctness, real-world processor architectures demand circuits optimized for high clock frequencies, minimal propagation latency, efficient silicon area, and low power dissipation.
 
-The choice between \texttt{when} and \texttt{MuxCase} in Chisel depends on the specific design scenario and synthesis goals. 
+This chapter explores architectural techniques for performance optimization in digital logic. We begin by examining how multiplexing and conditional constructs in hardware description languages synthesize into multiplexer trees versus priority encoders. Next, we analyze high-performance adder topologies that break the sequential carry-propagation bottleneck of simple ripple-carry adders. We then examine the microarchitecture of multi-port and multithreaded register files, evaluating the trade-offs between flip-flop arrays, banked SRAMs, and replication. Finally, we analyze sequential timing closure, contrasting Mealy and Moore state machine architectures in high-speed digital pipelines.
+
+\section{Multiplexing and Conditional Logic Optimization in Chisel} \label{sec:muxcase}
+\index{multiplexer!optimization}
+\index{MuxCase@\texttt{MuxCase}}
+\index{when@\texttt{when}}
+\index{switch@\texttt{switch}}
+
+In Chisel, designers have several constructs for conditional signal selection and multi-way branching: \texttt{when}, \texttt{switch}, and \texttt{MuxCase} (or \texttt{Mux1H}). The choice among these constructs directly influences the synthesized gate-level netlist, affecting propagation delay, area, and critical path timing.
 
 \subsection{Behavioral and Structural Implications}
-\texttt{when} is more natural and intuitive for conditions that resemble software-like \texttt{if-else} logic. It typically generates cascaded conditional logic (e.g., \texttt{if-else} structures) in the hardware, where each condition is checked sequentially. On the other hand, \texttt{MuxCase} represents a priority-free selection logic, a multiplexer, where all conditions are evaluated simultaneously. This structure often synthesizes directly into a multiplexer tree, which can result in better performance and reduced latency for certain designs.
+The \texttt{when} construct is intuitive for designers accustomed to software-like \texttt{if-else} branching. However, in hardware, nested \texttt{when} statements generate cascaded priority logic, where each condition is evaluated sequentially. Early conditions take precedence, and subsequent conditions are evaluated only if all preceding conditions are false.
+
+In contrast, \texttt{MuxCase} represents priority-free parallel selection logic. When conditions are mutually exclusive, a multiplexer tree is generated where all conditions are evaluated concurrently. This structure often synthesizes into balanced multiplexer trees or parallel Look-Up Table (LUT) structures, resulting in lower latency and superior timing closure.
 
 \subsection{Synthesis Implications}
 \textbf{Timing and Performance:}  
-For timing, \texttt{when} introduces propagation delays due to the cascading nature of sequential conditions. In contrast, \texttt{MuxCase} generates parallel logic, potentially yielding better timing performance as conditions are evaluated independently.
+For timing, chained \texttt{when} statements introduce a linear increase in propagation delay ($O(N)$ for $N$ conditions) due to the cascading ripple of priority enables. Conversely, \texttt{MuxCase} enables synthesis tools to construct balanced trees ($O(\log N)$ delay), minimizing the critical path when conditions are independent.
 
 \textbf{Area:}  
-The \texttt{when} construct can produce more compact hardware for sequential conditions since unused conditions are pruned early. However, \texttt{MuxCase} may generate larger hardware if many mutually exclusive conditions are evaluated together because all conditions are checked in parallel.
+The \texttt{when} construct can produce compact logic for genuinely prioritized conditions because logic synthesis can prune unused paths early. However, when applied to mutually exclusive cases, priority logic introduces redundant gating. \texttt{MuxCase} directly generates a multiplexer, which maps efficiently to dedicated multiplexer primitives or wide LUTs in modern FPGAs and standard-cell ASIC libraries.
 
-\textbf{Readability:}  
-\texttt{when} is preferable for sequential, human-readable conditions with natural priority, while \texttt{MuxCase} is better suited for a concise representation of mutually exclusive cases.
+\textbf{Readability and Intent:}  
+The \texttt{when} construct clearly conveys priority when priority is inherently required (e.g., interrupt handling or default override). \texttt{MuxCase} is better suited for opcode decoding, instruction selection, and mutually exclusive multi-way branches.
 
-\subsection{Specific Considerations}
-\textbf{Mutually Exclusive Conditions:}  
-If conditions are naturally exclusive, \texttt{MuxCase} is often a better fit. For example:
-\[
-\texttt{val result = MuxCase(0.U, Seq(}
-\]
-\[
-\quad (\texttt{opcode === ADD} \rightarrow \texttt{(a + b),}
-\]
-\[
-\quad (\texttt{opcode === SUB} \rightarrow \texttt{(a - b))}
-\]
-\texttt{))}
-This translates to a 3-to-1 multiplexer in hardware.
+\subsection{Syntax and Implementation Examples}
+\textbf{Mutually Exclusive Selection with \texttt{MuxCase}:}  
+When conditions are mutually exclusive, \texttt{MuxCase} provides a clean, parallel multiplexer description. The construct takes a default value and a sequence of boolean-condition to data-expression pairs (\texttt{condition -> data}):
 
-\textbf{Priority Logic:}  
-When conditions have a natural priority (e.g., an \texttt{else} case that catches all unhandled conditions), \texttt{when} is preferable. For example:
-\[
-\texttt{when(opcode === ADD) \{}
-\]
-\[
-\quad \texttt{result := a + b}
-\]
-\[
-\texttt{\}.elsewhen(opcode === SUB) \{}
-\]
-\[
-\quad \texttt{result := a - b}
-\]
-\[
-\texttt{\}.otherwise \{}
-\]
-\[
-\quad \texttt{result := 0.U}
-\]
-\texttt{\}}  
-This logic represents a chain of conditional checks in hardware.
+\begin{chiselcode}
+val result = MuxCase(0.U, Seq(
+  (opcode === ADD) -> (a + b),
+  (opcode === SUB) -> (a - b)
+))
+\end{chiselcode}
+
+This description translates directly into a 3-to-1 multiplexer in hardware, selecting between the computed sum, difference, or the default value \texttt{0.U}.
+
+\textbf{Prioritized Selection with \texttt{when}:}  
+When conditions require sequential priority, the \texttt{when}/\texttt{elsewhen}/\texttt{otherwise} chain explicitly models this behavior:
+
+\begin{chiselcode}
+when(opcode === ADD) {
+  result := a + b
+}.elsewhen(opcode === SUB) {
+  result := a - b
+}.otherwise {
+  result := 0.U
+}
+\end{chiselcode}
+
+This logic synthesizes into a chain of multiplexers where the \texttt{ADD} condition controls the final multiplexer stage, imposing priority over the \texttt{SUB} and default cases.
 
 \subsection{Switch Synthesis in Chisel}
-In Chisel, a \texttt{switch} statement is a construct used for multi-way branching based on a condition or value. The hardware synthesized from a \texttt{switch} statement depends on the conditions and the synthesis toolchain. Generally, it can result in one of the following hardware structures:
+In Chisel, the \texttt{switch} construct (available via \texttt{chisel3.util.switch}) provides multi-way branching based on a single selector expression:
 
-A \textbf{multiplexer tree} is generated if the \texttt{switch} conditions are mutually exclusive, with each case corresponding to a distinct value of the selector. For instance:
+\begin{chiselcode}
+import chisel3.util._
 
-\begin{lstlisting}[language=Scala]
 val result = Wire(UInt(8.W)) 
 switch(selector) { 
- is("b00".U) { result := a } 
- is("b01".U) { result := b } 
- is("b10".U) { result := c } 
- is("b11".U) { result := d } 
- }
-\end{lstlisting}
+  is("b00".U) { result := a } 
+  is("b01".U) { result := b } 
+  is("b10".U) { result := c } 
+  is("b11".U) { result := d } 
+}
+\end{chiselcode}
 
-This should synthesize into a 4-to-1 multiplexer controlled by the value of \texttt{selector}.
+When the \texttt{is} conditions cover distinct, mutually exclusive literal values of \texttt{selector}, synthesis tools generate a balanced 4-to-1 multiplexer. However, if the selector is wide or conditions overlap, synthesis tools may introduce priority encoders or wide decoders. 
 
-When the \texttt{switch} includes overlapping or non-mutually-exclusive conditions, \textbf{priority logic} is typically generated. Priority logic evaluates cases sequentially, giving precedence to earlier conditions. For wide selectors or more complex logic, synthesis tools may generate \textbf{decoder logic} to translate the selector into one-hot or prioritized enable signals that control the corresponding cases.
-
-\subsection{Comparison with \texttt{MuxCase} and \texttt{when}}
-\texttt{MuxCase} is more explicit and directly creates a multiplexer, making it compact and efficient for mutually exclusive conditions. \texttt{when} constructs explicitly generate priority logic. In contrast, \texttt{switch} can represent either multiplexers or priority logic depending on the use case, providing a flexible but less predictable synthesis.
-
-\subsubsection{Limitations of \texttt{switch}}
-While \texttt{switch} provides a clean and readable way to handle multi-way branching, it is not always recommended for large or complex selectors. For wide selectors, the generated decoder logic can result in significant area and timing overhead. Additionally, overlapping or non-mutually-exclusive cases can inadvertently lead to priority chains that increase latency and complicate timing analysis. 
+For wide selectors, \texttt{switch} statements can inadvertently create large decoding logic and timing bottlenecks. Furthermore, as noted in Chapter \ref{lect1}, modern Chisel development discourages reliance on \texttt{switch} for complex designs in favor of pattern matching, \texttt{MuxCase}, or \texttt{Mux1H} (one-hot multiplexing), which provide more predictable synthesis results and avoid subtle refactoring bugs.
 
 
-%**********************************
-\section{Carry Lookahead Adder}
-%*********************************
-Carry Look-Ahead Adders (CLAs) are designed to overcome the performance bottlenecks of ripple-carry adders by reducing the dependency on sequential carry propagation. Instead of waiting for each bit's carry to be computed, the CLA computes carries in parallel using the generate (\texttt{G}) and propagate (\texttt{P}) signals for each bit. These signals allow the adder to determine whether a carry will be generated or propagated at each stage. Using these signals, the carry for each bit position can be calculated directly through a set of Boolean equations, significantly reducing the delay to logarithmic time relative to the adder's width. This design is particularly effective for high-speed arithmetic operations in processors and digital signal processing, where minimizing latency is important. However, the parallel computation and additional logic circuitry result in increased hardware complexity compared to simpler adders.
+%*****************************************************************************
+\section{High-Performance Adders} \label{sec:high_performance_adders}
+%*****************************************************************************
+\index{adder!high-performance}
+\index{carry lookahead adder (CLA)}
+\index{carry select adder (CSA)}
+\index{carry save adder (CSA)}
+\index{Kogge-Stone adder}
+\index{parallel prefix adder}
 
-%******************************
-\section{Carry Select Adder}
-%******************************
-Carry Select Adders (CSAs) improve upon the delay of ripple-carry adders by precomputing the sum and carry outputs for both possible carry-in values (0 and 1) in parallel. Each stage of the adder computes two possible results based on these assumptions, and a multiplexer is used to select the correct result once the carry-in is determined. This approach significantly reduces the propagation delay associated with sequential carry computation while maintaining a relatively straightforward design. Although CSAs require additional hardware resources for the parallel computations and multiplexers, they achieve a good trade-off between speed and area, making them well-suited for medium-sized arithmetic units where both latency and complexity are important considerations.
+In Chapter \ref{lect1}, we analyzed the ripple-carry adder, where the carry out of each bit stage $i$ serves as the carry in to stage $i+1$. Because the carry signal must propagate sequentially through all $N$ full adders, the worst-case critical path delay grows linearly with bit width:
+\begin{equation}
+t_{\text{RCA}} = t_{\text{gen}} + (N - 1) t_{\text{carry}} + t_{\text{sum}} = O(N)
+\end{equation}
+For 32-bit and 64-bit ALUs in high-frequency processors, this $O(N)$ latency is unacceptable. High-performance adders employ parallel carry computation, speculative calculation, or carry-deferred representation to reduce arithmetic latency.
 
-%*****************************
-\section{Carry Save Adder}
-%*****************************
-Carry-save adders are specialized adders used primarily in multiplication. Unlike conventional adders, which propagate carries through the stages immediately, CSAs represent the result as two separate numbers: a partial sum and a carry vector. These two outputs are then combined in a subsequent addition step, often using a more efficient adder such as a carry-lookahead adder. By deferring the carry propagation, CSAs significantly reduce the delay for intermediate steps, making them highly efficient for scenarios where multiple additions must be performed simultaneously. Examples include the Wallace tree \cite{wallace1964} and Dadda tree \cite{dadda1965}. This efficiency is achieved at the cost of additional logic to manage the separate sum and carry outputs.
+\subsection{Carry Lookahead Adder (CLA)}
+The Carry Lookahead Adder (CLA) overcomes the carry propagation bottleneck by computing all carry signals in parallel. For each bit position $i$, two intermediate signals are defined:
+\begin{align}
+\text{Generate: } & G_i = A_i \cdot B_i \\
+\text{Propagate: } & P_i = A_i \oplus B_i \quad (\text{or } A_i + B_i)
+\end{align}
+$G_i$ indicates that a carry is generated at stage $i$ regardless of the carry-in. $P_i$ indicates that an incoming carry $C_i$ will propagate through stage $i$ to $C_{i+1}$.
 
+The carry recurrence relation is:
+\begin{equation}
+C_{i+1} = G_i + P_i \cdot C_i
+\end{equation}
+By recursively expanding this relation, each carry bit can be expressed directly in terms of the primary inputs and the initial carry-in $C_0$:
+\begin{align}
+C_1 &= G_0 + P_0 C_0 \\
+C_2 &= G_1 + P_1 G_0 + P_1 P_0 C_0 \\
+C_3 &= G_2 + P_2 G_1 + P_2 P_1 G_0 + P_2 P_1 P_0 C_0 \\
+C_4 &= G_3 + P_3 G_2 + P_3 P_2 G_1 + P_3 P_2 P_1 G_0 + P_3 P_2 P_1 P_0 C_0
+\end{align}
+In theory, all carries are available after just two gate delays (an AND level followed by an OR level), enabling constant-time carry computation ($O(1)$). In practice, physical fan-in and fan-out limits restrict flat lookahead blocks to 4 or 8 bits. Larger adders use hierarchical (block) CLA structures, defining block generate ($G_{\text{block}}$) and block propagate ($P_{\text{block}}$) terms, resulting in an overall latency of $O(\log N)$.
 
+\subsection{Carry Select Adder (CSA)}
+The Carry Select Adder accelerates addition through speculation. The $N$-bit adder is partitioned into smaller blocks (e.g., 4-bit or 8-bit groups). For each block, two additions are performed simultaneously in parallel:
+\begin{enumerate}
+    \item One adder computes the sum assuming the incoming carry is $0$ ($C_{\text{in}} = 0$).
+    \item A second adder computes the sum assuming the incoming carry is $1$ ($C_{\text{in}} = 1$).
+\end{enumerate}
+When the true carry-in arrives from the preceding block, a 2-to-1 multiplexer selects the precomputed sum and carry-out. 
 
+In a uniform carry select adder with block size $k$, the carry propagates through $N/k$ multiplexers. To further optimize performance, a \textbf{square-root carry select adder} uses variable block sizes that increase by one bit per stage (e.g., 2, 3, 4, 5, 6 bits). The larger blocks take progressively longer to compute their tentative sums, but this delay is hidden because the carry-in signal from earlier stages arrives later. This balances the arrival times of data and carry inputs at each multiplexer, achieving an overall delay of:
+\begin{equation}
+t_{\text{sq-CSA}} = O(\sqrt{N})
+\end{equation}
+The Carry Select Adder provides an excellent speed-area trade-off: it reduces delay substantially compared to a ripple-carry adder while avoiding the complex routing of a full parallel prefix tree, requiring approximately 40\% to 60\% more area than a ripple-carry adder.
 
+\subsection{Carry Save Adder (CSA)}
+When summing three or more operands (as in multi-operand addition and multiplier partial-product reduction), propagating carries after each addition introduces unnecessary delay. The Carry Save Adder (CSA) resolves this by deferring carry propagation entirely.
 
+A carry-save adder cell is essentially a Full Adder acting as a \textbf{3:2 compressor}. Given three input bits ($A_i, B_i, C_i$), it produces two output bits: a sum bit $S_i$ and a carry bit $C_{i+1}$:
+\begin{align}
+S_i &= A_i \oplus B_i \oplus C_i \\
+C_{i+1} &= (A_i \cdot B_i) + (B_i \cdot C_i) + (A_i \cdot C_i)
+\end{align}
+Crucially, the carry bit $C_{i+1}$ is not forwarded to the adjacent bit cell in the same stage; instead, it is output alongside the sum bit. Thus, adding three $N$-bit numbers produces two $N$-bit results (a partial sum vector and a shifted carry vector) with a delay of only \textit{one full adder} ($O(1)$), completely independent of the operand width $N$.
 
-%*****************************
-\section{Kogge-Stone Adder} \label{sec:kogge-stone-adder}
-%*****************************
-Parallel prefix adders are a class of high-performance adders designed to optimize the computation of carry signals in binary addition, significantly reducing delay compared to simpler adder designs like ripple-carry adders. They achieve this by dividing the addition process into three distinct stages: generating initial propagate and generate signals for each bit, computing intermediate carries through a tree-like prefix structure, and finally calculating the sum based on these carry signals. The tree structure allows the carry signals to be computed in parallel, with a logarithmic time complexity relative to the number of bits, making these adders highly efficient for large bit-width operations. These adders are widely used in modern high-speed computing systems and processors.
+Carry-save adders are interconnected in tree structures—most notably the Wallace tree \cite{wallace1964} and Dadda tree \cite{dadda1965}—to reduce $K$ partial products down to two vectors in $O(\log_{1.5} K)$ levels of logic. Only in the final stage is a fast two-operand adder (such as a CLA or Kogge-Stone adder) used to merge the carry and sum vectors into a final binary result.
 
-The Kogge-Stone Adder is a parallel prefix adder known for its high performance and suitability for large bit-width arithmetic operations. It minimizes the propagation delay using a tree-like structure to compute carry signals in a logarithmic number of stages relative to the bit width. The design uses generate and propagate signals to recursively compute carries in parallel, ensuring that the carry for any given bit is available after just $\log_2(n)$ stages, where $n$ is the bit width. While this structure significantly enhances speed, it requires substantial wiring and additional resources, making it resource-intensive compared to simpler designs like ripple-carry adders. Due to its efficiency in reducing delay, the Kogge-Stone Adder is frequently employed in high-performance processors and digital systems requiring fast arithmetic computations  \cite{kogge1973parallel}.
+\subsection{Parallel Prefix Adders: Kogge-Stone Adder} \label{sec:kogge-stone-adder}
+Parallel prefix adders treat carry computation as a general prefix problem. Binary addition is decomposed into three distinct phases:
+\begin{enumerate}
+    \item \textbf{Pre-computation}: Generate individual generate and propagate signals for each bit: $g_i = a_i \cdot b_i$, $p_i = a_i \oplus b_i$.
+    \item \textbf{Prefix Network}: Combine generate and propagate pairs using the associative \textbf{prefix operator} $\bullet$:
+    \begin{equation}
+    (G, P) = (g_2, p_2) \bullet (g_1, p_1) = \left( g_2 + (p_2 \cdot g_1), \; p_2 \cdot p_1 \right)
+    \end{equation}
+    Because the $\bullet$ operator is associative, intermediate terms can be grouped and evaluated in any order, enabling balanced tree networks.
+    \item \textbf{Post-computation}: Compute final sum bits using the evaluated carries: $S_i = p_i \oplus C_i$.
+\end{enumerate}
+
+The \textbf{Kogge-Stone Adder} \cite{kogge1973parallel} is the most prominent parallel prefix topology, optimized for minimum logic depth. It computes carries in $\lceil \log_2 N \rceil$ stages with a uniform fan-out of 2 at each stage. This makes it one of the fastest adder architectures known for 32-bit, 64-bit, and 128-bit integer units. However, this speed comes at the expense of high wiring density and area: Kogge-Stone requires $O(N \log_2 N)$ prefix operator cells and a large number of routing tracks.
+
+\subsubsection{Comparison of High-Performance Adder Architectures}
+Table \ref{tab:adder_comparison} summarizes the asymptotic delay, area, fan-out, and routing complexity of the major adder architectures.
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Adder Architecture} & \textbf{Logic Delay} & \textbf{Area Complexity} & \textbf{Max Fan-out} & \textbf{Wiring Density} \\ \hline
+Ripple-Carry Adder (RCA) & $O(N)$ & $O(N)$ & $O(1)$ & Very Low \\ \hline
+Carry Lookahead (CLA) & $O(\log N)$ & $O(N \log N)$ & High & Moderate \\ \hline
+Carry Select (Square-Root) & $O(\sqrt{N})$ & $O(N)$ & $O(\sqrt{N})$ & Low \\ \hline
+Carry Save (per stage) & $O(1)$ & $O(N)$ & $O(1)$ & Low \\ \hline
+Kogge-Stone Prefix Adder & $O(\log_2 N)$ & $O(N \log_2 N)$ & 2 & Very High \\ \hline
+Brent-Kung Prefix Adder & $O(2 \log_2 N)$ & $O(N)$ & 2 & Low \\ \hline
+\end{tabular}
+\caption{Comparison of High-Performance Adder Architectures.}
+\label{tab:adder_comparison}
+\end{table}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Multi-Port Register Files}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\index{register file!multi-ported}
+\index{register file!banked}
+\index{register file!replication}
+\index{register file!bypass networks}
+
 A multi-port register file is an important component in high-performance processors, particularly in superscalar and out-of-order architectures, where multiple instructions execute concurrently. The design of such a register file requires consideration of factors including port scalability, read and write access, timing constraints, area efficiency, and power consumption. 
 
 %****************************************************
@@ -129,7 +198,6 @@ A register file may use either fully combinational reads (single-cycle access) o
 
 In contrast, pipelined register files introduce a one-cycle read delay, allowing for better timing closure at high clock frequencies. This technique is commonly used in deeply pipelined superscalar processors to balance speed and complexity.
 
-
 %****************************************************
 \subsection{Multi-Porting Techniques}
 %****************************************************
@@ -144,110 +212,131 @@ Banking is highly efficient but introduces potential bank conflicts, requiring a
 \textbf{Register replication} duplicates the entire register file across multiple SRAM blocks, with each block providing one read port per cycle. A 4-issue processor requiring 8 read ports might use 4 copies of the register file, each servicing 2 reads. While this approach eliminates read conflicts, it significantly increases area and power consumption.
 
 \subsubsection{Bypass Networks and Shadow Registers}
-In deeply pipelined designs, many register reads can be bypassed instead of accessing the main register file. A bypass network forwards the result of recently written values directly to dependent instructions, reducing pressure on the register file. Additionally, a shadow register file (implemented using Register) can store recently written values before committing them to an SRAM-based backing store.
+In deeply pipelined designs, many register reads can be bypassed instead of accessing the main register file. A bypass network forwards the result of recently written values directly to dependent instructions, reducing pressure on the register file. Additionally, a shadow register file (implemented using registers) can store recently written values before committing them to an SRAM-based backing store.
 
 %****************************************************
 \subsection{Write-Back Arbitration}
 %****************************************************
-When multiple instructions write back in the same cycle, a **write port contention problem** occurs. To resolve this \textbf{Write port prioritization} assigns priority levels to different sources, such as integer ALUs, floating-point units, or memory loads. \textbf{Write combining} merges multiple writes into a single cycle if they target the same register. \textbf{Staggered write-back} spreads writes across consecutive cycles to avoid conflicts.
+When multiple instructions write back in the same cycle, a \textbf{write port contention problem} occurs. To resolve this, \textbf{write port prioritization} assigns priority levels to different sources, such as integer ALUs, floating-point units, or memory loads. \textbf{Write combining} merges multiple writes into a single cycle if they target the same register. \textbf{Staggered write-back} spreads writes across consecutive cycles to avoid conflicts.
 
 The write arbitration logic ensures that high-priority instructions complete their write-back first, preventing stalls in the execution pipeline.
 
 %****************************************************
 \subsection{Power and Area Considerations}
 %****************************************************
-Register files consume significant power due to frequent access by multiple functional units. To optimize power. \textbf{Clock gating} disables unused portions of the register file to save dynamic power.  \textbf{Read clustering} groups read ports together based on access patterns, reducing unnecessary accesses.
-\textbf{Voltage scaling} lowers power consumption in lower-speed execution units.
+\index{clock gating}
+Register files consume significant power due to frequent access by multiple functional units. To optimize power, \textbf{clock gating} disables unused portions of the register file to save dynamic power. \textbf{Read clustering} groups read ports together based on access patterns, reducing unnecessary accesses. \textbf{Voltage scaling} lowers power consumption in lower-speed execution units.
 
 Area optimizations include SRAM-based storage, narrow-width optimizations (storing frequently used 8-bit and 16-bit values in smaller memory cells), and hierarchical register files that separate frequently accessed registers from less frequently used ones.
 
 %****************************************************
 \subsection{Integration with Pipeline and Execution Units}
 %****************************************************
-A register file must interface with execution units while maintaining pipeline efficiency. The integration involves \textit{Read scheduling} to ensure that operands are available before execution. \textit{Write-back coordination} to update the register file without conflicts. \textit{Forwarding mechanisms} to prevent stalls by using bypass paths for recently computed results.
+A register file must interface with execution units while maintaining pipeline efficiency. The integration involves \textit{Read scheduling} to ensure that operands are available before execution, \textit{Write-back coordination} to update the register file without conflicts, and \textit{Forwarding mechanisms} to prevent stalls by using bypass paths for recently computed results.
 
 The placement of the register file in the processor pipeline also influences performance. Some designs use a centralized register file, while others distribute smaller register files across execution clusters to reduce wire delay.
 
 %****************************************************
 \subsection{Comparison of Multi-Porting Strategies}
 %****************************************************
-A comparison of multi-porting strategies is shown in the following table:
+A comparison of multi-porting strategies is shown in Table \ref{tab:multiport_regfile_comparison}:
 
-{\footnotesize
-\begin{center}
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Method} & \textbf{Latency} & \textbf{Scalability} & \textbf{Area Efficiency} \\
-\hline
-\texttt{Vec[Reg]} (FF-based) & Zero-cycle reads & Poor for large sizes & High area and power \\
-Multi-Banked SRAM & 1-cycle read delay & Good, requires conflict resolution & Efficient for large files \\
-Register Replication & 1-cycle read delay & Scalable but increases power & High area cost \\
-Bypass Networks & Zero-cycle forwarding & Enhances performance & Increases control  complexity \\
-\hline
+\textbf{Method} & \textbf{Latency} & \textbf{Scalability} & \textbf{Area Efficiency} \\ \hline
+\texttt{Vec[Reg]} (FF-based) & Zero-cycle reads & Poor for large sizes & High area and power \\ \hline
+Multi-Banked SRAM & 1-cycle read delay & Good, requires conflict resolution & Efficient for large files \\ \hline
+Register Replication & 1-cycle read delay & Scalable but increases power & High area cost \\ \hline
+Bypass Networks & Zero-cycle forwarding & Enhances performance & Increases control complexity \\ \hline
 \end{tabular}
-\end{center}
-}
+\caption{Comparison of Multi-Porting Strategies.}
+\label{tab:multiport_regfile_comparison}
+\end{table}
 
 \ifthenelse{\boolean{chiselversion}}{
 %************************************************
+\subsection{Parameterized 2R/1W Combinational Register File} \label{subsec:regfile_2R1W_vec}
+%**************************************************
+For smaller register files (e.g., 16 to 32 entries) in single-issue or lightly pipelined processors, registers are best implemented using flip-flop arrays. Listing \ref{lst:chisel_2R1W_vec_regfile} shows the \texttt{RegFile2R1WVec} module, which implements a 2-read, 1-write register file using a Chisel vector of registers (\texttt{VecInit} of \texttt{RegInit}).
+
+\includechiselcode[caption={Parameterized 2R/1W Combinational Register File (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_2R1W_vec_regfile}, firstline=24, firstnumber=24, lastline=50]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
+
+In this design, the read data outputs \texttt{io.src1data} and \texttt{io.src2data} are generated combinationally by directly indexing into the register vector (\texttt{regs(io.src1)} and \texttt{regs(io.src2)}). This provides immediate, zero-cycle read access: as soon as the read addresses are applied, the operand data is available in the same clock cycle. Writes are synchronous and occur on the rising clock edge when \texttt{io.wen} is asserted. This corresponds to the \texttt{Vec[Reg]} row in Table \ref{tab:multiport_regfile_comparison}.
+
+%************************************************
 \subsection{Parameterized 2R/1W SRAM-based Register File} \label{subsec:regfile_2R1W_SRAM}
 %**************************************************
-\includechiselcode[caption={Parameterized 2R/1W SRAM-based Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_2R1W_SRAM_regfile}, firstline=22, firstnumber=22, lastline=999]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
+When the register file depth or bit width increases, flip-flop arrays become area-prohibitive. Listing \ref{lst:chisel_2R1W_SRAM_regfile} shows \texttt{RegFile2R1WSRAM}, which implements a 2-read, 1-write register file using synchronous on-chip memory (\texttt{SyncReadMem}).
 
-Listing \ref{lst:chisel_2R1W_SRAM_regfile} shows \texttt{RegFile2R1WSRAM} that implements a register file with two read ports and one write port. It is built using a synchronous memory (\texttt{SyncReadMem}), ensuring that all memory operations are synchronized with the clock signal. The register file stores \texttt{depth} registers, where each register is \texttt{width} bits wide. By default, both \texttt{depth} and \texttt{width} are set to 32, meaning the register file contains 32 registers, each capable of holding a 32-bit value.
+\includechiselcode[caption={Parameterized 2R/1W SRAM-based Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_2R1W_SRAM_regfile}, firstline=22, firstnumber=22, lastline=52]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
 
-To address individual registers within the register file, the code computes the number of address bits required using the function \texttt{log2Ceil(depth)}. This function determines the minimum number of bits necessary to represent an index into a structure of size \texttt{depth}. The computed address width is then used to define input and output signals in the module's interface.
-
-The module interface consists of several input and output ports. The inputs include \texttt{src1} and \texttt{src2}, which specify the addresses of the registers to be read, and \texttt{dst1}, which specifies the address of the register to be written. The \texttt{wen} signal acts as a write enable, determining whether a write operation should take place. The \texttt{dst1data} input carries the data to be written to the register file. The outputs \texttt{src1data} and \texttt{src2data} provide the data read from the registers at addresses \texttt{src1} and \texttt{src2}, respectively.
-
-The register file is implemented using a synchronous memory block \texttt{mem}, instantiated with \texttt{SyncReadMem}. This memory is designed for synchronous reads, meaning that data is retrieved one clock cycle after the corresponding address is provided. The module reads data from the memory using \texttt{mem.read(io.src1)} and \texttt{mem.read(io.src2)}. Since the read operation is synchronous, the outputs must be registered to ensure they align correctly with the processor pipeline. This is achieved using \texttt{RegNext}, which registers the read outputs so that they are available one cycle later. If no previous value exists, the outputs default to zero.
-
-The write operation is controlled by the \texttt{wen} signal. When \texttt{wen} is asserted, the module writes the value of \texttt{dst1data} into the memory at the address specified by \texttt{dst1}. This ensures that the write operation is executed only when explicitly enabled. Because the processor pipeline ensures that write operations do not coincide with reads in the same cycle, there is no need for additional bypass logic to resolve read-after-write hazards.
-
-
+Listing \ref{lst:chisel_2R1W_SRAM_regfile} stores \texttt{depth} registers, each \texttt{width} bits wide. The address width is computed using \texttt{log2Ceil(depth)}. Memory reads are synchronous: data is retrieved one clock cycle after the address is presented. To align with the processor pipeline stages, the read outputs are registered using \texttt{RegNext}, ensuring deterministic pipeline synchronization. Writes occur when \texttt{io.wen} is asserted. Because the pipeline guarantees that writeback does not coincide with reads to the same address in the same cycle, bypass logic is omitted.
 
 %************************************************
 \subsection{Parameterized Multithreaded 2R/1W SRAM-based Register File} \label{subsec:regfile_MT_2R1W_SRAM}
 %**************************************************
+In barrel-threaded and multithreaded processors, each hardware thread requires its own architectural register context. Listing \ref{lst:chisel_MT_2R1W_SRAM_regfile} implements \texttt{RegFileMT2R1WSRAM}, a multithreaded register file supporting multiple concurrent threads.
 
+\includechiselcode[caption={Parameterized Multithreaded 2R/1W SRAM-based Register File (Chisel: RegFileMT2R1WSRAM.scala)}, label={lst:chisel_MT_2R1W_SRAM_regfile}, firstline=29, firstnumber=29, lastline=72]{\chiselSourceDir/memory/RegFileMT2R1WSRAM.scala}
 
-\includechiselcode[caption={Parameterized Multithreaded 2R/1W SRAM-based Register File (Chisel: RegFileMT2R1WSRAM.scala)}, label={lst:chisel_MT_2R1W_SRAM_regfile}, firstline=29, firstnumber=29, lastline=999]{\chiselSourceDir/memory/RegFileMT2R1WSRAM.scala}
-
-Listing \ref{lst:chisel_MT_2R1W_SRAM_regfile} \texttt{RegFileMT2R1WSRAM} implements a barrel-threaded multithreaded register file with two read ports and one write port. This design utilizes a synchronous memory (\texttt{SyncReadMem}) to store register values while supporting multiple independent threads. Each thread maintains a separate register space, and a thread identifier (\texttt{threadID}) is used to distinguish between the register sets. Instead of storing registers separately for each thread, the module implements a unified SRAM structure, where the total memory depth is equal to the product of the number of threads and the number of registers per thread.
-
-To compute memory addresses for accessing registers, the module concatenates the \texttt{threadID} with the register index. This concatenation effectively partitions the memory into per-thread sections, ensuring that each thread has exclusive access to its own registers. The number of bits required to represent a thread identifier is determined using \texttt{log2Ceil(threads)}, while the number of bits needed to index registers within a thread is computed using \texttt{log2Ceil(depth)}. The resulting memory depth, given by \texttt{threads * depth}, defines the total storage required for the register file.
-
-The module's input and output interface consists of several ports that facilitate register file operations. The \texttt{threadID} input determines the active thread, and all read and write accesses are performed within the address space of this thread. The read ports \texttt{src1} and \texttt{src2} specify the register indices to be read, while their corresponding outputs \texttt{src1data} and \texttt{src2data} return the stored values after a one-cycle delay. The write port \texttt{dst1} specifies the register index for writing data, and \texttt{dst1data} contains the value to be written. The write operation is controlled by the \texttt{wen} signal, which enables writes when asserted.
-
-To perform memory operations, the module first computes the effective memory addresses by concatenating the \texttt{threadID} with the respective register indices. These computed addresses are used for both read and write operations. The read operation is synchronous, meaning that data is not available immediately after providing the address but appears in the next clock cycle. To align with the processor pipeline, the module registers the read outputs using \texttt{RegNext}, ensuring that the read values are properly synchronized with the computation stages.
-
-For write operations, when \texttt{wen} is asserted, the module writes the value of \texttt{dst1data} into memory at the computed effective address \texttt{Cat(io.threadID, io.dst1)}. This guarantees that each thread writes only to its own register space without interfering with other threads. The use of a unified memory structure simplifies the implementation while allowing independent register access for each thread.
-
-
+Rather than maintaining separate, physically fragmented SRAM arrays for each thread, the module uses a unified SRAM of effective depth $\text{threads} \times \text{depth}$. Memory addresses are formed by concatenating the \texttt{threadID} with the register index using \texttt{Cat(io.threadID, io.src1)} and \texttt{Cat(io.threadID, io.dst1)}. This automatically partitions the storage space into dedicated per-thread regions while sharing read/write port decoding logic.
 
 %************************************************
-%\subsection{Parameterized Multiport Register File}
+\subsection{Parameterized Multi-Banked Multiport Register File} \label{subsec:regfile_multiport}
 %**************************************************
-%\includechiselcode[caption={Parameterized Multi R/W port Register File (Chisel: RegFile.scala)}, label={lst:chisel_multiport_regfile}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/RegFile.scala}
+For wide-issue superscalar processors requiring high read and write bandwidth, a single SRAM cannot provide the required ports. Listing \ref{lst:chisel_multiport_regfile} presents \texttt{RegFile}, which implements a multi-banked register file partitioned across independent memory banks.
 
-%Listing \ref{lst:chisel_multiport_regfile} 
+\includechiselcode[caption={Parameterized Multi-Banked Multiport Register File (Chisel: RegFile.scala)}, label={lst:chisel_multiport_regfile}, firstline=9, firstnumber=9, lastline=54]{\chiselSourceDir/memory/RegFile.scala}
 
+The \texttt{RegFile} class partitions \texttt{numRegs} registers into \texttt{numBanks} independent \texttt{SyncReadMem} blocks of size \texttt{bankSize = numRegs / numBanks}. For each of the \texttt{numReadPorts} read ports, the bank index and internal bank offset are computed from the address. One-hot bank select signals (\texttt{UIntToOH}) enable read access to the designated bank, and a one-hot multiplexer (\texttt{Mux1H}) routes the resulting data to the output port. Similarly, write ports decode bank indices to write to the appropriate bank when \texttt{writeEnable} is active. The wrapper class \texttt{EightReadFourWriteRegFile} demonstrates an 8-read, 4-write configuration across 4 banks, supporting the high-bandwidth requirements of modern execution engines.
 }% End Chisel
 
-
 %****************************************************
-\subsection{Conclusion}
+\subsection{Register File Design Trade-Offs} \label{subsec:regfile_tradeoffs}
 %****************************************************
-The design of a multi-port register file is a complex trade-off between latency, power, area, and access bandwidth. Small, low-latency register files are best implemented using \texttt{Vec[Reg]}, while large-scale register files require SRAM-based architectures with multi-porting techniques such as banking, replication, and bypassing. A well-optimized register file ensures efficient execution of instructions while maintaining balance between scalability and implementation cost.
+The design of a multi-port register file requires balancing latency, power, silicon area, and access bandwidth. Small, low-latency register files are best implemented using flip-flop arrays (\texttt{RegFile2R1WVec}), which deliver immediate zero-cycle reads. Large-capacity, high-throughput register files require SRAM-based architectures with multi-porting techniques such as banking (\texttt{RegFile}), thread partitioning (\texttt{RegFileMT2R1WSRAM}), and forwarding networks.
 
 
-%*************************************
-\section{Mealy vs Moore Automata}
-%*************************************
-Mealy and Moore automata are two fundamental models for designing finite state machines, and they differ primarily in the way outputs are generated. In a Mealy automaton, the output is a function of both the current state and the current input. This means that the output can change immediately in response to an input change, potentially resulting in faster response times. However, this tight coupling may also lead to glitches if the input changes asynchronously relative to the state transitions.
+%*****************************************************************************
+\section{Sequential Timing Closure: Mealy vs. Moore Architectures} \label{sec:mealy_moore_timing}
+%*****************************************************************************
+\index{state machine!timing closure}
+\index{Mealy automaton!timing}
+\index{Moore automaton!timing}
+\index{critical path}
 
-In contrast, a Moore automaton generates outputs solely based on the current state, independent of the immediate input. As a result, the output in a Moore machine only changes when the state changes. This can simplify the design and make the system more robust, since outputs are synchronized with state transitions, but it may also introduce a delay in output response compared to a Mealy design.
+In Chapter \ref{lect3}, we studied the formal mathematical models of finite state automata (2-OS), distinguishing between Mealy and Moore state machines based on their output generation functions. In high-performance digital logic and deep processor pipelines, the choice between Mealy and Moore styles is a critical design decision governed by \textbf{timing closure}, \textbf{setup/hold margins}, and \textbf{maximum operating frequency ($f_{\max}$)}.
 
-Another key difference is the state complexity. Mealy machines often require fewer states to implement the same functionality because they leverage the input signal directly to determine outputs. Moore machines, while potentially more straightforward in terms of output logic, might require additional states to achieve equivalent behavior since each state must uniquely determine the output.
+\subsection{Timing Paths in Moore Architectures}
+In a Moore automaton, the output function $g: Q \rightarrow Y$ depends solely on the current state registers $Q$:
+\begin{equation}
+Y(t) = g(Q(t))
+\end{equation}
+Because the state is updated only at the clock edge, the output transitions strictly after the register clock-to-Q delay ($t_{\text{cq}}$). The combinational output path is completely isolated from the inputs $X(t)$. The clock period constraint is:
+\begin{equation}
+T_{\text{clk, Moore}} \ge \max\left( t_{\text{cq}} + t_{\text{comb, state}} + t_{\text{su}}, \; t_{\text{cq}} + t_{\text{comb, out}} + t_{\text{su, dest}} \right)
+\end{equation}
+This architecture provides clean, well-bounded timing paths. When composing modules hierarchically, Moore outputs guarantee that combinational paths do not cascade across module boundaries, preventing unexpected critical path lengthening. Furthermore, Moore outputs are naturally glitch-free if registered, minimizing dynamic power dissipation. However, a Moore machine requires at least one clock cycle of latency before an input change can affect the outputs.
 
-In summary, the choice between a Mealy and a Moore automaton involves trade-offs between response speed, design simplicity, and state complexity. A Mealy design is advantageous when quick reaction to inputs is essential, whereas a Moore design may be preferred for its stability and easier analysis, especially in environments where synchronized outputs are critical.
+\subsection{Timing Paths in Mealy Architectures}
+In a Mealy automaton, the output function $g: X \times Q \rightarrow Y$ depends simultaneously on the current state $Q$ and the immediate input $X$:
+\begin{equation}
+Y(t) = g(X(t), Q(t))
+\end{equation}
+This enables \textbf{zero-cycle response}: the output can react within the very same clock cycle that an input arrives, which is advantageous for low-latency protocols, arbiter grants, and bypass logic.
+
+However, this responsiveness introduces severe timing constraints:
+\begin{equation}
+T_{\text{clk, Mealy}} \ge t_{\text{in, valid}} + t_{\text{comb, out}} + t_{\text{su, dest}}
+\end{equation}
+If the input $X(t)$ arrives late in the clock cycle (having already traversed combinational logic in a driving module), adding $t_{\text{comb, out}}$ will frequently violate the setup time of downstream logic. Worse, chaining two Mealy modules back-to-back creates a long, unbroken combinational path traversing multiple modules, significantly degrading $f_{\max}$ and introducing risks of combinational loops. Additionally, any glitch or hazard on the input signals propagates immediately to the outputs.
+
+\subsection{Architectural Synthesis Guidelines}
+To achieve high performance and reliable timing closure in digital designs:
+\begin{itemize}
+    \item \textbf{High-Frequency Pipelines}: Prefer Moore machines (or Delayed Mealy machines with registered outputs, as described in Chapter \ref{lect3}) on intra-core interfaces to ensure modular timing closure and high clock frequency.
+    \item \textbf{Low-Latency Handshaking}: Use Mealy machines only when single-cycle response is strictly necessary (e.g., bus handshaking, early aborts), ensuring that the driving inputs originate directly from flip-flop registers without intervening combinational logic.
+\end{itemize}

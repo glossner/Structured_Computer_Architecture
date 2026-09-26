@@ -7,6 +7,7 @@
 This section summarizes notable changes to the textbook, code listings, and hardware testbenches since the release of the First Edition PDF (\texttt{Structured\_Computer\_Architecture\_1st\_edition\_2026\_06\_03.pdf}, June 3, 2026).
 
 \begin{itemize}
+    \item \textbf{Performance Optimized Digital Logic (Chapter 15)}: Unified high-performance adder architectures (CLA, CSA, Kogge-Stone) with analytical formulations and comparative trade-offs, converted inline code to \texttt{chiselcode}, integrated the combinational (\texttt{RegFile2R1WVec}) and multi-banked (\texttt{RegFile}) register file implementations, and reframed sequential automata around timing closure and critical path optimization.
     \item \textbf{Build Infrastructure \& Chisel/Scala Toolchain}: Upgraded Chisel hardware construction library to version 7.15.0 and Scala to version 2.13.18 in \texttt{RTL/Chisel/build.sbt}, and updated compiler plugins for CIRCT firtool 1.158.0.
     \item \textbf{RTL \& Simulation Testbenches}: Adapted testbenches for Chisel 7 simulation semantics (explicit reset pulse for \texttt{WaveFormGeneratorSpec} and deterministic thread isolation initialization in \texttt{RegFileMT2R1WSRAMTest}), achieving 100\% pass across all 20 unit test suites.
     \item \textbf{Generated Verilog Artifacts}: Re-emitted clean and annotated synthesizable SystemVerilog models (\texttt{GCD.sv} and \texttt{WaveFormGenerator.sv}) using the CIRCT firtool 1.158.0 backend.
