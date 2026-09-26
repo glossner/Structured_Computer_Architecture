@@ -717,9 +717,9 @@ In Scala, a companion object is an object that shares the same name as a class a
 
 Listing \ref{lst:chisel_mux_companion} shows the companion object. The \texttt{Multiplexer} \textit{object} provides a factory method for creating and connecting instances of a parameterized multiplexer. The method takes a \texttt{Vec[UInt]} of inputs, and a \texttt{UInt} that specifies the selection signal for the multiplexer. After the module is instantiated, its I/O ports are connected. The \texttt{mux.io.inputs} port is connected to the \texttt{inputs} vector, and the \texttt{mux.io.select} port is connected to the \texttt{select} signal. Finally, the \texttt{apply} method returns the \texttt{mux.io.output}, providing the result of the multiplexer to the caller. 
 
-\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/Mux4.scala}
+\includechiselcode[caption={4-to-1 8-bit Bus Multiplexer (Chisel: Mux4.scala)}, label={lst:chisel_mux4}, firstline=8, firstnumber=8, lastline=12]{\chiselSourceDir/Mux4.scala}
 
-Listing \ref{lst:chisel_mux4} shows an instantiation of a multiplexer with four 8-bit inputs. It uses the companion object to connect the signals. If the I/O signals retain the same names as the Multiplexer class, the 4-to-1 8-bit bus multiplexer could have been instantiated the same way as the 2-to-4 decoder shown in Listing \ref{lst:chisel_2to4_decoder} - \texttt{class Mux4 extends Multiplexer(4)}. However, it is often more convenient for users of hardware libraries to see the I/O definitions in the leaf class. Generally, we try to follow this design principle for instantiated Chisel hardware and so Listing \ref{lst:chisel_mux4} fully specifies the I/O signals.
+Listing \ref{lst:chisel_mux4} shows the \texttt{Mux4} module, which specializes the parameterized \texttt{Multiplexer} base class through inheritance: \texttt{class Mux4 extends Multiplexer(n = 4, width = 8)}. Because this design represents a direct \textit{is-a} relationship, extending the base class directly inherits the input vector (\texttt{io.inputs}), selection signal (\texttt{io.select}), and multiplexed output (\texttt{io.output}), eliminating duplicate I/O bundle declarations and ensuring consistency with \texttt{Decoder2to4} and \texttt{DeMux16}.
 
 \begin{figure}[H]
     \centering
@@ -1047,9 +1047,9 @@ Listing \ref{lst:chisel_adder_behavioral} shows code that defines a class \textt
 %***********************************
 \subsection{4-bit Behavioral Adder}
 %***********************************
-\includechiselcode[caption={4-bit Behavioral Adder (Chisel: BehavioralAdder4.scala)}, label={lst:chisel_adder_behavioral4}, firstline=8, firstnumber=8, lastline=17]{\chiselSourceDir/adders/BehavioralAdder4.scala}
+\includechiselcode[caption={4-bit Behavioral Adder (Chisel: BehavioralAdder4.scala)}, label={lst:chisel_adder_behavioral4}, firstline=8, firstnumber=8, lastline=10]{\chiselSourceDir/adders/BehavioralAdder4.scala}
 
-Listing \ref{lst:chisel_adder_behavioral4} shows a 4-bit behavioral adder that instantiates the class \texttt{BehavioralAdder}. 
+Listing \ref{lst:chisel_adder_behavioral4} shows a 4-bit behavioral adder defined via inheritance: \texttt{class BehavioralAdder4 extends BehavioralAdder(width = 4)}. This establishes a clean object-oriented derivation hierarchy: the abstract base class \texttt{Adder} specifies the I/O interface contract, \texttt{BehavioralAdder} provides the addition logic, and \texttt{BehavioralAdder4} specializes the operand width. 
 
 \begin{figure}[H]
     \centering
@@ -1307,11 +1307,9 @@ The core computation is performed using a \texttt{Mux} construct, which selects 
 
 The result of the operation is assigned to the \texttt{io.result} output. To ensure that the output adheres to the specified bit width, the \texttt{fullResult} is truncated using \texttt{(width - 1, 0)}, which extracts only the least significant \texttt{width} bits of the result. This ensures that the output does not exceed the desired width, even in cases of overflow or underflow. 
 
-\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=5, firstnumber=5, lastline=99]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
+\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=8, firstnumber=8, lastline=11]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
 
-Listing \ref{lst:chisel_addersubtractor_behavioral4} shows an instantiation of a Chisel 4-bit behavioral adder/subtractor. The \texttt{BehavioralAdderSubtractor4} module defines an input-output interface (\texttt{io}) consisting of two 4-bit unsigned inputs (\texttt{a} and \texttt{b}), a 1-bit control signal (\texttt{subtract}), and a 4-bit unsigned output (\texttt{sum}). 
-
-The arithmetic operation itself is delegated to a reusable module called \texttt{BehavioralAdderSubtractor}, which is invoked with the necessary parameters, including the two input values (\texttt{a} and \texttt{b}), the \texttt{subtract} control signal, and the bit width of the operation (4 bits in this case). The result of the operation is assigned to the \texttt{sum} output. 
+Listing \ref{lst:chisel_addersubtractor_behavioral4} shows a 4-bit behavioral adder/subtractor specializing the generic \texttt{BehavioralAdderSubtractor} through inheritance: \texttt{class BehavioralAdderSubtractor4 extends BehavioralAdderSubtractor(width = 4)}. The module directly inherits the 4-bit operands \texttt{io.a} and \texttt{io.b}, the \texttt{io.subtract} control signal, and the computed \texttt{io.result} output, maintaining architectural consistency with \texttt{BehavioralAdderSubtractor64}.
 
 }%End Chisel Code
 
@@ -1528,13 +1526,17 @@ Listing \ref{lst:chisel_riscv_alu} presents a 32-bit synthesizable ALU for the R
     \item \textbf{Zero and Condition Flags}: Evaluates equality (\texttt{zero}) and signed/unsigned magnitude comparisons (\texttt{lessThan}, \texttt{lessThanU}), providing the exact condition evaluations required by RISC-V branch instructions (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}, \texttt{BLTU}, \texttt{BGEU}).
 \end{itemize}
 
-\paragraph{Integrated Datapath Architecture vs. Modular Reuse}
-A natural question arises: why does the RISC-V ALU implement an integrated datapath rather than reusing the earlier generic \texttt{MultifunctionAdderSubtractor64} module? In microprocessor execution datapath design, ALUs are tightly integrated for three fundamental reasons:
+\paragraph{Integrated Datapath Architecture vs. Trait Mixins and Modular Reuse}
+A compelling architectural alternative is whether the execution unit should be constructed using Scala's support for multiple inheritance via \textbf{trait mixins} (e.g., \texttt{class ALU extends Module with AdderOps with SubtractorOps with LogicOps with FloatOps}).
+
+Trait mixins offer tremendous software engineering appeal: optional coprocessor extensions (such as single-precision floating-point, vector units, or custom cryptography accelerators) can be maintained as completely independent, decoupled traits and seamlessly mixed into the CPU core configuration. However, when applied to foundational integer arithmetic datapaths, trait mixins and multiple structural module inheritance introduce critical physical hardware trade-offs:
 \begin{enumerate}
-    \item \textbf{Zero-Latency Control Routing}: The RISC-V instruction encoding was specifically engineered so that instruction fields $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ map directly to the 5-bit ALU control code without requiring translation gates or opcode re-encoding multiplexers.
-    \item \textbf{Critical Path and Timing Optimization}: The generic multi-width adder/subtractor incorporates dynamic operand width decoding (8/16/32/64 bits) and masking logic. In an RV32I processor where all datapath registers and operations are uniformly 32 bits, these extra multiplexer levels would introduce unnecessary propagation delay into the processor's most critical timing path ($F_{\max}$) and waste silicon area on unused 64-bit datapath slices.
-    \item \textbf{Unified Arithmetic and Comparison Datapath}: In \texttt{RiscvALU}, the 32-bit subtractor directly computes the condition flags (\texttt{zero}, \texttt{lessThan}, \texttt{lessThanU}) required for conditional branch resolution (\texttt{BEQ}, \texttt{BLT}, etc.), sharing the adder hardware without redundant comparators. Modern logic synthesizers map this single unified structure into optimal carry chains and DSP multiplier blocks with minimal gate count.
+    \item \textbf{Hardware Duplication vs. Datapath Sharing}: In digital CMOS hardware, an adder and a subtractor are physically the same circuit. Subtraction is computed via two's complement addition: $A - B = A + (\sim B) + 1$. If an ALU is constructed by mixing in separate, independent adder and subtractor traits that instantiate their own internal datapaths, the hardware generator will elaborate two distinct 32-bit parallel adder trees, doubling silicon area and requiring an extra 32-bit multiplexer to select the result. Furthermore, branch condition evaluations (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}) and magnitude comparisons (\texttt{SLT}, \texttt{SLTU}) directly reuse the borrow and sign outputs of the subtractor. Decomposing these into disjoint trait mixins risks isolating internal carry chains, forcing the synthesis of redundant comparator logic.
+    \item \textbf{Zero-Latency Direct-Wire Control}: The RISC-V ISA deliberately aligned its instruction fields so that $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ connect directly to the execution unit without intermediate decoding or translation shims.
+    \item \textbf{Critical Timing Path ($F_{\max}$)}: The integer ALU lies on the processor's most speed-critical cycle. Introducing layered module boundaries or multi-width masking indirection adds parasitic delay and degrades achievable clock frequency.
+    \item \textbf{Synthesizer Evolution and Empirical Experiments}: Logic synthesis tools (such as Yosys, Synopsys Design Compiler, and Cadence Genus) are continuously improving their global subexpression elimination, resource sharing, and cross-boundary operator merging. Advanced compilers can sometimes recognize identical addition/subtraction carry chains across module boundaries. However, because heuristic optimization varies significantly across target process design kits (PDKs), cell libraries, and compiler revisions, it is essential engineering practice to run empirical synthesis experiments before freezing an architecture.
 \end{enumerate}
+Because avoiding hardware duplication and maximizing circuit clarity are primary objectives for this textbook, we retain the unified, direct-wire implementation of \texttt{RiscvALU} in Listing \ref{lst:chisel_riscv_alu}. The sheer simplicity of this ALU minimizes critical path delay and produces optimal physical hardware.
 
 \clearpage
 \includechiselcode[caption={RISC-V RV32I\_Zmmul Arithmetic Logic Unit (Chisel: RiscvALU.scala)}, label={lst:chisel_riscv_alu}, firstline=8, firstnumber=8]{\chiselSourceDir/riscv/RiscvALU.scala}

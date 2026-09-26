@@ -5,13 +5,7 @@ package scabook.adders
 
 import chisel3._
 
-class BehavioralAdder(width: Int) extends Module {
-  val io = IO(new Bundle {
-    val a = Input(UInt(width.W))    // Input A (UInt)
-    val b = Input(UInt(width.W))    // Input B (UInt)
-    val sum = Output(UInt(width.W)) // Fixed-width sum output
-  })
-
+class BehavioralAdder(width: Int) extends Adder(width) {
   // Perform addition and truncate to width
   io.sum := (io.a + io.b)(width - 1, 0)
 }
