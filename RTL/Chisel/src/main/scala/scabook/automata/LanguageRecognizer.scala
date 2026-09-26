@@ -17,18 +17,33 @@ class LanguageRecognizer extends Module {
     val state = Output(State())
   })
 
-  val state     = RegInit(State.sInit)
-  val nextState = WireDefault(state)
-  val outCode   = WireDefault(OutputCode.Fail)
+  val state = RegInit(State.sInit)
+  val isA   = io.in
+  val isB   = !io.in
 
-  switch(state) {
-    is(State.sInit)  { nextState := Mux(io.in, State.sRunA, State.sError)
-                       outCode   := Mux(io.in, OutputCode.RecA, OutputCode.Fail) }
-    is(State.sRunA)  { nextState := Mux(io.in, State.sRunA, State.sRunB)
-                       outCode   := Mux(io.in, OutputCode.RecA, OutputCode.RecB) }
-    is(State.sRunB)  { nextState := Mux(!io.in, State.sRunB, State.sError)
-                       outCode   := Mux(!io.in, OutputCode.RecB, OutputCode.Fail) }
-    is(State.sError) { nextState := State.sError; outCode := OutputCode.Fail }
-  }
-  state := nextState; io.state := state; io.out := outCode
+  // One-hot state decoding
+  val inInit  = state === State.sInit
+  val inRunA  = state === State.sRunA
+  val inRunB  = state === State.sRunB
+  val inError = state === State.sError
+
+  // Next-State Combinational Logic (loopCLC)
+  val nextState = MuxCase(State.sError, Seq(
+    inInit  -> Mux(isA, State.sRunA, State.sError),
+    inRunA  -> Mux(isA, State.sRunA, State.sRunB),
+    inRunB  -> Mux(isB, State.sRunB, State.sError),
+    inError -> State.sError
+  ))
+
+  // Output Combinational Logic (outCLC)
+  val outCode = MuxCase(OutputCode.Fail, Seq(
+    inInit  -> Mux(isA, OutputCode.RecA, OutputCode.Fail),
+    inRunA  -> Mux(isA, OutputCode.RecA, OutputCode.RecB),
+    inRunB  -> Mux(isB, OutputCode.RecB, OutputCode.Fail),
+    inError -> OutputCode.Fail
+  ))
+
+  state    := nextState
+  io.state := state
+  io.out   := outCode
 }
