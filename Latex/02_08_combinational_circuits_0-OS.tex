@@ -626,7 +626,7 @@ Listing \ref{lst:chisel_riscv_decoder} implements a modular, strongly-typed inst
 \end{itemize}
 
 \clearpage
-\includechiselcode[caption={RISC-V Modular Instruction Decoder (Chisel: RiscvDecoder.scala)}, label={lst:chisel_riscv_decoder}]{\chiselSourceDir/riscv/RiscvDecoder.scala}
+\includechiselcode[caption={RISC-V Modular Instruction Decoder (Chisel: RiscvDecoder.scala)}, label={lst:chisel_riscv_decoder}, firstline=7, firstnumber=7]{\chiselSourceDir/riscv/RiscvDecoder.scala}
 
 }%End Chisel
 
@@ -785,11 +785,9 @@ The \texttt{io} bundle defines the interface for the module, consisting of an in
 
 Simlar to the Multiplexer, a companion object provides a convenient factory method for instantiating the demultiplexer. The \texttt{apply} method creates an instance of the \texttt{Demultiplexer} class and connects the provided input and selection signals to the instance's IO ports. 
 
-\includechiselcode[caption={1-to-16 64-bit Bus Demultiplexer (Chisel: DeMux16.scala)}, label={lst:chisel_demux16}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/DeMux16.scala}
+\includechiselcode[caption={1-to-16 64-bit Bus Demultiplexer (Chisel: DeMux16.scala)}, label={lst:chisel_demux16}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/DeMux16.scala}
 
-Listing \ref{lst:chisel_demux16} shows a \texttt{DeMux16} class that defines a 1-to-16 demultiplexer that operates on 64-bit buses. This module is implemented as a subclass of \texttt{Module}, making it a Chisel hardware component. Its interface, specified by the \texttt{io} bundle, includes a 64-bit input bus (\texttt{io.input}), a 4-bit selection signal (\texttt{io.select}) to determine the active output, and a vector of 16 output buses (\texttt{io.outputs}), each 64 bits wide. The selection signal uses a 4-bit width because \(\log_2(16) = 4\), allowing indexing of the 16 outputs.
-
-The \texttt{DeMux16} class instantiates a parameterized demultiplexer from the \texttt{Demultiplexer} companion object. The input and selection signals (\texttt{io.input} and \texttt{io.select}) are passed as arguments to the \texttt{Demultiplexer} factory method, which returns a vector of 16 outputs. These outputs are directly assigned to \texttt{io.outputs}, ensuring that only the selected output is driven by the input signal, while the others remain zero.
+Listing \ref{lst:chisel_demux16} demonstrates parameter specialization through class inheritance rather than structural module encapsulation. Because \texttt{DeMux16} represents an \textit{is-a} specialization of the generic \texttt{Demultiplexer} (fixing parameters to 16 outputs and a 64-bit data bus), declaring \texttt{class DeMux16 extends Demultiplexer(numOutputs = 16, width = 64)} directly inherits the base module's I/O interface (\texttt{io.input}, \texttt{io.select}, and \texttt{io.outputs}) and internal decoding logic. This methodology avoids declaring redundant wrapper I/O bundles and eliminates an extra level of structural hierarchy in the synthesized design, maintaining stylistic consistency with \texttt{Decoder2to4} (Listing \ref{lst:chisel_2to4_decoder}). In digital hardware design, inheritance is preferred for concrete parameterizations of a single component, whereas composition is reserved for assembling disparate modules into a composite subsystem.
 
 }% End Chisel
 
@@ -1309,7 +1307,7 @@ The core computation is performed using a \texttt{Mux} construct, which selects 
 
 The result of the operation is assigned to the \texttt{io.result} output. To ensure that the output adheres to the specified bit width, the \texttt{fullResult} is truncated using \texttt{(width - 1, 0)}, which extracts only the least significant \texttt{width} bits of the result. This ensures that the output does not exceed the desired width, even in cases of overflow or underflow. 
 
-\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=4, firstnumber=1, lastline=99]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
+\includechiselcode[caption={4-bit Behavioral Adder/Subtractor (Chisel: BehavioralAdderSubtractor4.scala)}, label={lst:chisel_addersubtractor_behavioral4}, firstline=5, firstnumber=5, lastline=99]{\chiselSourceDir/addersubtractors/BehavioralAdderSubtractor4.scala}
 
 Listing \ref{lst:chisel_addersubtractor_behavioral4} shows an instantiation of a Chisel 4-bit behavioral adder/subtractor. The \texttt{BehavioralAdderSubtractor4} module defines an input-output interface (\texttt{io}) consisting of two 4-bit unsigned inputs (\texttt{a} and \texttt{b}), a 1-bit control signal (\texttt{subtract}), and a 4-bit unsigned output (\texttt{sum}). 
 
@@ -1363,7 +1361,7 @@ As synthesis design tools become more mature, it is interesting to note that bot
 %*************************************************************************************************
 We now present a multifunction adder/subtractor that is closer to what might be found in a commercial design.
 
-\includechiselcode[caption={Abstract Multifunction Adder/Subtractor (Chisel: MultifunctionAdderSubtractor.scala)}, label={lst:chisel_mf_adder_abstract}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor.scala}
+\includechiselcode[caption={Abstract Multifunction Adder/Subtractor (Chisel: MultifunctionAdderSubtractor.scala)}, label={lst:chisel_mf_adder_abstract}, firstline=8, firstnumber=8, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor.scala}
 
 Listing \ref{lst:chisel_mf_adder_abstract} serves as an abstract base class for constructing modules that implement multi-functional arithmetic operations. The class is declared as \texttt{abstract}, meaning it is not directly instantiated but instead serves as a blueprint for more specific implementations. It extends the \texttt{Module} class, the fundamental building block for Chisel designs. The constructor accepts a single parameter \texttt{width} that specifies the bit-width of the operands and results. A \texttt{require} statement ensures this value is greater than zero, providing an early runtime check for invalid parameters.
 
@@ -1391,7 +1389,7 @@ This base class is designed for flexibility and modularity:
 
 We now proceed to an implementation. While the arithmetic is still behavioral, the inclusion of flags moves it close to a structural implementation.
 
-\includechiselcode[caption={Multifunction 64-bit Adder/Subtractor (Chisel)}, label={lst:chisel_mf64_adder}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor64.scala}
+\includechiselcode[caption={Multifunction 64-bit Adder/Subtractor (Chisel: MultifunctionAdderSubtractor64.scala)}, label={lst:chisel_mf64_adder}, firstline=10, firstnumber=10, lastline=999]{\chiselSourceDir/addersubtractors/MultifunctionAdderSubtractor64.scala}
 
 Listing \ref{lst:chisel_mf64_adder} shows a 64-bit multifunction adder-subtractor module. It is part of the package \texttt{scabook.addersubtractors} and is designed to perform a variety of arithmetic operations, including addition and subtraction, over signed and unsigned integers of varying bit widths (8, 16, 32, and 64). The implementation is parameterized by an opcode, which encodes the operation type and operand characteristics. 
 
@@ -1500,7 +1498,7 @@ Actual implementations are sometimes optimized by implementing two or more modul
 
 \ifthenelse{\boolean{chiselversion}}{
 
-\includechiselcode[caption={64-bit ALU (Chisel: ALU64.scala)}, label={lst:chisel_ALU64}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/ALUs/ALU64.scala}
+\includechiselcode[caption={64-bit ALU (Chisel: ALU64.scala)}, label={lst:chisel_ALU64}, firstline=11, firstnumber=11, lastline=999]{\chiselSourceDir/ALUs/ALU64.scala}
 
 Listing \ref{lst:chisel_ALU64} shows the \texttt{ALU64} class implements a 64-bit Arithmetic Logic Unit (ALU) using Chisel, designed to perform both arithmetic and logical operations. The operations are controlled by a 6-bit opcode, with modularity and reuse of the \texttt{MultifunctionAdderSubtractor64} module to handle arithmetic functionality. 
 
@@ -1519,8 +1517,6 @@ Logical operations, such as \texttt{AND}, \texttt{OR}, \texttt{XOR}, \texttt{SLL
 
 The ALU combines arithmetic and logical functionalities by selecting the result based on the operation type (\texttt{isArithmetic} or \texttt{isLogical}). For arithmetic operations, the result and flags are directly obtained from the \texttt{MultifunctionAdderSubtractor64}. Logical operations, on the other hand, do not produce flags such as carry or overflow; these outputs are set to zero when a logical operation is performed.
 
-The ALU includes optional debugging functionality, controlled by the \texttt{printDebugInfo} flag. When enabled, it prints intermediate values such as operand adjustments, masks, and results, aiding in testing and verification.
-
 \clearpage
 \subsubsection{RISC-V RV32I\_Zmmul Arithmetic Logic Unit (Chisel)}
 For modern instruction set architectures, the ALU is engineered to execute the standard operations of the architecture directly. Rather than imposing arbitrary control codes that require translation multiplexers, an architecturally aligned ALU matches the exact control bitstrings dispatched from the instruction decoder.
@@ -1532,8 +1528,16 @@ Listing \ref{lst:chisel_riscv_alu} presents a 32-bit synthesizable ALU for the R
     \item \textbf{Zero and Condition Flags}: Evaluates equality (\texttt{zero}) and signed/unsigned magnitude comparisons (\texttt{lessThan}, \texttt{lessThanU}), providing the exact condition evaluations required by RISC-V branch instructions (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}, \texttt{BLTU}, \texttt{BGEU}).
 \end{itemize}
 
+\paragraph{Integrated Datapath Architecture vs. Modular Reuse}
+A natural question arises: why does the RISC-V ALU implement an integrated datapath rather than reusing the earlier generic \texttt{MultifunctionAdderSubtractor64} module? In microprocessor execution datapath design, ALUs are tightly integrated for three fundamental reasons:
+\begin{enumerate}
+    \item \textbf{Zero-Latency Control Routing}: The RISC-V instruction encoding was specifically engineered so that instruction fields $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ map directly to the 5-bit ALU control code without requiring translation gates or opcode re-encoding multiplexers.
+    \item \textbf{Critical Path and Timing Optimization}: The generic multi-width adder/subtractor incorporates dynamic operand width decoding (8/16/32/64 bits) and masking logic. In an RV32I processor where all datapath registers and operations are uniformly 32 bits, these extra multiplexer levels would introduce unnecessary propagation delay into the processor's most critical timing path ($F_{\max}$) and waste silicon area on unused 64-bit datapath slices.
+    \item \textbf{Unified Arithmetic and Comparison Datapath}: In \texttt{RiscvALU}, the 32-bit subtractor directly computes the condition flags (\texttt{zero}, \texttt{lessThan}, \texttt{lessThanU}) required for conditional branch resolution (\texttt{BEQ}, \texttt{BLT}, etc.), sharing the adder hardware without redundant comparators. Modern logic synthesizers map this single unified structure into optimal carry chains and DSP multiplier blocks with minimal gate count.
+\end{enumerate}
+
 \clearpage
-\includechiselcode[caption={RISC-V RV32I\_Zmmul Arithmetic Logic Unit (Chisel: RiscvALU.scala)}, label={lst:chisel_riscv_alu}]{\chiselSourceDir/riscv/RiscvALU.scala}
+\includechiselcode[caption={RISC-V RV32I\_Zmmul Arithmetic Logic Unit (Chisel: RiscvALU.scala)}, label={lst:chisel_riscv_alu}, firstline=8, firstnumber=8]{\chiselSourceDir/riscv/RiscvALU.scala}
 
 }% End Chisel
 
