@@ -539,9 +539,10 @@ The \texttt{regLang} module, which contains the core finite state machine logic,
 }% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
+\clearpage
 \subsubsection{Chisel Implementation of Language Recognizer}
 
-\includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}, label={lst:chisel_language_recognizer}, firstline=25, firstnumber=25, lastline=85]{\chiselSourceDir/automata/LanguageRecognizer.scala}
+\includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}, label={lst:chisel_language_recognizer}]{\chiselSourceDir/automata/LanguageRecognizer.scala}
 
 Listing \ref{lst:chisel_language_recognizer} implements the Mealy automaton in Chisel for recognizing the regular language $L = (a^n b^m \mid n, m > 0)$. In Chisel, finite state machines are constructed with strong type safety and structural clarity using \texttt{ChiselEnum} and \texttt{switch/is} pattern matching:
 \begin{itemize}
@@ -804,13 +805,14 @@ ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
 \end{verilogcode}
 
 \ifthenelse{\boolean{chiselversion}}{
+\clearpage
 %***********************************************************************
 \subsubsection{Multi-Cycle Complex Automaton: Greatest Common Divisor}\label{chiselGCD}
 %***********************************************************************
 
 In modern hardware design, multi-cycle state machines that perform algorithmic transformations (such as iterative arithmetic, protocol handshakes, and cryptographic loops) can be expressed directly in Chisel without requiring ad-hoc micro-ROM tables. 
 
-\includechiselcode[caption={Greatest Common Divisor Complex Automaton (Chisel: GCD.scala)}, label={lst:chisel_gcd}, firstline=15, firstnumber=15, lastline=37]{\chiselSourceDir/GCD.scala}
+\includechiselcode[caption={Greatest Common Divisor Complex Automaton (Chisel: GCD.scala)}, label={lst:chisel_gcd}]{\chiselSourceDir/GCD.scala}
 
 Listing \ref{lst:chisel_gcd} shows a canonical complex automaton implementing Euclid's greatest common divisor (GCD) subtraction algorithm in Chisel:
 \begin{itemize}
@@ -951,8 +953,9 @@ Finally, the current value of the program counter \texttt{pc} is assigned to the
 }% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
+\clearpage
 \subsubsection{Chisel Program Counter for RISC-V}
-\includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}, label={lst:chisel_program_counter}, firstline=25, firstnumber=25, lastline=56]{\chiselSourceDir/automata/ProgramCounter.scala}
+\includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}, label={lst:chisel_program_counter}]{\chiselSourceDir/automata/ProgramCounter.scala}
 
 Listing \ref{lst:chisel_program_counter} shows the Chisel implementation of the Program Counter control automaton, designed specifically for standard 32-bit RISC-V (RV32) instruction sequencing. The module maintains the instruction address in a 32-bit register \texttt{pcReg} initialized to \texttt{initPC} (defaulting to \texttt{0x00000000}) and computes the next execution address across four architectural modes:
 \begin{itemize}
@@ -1032,8 +1035,6 @@ In the default case, the outputs are assigned a 33-bit value corresponding to ze
 \ifthenelse{\boolean{chiselversion}}{
 \subsubsection{Chisel Registers with Arithmetic \& Logic Unit (RALU)}
 
-\includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}, label={lst:chisel_ralu}, firstline=36, firstnumber=36, lastline=98]{\chiselSourceDir/automata/RALU.scala}
-
 Listing \ref{lst:chisel_ralu} implements the RALU subsystem in Chisel by loop-connecting the 32-register RISC-V register file (\texttt{RiscvRegFile}, Listing \ref{lst:chisel_riscv_regfile}) with a 32-bit arithmetic-logic unit. This closes the second fundamental feedback loop of the computing engine:
 \begin{itemize}
     \item \textbf{Operand Fetch}: In each clock cycle, the register file combinationally outputs two 32-bit operands from register addresses \texttt{rs1Addr} and \texttt{rs2Addr}.
@@ -1041,6 +1042,9 @@ Listing \ref{lst:chisel_ralu} implements the RALU subsystem in Chisel by loop-co
     \item \textbf{ALU Computation}: The 32-bit ALU performs the operation specified by \texttt{aluOp} (addition, subtraction, logical shifts, arithmetic shifts, bitwise operations, and signed/unsigned comparisons), producing both \texttt{aluResult} and a condition flag \texttt{zeroFlag} for branch evaluation.
     \item \textbf{Loop Closure \& Write-Back}: A write-back multiplexer selects between the computed ALU output and external data (such as a memory load via \texttt{extData}), routing the result to \texttt{rdAddr} on the positive clock edge when \texttt{regWrite} is asserted.
 \end{itemize}
+
+\clearpage
+\includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}, label={lst:chisel_ralu}]{\chiselSourceDir/automata/RALU.scala}
 }% End Chisel 
 
 

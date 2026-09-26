@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-09-26
 
+### Fixed
+- **Chisel Listing Splitting & Layout (Chapters 9 & 10)**:
+  - Eliminated listing splitting across page turns for all Chisel listings in Chapters 9 and 10 (`SRAM.scala`, `PipelinedSRAM.scala`, `RegFile2R1WVec.scala`, `RegFile2R1WSRAM.scala`, `RiscvRegFile.scala`, `LanguageRecognizer.scala`, `GCD.scala`, `ProgramCounter.scala`, and `RALU.scala`), ensuring unbroken, contiguous single-page presentation.
+  - Corrected Listing 9.6 to properly include `PipelinedSRAM.scala` (with `RegNext`) instead of replicating `SRAM.scala`.
+  - Fixed `ProgramCounter.scala` truncation in `02_10_automata_2-OS.tex`, restoring full display from line 1.
+  - Fixed all-red syntax highlighting on `LanguageRecognizer.scala` caused by quote parsing in LaTeX listings.
+  - Refactored `RALU.scala` ALU multiplexing from `switch` to `MuxCase`, conforming with textbook architectural guidelines.
+
 ### Added
 - **Phase 1 RISC-V Hardware Bridge & Automata (Chapters 9 & 10)**:
   - Implemented `RiscvRegFile.scala` (32-register × 32-bit RV32 register file with hardwired `x0 === 0.U`) and unit test suite `RiscvRegFileTest.scala`.
