@@ -528,6 +528,56 @@ between the software engineer  and hardware engineer. We will list and comment f
 \end{itemize}
 
 
+\ifthenelse{\boolean{chiselversion}}{
+\section{RISC-V Fetch-Execute Processor (Chisel)}\label{sec:riscv_fetch_execute_chisel}
+\index{fetch-execute processor!RISC-V}
+\index{Harvard architecture!RISC-V pipelined core}
+
+Having analyzed the foundational principles of instruction set architectures, we now assemble the digital components developed throughout Chapters \ref{lect1}--\ref{lect3} into a complete, synthesizable Harvard computer implementing the 32-bit RISC-V (RV32I\_Zmmul) ISA in Chisel.
+
+\subsection{The 5-OS Harvard Architecture in Hardware}
+The Harvard computer model organizes processing into five coordinated structural feedback loops (5-OS):
+\begin{enumerate}
+    \item \textbf{Loop 1 (Internal Register File Loop)}: The 32 architectural registers in \texttt{RiscvRegFile} (Listing \ref{lst:chisel_riscv_regfile}) provide high-speed local operand storage with dual combinational read ports and a synchronous write port, ensuring that register $x0$ remains strictly hardwired to zero.
+    \item \textbf{Loop 2 (RALU Datapath Loop)}: The execution engine \texttt{RALU} (Listing \ref{lst:chisel_ralu}) couples the register file with the unified \texttt{RiscvALU} (Listing \ref{lst:chisel_riscv_alu}). The direct-wire opcode bitstrings $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ pass through the decode stage to command all base integer arithmetic, logic, shift operations, and \texttt{Zmmul} integer multiplications without decoding overhead.
+    \item \textbf{Loop 3 (Branch \& Next-PC Decision Loop)}: Condition flags produced by the ALU (\texttt{zeroFlag}, \texttt{lessThanFlag}, and \texttt{lessThanUFlag}) are evaluated by branch comparison logic to dynamically direct program execution.
+    \item \textbf{Loop 4 (Instruction Fetch Loop)}: The \texttt{ProgramCounter} automaton (Listing \ref{lst:chisel_program_counter}) presents the sequential instruction address to instruction memory, advancing by $+4$ each cycle or loading branch/jump targets upon control transfer.
+    \item \textbf{Loop 5 (Data Memory Loop)}: The byte-addressable synchronous data memory \texttt{RiscvDataMemory} (Listing \ref{lst:chisel_riscv_datamemory}) provides memory access for byte, halfword, and word loads and stores with correct sign extension.
+\end{enumerate}
+
+\subsection{Two-Stage Decoupled Pipeline (Fetch $\mid$ Execute)}
+Listing \ref{lst:chisel_riscv_fetch_execute} implements the processor as a two-stage decoupled pipeline partitioned into:
+\begin{itemize}
+    \item \textbf{Stage 1: Instruction Fetch (IF)}: The \texttt{ProgramCounter} automaton drives the instruction memory address bus \texttt{io.imem.addr}. At the positive clock edge, the retrieved 32-bit instruction word is captured in the pipeline instruction register \texttt{regInst}, while the corresponding program counter is latched in \texttt{regPC}.
+    \item \textbf{Stage 2: Execute \& Write-Back (EX/WB)}: The instruction residing in \texttt{regInst} is combinationally decoded by \texttt{RiscvDecoder}. The register file combinationally delivers source operands \texttt{rs1Data} and \texttt{rs2Data}, immediate constants are sign-extended, and the ALU computes the result. In the same clock cycle, the result is committed to the destination register \texttt{rdAddr} on the positive clock edge.
+\end{itemize}
+
+\subsection{Hazard Analysis and Zero-Hazard Hardware Guarantees}
+In pipelined architectures, pipeline hazards occur when concurrent instruction execution threatens data integrity or control flow correctness. The two-stage decoupled design completely eliminates data and control hazards through targeted hardware mechanisms:
+\begin{enumerate}
+    \item \textbf{Read-After-Write (RAW) Hazards}\index{pipeline hazards!RAW hazard elimination}:
+    \begin{itemize}
+        \item \emph{ALU-to-ALU Dependencies}: When an instruction writes to register $x_d$ and the immediately subsequent instruction reads from $x_d$, standard pipelines encounter a RAW dependency. In our design, \texttt{RiscvRegFile} incorporates internal write-through forwarding:
+        \begin{equation}
+            \text{readData} = (\text{regWrite} \land (\text{rdAddr} = \text{rAddr}) \land (\text{rdAddr} \neq 0)) \ ?\ \text{writeData} : \text{mem}(\text{rAddr})
+        \end{equation}
+        Because the ALU produces its result combinationally during the execute cycle, the write-through bypass combinationally forwards \texttt{writeData} directly to the register read ports within the same clock period before latching. Back-to-back dependent ALU instructions execute with \textbf{zero stall cycles}, sustaining a peak throughput of one instruction per cycle (IPC = 1.0).
+        \item \emph{Load-Use Dependencies}: Synchronous on-chip SRAM requires one clock cycle of read latency to deliver memory data to \texttt{io.dmem.readData}. When a load instruction is decoded in the EX/WB stage, the hardware interlock detects \texttt{c.memRead \&\& !loadStall} and automatically asserts \texttt{loadStall} for one cycle, freezing the Program Counter and holding \texttt{regInst}. On the following cycle, memory data is available at the write-back multiplexer and latched into the register file. Subsequent instructions immediately consume the loaded operand without data corruption.
+    \end{itemize}
+    \item \textbf{Write-After-Write (WAW) Hazards}\index{pipeline hazards!WAW and WAR hazards}:
+    All instructions retire and commit their results to the architectural register file strictly in program order. Because execution latency is deterministic and out-of-order retirement is prevented, WAW hazards cannot occur.
+    \item \textbf{Write-After-Read (WAR) Hazards}:
+    Source operands are combinationally sampled by the ALU from the register file prior to or concurrently with the rising clock edge that commits the write-back. No subsequent instruction can overwrite a register operand before an earlier instruction has consumed it. Consequently, WAR hazards are eliminated.
+    \item \textbf{Control Hazards (Branches and Jumps)}\index{pipeline hazards!control hazard flush}:
+    Conditional branches and jump instructions compute their target addresses in the EX/WB stage: relative branches and \texttt{JAL} compute $\text{target} = \text{regPC} + \text{imm}$, while \texttt{JALR} computes $\text{target} = \text{rs1} + \text{imm} = \text{aluResult}$. When a branch condition is satisfied or an unconditional jump executes, \texttt{flush} is asserted: the target address is loaded into \texttt{ProgramCounter} via mode \texttt{Mode.Jalr}, and the speculatively fetched instruction in \texttt{regInst} is replaced with a single \texttt{NOP} bubble (\texttt{0x00000013}, \texttt{addi x0, x0, 0}). The pipeline then resumes sequential execution at the target with zero lingering side effects.
+\end{enumerate}
+
+Listing \ref{lst:chisel_riscv_fetch_execute} shows the complete Chisel implementation of the \texttt{RiscvFetchExecute} core along with the \texttt{RiscvSystem} Harvard harness.
+
+\includechiselcode[caption={RISC-V 5-OS Harvard Fetch-Execute Pipelined Processor (Chisel: RiscvFetchExecute.scala)}, label={lst:chisel_riscv_fetch_execute}, firstline=10, firstnumber=10, lastline=174]{\chiselSourceDir/riscv/RiscvFetchExecute.scala}
+}% End Chisel Version
+
+
 \section{Problems}
 
 \begin{problem}

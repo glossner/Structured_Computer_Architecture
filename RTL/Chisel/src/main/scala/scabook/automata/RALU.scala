@@ -19,6 +19,8 @@ class RALU(val width: Int = 32) extends Module {
     val immVal, extData             = Input(UInt(width.W))
     val rs1Data, rs2Data, aluResult = Output(UInt(width.W))
     val zeroFlag                    = Output(Bool())
+    val lessThanFlag                = Output(Bool())
+    val lessThanUFlag               = Output(Bool())
   })
 
   val regFile = Module(new RiscvRegFile(width))
@@ -36,7 +38,9 @@ class RALU(val width: Int = 32) extends Module {
   alu.io.opB   := Mux(io.useImm, io.immVal, regFile.io.rs2_data)
   alu.io.aluOp := io.aluOp
 
-  io.aluResult := alu.io.result
-  io.zeroFlag  := alu.io.zero
+  io.aluResult    := alu.io.result
+  io.zeroFlag     := alu.io.zero
+  io.lessThanFlag := alu.io.lessThan
+  io.lessThanUFlag := alu.io.lessThanU
   regFile.io.rd_data := Mux(io.memToReg, io.extData, alu.io.result)
 }
