@@ -12,7 +12,7 @@ class RiscvDataMemory(val depthWords: Int = 1024) extends Module {
     val writeData = Input(UInt(32.W));  val readData = Output(UInt(32.W))
   })
 
-  val mem      = SyncReadMem(depthWords, Vec(4, UInt(8.W)))
+  val mem      = Mem(depthWords, Vec(4, UInt(8.W)))
   val wordAddr = io.addr(log2Ceil(depthWords) + 1, 2)
   val byteOff  = io.addr(1, 0); val h = byteOff(1)
   val wmask    = WireDefault(VecInit(Seq.fill(4)(false.B)))
@@ -28,7 +28,7 @@ class RiscvDataMemory(val depthWords: Int = 1024) extends Module {
     for (i <- 0 until 4) { wmask(i) := true.B; wdata(i) := d(8*i+7, 8*i) }
   }
   when(io.memWrite) { mem.write(wordAddr, wdata, wmask) }
-  val r    = mem.read(wordAddr, io.memRead)
+  val r    = mem.read(wordAddr)
   val b    = r(byteOff); val half = Mux(h, Cat(r(3), r(2)), Cat(r(1), r(0)))
   val bExt = Cat(Mux(isU, 0.U(24.W), Fill(24, b(7))), b)
   val hExt = Cat(Mux(isU, 0.U(16.W), Fill(16, half(15))), half)

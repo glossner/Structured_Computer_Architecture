@@ -314,7 +314,7 @@ Standard RAM models operate on monolithic machine words. However, the RISC-V ISA
 
 Listing \ref{lst:chisel_riscv_datamemory} implements a byte-addressable synchronous data memory in Chisel:
 \begin{itemize}
-    \item \textbf{Vectorized Byte Storage}: The memory is declared as \texttt{SyncReadMem(depthWords, Vec(4, UInt(8.W)))}, organizing each 32-bit word as four independently writable byte lanes.
+    \item \textbf{Vectorized Byte Storage}: The memory is declared as \texttt{Mem(depthWords, Vec(4, UInt(8.W)))}, organizing each 32-bit word as four independently writable byte lanes with combinational read access.
     \item \textbf{Byte Write Mask Generation}: Based on \texttt{funct3} and the address offset \texttt{addr[1:0]}, a 4-bit write mask (\texttt{wmask}) is asserted to selectively update single bytes (\texttt{SB}), aligned 16-bit halfwords (\texttt{SH}), or full 32-bit words (\texttt{SW}).
     \item \textbf{Load Data Sign/Zero Extension}: Read bytes are reassembled and conditionally routed through sign-extension or zero-padding logic matching \texttt{funct3}, providing architectural load data directly to the write-back stage.
 \end{itemize}

@@ -22,45 +22,56 @@ class DmemPort(val addrWidth: Int = 32, val dataWidth: Int = 32) extends Bundle 
   val readData  = Input(UInt(dataWidth.W))
 }
 
-/** RISC-V RV32I_Zmmul 5-OS Harvard Fetch-Execute Pipelined Core.
-  * Features a 2-stage decoupled pipeline (Fetch | Execute) with
-  * hardware interlocks guaranteeing zero RAW, WAW, and WAR hazards.
+/** RISC-V RV32I_Zmmul 5-OS Harvard Fetch-Execute Processor Core.
+  *
+  * Modularly integrates library components developed across prior chapters:
+  *   - ProgramCounter: Program counter automaton (Chapter 10, Loop 2 & Loop 3)
+  *   - RiscvDecoder: Instruction decoder & immediate generator (Chapter 8)
+  *   - RALU: Executive subsystem (Chapter 10) combining RiscvRegFile (Chapter 9)
+  *     and RiscvALU (Chapter 8) (Loop 1 & Loop 2)
+  *
+  * Executes each instruction in the classic Fetch-Execute cycle as unified
+  * logical functions without stall delays using unbuffered memories.
   */
 class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
     val dmem     = new DmemPort(xlen, xlen)
-    val stall    = Input(Bool())
     val pc       = Output(UInt(xlen.W))
     val inst     = Output(UInt(xlen.W))
     val aluOut   = Output(UInt(xlen.W))
     val regWrite = Output(Bool())
   })
 
+  // Subsystem Instantiation (Reusing Prior Library Elements)
   val pc      = Module(new ProgramCounter(width = xlen, initPC = initPC))
   val decoder = Module(new RiscvDecoder)
   val ralu    = Module(new RALU(width = xlen))
 
   // ==========================================
-  // STAGE 1: INSTRUCTION FETCH (IF)
+  // FUNCTION 1: INSTRUCTION FETCH (IF)
   // ==========================================
   io.imem.addr := pc.io.pc
-
-  // Pipeline Registers between Fetch and Execute (IF/EX)
-  val regInst   = RegInit(0x00000013.U(32.W)) // NOP: ADDI x0, x0, 0
-  val regPC     = RegInit(initPC.U(xlen.W))
-
-  // Load-Use memory latency interlock (prevents RAW hazards on synchronous loads)
-  val loadStall = RegInit(false.B)
+  val inst      = io.imem.inst
 
   // ==========================================
-  // STAGE 2: EXECUTE & WRITEBACK (EX/WB)
+  // FUNCTION 2: INSTRUCTION DECODE (ID)
   // ==========================================
-  val inst = regInst
   decoder.io.inst := inst
   val d = decoder.io.decoded
   val c = d.control
   val f = RiscvFields(inst)
+
+  // ==========================================
+  // FUNCTION 3: OPERAND FETCH & ALU EXECUTION (EX)
+  // ==========================================
+  ralu.io.rs1Addr  := d.rs1
+  ralu.io.rs2Addr  := d.rs2
+  ralu.io.rdAddr   := d.rd
+  ralu.io.useImm   := c.aluSrc
+  ralu.io.immVal   := d.imm
+  ralu.io.aluOp    := c.aluOp
+  ralu.io.memToReg := true.B
 
   // Branch condition evaluation
   val branchCond = MuxCase(false.B, Seq(
@@ -77,71 +88,45 @@ class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0) extends Modu
   val isLui       = (f.opcode === RiscvOpcodes.LUI)
   val isAuipc     = (f.opcode === RiscvOpcodes.AUIPC)
 
-  // Control transfer flush: discard fetched instruction on taken branch/jump
-  val flush = branchTaken || isJal || isJalr
-
-  // Target computation: Branch & JAL use regPC + imm; JALR uses rs1 + imm (ALU result)
-  val target = Mux(isJalr, ralu.io.aluResult, regPC + d.imm)
-  pc.io.branchImm  := d.imm
-  pc.io.jalrTarget := target
-
-  // Program Counter Next-Address Control (Loop 4)
-  pc.io.mode := MuxCase(ProgramCounter.Mode.Plus4, Seq(
-    flush                                   -> ProgramCounter.Mode.Jalr,
-    (io.stall || (c.memRead && !loadStall)) -> ProgramCounter.Mode.Stall
-  ))
-
-  // Update IF/EX Pipeline Registers
-  when(io.stall) {
-    // Hold state during external stall
-  }.elsewhen(c.memRead && !loadStall) {
-    // 1-cycle load latency interlock: hold regInst and latch loadStall
-    loadStall := true.B
-  }.elsewhen(flush) {
-    // Discard speculatively fetched instruction; insert NOP bubble
-    regInst   := 0x00000013.U
-    regPC     := pc.io.nextPC
-    loadStall := false.B
-  }.otherwise {
-    regInst   := io.imem.inst
-    regPC     := pc.io.pc
-    loadStall := false.B
-  }
-
-  // Write-Back Multiplexer
-  val wbData = MuxCase(ralu.io.aluResult, Seq(
-    c.memToReg -> io.dmem.readData,
-    c.jump     -> (regPC + 4.U),
-    isLui      -> d.imm,
-    isAuipc    -> (regPC + d.imm)
-  ))
-
-  // Executive Datapath (RALU - Loop 2 & Loop 3)
-  ralu.io.rs1Addr  := d.rs1
-  ralu.io.rs2Addr  := d.rs2
-  ralu.io.rdAddr   := d.rd
-  ralu.io.regWrite := c.regWrite && !io.stall && !(c.memRead && !loadStall)
-  ralu.io.useImm   := c.aluSrc
-  ralu.io.immVal   := d.imm
-  ralu.io.aluOp    := c.aluOp
-  ralu.io.memToReg := true.B
-  ralu.io.extData  := wbData
-
-  // Data Memory Port (Loop 5)
+  // ==========================================
+  // FUNCTION 4: DATA MEMORY & WRITE-BACK (MEM/WB)
+  // ==========================================
   io.dmem.addr      := ralu.io.aluResult
   io.dmem.funct3    := f.funct3
-  io.dmem.memRead   := c.memRead && !io.stall
-  io.dmem.memWrite  := c.memWrite && !io.stall && !loadStall
+  io.dmem.memRead   := c.memRead
+  io.dmem.memWrite  := c.memWrite
   io.dmem.writeData := ralu.io.rs2Data
 
+  val wbData = MuxCase(ralu.io.aluResult, Seq(
+    c.memToReg -> io.dmem.readData,
+    c.jump     -> (pc.io.pc + 4.U),
+    isLui      -> d.imm,
+    isAuipc    -> (pc.io.pc + d.imm)
+  ))
+  ralu.io.extData  := wbData
+  ralu.io.regWrite := c.regWrite
+
+  // ==========================================
+  // FUNCTION 5: NEXT PROGRAM COUNTER GENERATION (PC)
+  // ==========================================
+  val target = Mux(isJalr, ralu.io.aluResult, pc.io.pc + d.imm)
+  pc.io.branchImm  := d.imm
+  pc.io.jalrTarget := target
+  pc.io.mode := Mux(branchTaken || isJal || isJalr,
+    ProgramCounter.Mode.Jalr,
+    ProgramCounter.Mode.Plus4
+  )
+
   // Observability
-  io.pc       := regPC
+  io.pc       := pc.io.pc
   io.inst     := inst
   io.aluOut   := ralu.io.aluResult
   io.regWrite := ralu.io.regWrite
 }
 
-/** Complete Harvard 5-OS Computing System Harness. */
+/** Complete Harvard 5-OS Computing System Harness.
+  * Reuses RiscvDataMemory (ByteMemory) from Chapter 9.
+  */
 class RiscvSystem(val program: Seq[BigInt], val memWords: Int = 1024) extends Module {
   val io = IO(new Bundle {
     val pc       = Output(UInt(32.W))
@@ -150,8 +135,8 @@ class RiscvSystem(val program: Seq[BigInt], val memWords: Int = 1024) extends Mo
     val regWrite = Output(Bool())
   })
 
-  val core = Module(new RiscvFetchExecute(xlen = 32))
-  val dmem = Module(new RiscvDataMemory(depthWords = memWords))
+  val core       = Module(new RiscvFetchExecute(xlen = 32))
+  val byteMemory = Module(new RiscvDataMemory(depthWords = memWords))
 
   val progSize   = 1 << log2Ceil(math.max(2, program.length))
   val paddedProg = program ++ Seq.fill(progSize - program.length)(BigInt(0x00000013))
@@ -159,16 +144,15 @@ class RiscvSystem(val program: Seq[BigInt], val memWords: Int = 1024) extends Mo
   val pcWordAddr = core.io.imem.addr(log2Ceil(progSize) + 1, 2)
   core.io.imem.inst := progVec(pcWordAddr)
 
-  dmem.io.addr          := core.io.dmem.addr
-  dmem.io.funct3        := core.io.dmem.funct3
-  dmem.io.memRead       := core.io.dmem.memRead
-  dmem.io.memWrite      := core.io.dmem.memWrite
-  dmem.io.writeData     := core.io.dmem.writeData
-  core.io.dmem.readData := dmem.io.readData
+  byteMemory.io.addr          := core.io.dmem.addr
+  byteMemory.io.funct3        := core.io.dmem.funct3
+  byteMemory.io.memRead       := core.io.dmem.memRead
+  byteMemory.io.memWrite      := core.io.dmem.memWrite
+  byteMemory.io.writeData     := core.io.dmem.writeData
+  core.io.dmem.readData       := byteMemory.io.readData
 
-  core.io.stall := false.B
-  io.pc         := core.io.pc
-  io.inst       := core.io.inst
-  io.aluOut     := core.io.aluOut
-  io.regWrite   := core.io.regWrite
+  io.pc       := core.io.pc
+  io.inst     := core.io.inst
+  io.aluOut   := core.io.aluOut
+  io.regWrite := core.io.regWrite
 }
