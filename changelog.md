@@ -1,3 +1,10 @@
+# 09/26/2026 17:10 RISC-V Processor Architecture, Verification & Chapter 18 Documentation
+
+* **RISC-V Chapter 18 Integration (`Latex/04_18_RISCV.tex`)**: Authored and integrated Chapter 18 into Part IV ("Practical Designs") of the textbook, uncommenting `\include{04_18_RISCV}` in `Latex/00_main.tex`. Provided comprehensive documentation of the RV32I base ISA and `Zmmul` extension, the Harvard 5-OS loop structure, 5-function Fetch-Execute microarchitecture, and pedagogical problem set.
+* **Architectural Conformance Verification Documentation**: Documented the pure Chisel/Scala verification methodology with `EphemeralSimulator` running all 42 official RISC-V architectural tests (`riscv-arch-test`: 38 RV32I + 4 Zmmul) without external Verilog/Verilator compilation, achieving 100% exact signature matches against Spike golden reference signatures. Detailed architectural corner cases uncovered during verification (JALR target calculation, shift amount masking, signed/unsigned comparisons, sub-word alignment, and x0 invariance).
+* **Industrial Architectural Comparison**: Documented a detailed structural and microarchitectural comparison between the textbook `RiscvFetchExecute` core and the tapeout-proven `ZeroNyte` core from KryptoNyte, exploring branch condition evaluation, memory alignment, and object-oriented register file design.
+* **Cross-References and Index Generation**: Linked Chapter 13 Section 13.7 directly to Chapter 18, populated the comprehensive subject index with RISC-V entries, and validated error-free compilation of the 606-page textbook with XeLaTeX and MakeIndex.
+
 # 09/26/2026 12:00 Modular RV32I_Zmmul Architecture & Datapath RTL Integration
 
 * **Modular RISC-V Decoder (`RiscvDecoder.scala`)**: Implemented modular instruction decoder targeting RV32I_Zmmul, leveraging synthesizable Scala OOP abstractions (`RiscvFields`, `DecodedInstruction`, `DecodedControl`, `RiscvOpcodes`, and `AluOp`). Operates with zero gate-delay direct-wire opcode derivation for R-type instructions (`aluOp = {inst[25], inst[30], inst[14:12]}`). Verified via unit test suite `RiscvDecoderTest.scala`.

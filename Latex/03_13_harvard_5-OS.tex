@@ -574,7 +574,7 @@ Listing \ref{lst:chisel_riscv_fetch_execute} shows the complete Chisel implement
     \item \texttt{RiscvDataMemory} (Listing \ref{lst:chisel_riscv_datamemory}, Chapter \ref{syncMem}): Instantiated as \texttt{byteMemory} in \texttt{RiscvSystem}, providing byte, halfword, and word memory operations with combinational read access.
 \end{itemize}
 
-By coupling the processor with unbuffered memory models, each instruction completes execution within a single clock cycle without requiring wait states, interlocks, or pipeline stalls.
+By coupling the processor with unbuffered memory models, each instruction completes execution within a single clock cycle without requiring wait states, interlocks, or pipeline stalls. For an in-depth treatment of the RISC-V architecture, cycle-accurate Chisel/Scala verification passing all 42 official architectural conformance tests, and comparative analysis against industrial single-cycle cores such as \texttt{ZeroNyte}, see Chapter \ref{riscvProcessor}.
 
 \includechiselcode[caption={RISC-V 5-OS Harvard Fetch-Execute Processor (Chisel: RiscvFetchExecute.scala)}, label={lst:chisel_riscv_fetch_execute}, firstline=10, firstnumber=10, lastline=158]{\chiselSourceDir/riscv/RiscvFetchExecute.scala}
 }% End Chisel Version
