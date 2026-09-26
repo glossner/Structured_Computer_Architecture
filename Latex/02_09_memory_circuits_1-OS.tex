@@ -259,9 +259,10 @@ The data output is also related to the same edge.}}{swave}
 
 
 \ifthenelse{\boolean{chiselversion}}{
+\clearpage
 In Chisel, memory can be implemented using built-in constructs such as \texttt{Mem} and \texttt{SyncReadMem}. For SRAM-like behavior, \texttt{SyncReadMem} is preferred since it introduces synchronous reads.
 
-\includechiselcode[caption={Parameterized SRAM (Chisel: SRAM.scala)}, label={lst:chisel_sram}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
+\includechiselcode[caption={Parameterized SRAM (Chisel: SRAM.scala)}, label={lst:chisel_sram}]{\chiselSourceDir/memory/SRAM.scala}
 
 Listing \ref{lst:chisel_sram} shows a Chisel module that defines a synchronous SRAM (Static Random Access Memory) model, which provides controlled read and write operations using a clocked memory structure. The design consists of an addressable memory space, data input and output ports, and a write-enable control signal.
 
@@ -294,8 +295,8 @@ A skilled designer will almost always be able to hide the effect of latency and 
                     {\verilogSourceDir/A09_syncPipeRAM.sv}
 
 \ifthenelse{\boolean{chiselversion}}{
-
-\includechiselcode[caption={Parameterized Pipelined SRAM (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_sram_pipelined}, firstline=9, firstnumber=9, lastline=999]{\chiselSourceDir/memory/SRAM.scala}
+\clearpage
+\includechiselcode[caption={Parameterized Pipelined SRAM (Chisel: PipelinedSRAM.scala)}, label={lst:chisel_sram_pipelined}]{\chiselSourceDir/memory/PipelinedSRAM.scala}
 
 Listing \ref{lst:chisel_sram_pipelined} implements a pipelined synchronous SRAM, where memory read operations have a one-cycle delay before the output is available. This delay is achieved using the \texttt{RegNext} construct, which ensures that the read data is stored in a register before being passed to the output.
 
@@ -343,19 +344,22 @@ Listing \ref{lst:A09_regFile.sv} implements a synchronous register file in Syste
 }% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
+\clearpage
 \subsubsection{Chisel Implementations of Register Files}
 
-\includechiselcode[caption={Register File using Vector of Registers (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}, firstline=24, firstnumber=24, lastline=52]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
+\includechiselcode[caption={Register File using Vector of Registers (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
 
 Listing \ref{lst:chisel_regfile} implements a register-based register file. In Chisel, a register file can be implemented using either a \texttt{Vec} of \texttt{Reg} or an SRAM-based memory structure such as \texttt{SyncReadMem}. The choice between these two implementations depends on multiple factors, including the size of the register file, read and write access patterns, and the target hardware architecture.
 
 A \texttt{Vec} of \texttt{Reg} is a collection of registers, each implemented as a distinct flip-flop. This approach is particularly suitable for small register files, such as general-purpose registers in a CPU core or pipeline buffers. Since each register is directly accessible, read operations are purely combinational, resulting in zero-cycle latency. This makes \texttt{Vec} of \texttt{Reg} ideal when low-latency register access is a requirement. Additionally, this structure allows multiple concurrent reads and writes, making it beneficial for designs where multiple functional units require simultaneous register access. However, as the number of registers increases, the area and power consumption grow significantly due to the need for dedicated flip-flops for every bit in the register file. This makes \texttt{Vec} of \texttt{Reg} inefficient for large-scale register files.
 
-\includechiselcode[caption={Synchronous SRAM Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_regfile_sram}, firstline=22, firstnumber=22, lastline=52]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
+\clearpage
+\includechiselcode[caption={Synchronous SRAM Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_regfile_sram}]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
 
 Listing \ref{lst:chisel_regfile_sram} shows an SRAM-based register file implemented with Chisel's \texttt{SyncReadMem}. It models a synchronous memory array where read data is registered, providing a one-cycle read latency. This structure substantially reduces silicon area for large storage arrays, vector register files, and multi-banked architectures.
 
-\includechiselcode[caption={RISC-V 32-Register Architectural Register File (Chisel: RiscvRegFile.scala)}, label={lst:chisel_riscv_regfile}, firstline=20, firstnumber=20, lastline=49]{\chiselSourceDir/memory/RiscvRegFile.scala}
+\clearpage
+\includechiselcode[caption={RISC-V 32-Register Architectural Register File (Chisel: RiscvRegFile.scala)}, label={lst:chisel_riscv_regfile}]{\chiselSourceDir/memory/RiscvRegFile.scala}
 
 Listing \ref{lst:chisel_riscv_regfile} presents an architectural register file compliant with the standard 32-bit RISC-V (RV32I) unprivileged specification. The module provides 32 registers of 32 bits ($x0 \dots x31$) with dual asynchronous read ports (\texttt{rs1}, \texttt{rs2}) and a single synchronous write port (\texttt{rd}). Crucially, register $x0$ is hardwired to zero: combinational reads from address $0$ strictly return \texttt{0.U}, while writes addressed to $x0$ are guarded and ignored (\texttt{io.rd =/= 0.U}), fulfilling a foundational invariant of the RISC-V ISA.
 }% End Chisel
