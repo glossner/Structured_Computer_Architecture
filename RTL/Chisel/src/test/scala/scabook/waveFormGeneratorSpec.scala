@@ -16,6 +16,10 @@ class WaveFormGeneratorSpec extends AnyFreeSpec with Matchers {
       var randomIndex = 0
       var clockState = false
 
+      dut.reset.poke(true.B)
+      dut.clock.step()
+      dut.reset.poke(false.B)
+
       for (cycle <- 0 until 10) { // Simulate 10 clock cycles
         // Check randomWave output
         dut.io.randomWave.expect(randomWaveExpected(randomIndex).B)

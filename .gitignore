@@ -18,6 +18,8 @@ RTL/Chisel/.bsp/sbt.json
 
 # Verilator specific
 RTL/Chisel/generators/obj_dir
+filelist.f
+verification/
 
 # Scala-IDE specific
 .scala-build
