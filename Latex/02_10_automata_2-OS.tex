@@ -542,14 +542,14 @@ The \texttt{regLang} module, which contains the core finite state machine logic,
 
 \subsubsection{Chisel Implementation of Language Recognizer}
 
-\includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}, label={lst:chisel_language_recognizer}]{\chiselSourceDir/automata/LanguageRecognizer.scala}
+\includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}, label={lst:chisel_language_recognizer}, firstline=7, firstnumber=7]{\chiselSourceDir/automata/LanguageRecognizer.scala}
 
-Listing \ref{lst:chisel_language_recognizer} implements the Mealy automaton in Chisel for recognizing the regular language $L = (a^n b^m \mid n, m > 0)$. In Chisel, finite state machines are constructed with strong type safety and structural clarity using \texttt{ChiselEnum} and \texttt{switch/is} pattern matching:
+Listing \ref{lst:chisel_language_recognizer} implements the Mealy automaton in Chisel for recognizing the regular language $L = (a^n b^m \mid n, m > 0)$. In Chisel, finite state machines are constructed with strong type safety and structural clarity using \texttt{ChiselEnum}, one-hot state decoding, and idiomatic \texttt{MuxCase} combinational logic, cleanly separating the next-state logic (\texttt{loopCLC}) and output logic (\texttt{outCLC}):
 \begin{itemize}
     \item \textbf{Type-Safe State Enumeration}: Rather than defining raw integer constants or untyped preprocessor macros, states (\texttt{sInit}, \texttt{sRunA}, \texttt{sRunB}, \texttt{sError}) are defined as strongly typed values within a \texttt{ChiselEnum}. The Chisel compiler strictly prevents accidental assignments of illegal states to the state register.
     \item \textbf{Synchronous State Register}: The state register \texttt{state = RegInit(State.sInit)} provides deterministic synchronous reset without requiring explicit reset multiplexers in combinational code.
-    \item \textbf{Default Assignments \& Latch Prevention}: By declaring default assignments (\texttt{val nextState = WireDefault(state)} and \texttt{val outCode = WireDefault(OutputCode.Fail)}), Chisel guarantees that all transitions and output paths are fully specified, preventing unintentional latch inference.
-    \item \textbf{Mealy Output Logic}: In compliance with the formal definition of a Mealy automaton, the output \texttt{outCode} is computed directly from both the current state and the incoming input symbol \texttt{io.in} during the active cycle.
+    \item \textbf{One-Hot State Decoding \& Next-State Logic (\texttt{loopCLC})}: States are decoded into one-hot active signals (\texttt{inInit}, \texttt{inRunA}, \texttt{inRunB}, \texttt{inError}) that drive \texttt{MuxCase} multiplexers to select the next state based on the input symbol, directly implementing the feedback loop without mutable wire reassignments.
+    \item \textbf{Mealy Output Logic (\texttt{outCLC})}: In compliance with the formal definition of a Mealy automaton, the output symbol \texttt{outCode} is computed directly from both the active state and the incoming input symbol during the active cycle.
 \end{itemize}
 }% End Chisel
 
@@ -812,7 +812,7 @@ ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
 
 In modern hardware design, multi-cycle state machines that perform algorithmic transformations (such as iterative arithmetic, protocol handshakes, and cryptographic loops) can be expressed directly in Chisel without requiring ad-hoc micro-ROM tables. 
 
-\includechiselcode[caption={Greatest Common Divisor Complex Automaton (Chisel: GCD.scala)}, label={lst:chisel_gcd}]{\chiselSourceDir/GCD.scala}
+\includechiselcode[caption={Greatest Common Divisor Complex Automaton (Chisel: GCD.scala)}, label={lst:chisel_gcd}, firstline=10, firstnumber=10, lastline=37]{\chiselSourceDir/GCD.scala}
 
 Listing \ref{lst:chisel_gcd} shows a canonical complex automaton implementing Euclid's greatest common divisor (GCD) subtraction algorithm in Chisel:
 \begin{itemize}
