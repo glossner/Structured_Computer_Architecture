@@ -35,6 +35,6 @@ class RiscvDecoder extends Module {
   c.regWrite := isRType || isIType || isLoad || isJump || isUpper
   c.memRead  := isLoad;   c.memWrite := isStore
   c.branch   := isBranch; c.jump     := isJump
-  c.aluSrc   := isIType || isLoad || isStore || isUpper
+  c.aluSrc   := isIType || isLoad || isStore || isUpper || (op === RiscvOpcodes.JALR)
   c.memToReg := isLoad;   c.aluOp    := aluOpWire
 }
