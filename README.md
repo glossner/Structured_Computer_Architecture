@@ -39,7 +39,7 @@ In our opinion, an advantage of the order-based approach is that it roughly foll
 
 Although we write primarily for our students, we have both industry experience and have shipped multiple machines in volume. The code we provide bridges the gap between theoretical models and commercial implementations. The code starts very simple using behavioral constructs but progresses towards code that can be used in commercial machines. Over time, it is our hope that these examples continue to expand.
 
-The descriptions of the structures and the simulation of their behavior are written in both SystemVerilog and Chisel HDL. The Chisel code has unit tests and has been tested using Chisel 6.6.0. Some of the SystemVerilog code has unit tests. All SystemVerilog codes have been validated using the AMD/Xilinx Vivado Design Suite. It should also be executed using online tools such as EDA
+The descriptions of the structures and the simulation of their behavior are written in both SystemVerilog and Chisel HDL. The Chisel code has unit tests and has been tested using Chisel 7.15.0. Some of the SystemVerilog code has unit tests. All SystemVerilog codes have been validated using the AMD/Xilinx Vivado Design Suite. It should also be executed using online tools such as EDA
 Playground.
 
 Because this book’s code is executable, it should not contain any syntax errors. The same files used for design descriptions are directly imported into the book.

@@ -35,10 +35,16 @@ class RegFileMT2R1WSRAMTest extends AnyFlatSpec {
     val depth = 32
     val threads = 8
     simulate(new RegFileMT2R1WSRAM(width, depth, threads)) { dut =>
-      // --- Preload Stage ---
+      // Cycle 0: Initialize thread 1, register 1 to 0 to verify isolation.
+      dut.io.threadID.poke(1.U)
+      dut.io.dst1.poke(1.U)
+      dut.io.dst1data.poke(0.U)
+      dut.io.wen.poke(true.B)
+      dut.clock.step()
+
       // Use threadID = 0 for main operations.
       dut.io.threadID.poke(0.U)
-      // Cycle 0: Write 10 into thread 0, register 1.
+      // Cycle 1: Write 10 into thread 0, register 1.
       dut.io.dst1.poke(1.U)
       dut.io.dst1data.poke(10.U)
       dut.io.wen.poke(true.B)
