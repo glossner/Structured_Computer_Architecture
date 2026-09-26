@@ -42,6 +42,10 @@
 \includechiselcode[caption={Parameterized Decoder (Chisel: Decoder.scala)}]{\chiselSourceDir/Decoder.scala}
 \subsubsection{2-to-4 Decoder}
 \includechiselcode[caption={Instantiated 2-to-4 Decoder (Chisel: Decoder2to4.scala)}]{\chiselSourceDir/Decoder2to4.scala}
+\subsubsection{RISC-V Modular Instruction Decoder}
+\includechiselcode[caption={RISC-V Modular Instruction Decoder (Chisel: RiscvDecoder.scala)}]{\chiselSourceDir/riscv/RiscvDecoder.scala}
+\subsubsection{RISC-V Immediate Generator}
+\includechiselcode[caption={RISC-V Multi-Format Immediate Generator (Chisel: RiscvImmGen.scala)}]{\chiselSourceDir/riscv/RiscvImmGen.scala}
 
 \subsection{Multiplexer}
 \subsubsection{Parameterized Bus Multiplexer}
@@ -82,7 +86,10 @@
 \includechiselcode[caption={Parameterized Ripple-Carry Adder (Chisel)}]{\chiselSourceDir/adders/RippleCarryAdder.scala}
 
 \subsection{ALUs}
+\subsubsection{64-bit Parameterized ALU}
 \includechiselcode[caption={64-bit ALU (Chisel: ALU64.scala)}]{\chiselSourceDir/ALUs/ALU64.scala}
+\subsubsection{RISC-V RV32I\_Zmmul Direct-Wire ALU}
+\includechiselcode[caption={RISC-V RV32I\_Zmmul Arithmetic Logic Unit (Chisel: RiscvALU.scala)}]{\chiselSourceDir/riscv/RiscvALU.scala}
 
 \subsection{Memory \& Register Files}
 \subsubsection{Vector-Based Register File}
@@ -91,6 +98,8 @@
 \includechiselcode[caption={Synchronous SRAM Register File (Chisel: RegFile2R1WSRAM.scala)}]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
 \subsubsection{RISC-V Architectural Register File}
 \includechiselcode[caption={RISC-V 32-Register Architectural Register File (Chisel: RiscvRegFile.scala)}]{\chiselSourceDir/memory/RiscvRegFile.scala}
+\subsubsection{RISC-V Byte-Addressable Data Memory}
+\includechiselcode[caption={RISC-V Byte-Addressable Synchronous Data Memory (Chisel: RiscvDataMemory.scala)}]{\chiselSourceDir/memory/RiscvDataMemory.scala}
 
 \subsection{Automata}
 \subsubsection{Mealy Language Recognizer}

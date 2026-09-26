@@ -308,6 +308,20 @@ A key aspect of this implementation is the use of \texttt{RegNext}. This introdu
 
 The registered read data is assigned to the output using \texttt{io.dataOut := readReg}. This guarantees that the memory data is presented in a stable and predictable manner. The registered output ensures that data remains valid across clock cycles, making this design beneficial for both ASIC and FPGA implementations that require synchronous memory operations with controlled timing.
 
+\clearpage
+\subsubsection{RISC-V Byte-Addressable Data Memory (Chisel)}
+Standard RAM models operate on monolithic machine words. However, the RISC-V ISA specifies byte-granularity memory operations: store byte (\texttt{SB}), store halfword (\texttt{SH}), and store word (\texttt{SW}), as well as signed and unsigned loads (\texttt{LB}, \texttt{LBU}, \texttt{LH}, \texttt{LHU}, \texttt{LW}).
+
+Listing \ref{lst:chisel_riscv_datamemory} implements a byte-addressable synchronous data memory in Chisel:
+\begin{itemize}
+    \item \textbf{Vectorized Byte Storage}: The memory is declared as \texttt{SyncReadMem(depthWords, Vec(4, UInt(8.W)))}, organizing each 32-bit word as four independently writable byte lanes.
+    \item \textbf{Byte Write Mask Generation}: Based on \texttt{funct3} and the address offset \texttt{addr[1:0]}, a 4-bit write mask (\texttt{wmask}) is asserted to selectively update single bytes (\texttt{SB}), aligned 16-bit halfwords (\texttt{SH}), or full 32-bit words (\texttt{SW}).
+    \item \textbf{Load Data Sign/Zero Extension}: Read bytes are reassembled and conditionally routed through sign-extension or zero-padding logic matching \texttt{funct3}, providing architectural load data directly to the write-back stage.
+\end{itemize}
+
+\clearpage
+\includechiselcode[caption={RISC-V Byte-Addressable Data Memory (Chisel: RiscvDataMemory.scala)}, label={lst:chisel_riscv_datamemory}]{\chiselSourceDir/memory/RiscvDataMemory.scala}
+
 } %End Chisel
 
 

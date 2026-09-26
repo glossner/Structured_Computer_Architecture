@@ -18,6 +18,7 @@ class ProgramCounter(val width: Int = 32, val initPC: BigInt = 0) extends Module
     val jalrTarget = Input(UInt(width.W))
     val pc         = Output(UInt(width.W))
     val nextPC     = Output(UInt(width.W))
+    val pcPlus4    = Output(UInt(width.W))
   })
 
   val pcReg      = RegInit(initPC.U(width.W))
@@ -30,7 +31,8 @@ class ProgramCounter(val width: Int = 32, val initPC: BigInt = 0) extends Module
     is(Mode.Stall)  { nextPCWire := pcReg }
   }
 
-  pcReg     := nextPCWire
-  io.pc     := pcReg
-  io.nextPC := nextPCWire
+  pcReg      := nextPCWire
+  io.pc      := pcReg
+  io.nextPC  := nextPCWire
+  io.pcPlus4 := pcReg + 4.U
 }

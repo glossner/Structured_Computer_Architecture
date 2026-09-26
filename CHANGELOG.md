@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Refactored `RALU.scala` ALU multiplexing from `switch` to `MuxCase`, conforming with textbook architectural guidelines.
 
 ### Added
+- **Modular RV32I_Zmmul Architecture & Datapath Elements (Chapters 8, 9, & 10)**:
+  - Implemented `RiscvConstants.scala`: Defined standard RV32I opcodes (`RiscvOpcodes`), direct-wire 5-bit ALU control codes (`AluOp`), object-oriented instruction view (`RiscvFields`), and typed interconnect bundles (`DecodedControl`, `DecodedInstruction`).
+  - Implemented `RiscvDecoder.scala`: Synthesizable RV32I_Zmmul instruction decoder with zero gate-delay direct-wire opcode routing (`aluOp = {inst[25], inst[30], inst[14:12]}`) for R-type instructions and full control signal generation. Verified with `RiscvDecoderTest.scala`.
+  - Implemented `RiscvImmGen.scala`: Dedicated sign-extending immediate generator for I, S, B, U, and J instruction formats. Verified with `RiscvImmGenTest.scala`.
+  - Implemented `RiscvALU.scala`: 32-bit RV32I_Zmmul ALU implementing all 10 base integer operations and 4 multiplication operations with comparison flags (`zero`, `lessThan`, `lessThanU`) via `MuxCase`. Verified with `RiscvALUTest.scala`.
+  - Implemented `RiscvDataMemory.scala`: Byte-addressable synchronous data RAM utilizing `SyncReadMem` with byte write enables (`SB`, `SH`, `SW`) without `switch` statements, and load sign/zero extension (`LB`, `LH`, `LW`, `LBU`, `LHU`). Verified with `RiscvDataMemoryTest.scala`.
+  - Enhanced `ProgramCounter.scala`: Added sequential link output port `pcPlus4` for JAL/JALR return address capture without datapath adder duplication.
+  - Refactored `RALU.scala`: Modularly integrated `RiscvRegFile` and `RiscvALU` with direct-wire control and named bundle wiring. Verified with `RALUTest.scala`.
+  - Updated LaTeX chapters `02_08_combinational_circuits_0-OS.tex`, `02_09_memory_circuits_1-OS.tex`, `02_10_automata_2-OS.tex`, and `A99_Code_Listings.tex` with single-page unbroken listings.
 - **Phase 1 RISC-V Hardware Bridge & Automata (Chapters 9 & 10)**:
   - Implemented `RiscvRegFile.scala` (32-register × 32-bit RV32 register file with hardwired `x0 === 0.U`) and unit test suite `RiscvRegFileTest.scala`.
   - Implemented `LanguageRecognizer.scala` (type-safe Mealy FSM for regular language $a^+ b^+$ with `ChiselEnum`) and unit test suite `LanguageRecognizerTest.scala`.
