@@ -1,6 +1,6 @@
 \newpage
 
-\section{Pipelined toyRISC}
+\section{Pipelined toyRISC\index{pipelined processor: processor executing overlapping instruction stages}\index{toyRISC!pipelined implementation}}
 
 The pipelined toyRISC processor design is developed in the context of a system that contains both program and data memory. Consequently, the top module contains a memory module connected to the module we are investigating, that of the pipelinedToyRISC processor.
 
@@ -44,7 +44,7 @@ Decoder module works for all pipe levels providing selection signals and decoded
                     lastline=450]
                     {\verilogSourceDir/A17_DECODE.sv}
 
-\subsubsection{First Pipe Level: Instruction Fetch}
+\subsubsection{First Pipe Level: Instruction Fetch\index{pipelined processor!instruction fetch stage (IF)}}
 
 In each clock cycle a new instruction is fetched from the program memory and inserted in the pipe. The next program address is generated according to the selection code provided by the decoder module.
 
@@ -55,7 +55,7 @@ In each clock cycle a new instruction is fetched from the program memory and ins
                     lastline=450]
                     {\verilogSourceDir/A17_INSTRFETCH.sv}
 
-\subsubsection{Second Pipe Level: Operands Fetch}
+\subsubsection{Second Pipe Level: Operands Fetch\index{pipelined processor!operands fetch stage (ID)}\index{pipelined processor!writeback stage (WB)}}
 
 The second hardware level in pipe works for two functional levels in the pipe:
 \begin{itemize}
@@ -79,7 +79,7 @@ The second hardware level in pipe works for two functional levels in the pipe:
                     lastline=450]
                     {\verilogSourceDir/A17_intUnit.sv}
 
-\subsubsection{Third Pipe Level: Execute}
+\subsubsection{Third Pipe Level: Execute\index{pipelined processor!execute stage (EX)}}
 
 The third level of the hardware pipe executes the third level of the functional pipe which is the execution step. This hardware level contains ALU and the multiplexer which selects the right operand for ALU.
 

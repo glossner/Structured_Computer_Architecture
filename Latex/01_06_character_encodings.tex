@@ -3,7 +3,7 @@
 \localtoc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Encoding Alphabetic Characters in Computers}
+\section{Encoding Alphabetic Characters in Computers}\index{character encoding: mapping characters to unique binary values}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Modern computers operate using binary data, and to process text, they require a mechanism to encode alphabetic characters, digits, symbols, and control commands into binary representations. Character encoding is fundamental to storing, transmitting, and processing text data across systems, enabling interoperability between hardware and software platforms.
 
@@ -19,7 +19,7 @@ Computers represent all data using binary values (0s and 1s). However, human lan
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %********************************************************************
-\subsection{EBCDIC (Extended Binary Coded Decimal Interchange Code)}
+\subsection{EBCDIC (Extended Binary Coded Decimal Interchange Code)}\index{EBCDIC: 8-bit character encoding used in IBM mainframes}\index{character encoding!EBCDIC}\index{EBCDIC|see{character encoding, EBCDIC}}
 %********************************************************************
 
 Developed by IBM in the 1960s for mainframe computers, EBCDIC was designed to encode text for punch cards and early data processing systems \cite{ibm1964ebcdic}. EBCDIC uses 8 bits per character, allowing for 256 possible values. Key features include:
@@ -35,7 +35,7 @@ Example EBCDIC values:
 \]
 
 %***********************************************************************
-\subsection{ASCII (American Standard Code for Information Interchange).}
+\subsection{ASCII (American Standard Code for Information Interchange).}\index{ASCII: 7-bit character encoding standard}\index{character encoding!ASCII}\index{ASCII|see{character encoding, ASCII}}
 %***********************************************************************
 Introduced in 1963, ASCII quickly became the dominant character encoding standard for text. ASCII uses 7 bits per character, providing 128 unique values \cite{mackenzie1980coded}. Key features of ASCII include:
 \begin{itemize}
@@ -53,11 +53,11 @@ Example ASCII values:
 \section{Modern Character Encodings}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %*******************
-\subsection{Unicode}
+\subsection{Unicode}\index{Unicode: universal character set standard}\index{character encoding!Unicode}\index{Unicode|see{character encoding, Unicode}}
 %*******************
 ASCII has limitations. Many languages require more characters than ASCII's 128 values. To address this, the Unicode standard was developed in the 1990s to support nearly all written languages \cite{mackenzie1980coded, unicode2020standard}.
 
-Unicode assigns a unique numeric code (code point) to every character, independent of the underlying binary representation. For example:
+Unicode assigns a unique numeric code (code point)\index{code point: numerical value assigned to character in Unicode} to every character, independent of the underlying binary representation. For example:
 \[
 \text{A: U+0041, \quad Ω: U+03A9, \quad 你好: U+4F60 U+597D}.
 \]
@@ -67,7 +67,7 @@ While Unicode defines code points, it does not specify how these points are stor
 %*************************
 \subsection{UTF Encodings}
 %*************************
-\paragraph{UTF-8} is the most widely used Unicode encoding today \cite{unicode2020standard}. It is a variable-length encoding that uses 1 to 4 bytes per character:
+\paragraph{UTF-8}\index{UTF-8: variable-length 1-4 byte Unicode encoding}\index{character encoding!UTF-8}\index{UTF-8|see{character encoding, UTF-8}} is the most widely used Unicode encoding today \cite{unicode2020standard}. It is a variable-length encoding that uses 1 to 4 bytes per character:
 \begin{itemize}
     \item ASCII characters (U+0000 to U+007F) are encoded in 1 byte, preserving backward compatibility.
     \item Characters outside the ASCII range use 2 to 4 bytes, depending on their code point.
@@ -78,10 +78,10 @@ Example UTF-8 encodings:
 \text{A: } 01000001_2 \; (1 \text{ byte}),  \quad \text{Ω: } 11001110\;10101001_2 \; (2 \text{ bytes})\]
 \[\text{你好: } 11100100\;10111100\;10000000_2 \; 11100101\;10100111\;10101101_2 \; (6 \text{ bytes}).\]
 
-\paragraph{UTF-16.}
+\paragraph{UTF-16.}\index{UTF-16: 2 or 4 byte Unicode encoding}\index{character encoding!UTF-16}\index{Basic Multilingual Plane (BMP): first 65536 code points in Unicode}\index{UTF-16|see{character encoding, UTF-16}}
 UTF-16 uses 2 or 4 bytes per character. Characters in the Basic Multilingual Plane (BMP) are stored in 2 bytes, while supplementary characters require 4 bytes. UTF-16 is popular in Windows systems and programming environments like Java.
 
-\paragraph{UTF-32.}
+\paragraph{UTF-32.}\index{UTF-32: fixed 4-byte Unicode encoding}\index{character encoding!UTF-32}\index{UTF-32|see{character encoding, UTF-32}}
 UTF-32 uses a fixed 4 bytes per character, simplifying indexing and processing at the cost of memory efficiency. It is rarely used due to its high storage requirements.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -90,8 +90,8 @@ UTF-32 uses a fixed 4 bytes per character, simplifying indexing and processing a
 
 In addition to Unicode-based encodings, various modern encodings have been developed for specific use cases:
 
-    \paragraph{Base64.} Encodes binary data as printable ASCII characters, widely used in email and web applications.
-    \paragraph{MIME Encodings.} Designed for encoding text and attachments in email protocols.
+    \paragraph{Base64.}\index{Base64: binary-to-text encoding using 64 ASCII characters}\index{character encoding!Base64}\index{Base64|see{character encoding, Base64}} Encodes binary data as printable ASCII characters, widely used in email and web applications.
+    \paragraph{MIME Encodings.}\index{MIME (Multipurpose Internet Mail Extensions): standard for formatting email attachments and media} Designed for encoding text and attachments in email protocols.
     \paragraph{Custom Encodings.} Certain systems, such as legacy hardware or proprietary software, use custom encoding schemes optimized for their requirements.
 
 

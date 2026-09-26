@@ -20,7 +20,7 @@ Unlike integers, which are discrete, real numbers encompass rational values (e.g
 In computation, real numbers are often represented using floating-point or fixed-point formats:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Floating Point Representation of Real Numbers}
+\section{Floating Point Representation of Real Numbers}\index{floating-point representation: numerical representation encoding sign, exponent, and mantissa}\index{IEEE 754: standard for floating-point arithmetic}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The IEEE 754 standard defines floating-point formats, which provide an efficient and scalable way to approximate real numbers using a finite number of bits. These formats are widely used in scientific computations, graphics, and machine learning due to their ability to balance precision, range, and efficiency.
@@ -37,8 +37,8 @@ x = (-1)^s \cdot m \cdot 2^e,
 where:
 \begin{itemize}[noitemsep]
     \item \( s \): The sign bit, which determines whether the number is positive (\( s = 0 \)) or negative (\( s = 1 \)).
-    \item \( m \): The significand (or mantissa), which represents the precision of the number. It is normalized to the form \( 1.f \), where \( f \) is the fractional part in binary.
-    \item \( e \): The exponent, which determines the scale or range of the number. The exponent is stored in a biased format to allow both positive and negative exponents.
+    \item \( m \): The significand (or mantissa)\index{significand: precision part of a floating-point number}\index{mantissa|see{significand}}, which represents the precision of the number. It is normalized to the form \( 1.f \), where \( f \) is the fractional part in binary.
+    \item \( e \): The exponent\index{exponent: scale factor in floating-point representation}, which determines the scale or range of the number. The exponent is stored in a biased format\index{exponent bias: constant added to floating-point exponent to eliminate sign bit} to allow both positive and negative exponents.
 \end{itemize}
 
 For example, the decimal number \( 6.25 \) is represented as:
@@ -50,7 +50,7 @@ For example, the decimal number \( 6.25 \) is represented as:
 In a floating-point format, \( s = 0 \), \( m = 1.101 \), and \( e = 2 \) (adjusted with the exponent bias).
 
 %***************************************************
-\subsection{Rounding in Floating-Point Arithmetic}
+\subsection{Rounding in Floating-Point Arithmetic}\index{rounding modes: IEEE 754 rules for mapping reals to representable numbers}\index{IEEE 754!rounding modes}
 %****************************************************
 Finite precision requires approximating real numbers (\( \mathbb{R} \)) with a subset of representable values. Floating-point numbers have a finite number of bits, limiting the precision with which real numbers can be represented. When a computation produces a result that cannot be represented exactly (e.g., \( 1/3 \) in binary), rounding is applied to map the result to the nearest representable value.
 
@@ -62,7 +62,7 @@ Without consistent rounding rules, numerical computations could yield unpredicta
 The IEEE 754 standard defines the following five rounding modes:
 
 \begin{enumerate}
-    \item Round to Nearest, Ties to Even (Default):
+    \item Round to Nearest, Ties to Even (Default)\index{rounding modes!round to nearest ties to even}:
     \begin{itemize}
         \item The value is rounded to the nearest representable number.
         \item If the result is exactly halfway between two representable values, it is rounded to the nearest even value.
@@ -137,7 +137,7 @@ Round Toward Negative Infinity (\(-\infty\)) & Rounds down to the nearest repres
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Role of Denormalized Numbers in Floating-Point Arithmetic}
+\subsection{The Role of Denormalized Numbers in Floating-Point Arithmetic}\index{denormalized numbers: subnormal floating-point numbers without implicit leading 1}\index{subnormal numbers|see{denormalized numbers}}\index{gradual underflow: technique using denormals to avoid abrupt flush to zero}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Floating-point systems, such as those defined by the IEEE 754 standard, provide an approximation of the real number line (\( \mathbb{R} \)) within a finite precision. This approximation forms a discrete metric space, where the representable numbers are distributed non-uniformly. Denormalized numbers (also called subnormal numbers) are introduced to address the issue of spacing near zero, improving the system's ability to approximate \( \mathbb{R} \).
@@ -338,7 +338,7 @@ Decimal128                 & 128           & 15                    & 34 digits  
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Half-Precision Floating-Point (f16)}
+\subsection{Half-Precision Floating-Point (f16)}\index{floating-point!half-precision (binary16 / f16)}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The IEEE 754 half-precision (f16) format is a compact 16-bit representation, commonly used in graphics, machine learning, and resource-constrained environments. It is defined as follows:
@@ -373,8 +373,8 @@ where \( s \) is the sign bit, \( f \) is the fraction, and \( e \) is the biase
     x = (-1)^s \cdot (0.f) \cdot 2^{-14}.
     \]
     \item Zero: When \( e = 0 \) and \( f = 0 \), the value is \( x = 0 \) (with a sign determined by \( s \)).
-    \item Infinity: When \( e = 31 \) and \( f = 0 \), the value is \( x = \pm \infty \) (depending on the sign bit \( s \)).
-    \item NaN (Not a Number): When \( e = 31 \) and \( f \neq 0 \), the value is NaN, used for undefined operations (e.g., \( 0/0 \)).
+    \item Infinity\index{infinity!floating-point representation}: When \( e = 31 \) and \( f = 0 \), the value is \( x = \pm \infty \) (depending on the sign bit \( s \)).
+    \item NaN (Not a Number)\index{NaN (Not-a-Number): special floating-point value indicating invalid or undefined result}: When \( e = 31 \) and \( f \neq 0 \), the value is NaN, used for undefined operations (e.g., \( 0/0 \)).
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -414,14 +414,14 @@ However, the limited precision of f16 can lead to significant rounding errors in
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Fixed-Point Representation}
+\section{Fixed-Point Representation}\index{fixed-point representation: numerical representation with fixed integer and fractional bit widths}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Fixed-point representation is a method for storing and processing numbers by dividing a fixed number of bits into integer and fractional parts. This approach enables efficient computations, particularly in resource-constrained environments such as embedded systems, digital signal processing (DSP), and real-time control systems \cite{lathi2005digital}.
 
 Compared to floating-point representation, fixed-point arithmetic offers simplicity, lower computational overhead, and predictable precision. However, it comes with limitations in dynamic range and precision.
 
 %********************************************
-\subsection{Structure of Fixed-Point Numbers}
+\subsection{Structure of Fixed-Point Numbers}\index{Q-format: fixed-point notation specifying integer and fractional bits (Qm.n)}
 %*********************************************
 In fixed-point representation, a number is divided into two parts:
 \begin{itemize}[noitemsep]
@@ -663,7 +663,7 @@ Due to limited precision, some numbers cannot be represented exactly, leading to
 \paragraph{Overflow and Underflow.}
 Numbers exceeding the range of the floating-point format result in overflow, while numbers too close to zero result in underflow, both leading to inaccuracies or loss of data.
 
-\paragraph{Loss of Associativity.}
+\paragraph{Loss of Associativity.}\index{associativity!loss of in floating-point arithmetic}
 Finite precision arithmetic breaks mathematical properties like associativity. For example:
 
 \[
@@ -679,13 +679,13 @@ when \( a, b, c \in \mathbb{R} \) are subject to rounding.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Beyond traditional floating-point formats, alternative finite number representations have been developed to address specific computational challenges. 
 
-\paragraph{Interval arithmetic} represents numbers as intervals \( [a, b] \) rather than single values, ensuring that rounding errors and uncertainties are contained within computations \cite{moore2009introduction}. For example, adding two intervals produces a new interval that encloses all possible results. This method is important in numerical analysis, optimization, and scientific computing but requires careful management to prevent interval overgrowth. 
+\paragraph{Interval arithmetic}\index{interval arithmetic: representation enclosing real values within bounding intervals} represents numbers as intervals \( [a, b] \) rather than single values, ensuring that rounding errors and uncertainties are contained within computations \cite{moore2009introduction}. For example, adding two intervals produces a new interval that encloses all possible results. This method is important in numerical analysis, optimization, and scientific computing but requires careful management to prevent interval overgrowth. 
 
-\paragraph{Logarithmic number systems (LNS)} represent numbers as logarithms of their absolute values, offering efficient multiplication and division but complicating addition and subtraction \cite{naylor2013applications}. 
+\paragraph{Logarithmic number systems (LNS)}\index{logarithmic number system (LNS): representation using sign and logarithm of value} represent numbers as logarithms of their absolute values, offering efficient multiplication and division but complicating addition and subtraction \cite{naylor2013applications}. 
 
-\paragraph{Tapered floating-point} formats dynamically adjust the precision of the significand based on the exponent, improving adaptability for applications requiring variable precision \cite{gustafson2015tapered}. 
+\paragraph{Tapered floating-point}\index{tapered floating-point: format with variable-length significand based on exponent} formats dynamically adjust the precision of the significand based on the exponent, improving adaptability for applications requiring variable precision \cite{gustafson2015tapered}. 
 
-\paragraph{Brain Floating Point} In machine learning, bfloat16 balances the range of `float32` with reduced precision, optimizing performance on large-scale AI workloads \cite{wang2019bfloat16}. 
+\paragraph{Brain Floating Point}\index{bfloat16: 16-bit floating-point format matching float32 exponent range} In machine learning, bfloat16 balances the range of `float32` with reduced precision, optimizing performance on large-scale AI workloads \cite{wang2019bfloat16}. 
 
 
 

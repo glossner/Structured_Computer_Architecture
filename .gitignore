@@ -420,6 +420,8 @@ hs_err_pid*
 *.glg
 *.gls
 *.ist
+!Latex/index_style.ist
+Latex/00_main.pdf
 
 # Minted package
 _minted*

@@ -1,10 +1,10 @@
-\section{Chisel} \label{app:chisel}
+\section{Chisel\index{Chisel: Scala-embedded hardware construction language}\index{hardware construction language (HCL): programming language generating digital circuits}} \label{app:chisel}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%
-Chisel (\textbf{C}onstructing \textbf{H}ardware \textbf{I}n a \textbf{S}cala \textbf{E}mbedded \textbf{L}anguage) is a hardware design language embedded within Scala. It allows hardware designers to write complex, parameterizable, and reusable hardware components using high-level programming constructs \cite{bachrach2012chisel}. 
+Chisel (\textbf{C}onstructing \textbf{H}ardware \textbf{I}n a \textbf{S}cala \textbf{E}mbedded \textbf{L}anguage) is a hardware design language embedded within Scala\index{Scala: multi-paradigm programming language hosting Chisel}. It allows hardware designers to write complex, parameterizable, and reusable hardware components using high-level programming constructs \cite{bachrach2012chisel}. 
 
 This Appendix is a very brief introduction to Chisel primarily for designers to reference features quickly. For processor design, \citep{chisel:book} is a highly recommended free book. The Chisel Cheat Sheet is also helpful \cite{chiselcheatsheet}.
 
@@ -49,7 +49,7 @@ import chisel3.util._
 Chisel provides specialized data types for hardware representation \cite{chisel-doc}.
 
 %***********************
-\subsection{Base Types}
+\subsection{Base Types\index{Chisel!base types (Bool, UInt, SInt, FixedPoint)}}
 %**********************
 \paragraph{Bool.} Single-bit boolean (\texttt{true}/\texttt{false}). Declaration: \texttt{val myBool = Bool()}
 
@@ -64,7 +64,7 @@ Chisel provides specialized data types for hardware representation \cite{chisel-
 \paragraph{Reset.} Represents a reset signal.
 
 %****************************
-\subsection{Aggregate Types}
+\subsection{Aggregate Types\index{Chisel!aggregate types (Bundle, Vec)}}
 %***************************
 \paragraph{Bundle.} Custom data structures combining multiple fields. Declaration: \texttt{class MyBundle extends Bundle \{ val a = UInt(8.W) \}}
 
@@ -149,15 +149,15 @@ class MyModule(val width: Int) extends Module {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Wires represent combinational logic signals \cite{chisel-doc}.
 \begin{chiselcode}
-val tempWire = Wire(UInt(8.W))
+val tempWire = Wire(UInt(8.W))\index{Chisel!Wire}
 tempWire := io.in + 1.U    
 \end{chiselcode}
 
 Registers store state across clock cycles.
 \begin{itemize}
-    \item \texttt{Reg}: Creates a register without an initial value.
+    \item \texttt{Reg}\index{Chisel!Reg}: Creates a register without an initial value.
         \newline Declaration: \texttt{val myReg = Reg(UInt(8.W))}
-    \item \texttt{RegInit}: Creates a register with an initial value.
+    \item \texttt{RegInit}\index{Chisel!RegInit}: Creates a register with an initial value.
         \newline Declaration: \texttt{val myReg = RegInit(0.U(8.W))}
 \end{itemize}
 
@@ -171,7 +171,7 @@ myReg := myReg + 1.U
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %************************************
-\subsection{\texttt{when} Statements}
+\subsection{\texttt{when} Statements\index{Chisel!when, elsewhen, otherwise}}
 %************************************
 Conditional hardware execution.
 \begin{chiselcode}
@@ -185,7 +185,7 @@ when (condition) {
 \end{chiselcode}
 
 %**************************************
-\subsection{\texttt{switch} Statements}
+\subsection{\texttt{switch} Statements\index{Chisel!switch and is}}
 %**************************************
 Multi-way conditional execution.
 \begin{chiselcode}
@@ -200,7 +200,7 @@ switch(selector) {
 \end{chiselcode}
 
 %*********************************
-\subsection{\texttt{Mux} Function}
+\subsection{\texttt{Mux} Function\index{Chisel!Mux}}
 %*********************************
 Multiplexer for conditional selection.
 \begin{chiselcode}
@@ -271,7 +271,7 @@ The \texttt{MyGenericModule} class is a parameterized hardware module in Chisel.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %***********************************
-\subsection{Vectors (\texttt{Vec})}
+\subsection{Vectors (\texttt{Vec})\index{Chisel!Vec}}
 %***********************************
 Indexable collections of elements.
 \begin{chiselcode}
@@ -280,7 +280,7 @@ myVec(0) := io.in
 \end{chiselcode}
 
 %************************************
-\subsection{Memories (\texttt{Mem})}
+\subsection{Memories (\texttt{Mem})\index{Chisel!Mem}}
 %***********************************
 Memory elements for storage.
 \begin{chiselcode}
@@ -290,7 +290,7 @@ myMem.write(addr, dataIn)
 \end{chiselcode}
 
 %*******************
-\subsection{Bundles}
+\subsection{Bundles\index{Chisel!Bundle}}
 %*******************
 Custom data structures grouping multiple fields.
 \begin{chiselcode}
@@ -303,7 +303,7 @@ class MyBundle extends Bundle {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Testing and Verification}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Chisel Simulator Framework}
+\subsection{Chisel Simulator Framework\index{Chisel!EphemeralSimulator}}
 %**************************************
 Chisel provides built-in simulation tools via \texttt{EphemeralSimulator} for testing hardware modules with ScalaTest.
 \begin{chiselcode}
