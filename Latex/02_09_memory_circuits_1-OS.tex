@@ -330,6 +330,8 @@ anyone. }}{file_reg}
 \end{description}
 The internal structure of a file register is characterized by two multiplexers that ensure access to any pair of stored values.
 
+\ifthenelse{\boolean{verilogversion}}{
+\subsubsection{SystemVerilog Register File}
 \includeverilogcode[caption={Register file.   File: A09\_regFile.sv  (SystemVerilog)}, 
                     label={lst:A09_regFile.sv}, 
                     firstline=1, 
@@ -337,19 +339,25 @@ The internal structure of a file register is characterized by two multiplexers t
                     lastline=30]
                     {\verilogSourceDir/A09_regFile.sv}
 
-
+Listing \ref{lst:A09_regFile.sv} implements a synchronous register file in SystemVerilog featuring two combinational read ports and one edge-triggered write port.
+}% End Verilog
 
 \ifthenelse{\boolean{chiselversion}}{
-\includechiselcode[caption={Register File (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}, firstline=24, firstnumber=24, lastline=999]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
+\subsubsection{Chisel Implementations of Register Files}
+
+\includechiselcode[caption={Register File using Vector of Registers (Chisel: RegFile2R1WVec.scala)}, label={lst:chisel_regfile}, firstline=24, firstnumber=24, lastline=52]{\chiselSourceDir/memory/RegFile2R1WVec.scala}
 
 Listing \ref{lst:chisel_regfile} implements a register-based register file. In Chisel, a register file can be implemented using either a \texttt{Vec} of \texttt{Reg} or an SRAM-based memory structure such as \texttt{SyncReadMem}. The choice between these two implementations depends on multiple factors, including the size of the register file, read and write access patterns, and the target hardware architecture.
 
 A \texttt{Vec} of \texttt{Reg} is a collection of registers, each implemented as a distinct flip-flop. This approach is particularly suitable for small register files, such as general-purpose registers in a CPU core or pipeline buffers. Since each register is directly accessible, read operations are purely combinational, resulting in zero-cycle latency. This makes \texttt{Vec} of \texttt{Reg} ideal when low-latency register access is a requirement. Additionally, this structure allows multiple concurrent reads and writes, making it beneficial for designs where multiple functional units require simultaneous register access. However, as the number of registers increases, the area and power consumption grow significantly due to the need for dedicated flip-flops for every bit in the register file. This makes \texttt{Vec} of \texttt{Reg} inefficient for large-scale register files.
 
-\texttt{SyncReadMem} provides a more scalable approach for implementing register files when the number of registers is large. It models a synchronous memory that stores register values in a memory array instead of individual flip-flops, significantly reducing area and power consumption. This is particularly advantageous when the register file must hold a large number of entries, such as in vector processors, GPU register banks, or out-of-order execution buffers. Since \texttt{SyncReadMem} models SRAM behavior, it typically has a one-cycle read latency, meaning that register values are not immediately available in the same cycle as the read request. This trade-off makes it less suitable for applications requiring immediate read results but is acceptable in architectures that can tolerate pipelined reads. Another limitation of \texttt{SyncReadMem} is that it typically supports only a single read and a single write port per clock cycle unless explicitly instantiated as multi-port memory, which can introduce complexity.
+\includechiselcode[caption={Synchronous SRAM Register File (Chisel: RegFile2R1WSRAM.scala)}, label={lst:chisel_regfile_sram}, firstline=22, firstnumber=22, lastline=52]{\chiselSourceDir/memory/RegFile2R1WSRAM.scala}
 
-Additional designs showing SRAM register files can be found in Section \ref{subsec:regfile_2R1W_SRAM} and \ref{subsec:regfile_MT_2R1W_SRAM}.
+Listing \ref{lst:chisel_regfile_sram} shows an SRAM-based register file implemented with Chisel's \texttt{SyncReadMem}. It models a synchronous memory array where read data is registered, providing a one-cycle read latency. This structure substantially reduces silicon area for large storage arrays, vector register files, and multi-banked architectures.
 
+\includechiselcode[caption={RISC-V 32-Register Architectural Register File (Chisel: RiscvRegFile.scala)}, label={lst:chisel_riscv_regfile}, firstline=20, firstnumber=20, lastline=49]{\chiselSourceDir/memory/RiscvRegFile.scala}
+
+Listing \ref{lst:chisel_riscv_regfile} presents an architectural register file compliant with the standard 32-bit RISC-V (RV32I) unprivileged specification. The module provides 32 registers of 32 bits ($x0 \dots x31$) with dual asynchronous read ports (\texttt{rs1}, \texttt{rs2}) and a single synchronous write port (\texttt{rd}). Crucially, register $x0$ is hardwired to zero: combinational reads from address $0$ strictly return \texttt{0.U}, while writes addressed to $x0$ are guarded and ignored (\texttt{io.rd =/= 0.U}), fulfilling a foundational invariant of the RISC-V ISA.
 }% End Chisel
 
 

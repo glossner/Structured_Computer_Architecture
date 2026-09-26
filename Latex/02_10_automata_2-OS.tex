@@ -462,11 +462,12 @@ Designing a finite automaton using a description in SystemVerilog HDL involves w
 
 
 \begin{exemplu}\label{mealySV}
-We now reconsider the previous example, which involves recognizing the language \( L = \{ a^n b^m \mid n, m > 0 \} \), and proceed with its implementation using a SystemVerilog description.
+We now reconsider the previous example, which involves recognizing the language \( L = \{ a^n b^m \mid n, m > 0 \} \), and proceed with its implementation using hardware description languages.
 
 \normalfont{A key observation is that, regardless of the specific values of \( m \) and \( n \), the number of states in the finite automaton remains constant at four. However, while the number of states is fixed, the complexity of describing the automaton's behavior is proportional to this number. Specifically, the size of the truth table that defines the state transitions scales with the number of states but remains independent of the values of \( m \) and \( n \).}
 
-
+\ifthenelse{\boolean{verilogversion}}{
+\subsubsection{SystemVerilog Implementation of Language Recognizer}
 
 \includeverilogcode[caption={Defines binary codes for input, output and state variables.  File: A10\_defines.vh  (SystemVerilog)}, 
                     label={lst:A10_defines.vh}, 
@@ -475,7 +476,6 @@ We now reconsider the previous example, which involves recognizing the language 
                     lastline=30]
                     {\verilogSourceDir/A10_defines.vh}
 
-\end{exemplu}
 Listing \ref{lst:A10_defines.vh} shows a code snippet that defines several preprocessor macros in SystemVerilog that are used to establish constants for a finite automaton. In the first section, input codes are defined. The macro \texttt{\`define a 1'b1} specifies that the symbol \textit{a} is represented by the 1-bit binary value \texttt{1'b1}, while \texttt{\`define b 1'b0} defines the symbol \textit{b} as the 1-bit binary value \texttt{1'b0}. These definitions are for the input signals to the automaton.
 
 In the next portion of the code, output codes are established. The macro \texttt{\`define recA 2'b10} is used to indicate that the automaton outputs the 2-bit binary value \texttt{2'b10} when it receives input \textit{a}. Similarly, \texttt{\`define recB 2'b01} specifies that the output \texttt{2'b01} corresponds to the reception of input \textit{b}. Additionally, \texttt{\`define fail 2'b00} is defined to represent the output condition when the automaton fails to receive the correct string.
@@ -536,8 +536,24 @@ Listing \ref{lst:A10_testRegLang.sv} shows a SystemVerilog module \texttt{testRe
 An initial block is dedicated to clock generation. The clock is initialized to 0, and a \texttt{forever} loop toggles the clock every time unit by inverting its value. This produces a periodic square wave that drives the synchronous components of the design. Another initial block manages the reset signal and input stimulus. Here, the reset is initially asserted, and the input is set to the value defined by the macro \texttt{\`a}. After a 2 time unit delay, the reset is de-asserted, and subsequent delays cause the input to change first to the value corresponding to \texttt{\`b} and later back to the value defined by \texttt{\`a}. The simulation is programmed to finish after 100 time units, ensuring that all intended transitions are exercised.
 
 The \texttt{regLang} module, which contains the core finite state machine logic, is instantiated with the testbench signals connected to its ports. This instantiation, labeled as \texttt{dut} (device under test), allows the testbench to apply the generated inputs and observe the resulting outputs. Additionally, another initial block uses the \texttt{\$monitor} system task to continuously print the simulation time along with the current values of the clock, reset, input, and output signals, facilitating real-time observation of the system's behavior. Waveform dumping is also set up using \texttt{\$dumpfile} and \texttt{\$dumpvars}, which enable post-simulation analysis through a waveform viewer.
+}% End Verilog
+
+\ifthenelse{\boolean{chiselversion}}{
+\subsubsection{Chisel Implementation of Language Recognizer}
+
+\includechiselcode[caption={Mealy Language Recognizer Automaton (Chisel: LanguageRecognizer.scala)}, label={lst:chisel_language_recognizer}, firstline=25, firstnumber=25, lastline=85]{\chiselSourceDir/automata/LanguageRecognizer.scala}
+
+Listing \ref{lst:chisel_language_recognizer} implements the Mealy automaton in Chisel for recognizing the regular language $L = (a^n b^m \mid n, m > 0)$. In Chisel, finite state machines are constructed with strong type safety and structural clarity using \texttt{ChiselEnum} and \texttt{switch/is} pattern matching:
+\begin{itemize}
+    \item \textbf{Type-Safe State Enumeration}: Rather than defining raw integer constants or untyped preprocessor macros, states (\texttt{sInit}, \texttt{sRunA}, \texttt{sRunB}, \texttt{sError}) are defined as strongly typed values within a \texttt{ChiselEnum}. The Chisel compiler strictly prevents accidental assignments of illegal states to the state register.
+    \item \textbf{Synchronous State Register}: The state register \texttt{state = RegInit(State.sInit)} provides deterministic synchronous reset without requiring explicit reset multiplexers in combinational code.
+    \item \textbf{Default Assignments \& Latch Prevention}: By declaring default assignments (\texttt{val nextState = WireDefault(state)} and \texttt{val outCode = WireDefault(OutputCode.Fail)}), Chisel guarantees that all transitions and output paths are fully specified, preventing unintentional latch inference.
+    \item \textbf{Mealy Output Logic}: In compliance with the formal definition of a Mealy automaton, the output \texttt{outCode} is computed directly from both the current state and the incoming input symbol \texttt{io.in} during the active cycle.
+\end{itemize}
+}% End Chisel
 
 $\diamond$
+\end{exemplu}
 
 
 
@@ -736,13 +752,14 @@ in the module which describes the ROM of CROM we must include the following line
 
 The code generating mechanism is a program which has as input a file describing the behavior of the automaton using a microprogram. Let us consider  Example \ref{dummyMP} where the file {\tt theDefinition} is used  as an input for {\tt codeGenerator.sv}  defined inListing \ref{lst:A10_codeGenerator.sv}.
 
+\ifthenelse{\boolean{verilogversion}}{
 \includeverilogcode[caption={Micro-program assembler..   File: A10\_codeGenerator.sv  (SystemVerilog)}, 
                     label={lst:A10_codeGenerator.sv}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=130]
                     {\verilogSourceDir/A10_codeGenerator.sv}
-
+}{}
 
 Listing \ref{lst:A10_codeGenerator.sv} shows SystemVerilog code that generates the binary content of a ROM through a structured process that uses registers, tasks, and an initialization routine. Several registers are declared to represent various fields of the ROM entry. For instance, the 2-bit register \texttt{mode} indicates the transition mode, while \texttt{test} is a 1-bit register used for flag selection. Other registers—\texttt{field1} (2 bits), \texttt{field2} (3 bits), \texttt{field3} (2 bits), and \texttt{field4} (8 bits)—store different command parameters. The 5-bit registers \texttt{address} and \texttt{counter} keep track of the ROM addressing and entry count, respectively, and an array \texttt{labelTab} with 32 entries of 5 bits each is used to store addresses associated with specific label indices.
 
@@ -758,13 +775,14 @@ The initialization block of the code sets all registers to zero and initializes 
 label is used before it is defined, only during the second pass will the
 memory {\tt labelTab} contain the correct value of the jump address.
 
+\ifthenelse{\boolean{verilogversion}}{
 \includeverilogcode[caption={Micro-program assembler..   File: A10\_simulator.sv  (SystemVerilog)}, 
                     label={lst:A10_simulator.sv}, 
                     firstline=1, 
                     firstnumber=1, 
                     lastline=130]
                     {\verilogSourceDir/A10_simulator.sv}
-
+}{}
 
 Listing \ref{lst:A10_simulator.sv} shows a SystemVerilog module, named \texttt{simulator}. It is a simulation framework that incorporates externally generated ROM content via the \texttt{`include} directive, which pulls in the file \texttt{codeGenerator.v}. Within the module, a ROM is declared as an array \texttt{mem} consisting of 32 elements, where each element is a 23-bit register. An integer variable \texttt{i} is also declared to serve as a loop index.
 
@@ -784,6 +802,24 @@ ROM[5] = mode:10 addr:00011 test:1 com1:00 com2:000 com3:00 val:  0
 ROM[6] = mode:01 addr:00110 test:0 com1:00 com2:000 com3:00 val:  0
 ROM[7] = mode:xx addr:xxxxx test:x com1:xx com2:xxx com3:xx val:  x
 \end{verilogcode}
+
+\ifthenelse{\boolean{chiselversion}}{
+%***********************************************************************
+\subsubsection{Multi-Cycle Complex Automaton: Greatest Common Divisor}\label{chiselGCD}
+%***********************************************************************
+
+In modern hardware design, multi-cycle state machines that perform algorithmic transformations (such as iterative arithmetic, protocol handshakes, and cryptographic loops) can be expressed directly in Chisel without requiring ad-hoc micro-ROM tables. 
+
+\includechiselcode[caption={Greatest Common Divisor Complex Automaton (Chisel: GCD.scala)}, label={lst:chisel_gcd}, firstline=15, firstnumber=15, lastline=37]{\chiselSourceDir/GCD.scala}
+
+Listing \ref{lst:chisel_gcd} shows a canonical complex automaton implementing Euclid's greatest common divisor (GCD) subtraction algorithm in Chisel:
+\begin{itemize}
+    \item \textbf{Loop-Closing Registers}: Two internal registers, \texttt{x} and \texttt{y}, store the evolving operands across clock cycles.
+    \item \textbf{Conditional Transformation Logic}: In each active cycle, the larger value is reduced by subtracting the smaller value (\texttt{when(x > y) \{ x := x - y \}.otherwise \{ y := y - x \}}), iteratively converging toward the GCD.
+    \item \textbf{Termination and Handshake}: The automaton signals completion via \texttt{outputValid := (y === 0.U)}, presenting the final computed divisor on \texttt{outputGCD}.
+\end{itemize}
+This demonstrates how complex algorithmic control is realized directly in Chisel with concise, expressive conditional constructs.
+}% End Chisel
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Simple Automata}
@@ -896,6 +932,8 @@ A specific application of the counter simple automaton is the system used to com
 
 \placedrawing[H]{figures/04_08_program_counter.lp}{Program Counter.}{fig39}
 
+\ifthenelse{\boolean{verilogversion}}{
+\subsubsection{SystemVerilog Program Counter}
 \includeverilogcode[caption={Program counter.   File: A10\_programCounter.sv  (SystemVerilog)}, 
                     label={lst:A10_programCounter.sv}, 
                     firstline=1, 
@@ -910,6 +948,20 @@ The sequential behavior of the counter is described within an \texttt{always\_ff
 The combinational logic for computing the next program counter value is implemented in an \texttt{always\_comb} block using a \texttt{case} statement based on the \texttt{sel} input. When \texttt{sel} is \texttt{3'b000}, \texttt{nextPC} is assigned the current value of \texttt{pc}, effectively holding the counter. If \texttt{sel} is \texttt{3'b001}, \texttt{nextPC} is computed as \(\texttt{pc} + \texttt{relValue}\). For a selection of \texttt{3'b010}, the value of \texttt{nextPC} depends on the absolute value: if \texttt{absValue} is zero, \(\texttt{nextPC} = \texttt{pc} + \texttt{relValue}\); otherwise, \(\texttt{nextPC} = \texttt{pc} + 1\). Similarly, when \texttt{sel} is \texttt{3'b011}, \(\texttt{nextPC}\) is assigned \(\texttt{pc} + 1\) if \texttt{absValue} is zero, or \(\texttt{pc} + \texttt{relValue}\) otherwise. If \texttt{sel} is \texttt{3'b100}, the counter is loaded with the absolute value, so \(\texttt{nextPC} = \texttt{absValue}\). For any other value of \texttt{sel} (the default case), \(\texttt{nextPC} = \texttt{pc} + 1\).
 
 Finally, the current value of the program counter \texttt{pc} is assigned to the output \texttt{progAddr}. An alternative assignment (commented out in the code) would directly assign \texttt{nextPC} to \texttt{progAddr} for a non-pipelined implementation.
+}% End Verilog
+
+\ifthenelse{\boolean{chiselversion}}{
+\subsubsection{Chisel Program Counter for RISC-V}
+\includechiselcode[caption={Program Counter Control Automaton for RISC-V (Chisel: ProgramCounter.scala)}, label={lst:chisel_program_counter}, firstline=25, firstnumber=25, lastline=56]{\chiselSourceDir/automata/ProgramCounter.scala}
+
+Listing \ref{lst:chisel_program_counter} shows the Chisel implementation of the Program Counter control automaton, designed specifically for standard 32-bit RISC-V (RV32) instruction sequencing. The module maintains the instruction address in a 32-bit register \texttt{pcReg} initialized to \texttt{initPC} (defaulting to \texttt{0x00000000}) and computes the next execution address across four architectural modes:
+\begin{itemize}
+    \item \textbf{Sequential Execution (\texttt{Mode.Plus4})}: The counter advances by 4 bytes ($PC \leftarrow PC + 4$), corresponding to the standard 32-bit RISC-V instruction size.
+    \item \textbf{PC-Relative Branch (\texttt{Mode.Branch})}: Adds a two's complement sign-extended offset ($PC \leftarrow PC + \text{branchImm}$), servicing conditional branches (\texttt{BEQ}, \texttt{BNE}, etc.) and jump-and-link (\texttt{JAL}).
+    \item \textbf{Register-Indirect Jump (\texttt{Mode.Jalr})}: Computes the target from an address generated by the execution unit (\texttt{jalrTarget}). In accordance with the RISC-V unprivileged specification, the least-significant bit is explicitly masked to zero (\texttt{Cat(io.jalrTarget(width - 1, 1), 0.U(1.W))}).
+    \item \textbf{Pipeline Stall (\texttt{Mode.Stall})}: Holds the current PC value ($PC \leftarrow PC$), preserving the instruction fetch address during pipeline stalls, memory wait states, or hazard resolution.
+\end{itemize}
+}% End Chisel
 
 %***********************************************************************************
 \subsection{ {\bf{\em Registers with Arithmetic \& Logic Unit (RALU)}} \index{RALU (Registers with Arithmetic \& Logic Unit)}: a functional, simple automaton used as the main execution unit in a processor} \label{rALU}
@@ -932,7 +984,10 @@ If we connect in a loop a register file with a arithmetic logic unit we obtain t
 \end{description}
 According to the connection list, RALU performs no more than 8 functions, on 32-bit words stored in a 32-word register file.
 
+\placedrawing[h]{figures/04_09_ralu.lp}{32-bit RALU.}{ralu}
 
+\ifthenelse{\boolean{verilogversion}}{
+\subsubsection{SystemVerilog Implementation of RALU}
 
 \includeverilogcode[caption={Defining the functions for a RALU.   File: A10\_defineRALU.vh  (SystemVerilog)}, 
                     label={lst:A10_defineRALU.vh}, 
@@ -941,7 +996,6 @@ According to the connection list, RALU performs no more than 8 functions, on 32-
                     lastline=30]
                     {\verilogSourceDir/A10_defineRALU.vh}
 
-\placedrawing[h]{figures/04_09_ralu.lp}{32-bit RALU.}{ralu}
 
 \includeverilogcode[caption={RALU.   File: A10\_RALU.sv  (SystemVerilog)}, 
                     label={lst:A10_RALU.sv}, 
@@ -973,6 +1027,21 @@ The core functionality of the ALU is implemented within an \texttt{always\_comb}
 Additional operations are provided for the conditional output of the carry bit. When the function code is \texttt{`addcr} or \texttt{`subcr}, the ALU outputs only the carry bit from the corresponding arithmetic operation, with the remaining 32 bits set to zero. The ALU also supports logical and shifting operations. The \texttt{`lsh} and \texttt{`ash} operations perform logical and arithmetic shifts on the \texttt{left} operand, with the shifted-out bit being routed to the carry output. Other operations, such as \texttt{`move}, \texttt{`mult}, \texttt{`bwand}, \texttt{`bwor}, and \texttt{`bwxor}, respectively, transfer the \texttt{left} operand, multiply the operands, and execute bitwise AND, OR, and XOR functions, with the carry output remaining zero in these cases.
 
 In the default case, the outputs are assigned a 33-bit value corresponding to zero minus one, effectively setting all bits of \texttt{out} and \texttt{crOut} to zero, except for the bitwise representation of negative one. 
+}% End Verilog
+
+\ifthenelse{\boolean{chiselversion}}{
+\subsubsection{Chisel Registers with Arithmetic \& Logic Unit (RALU)}
+
+\includechiselcode[caption={Registers with Arithmetic \& Logic Unit (RALU) (Chisel: RALU.scala)}, label={lst:chisel_ralu}, firstline=36, firstnumber=36, lastline=98]{\chiselSourceDir/automata/RALU.scala}
+
+Listing \ref{lst:chisel_ralu} implements the RALU subsystem in Chisel by loop-connecting the 32-register RISC-V register file (\texttt{RiscvRegFile}, Listing \ref{lst:chisel_riscv_regfile}) with a 32-bit arithmetic-logic unit. This closes the second fundamental feedback loop of the computing engine:
+\begin{itemize}
+    \item \textbf{Operand Fetch}: In each clock cycle, the register file combinationally outputs two 32-bit operands from register addresses \texttt{rs1Addr} and \texttt{rs2Addr}.
+    \item \textbf{Operand B Selection}: A multiplexer selects between the register value (\texttt{rs2Data}) and an immediate constant (\texttt{immVal}) when \texttt{useImm} is asserted, supporting both register-register (R-type) and register-immediate (I-type) RISC-V instructions.
+    \item \textbf{ALU Computation}: The 32-bit ALU performs the operation specified by \texttt{aluOp} (addition, subtraction, logical shifts, arithmetic shifts, bitwise operations, and signed/unsigned comparisons), producing both \texttt{aluResult} and a condition flag \texttt{zeroFlag} for branch evaluation.
+    \item \textbf{Loop Closure \& Write-Back}: A write-back multiplexer selects between the computed ALU output and external data (such as a memory load via \texttt{extData}), routing the result to \texttt{rdAddr} on the positive clock edge when \texttt{regWrite} is asserted.
+\end{itemize}
+}% End Chisel 
 
 
 Let us use the RALU unit we just defined to illustrate elementary computational operations.
