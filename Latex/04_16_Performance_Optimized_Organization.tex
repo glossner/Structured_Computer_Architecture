@@ -1,8 +1,10 @@
-\chapter{Instruction-Level Parallelism\index{ILP (Instruction-Level Parallelism): }}\label{lect5}
+\chapter{Performance Optimized Organization: Pipelining and Instruction-Level Parallelism}\label{lect5}
+\index{pipelining!performance optimized organization}\index{ILP (Instruction-Level Parallelism): }\index{performance optimized organization}
 \localtoc
 
-There are various form of instruction-level parallelism. We will consider  only the parallelism introduced by the pipeline mechanism and the multiple execution units.
-Thus, chapter deals with the pipeline mechanism, used to accelerate the processor's operation, and the implications of its use. But as we will see any gain obtained from the application of an improvement technique comes with a price.
+In Chapter \ref{lect4}, we examined component-level digital logic optimizations---such as carry-lookahead adders, Kogge-Stone parallel prefix networks, and Wallace tree multipliers---designed to minimize combinational propagation delay along critical paths within individual functional blocks. In this chapter, we elevate our perspective from circuit-level logic to \textbf{system- and microarchitectural-level organization}. Rather than merely accelerating an isolated combinational operation, performance-optimized organization restructures the cooperative flow of instructions through time and space.
+
+Instruction-Level Parallelism (ILP) represents the family of architectural techniques that enable multiple machine operations to be executed simultaneously. We focus on the foundational organizational mechanisms that govern modern processor throughput: pipelining, pipeline hazard management (structural, data, and control), dynamic branch prediction, and superscalar dispatch with dynamic scheduling. As we will discover, every performance gain realized through spatial or temporal overlap introduces architectural dependencies that demand rigorous hardware solutions.
 
 \section{Pipelining}
 
@@ -15,20 +17,26 @@ In Figure \ref{fig47} the pipeline technique is illustrated. In Figure \ref{fig4
 
 \placedrawing[H]{figures/05b_01_pipelining.lp}{Pipelining. {\bf a.} The initial circuit, without pipeline register.  {\bf b.} The pipelined version of the circuit.}{fig47}
 
+\begin{equation}
+    T_{clock} = t_{regProp} + t_{CLC_{f \circ g}} + t_{set-up} \simeq t_{CLC_{f \circ g}}
+\end{equation}
 
-$$T_{clock} = t_{regProp} + t_{CLC_{f \circ g}} + t_{set-up} \simeq t_{CLC_{f \circ g}}$$
+In Figure \ref{fig47}b, the frequency at which the system clock can work will be increased because the period of the clock is given by:
+\begin{equation}
+    T_{clock} = t_{regProp} + \max(t_{CLC_{f}}, t_{CLC_{g}}) + t_{set-up}
+\end{equation}
 
-In Figure \ref{fig47}b,  the frequency at which the system clock can work will be increased because the period of the clock is given by
+The resulting acceleration (speedup) is:
+\begin{equation}
+    \alpha \simeq \frac{t_{CLC_{f \circ g}}}{\max(t_{CLC_{f}}, t_{CLC_{g}})}
+\end{equation}
 
-$$T_{clock} = t_{regProp} + max(t_{CLC_{f}}, t_{CLC_{g}}) + t_{set-up}$$
+The maximum efficiency, $\alpha \simeq 2$, is obtained when the combinational delay is perfectly balanced across stages:
+\begin{equation}
+    t_{CLC_{f}} \simeq t_{CLC_{g}}
+\end{equation}
 
-The resulting acceleration is:
-$$\alpha \simeq \frac{t_{CLC_{f \circ g}}}{max(t_{CLC_{f}}, t_{CLC_{g}})}$$
-
-The maximum efficiency, $\alpha \simeq 2$, is obtained when
-$$t_{CLC_{f}} \simeq t_{CLC_{g}}$$
-
-If the resulting frequency is not high enough, the technique is applied to the deepest circuit or both. The process can continue until the requested speed is reached.
+If the resulting frequency is not high enough, the technique is applied recursively to the deepest circuit or both. The process can continue until the requested speed is reached or until register setup and propagation overheads dominate the stage delay.
 
 \subsection{Pipeline Latency}
 
@@ -36,9 +44,33 @@ Increasing the clock frequency is accompanied, in a pipeline structure, by the i
 
 For example, in the structure from Figure \ref{fig47}a the latency is 2, due to the two synchronization registers, on the input and output. By introducing a pipeline register in the structure in Figure \ref{fig47}b the latency increases by one unit.
 
-If we process a sufficiently long string of data, {\tt X(1), X(2), ..., X(n)}, then the additional latency introduces an insignificant effect: the processing of the string will be performed in $n+3$ cycles instead of $n+2$ but at a frequency $\alpha$ times higher.
+If we process a sufficiently long string of data, \texttt{X(1), X(2), ..., X(n)}, then the additional latency introduces an insignificant effect: the processing of the string will be performed in $n+3$ cycles instead of $n+2$ but at a frequency $\alpha$ times higher.
 
-In other words, the introduction of the pipeline register in Figure \ref{fig47}b triggers a parallel process by which the system is involved in processing two successive components of the sequence to be processed. We a
+In other words, the introduction of the pipeline register in Figure \ref{fig47}b triggers a temporal parallel process wherein the system concurrently operates on two successive components of the data sequence.
+
+\subsection{Pipeline Throughput and Performance Metrics}
+\index{CPI (Cycles Per Instruction)!pipeline performance}\index{pipeline speedup}\index{performance equation}
+
+The performance of an instruction pipeline is formally evaluated using the fundamental processor performance equation:
+\begin{equation}
+    \text{Execution Time} = \text{IC} \times \text{CPI} \times T_{clock}
+\end{equation}
+where $\text{IC}$ is the total instruction count of the program, $\text{CPI}$ is the average number of clock cycles per instruction, and $T_{clock} = 1/f_{clock}$ is the clock period.
+
+In an ideal $k$-stage pipeline operating under steady-state conditions without hazards or stalls, exactly one instruction completes on every clock cycle:
+\begin{equation}
+    \text{CPI}_{\text{ideal}} = 1
+\end{equation}
+However, real hardware pipelines deviate from this theoretical optimum due to pipeline stalls introduced by architectural dependencies:
+\begin{equation}
+    \text{CPI} = \text{CPI}_{\text{ideal}} + \text{Stalls}_{\text{structural}} + \text{Stalls}_{\text{data}} + \text{Stalls}_{\text{control}}
+\end{equation}
+
+The effective speedup $S_k$ of a $k$-stage pipeline over an unpipelined single-cycle implementation is given by:
+\begin{equation}
+    S_k = \frac{\text{Execution Time}_{\text{unpipelined}}}{\text{Execution Time}_{\text{pipelined}}} = \frac{\text{CPI}_{\text{unpipelined}} \times T_{\text{unpipelined}}}{\text{CPI}_{\text{pipelined}} \times T_{\text{pipelined}}} \simeq \frac{k}{1 + \text{Stalls}}
+\end{equation}
+Minimizing these pipeline stall penalties through performance-optimized organization is the central engineering objective of high-performance processor design.
 
 
 \section{{\bf {\em Pipelined Version of toyRISC}}}
@@ -75,7 +107,7 @@ $$T_{clock} = max(t_{IF}, t_{OF}, t_{EX}, t_{WB})$$
 
 \subsection{Latency\index{latency}}
 
-In each clock cycle the execution of one instruction  ends with a latency of three clock cycles. The entire structure performs in parallel 4 successive instructions, each stage being involved in the execution of one instruction.
+In each clock cycle the execution of one instruction ends with a latency of three clock cycles. The entire structure performs in parallel 4 successive instructions, each stage being involved in the execution of one instruction.
 
 \begin{exemplu}
 Let us see how is executed the following sequence of instructions:
@@ -109,24 +141,54 @@ In Table \ref{pipeEx} the distribution along the pipe of the execution is repres
 $\diamond$
 \end{exemplu}
 
-In each clock cycle, an instruction completes with a latency of 3 clock cycles. The good news: the clock frequency increases significantly due to pipeline organization. The bad news: the latency introduced by the pipeline organization creates unwanted dependencies.
+In each clock cycle, an instruction completes with a latency of 3 clock cycles. The good news: the clock frequency increases significantly due to pipeline organization. The bad news: the latency introduced by the pipeline organization creates unwanted dependencies in single-threaded execution.
+
+\textbf{Architectural Insight: Hazard-Free Execution via Barrel Multithreading}:
+It is instructive to note a fundamental architectural relationship between pipeline depth and multithreading. Because this pipeline has exactly $k = 4$ stages, an instruction completes its write-back step exactly 4 clock cycles after it is fetched. In a single-threaded program, an instruction immediately following a producer will encounter data or control hazards. However, if the processor core interleaves $N = 4$ independent hardware threads in a fixed round-robin order (known as \textit{barrel} or \textit{interleaved multithreading}), each individual thread issues an instruction only once every 4 cycles. As a result, when thread $T_0$ issues its second instruction at cycle $t=4$, the result of its first instruction (issued at $t=0$) has already been written back to the register file in stage WB at cycle $t=3$. Under this condition---where the number of interleaved threads equals the pipeline depth ($N = k$)---all pipeline data and control hazards are structurally eliminated without needing stall bubbles, interlock logic, or forwarding multiplexers. We will explore this architectural technique in detail in later chapters.
 
 \section{Hazards Generated by Dependencies}
 
-%http://www.mathcs.richmond.edu/~dszajda/classes/cs301/Fall_2020/slides/Dependences_Hazards_Exceptions.pdf
-
-% https://www.geeksforgeeks.org/computer-organization-and-architecture-pipelining-set-2-dependencies-and-data-hazard/
-
-There are three types of dependencies\index{pipeline dependencies: structural, data, and control hazards}:
+There are three fundamental types of dependencies that create pipeline hazards\index{pipeline dependencies: structural, data, and control hazards}:
 \begin{enumerate}
-\item Structural Dependency
-\item Data Dependency
-\item Control Dependency
+\item \textbf{Structural Hazard}: Hardware resource conflicts where multiple instructions attempt to use the same physical unit concurrently.
+\item \textbf{Data Hazard}: Dependencies where an instruction requires the result of an earlier instruction that has not yet completed write-back.
+\item \textbf{Control Hazard}: Dependencies where the next instruction address depends on the evaluation of a branch or jump in a subsequent stage.
 \end{enumerate}
 
-These dependencies generate hazardous behaviors of the pipelined processor due to the parallel execution of instructions which partially overlap. In the following some of them will be illustrated. Due to the fact that we used the Harvard abstract model for our toyRISC processor, main structural dependency are avoided. Therefore we concentrate only to the next two type of dependencies.
+These dependencies generate hazardous behaviors in the pipelined processor due to the temporal overlap of partially completed instructions.
 
-Structural dependencies are typically represented by those related to processor memory. In the case of our processor, toyRISC, they do not appear because we have an abstract model of the Harvard type with two memories, one for programs and another for data. Thus, in what follows, we will focus on the other two types of dependencies.
+\subsection{Structural Hazards and Hardware Replication}\label{sec:structural_hazards}
+\index{structural hazards!resource conflicts}\index{hardware replication!structural hazard mitigation}
+
+A \textbf{structural hazard} occurs when two or more overlapping instructions in the pipeline attempt to access the same physical hardware resource simultaneously. When a required hardware block cannot support all concurrent requests, one or more instructions must stall until the resource is freed, degrading processor throughput.
+
+\subsubsection{1. Pipelined Structural Hazards and Dedicated PC Adder Replication}
+In a non-pipelined, single-cycle computing system (such as the Harvard 5-OS core discussed in Chapter \ref{lect6a}), execution is strictly sequential. Consequently, a single arithmetic logic unit (ALU) can theoretically be time-multiplexed to perform both arithmetic computations and sequential program counter incrementing ($\text{pc} \leftarrow \text{pc} + 4$).
+
+In a pipelined processor, however, this time-multiplexing is impossible. On \textbf{every single clock cycle}, the Instruction Fetch (\texttt{IF}) stage must calculate the sequential next address ($\text{pc} + 4$) concurrently while the Execution (\texttt{EX}) stage evaluates an arithmetic instruction or computes a branch target ($\text{pc} + \text{offset}$). If the processor attempted to share a single ALU between \texttt{IF} and \texttt{EX}, a structural hazard would occur on every cycle, stalling instruction fetch whenever arithmetic was performed and halving throughput.
+
+To eliminate this structural hazard, pipelined organization mandates \textbf{hardware replication}:
+\begin{itemize}
+    \item \textbf{Dedicated Program Counter Adder}: The \texttt{IF} stage incorporates its own autonomous $+4$ incrementer (or $+1$ in word-addressed architectures) exclusively dedicated to sequential instruction pointer calculation.
+    \item \textbf{Dedicated Branch Target Adder}: A separate adder is provided in the \texttt{EX} (or \texttt{OF}) stage to compute relative branch offsets without contending with the primary integer ALU.
+    \item \textbf{Separate Instruction and Data Memories}: In von Neumann architectures with a single shared memory bus, a structural hazard arises whenever an instruction in \texttt{MEM} attempts to read/write data while \texttt{IF} attempts to fetch the next instruction. By utilizing the Harvard architecture with separate instruction and data memories (or dual-ported L1 caches), memory access conflicts are eliminated.
+    \item \textbf{Multi-Ported Register Files}: The register file must provide multiple independent read ports (at least two for binary operations in \texttt{OF}) and a concurrent write port in \texttt{WB} so that operand reading and result write-back do not create structural contention.
+\end{itemize}
+
+\subsubsection{2. Superscalar Structural Hazards and Execution Unit Replication}
+When the microarchitecture is expanded from a scalar pipeline (issuing 1 instruction per cycle) to a \textbf{superscalar} organization (issuing $N$ instructions per cycle), structural hazards multiply:
+\begin{itemize}
+    \item If two independent arithmetic instructions are issued simultaneously in the same cycle, a core with only one integer ALU suffers a structural stall.
+    \item If two memory operations (e.g., two loads, or a load and a store) are issued in parallel, they conflict unless the data cache provides multiple independent read/write ports.
+\end{itemize}
+To sustain high issue rates without structural stalls, superscalar processors replicate functional execution units:
+\begin{itemize}
+    \item Multiple symmetric integer ALUs (e.g., 2 to 4 ALUs operating in parallel).
+    \item Multiple Address Generation Units (AGUs) and dual-ported load/store queues.
+    \item Dedicated floating-point adders and multipliers separate from the integer datapath.
+    \item Highly multi-ported register files (requiring $2N$ read ports and $N$ write ports for an $N$-way superscalar core).
+\end{itemize}
+Where physical silicon area or routing complexity prevents full replication (e.g., hardware dividers or complex transcendental units), instructions targeting the shared unit must arbitrate, and subsequent instructions that require the busy unit experience a structural stall.
 
 \subsection{Data dependency\index{dependencies!data dependencies in pipelined processors}}
 
@@ -324,10 +386,48 @@ or
 
 
 
-The structure of the processor is modified as it is shown in Figure \ref{brDelRed}, where a new level in pipe is added and the operands at  ALU inputs are selected using multiplexers with additional inputs. The selection for the augmented multiplexors are computed combinational as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as operand in the EXECUTE state of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected the  inputs 1  or as {\tt result4} to the inputs 2 to the selection multiplexors at ALU operand inputs. The value of {\tt result3} is used to be forwarded when the dependency is identified with the result of the instructions issued in one clock cycle before the current one. The value of {\tt result4} is used to be forwarded when the dependency is identified with the result of the instructions issued in two clock cycles before the current one.
+The structure of the processor is modified as shown in Figure \ref{brDelRed}, where a new level in the pipeline is added and the operands at the ALU inputs are selected using multiplexers with additional inputs. The selection for the augmented multiplexers is computed combinationally as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as an operand in the EXECUTE stage of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected to inputs 1 or as {\tt result4} to inputs 2 of the selection multiplexers at the ALU operand inputs. The value of {\tt result3} is forwarded when the dependency is identified with the result of the instruction issued one clock cycle before the current one (EX hazard). The value of {\tt result4} is forwarded when the dependency is identified with the result of the instruction issued two clock cycles before the current one (MEM hazard).
+
+\paragraph{Forwarding Truth Table and Priority Logic}
+Table \ref{tab:forwarding_logic} summarizes the multiplexer selection codes and hazard conditions for both the left ($rs1$) and right ($rs2$) ALU operands. 
+
+When a register dependency occurs simultaneously across multiple preceding stages---for example, if both \texttt{PipeReg\_3} and \texttt{PipeReg\_4} write to the same register required by \texttt{PipeReg\_2}---the forwarding logic \textbf{must give priority} to \texttt{PipeReg\_3}. Forwarding from \texttt{PipeReg\_4} is only activated if no hazard is detected from \texttt{PipeReg\_3}. This priority rule ensures that the ALU always consumes the most recently generated value in program order.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{ALU Forwarding Logic and Multiplexer Selection Codes.}
+    \label{tab:forwarding_logic}
+    \small
+    \begin{tabular}{|c|c|l|c|l|}
+      \hline
+      \textbf{Operand} & \textbf{Selection} & \textbf{Hazard Condition} & \textbf{Multiplexer} & \textbf{Source Selected} \\ 
+                       & \textbf{Code}      &                           & \textbf{Input}       &                          \\ \hline \hline
+      Left ALU  & \texttt{opSel[3:2] = 00} & No hazard                                            & Input 0 & Register File (\texttt{rf[rs1]}) \\ \cline{2-5}
+      Operand   & \texttt{opSel[3:2] = 01} & \texttt{RegWrite\_3} $\land$ (\texttt{rd\_3 == rs1})  & Input 1 & \texttt{result3} (\texttt{PipeReg\_3}) \\ \cline{2-5}
+      ($rs1$)   & \texttt{opSel[3:2] = 10} & \texttt{RegWrite\_4} $\land$ (\texttt{rd\_4 == rs1})  & Input 2 & \texttt{result4} (\texttt{PipeReg\_4}) \\ 
+                &                          & $\land\ \neg$(\texttt{RegWrite\_3} $\land$ \texttt{rd\_3 == rs1}) & & \\ \hline \hline
+      Right ALU & \texttt{opSel[1:0] = 00} & No hazard                                            & Input 0 & Register File (\texttt{rf[rs2]}) \\ \cline{2-5}
+      Operand   & \texttt{opSel[1:0] = 01} & \texttt{RegWrite\_3} $\land$ (\texttt{rd\_3 == rs2})  & Input 1 & \texttt{result3} (\texttt{PipeReg\_3}) \\ \cline{2-5}
+      ($rs2$)   & \texttt{opSel[1:0] = 10} & \texttt{RegWrite\_4} $\land$ (\texttt{rd\_4 == rs2})  & Input 2 & \texttt{result4} (\texttt{PipeReg\_4}) \\ 
+                &                          & $\land\ \neg$(\texttt{RegWrite\_3} $\land$ \texttt{rd\_3 == rs2}) & & \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+Formally, the Boolean equations for generating the forwarding multiplexer controls for the left operand ($rs1$) are:
+\begin{align}
+\text{ForwardA}_{1} &= \texttt{RegWrite\_3} \land (\texttt{rd\_3 == rs1\_2}) \\
+\text{ForwardA}_{2} &= \texttt{RegWrite\_4} \land (\texttt{rd\_4 == rs1\_2}) \land \neg \text{ForwardA}_{1}
+\end{align}
+and symmetrically for the right operand ($rs2$):
+\begin{align}
+\text{ForwardB}_{1} &= \texttt{RegWrite\_3} \land (\texttt{rd\_3 == rs2\_2}) \\
+\text{ForwardB}_{2} &= \texttt{RegWrite\_4} \land (\texttt{rd\_4 == rs2\_2}) \land \neg \text{ForwardB}_{1}
+\end{align}
+In architectures where register 0 is hardwired to zero (such as RISC-V or MIPS), each hazard condition additionally verifies that $\texttt{rd} \neq 0$ so that writes targeting the constant zero register do not trigger spurious forwarding.
 
 \begin{exemplu}\label{dataDepSimulation}
-Data dependency  solved by using forwarding is exemplified starting from Example \ref{dataDepSimulation}:
+Data dependency solved by using forwarding is exemplified starting from Example \ref{dataDepSim}:
 \begin{verbatim}
             NOP         ;
             VAL(0,1)    ;
@@ -339,7 +439,7 @@ Data dependency  solved by using forwarding is exemplified starting from Example
             HALT        ;
             HALT        ;
 \end{verbatim}
-Now the processor behaves incorrectly without the aditional {\tt NOP}s, as follows:
+With forwarding enabled, the processor behaves correctly even without the additional {\tt NOP}s, as follows:
 \begin{verbatim}
 pc=   0  RF=[x, x, x, x, x, x, x, x]
 pc=   1  RF=[x, x, x, x, x, x, x, x]
@@ -658,7 +758,7 @@ is the simplest solution  which uses a two state automaton whose behavior is des
 This mechanism always mispredicts the last iteration and the first iteration of a loop branch, thus the accuracy for a loop with $N$ iterations is $(100 \times (N-2)/N)\%$. For large values of $N$ the accuracy of the prediction increases, while for small values this mechanism is not very efficient.
 
 
-\paragraph{Two-Bit Counter Based Predictor} is a two-state finite automaton. Its behavior is described in Figure \ref{2bp}. The advantage of the two-bit predictor over a one-bit predictor is that a conditional jump has to deviate twice from what it has done most in the past before the prediction changes. For example, a loop-closing conditional jump is mispredicted once rather than twice.
+\paragraph{Two-Bit Counter Based Predictor} is a four-state finite automaton. Its behavior is described in Figure \ref{2bp}. The advantage of the two-bit predictor over a one-bit predictor is that a conditional jump has to deviate twice from what it has done most in the past before the prediction changes. For example, a loop-closing conditional jump is mispredicted once rather than twice.
 
 Each state of the automaton is interpreted as follows:
 \begin{itemize}
@@ -670,8 +770,44 @@ Each state of the automaton is interpreted as follows:
 
 \placedrawing[H]{figures/05b_05_2bit_branch_predictor.lp}{Two-bit saturated counter based predictor.}{2bp}
 
+The automaton is a {\em saturated} 2-bit counter. It increments for {\tt actually taken} and decrements for {\tt actually not taken}. This predictor changes prediction only on two successive mispredictions.
 
-The automaton is a {\em saturated} 2-bit counter. It increments for {\tt actually taken} and decrements  for {\tt actually not taken}. This predictor changes prediction only on two successive mispredictions.
+\paragraph{Step-by-Step Comparison: 1-Bit vs. 2-Bit Predictor on a Loop}
+To concretely visualize why a two-bit counter outperforms a one-bit predictor, consider a loop branch that executes 4 iterations ($N = 4$) per invocation before exiting. The dynamic execution sequence of branch outcomes is therefore Taken (T), Taken (T), Taken (T), and Not Taken (NT).
+
+Table \ref{tab:branch_trace} traces two consecutive outer-loop invocations of this loop branch. We assume both predictors start in the Taken state after initial warmup (State 1 for the 1-bit predictor, State 11 / Strongly Taken for the 2-bit counter).
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Step-by-Step Trace of 1-Bit vs. 2-Bit Dynamic Branch Predictors on a 4-Iteration Loop.}
+    \label{tab:branch_trace}
+    \small
+    \begin{tabular}{|c|c||c|c|c||c|c|c|}
+      \hline
+      \textbf{Pass \&} & \textbf{Actual} & \multicolumn{3}{c||}{\textbf{1-Bit Predictor}} & \multicolumn{3}{c|}{\textbf{2-Bit Predictor}} \\ \cline{3-8}
+      \textbf{Iteration} & \textbf{Outcome} & \textbf{State} & \textbf{Pred} & \textbf{Correct?} & \textbf{State} & \textbf{Pred} & \textbf{Correct?} \\ \hline \hline
+      \multicolumn{8}{|l|}{\textit{First Loop Invocation:}} \\ \hline
+      Pass 1, Iter 1 & T  & 1 (T)  & T  & \checkmark (Yes) & 11 (ST) & T  & \checkmark (Yes) \\ \hline
+      Pass 1, Iter 2 & T  & 1 (T)  & T  & \checkmark (Yes) & 11 (ST) & T  & \checkmark (Yes) \\ \hline
+      Pass 1, Iter 3 & T  & 1 (T)  & T  & \checkmark (Yes) & 11 (ST) & T  & \checkmark (Yes) \\ \hline
+      Pass 1, Iter 4 & NT & 1 (T)  & T  & $\times$ \textbf{No (Mispred)} & 11 (ST) & T  & $\times$ \textbf{No (Mispred)} \\ \hline \hline
+      \multicolumn{8}{|l|}{\textit{Second Loop Invocation (Re-entering Loop):}} \\ \hline
+      Pass 2, Iter 1 & T  & 0 (NT) & NT & $\times$ \textbf{No (Mispred)} & 10 (WT) & T  & \checkmark \textbf{Yes (Correct!)} \\ \hline
+      Pass 2, Iter 2 & T  & 1 (T)  & T  & \checkmark (Yes) & 11 (ST) & T  & \checkmark (Yes) \\ \hline
+      Pass 2, Iter 3 & T  & 1 (T)  & T  & \checkmark (Yes) & 11 (ST) & T  & \checkmark (Yes) \\ \hline
+      Pass 2, Iter 4 & NT & 1 (T)  & T  & $\times$ \textbf{No (Mispred)} & 11 (ST) & T  & $\times$ \textbf{No (Mispred)} \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+As shown in Table \ref{tab:branch_trace}, the 1-bit predictor incurs \textbf{two mispredictions} per loop invocation:
+\begin{enumerate}
+    \item When the loop terminates on Iteration 4 (predicts T, actually NT), causing the state bit to flip from 1 to 0.
+    \item When the loop is re-entered on Pass 2, Iteration 1 (predicts NT based on the previous loop exit, but the branch is actually T), causing the state bit to flip back to 1.
+\end{enumerate}
+Consequently, for an $N$-iteration loop, the 1-bit predictor correctly predicts only $N-2$ branch occurrences, giving an accuracy of $(N-2)/N$. For $N = 4$, its steady-state accuracy is only $2/4 = 50\%$.
+
+In contrast, the 2-bit counter predictor incurs only \textbf{a single misprediction} upon loop exit. When the loop terminates on Iteration 4, the counter decrements from Strongly Taken (11) to Weakly Taken (10). Because the most significant bit remains 1, the predictor continues to predict Taken! When the loop re-executes on Pass 2, Iteration 1 is correctly predicted as Taken, and the counter immediately increments back to Strongly Taken (11). Its accuracy is $(N-1)/N$, which is $3/4 = 75\%$ for $N = 4$, and rises to $90\%$ for $N = 10$.
 
 \section{Programming Pipelined Processors}
 
@@ -877,28 +1013,77 @@ More at: \url{https://www.geeksforgeeks.org/ieee-standard-754-floating-point-num
 For the purpose we are pursuing, it is enough to understand that the operation with represented floating-point numbers involves a pipeline or a sequence of elementary operations of one clock cycle. The number of cycles will be different depending on the operation, minimum for addition and maximum for division.
 \end{comment}
 
-\subsubsection{Tomasulo's Algorithm\index{Tomasulo's algorithm:  is an algorithm for dynamic scheduling of instructions in out-of-order execution which enables more efficient use of multiple execution units}}\index{Tomasulo, Robert  (1934-2008): an American computer scientist, and the inventor of the Tomasulo algorithm}
+\subsubsection{Dynamic Scheduling with the Scoreboard (CDC 6600)}\label{sec:scoreboard}\index{Scoreboard!CDC 6600 dynamic scheduling}\index{Cray, Seymour (1925-1996)}
 
-The execution unit of a scalar processor has, in addition to the ALU for integers that we discussed, several units that perform operations with floating-point numbers (see Chapter \ref{floarReprezentation} in this book). For out-of-order execution, it is not enough to have a register file. Next to each execution unit, for integer or real, complex storage units called Resevation Stations (RS) will be added. Each recording in a RS has the following fields \citep{Patterson19}:
+The earliest dynamic scheduling technique for out-of-order execution was the \emph{Scoreboard}, invented by Seymour Cray for the Control Data Corporation (CDC) 6600 supercomputer in 1964. The CDC 6600 incorporated multiple independent functional units (floating-point adders, multipliers, a divider, shift units, and integer ALUs) operating in parallel. 
+
+The scoreboard is a centralized hardware control unit that maintains the status of all active instructions, functional units, and registers. It dynamically steers instruction progress through four execution stages:
+\begin{enumerate}
+    \item \textbf{Issue}: Decodes the instruction and checks for \textbf{structural hazards} and \textbf{WAW hazards} (output dependencies). If the required functional unit is busy, or if another previously issued instruction has the same destination register ($rd$), the instruction issue stage stalls. No subsequent instructions can issue until the hazard resolves.
+    \item \textbf{Read Operands}: Monitors \textbf{RAW hazards} (true data dependencies). An instruction remains in this stage until all of its source operands are available in the register file---meaning no currently active functional unit is computing a value destined for those registers. Once the operands are valid, the functional unit reads them directly from the register file.
+    \item \textbf{Execution}: The functional unit performs the requested operation over its required latency (e.g., 1 cycle for integer addition, 4 cycles for floating-point addition, 10 cycles for floating-point multiplication). When execution completes, the unit notifies the scoreboard.
+    \item \textbf{Write Result}: Checks for \textbf{WAR hazards} (anti-dependencies). Before a functional unit can write its result back to the register file, the scoreboard checks whether any earlier issued instruction has yet to read its source operand from this destination register. If such an instruction exists, the writeback stage stalls until the dependent instruction has completed its \textit{Read Operands} phase!
+\end{enumerate}
+
+Although the scoreboard achieved unprecedented performance for its time by enabling independent operations to complete out of order, it suffered from two key limitations:
 \begin{itemize}
-    \item Op—The operation to perform on source operands S1 and S2.
-\item Qj, Qk—The reservation stations that will produce the corresponding source
-operand; a value of zero indicates that the source operand is already available
-in Vj or Vk, or is unnecessary.
-\item Vj, Vk—The value of the source operands. Note that only one of the V fields or
-the Q field is valid for each operand. For loads, the Vk field is used to hold the
-offset field.
-\item A—Used to hold information for the memory address calculation for a load or
-store. Initially, the immediate field of the instruction is stored here; after the
-address calculation, the effective address is stored here.
-\item Busy—Indicates that this reservation station and its accompanying functional
-unit are occupied.
+    \item \textbf{WAR and WAW Stalls}: Because registers are referenced strictly by their architectural names without renaming, instructions must stall on both WAR and WAW hazards.
+    \item \textbf{Centralized Bottleneck}: All status tracking and hazard evaluations occur in a centralized scoreboard, restricting issue bandwidth and limiting scalability to deeply pipelined or wider-issue superscalar cores.
 \end{itemize}
-while the register file has a field, Qi:
+
+\subsubsection{Tomasulo's Algorithm and Dynamic Register Renaming (IBM 360/91)}\label{sec:tomasulo}\index{Tomasulo's algorithm: dynamic scheduling in out-of-order execution}\index{Tomasulo, Robert (1934-2008)}
+
+To overcome the performance bottlenecks of scoreboarding, Robert Tomasulo invented a dynamic scheduling algorithm at IBM in 1967 for the System/360 Model 91 floating-point unit. Tomasulo's algorithm introduces three revolutionary microarchitectural concepts:
+\begin{enumerate}
+    \item \textbf{Distributed Reservation Stations}: Instead of a centralized control structure, small storage buffers called \emph{Reservation Stations} (RS) are placed directly at the input of each functional unit. Instructions are dispatched immediately into an available reservation station, freeing the instruction issue logic to fetch and decode subsequent instructions.
+    \item \textbf{Dynamic Register Renaming}: Register specifiers are replaced by \emph{tags} identifying the reservation station that will produce the result. If a source operand is not yet available at issue time, the reservation station stores the tag of the producing unit rather than the operand value. Because operands are buffered and referenced by tags rather than architectural register names, \textbf{WAR and WAW hazards are completely eliminated without stalling}.
+    \item \textbf{Common Data Bus (CDB)}: Results are not written point-to-point into the register file. Instead, when a functional unit finishes, it broadcasts its reservation station tag along with the computed data over a shared broadcast bus called the \emph{Common Data Bus} (CDB). All reservation stations waiting for that tag snoop the bus and latch the result simultaneously, bypassing the register file entirely.
+\end{enumerate}
+
+Tomasulo's algorithm coordinates execution through three distinct phases:
+\begin{enumerate}
+    \item \textbf{Issue}: Checks for a structural hazard (is there a free reservation station for this instruction's functional unit type?). If a reservation station is free, the instruction is issued. If a source operand is already available in the register file, its value is copied directly into the reservation station's value field ($V_j$ or $V_k$). If the operand is currently being computed by another instruction, the tag of the producing reservation station is copied into the tag field ($Q_j$ or $Q_k$). Finally, the destination register in the register status table is updated to point to this reservation station ($Q_i$), dynamically renaming the register.
+    \item \textbf{Execute}: When all required source operands are available in the reservation station (i.e., $Q_j = 0$ and $Q_k = 0$), the functional unit begins execution. While waiting, the reservation station snoops the CDB on every cycle to capture pending values when their producing tags are broadcast, resolving \textbf{RAW hazards} dynamically.
+    \item \textbf{Write Result}: Upon completion, the functional unit broadcasts its result and tag over the CDB. Any reservation station waiting on that tag copies the value into its $V$ field and clears its $Q$ field. If the register status table indicates that this reservation station is still the latest producer for the destination register ($Q_i == \text{this RS}$), the register file is updated. Finally, the reservation station is marked free ($Busy = 0$).
+\end{enumerate}
+
+Each entry in a Reservation Station maintains the following status fields \citep{Patterson19}:
 \begin{itemize}
-    \item Qi—The number of the reservation station that contains the operation whose
-result should be stored into this register. If the value of Qi is blank (or 0), no currently active instruction is computing a result destined for this register, meaning that the value is simply the register contents.
+    \item \textbf{Op}: The operation to perform on source operands $S_1$ and $S_2$.
+    \item \textbf{Qj, Qk}: The reservation station tags that will produce the corresponding source operands; a value of zero indicates that the source operand is already available in $V_j$ or $V_k$, or is unnecessary.
+    \item \textbf{Vj, Vk}: The values of the source operands. Note that for each operand, only one of the $V$ field or $Q$ field is valid. For memory store instructions, $V_k$ holds the data value to be stored.
+    \item \textbf{A}: Holds memory address calculation information for load and store instructions. Initially, the immediate offset is stored here; after effective address calculation, the memory address is stored here.
+    \item \textbf{Busy}: A 1-bit flag indicating whether this reservation station and its functional unit are currently occupied.
 \end{itemize}
+
+Complementing the reservation stations, the processor's register file includes a register result status field, \textbf{Qi}:
+\begin{itemize}
+    \item \textbf{Qi}: The identifier of the reservation station producing the result to be stored into register $R_i$. If $Q_i = 0$ (or blank), no currently active instruction is writing to $R_i$, meaning the value stored in the register file is architecturally valid.
+\end{itemize}
+
+\subsubsection{Comparative Summary: Scoreboard vs. Tomasulo}\label{sec:ooo_comparison}
+
+Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational trade-offs between the CDC 6600 Scoreboard and the IBM 360/91 Tomasulo dynamic scheduling approaches.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Architectural Comparison of Dynamic Scheduling Approaches.}
+    \label{tab:scoreboard_vs_tomasulo}
+    \small
+    \begin{tabular}{|l|l|l|}
+      \hline
+      \textbf{Architectural Feature} & \textbf{CDC 6600 Scoreboard (1964)} & \textbf{IBM 360/91 Tomasulo (1967)} \\ \hline \hline
+      \textbf{Control Architecture}  & Centralized scoreboard unit          & Distributed reservation stations per FU \\ \hline
+      \textbf{Register Renaming}     & None (references architectural regs) & Dynamic renaming via RS tags and $Q_i$ \\ \hline
+      \textbf{RAW Hazard Handling}   & Stalls \textit{Read Operands} stage  & Snoops Common Data Bus (CDB) in RS \\ \hline
+      \textbf{WAR Hazard Handling}   & \textbf{Stalls} \textit{Write Result} stage & \textbf{Eliminated} by operand buffering \& tags \\ \hline
+      \textbf{WAW Hazard Handling}   & \textbf{Stalls} \textit{Issue} stage        & \textbf{Eliminated} by overwriting register $Q_i$ \\ \hline
+      \textbf{Result Routing}        & Point-to-point write to regfile      & Broadcast via Common Data Bus (CDB) \\ \hline
+      \textbf{Operand Buffering}     & In register file only                & In reservation station value fields ($V_j, V_k$) \\ \hline
+      \textbf{Hardware Overhead}     & Moderate centralized status tables   & High (associative tag comparators + CDB) \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
 
 \section{Problems}
 
@@ -924,6 +1109,113 @@ $\diamond$
 \begin{problem}
 Write, for the three versions of toyRISC,  the program which compute $10!$.
 
+$\diamond$
+\end{problem}
+
+\begin{problem}
+\textbf{Pipeline Speedup and Imbalance Analysis}:
+Consider an unpipelined processor where the major datapath operations have the following latencies:
+Instruction Fetch ($\text{IF}$) = $250\,\text{ps}$,
+Operand Fetch / Decode ($\text{OF}$) = $150\,\text{ps}$,
+Execute ($\text{EX}$) = $320\,\text{ps}$,
+Memory Access ($\text{MEM}$) = $380\,\text{ps}$,
+Write Back ($\text{WB}$) = $150\,\text{ps}$.
+Suppose the processor is partitioned into a 5-stage pipeline ($\text{IF}, \text{OF}, \text{EX}, \text{MEM}, \text{WB}$). Adding pipeline registers between each stage introduces a setup and clock-to-Q latch overhead of $t_{\text{reg}} = 30\,\text{ps}$ per stage.
+\begin{enumerate}
+    \item Determine the minimum clock period and operating frequency for both the unpipelined and pipelined processors.
+    \item Calculate the ideal speedup achieved by pipelining for an arbitrarily large number of instructions ($N \to \infty$), assuming zero hazard stalls.
+    \item Suppose that due to data load delays and branch mispredictions, dynamic execution incurs an average penalty of 0.25 stall cycles per instruction. What is the actual speedup achieved over the unpipelined core?
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item For the unpipelined processor, an instruction executes sequentially through all five functional blocks in a single clock cycle:
+    \[
+    T_{\text{unpipe}} = 250 + 150 + 320 + 380 + 150 = 1250\,\text{ps} \quad (f_{\text{unpipe}} = 800\,\text{MHz})
+    \]
+    For the 5-stage pipelined processor, the clock cycle is limited by the critical path of the slowest (bottleneck) stage plus the pipeline register overhead:
+    \[
+    T_{\text{pipe}} = \max(250, 150, 320, 380, 150) + t_{\text{reg}} = 380\,\text{ps} + 30\,\text{ps} = 410\,\text{ps} \quad (f_{\text{pipe}} \approx 2.439\,\text{GHz})
+    \]
+    \item Under ideal conditions with no stalls, the pipelined processor retires 1 instruction per cycle ($\text{CPI}_{\text{pipe}} = 1.0$), while the unpipelined processor executes 1 instruction per cycle with clock period $T_{\text{unpipe}}$ ($\text{CPI}_{\text{unpipe}} = 1.0$). The ideal speedup is:
+    \[
+    S_{\text{ideal}} = \frac{T_{\text{unpipe}}}{T_{\text{pipe}}} = \frac{1250\,\text{ps}}{410\,\text{ps}} \approx 3.049\times
+    \]
+    Notice that the speedup is significantly less than the number of stages ($k = 5$) due to stage imbalance (the $380\,\text{ps}$ MEM stage vs. $150\,\text{ps}$ stages) and register overhead ($30\,\text{ps}$).
+    \item With $0.25$ stall cycles per instruction, the average CPI of the pipelined processor increases to $\text{CPI}_{\text{actual}} = 1.0 + 0.25 = 1.25$. The actual speedup becomes:
+    \[
+    S_{\text{actual}} = \frac{\text{CPI}_{\text{unpipe}} \times T_{\text{unpipe}}}{\text{CPI}_{\text{actual}} \times T_{\text{pipe}}} = \frac{1.0 \times 1250\,\text{ps}}{1.25 \times 410\,\text{ps}} = \frac{1250}{512.5} \approx 2.439\times
+    \]
+\end{enumerate}
+$\diamond$
+\end{problem}
+
+\begin{problem}
+\textbf{Forwarding Unit Hazard Equations and Priority}:
+In the pipelined toyRISC processor with forwarding, the Execute stage ($\text{EX}$) receives operands selected from the register file, from \texttt{PipeReg\_3} (holding the result of the instruction issued 1 cycle earlier), or from \texttt{PipeReg\_4} (holding the result of the instruction issued 2 cycles earlier).
+\begin{enumerate}
+    \item Specify the Boolean logic expressions for selecting the left ALU operand multiplexer control signals ($\text{ForwardA}$).
+    \item Consider the following assembly code snippet:
+\begin{verbatim}
+    ADD(1, 2, 3)  ;   // rf[1] <= rf[2] + rf[3]
+    ADD(1, 4, 5)  ;   // rf[1] <= rf[4] + rf[5]
+    SUB(6, 1, 7)  ;   // rf[6] <= rf[1] - rf[7]
+\end{verbatim}
+Trace the contents of \texttt{PipeReg\_3}, \texttt{PipeReg\_4}, and \texttt{PipeReg\_2} when \texttt{SUB} enters the Execute stage. Explain why a naive forwarding unit that checks \texttt{PipeReg\_4} without masking by \texttt{PipeReg\_3} would produce an erroneous architectural result.
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item Let $\text{ForwardA} = 01$ select \texttt{result3} from \texttt{PipeReg\_3}, $\text{ForwardA} = 10$ select \texttt{result4} from \texttt{PipeReg\_4}, and $\text{ForwardA} = 00$ select the register file output. The Boolean conditions are:
+    \begin{align*}
+    \text{ForwardA}_{01} &= \texttt{RegWrite\_3} \land (\texttt{rd\_3 == rs1\_2}) \\
+    \text{ForwardA}_{10} &= \texttt{RegWrite\_4} \land (\texttt{rd\_4 == rs1\_2}) \land \neg(\texttt{RegWrite\_3} \land (\texttt{rd\_3 == rs1\_2}))
+    \end{align*}
+    \item When \texttt{SUB(6,1,7)} reaches the Execute stage:
+    \begin{itemize}
+        \item \texttt{PipeReg\_2} holds \texttt{SUB(6,1,7)} with source register $\texttt{rs1} = 1$.
+        \item \texttt{PipeReg\_3} holds the second \texttt{ADD(1,4,5)} with destination register $\texttt{rd} = 1$.
+        \item \texttt{PipeReg\_4} holds the first \texttt{ADD(1,2,3)} with destination register $\texttt{rd} = 1$.
+    \end{itemize}
+    Both \texttt{PipeReg\_3} and \texttt{PipeReg\_4} have $\texttt{rd} = 1$, matching $\texttt{rs1} = 1$. However, in program order, the second instruction (\texttt{ADD(1,4,5)}) overwrote the value computed by the first. If the hardware does not prioritize \texttt{PipeReg\_3} over \texttt{PipeReg\_4}, the forwarding unit might select the stale result from the older instruction in \texttt{PipeReg\_4}, violating RAW data integrity. Masking the \texttt{PipeReg\_4} condition with $\neg(\texttt{RegWrite\_3} \land (\texttt{rd\_3 == rs1\_2}))$ guarantees that the newest program value is always consumed.
+\end{enumerate}
+$\diamond$
+\end{problem}
+
+\begin{problem}
+\textbf{Branch Predictor Performance and CPI Penalty}:
+A pipelined processor executes a dynamic benchmark where 20\% of all executed instructions are conditional branches. Due to the branch resolution latency in the pipeline, each mispredicted branch incurs a 3-cycle flush penalty, whereas a correctly predicted branch incurs 0 penalty cycles.
+Assume that 70\% of all executed conditional branches are taken in practice.
+\begin{enumerate}
+    \item Calculate the effective CPI (assuming ideal $\text{CPI}_{\text{base}} = 1.0$) for a static branch predictor that predicts Always Not Taken.
+    \item Calculate the effective CPI for a 1-bit dynamic predictor that achieves an 82\% prediction accuracy on this workload.
+    \item Calculate the effective CPI for a 2-bit saturating counter dynamic predictor that achieves a 93\% prediction accuracy.
+    \item What is the percentage speedup of the 2-bit predictor over the static Always Not Taken predictor?
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item The general formula for CPI including branch misprediction penalty is:
+    \[
+    \text{CPI} = \text{CPI}_{\text{base}} + (\text{Branch Frequency}) \times (\text{Misprediction Rate}) \times (\text{Penalty})
+    \]
+    For the static Always Not Taken predictor, every branch that is actually taken is mispredicted. Since 70\% of branches are taken, the misprediction rate is $0.70$:
+    \[
+    \text{CPI}_{\text{static}} = 1.0 + 0.20 \times 0.70 \times 3 = 1.0 + 0.420 = 1.420
+    \]
+    \item For the 1-bit dynamic predictor with 82\% accuracy, the misprediction rate is $1.0 - 0.82 = 0.18$ (18\%):
+    \[
+    \text{CPI}_{\text{1-bit}} = 1.0 + 0.20 \times 0.18 \times 3 = 1.0 + 0.108 = 1.108
+    \]
+    \item For the 2-bit saturating counter predictor with 93\% accuracy, the misprediction rate is $1.0 - 0.93 = 0.07$ (7\%):
+    \[
+    \text{CPI}_{\text{2-bit}} = 1.0 + 0.20 \times 0.07 \times 3 = 1.0 + 0.042 = 1.042
+    \]
+    \item The execution speedup of the 2-bit predictor over the static Always Not Taken predictor is:
+    \[
+    \text{Speedup} = \frac{\text{CPI}_{\text{static}}}{\text{CPI}_{\text{2-bit}}} = \frac{1.420}{1.042} \approx 1.3628 \implies \mathbf{36.3\% \text{ speedup}}
+    \]
+\end{enumerate}
 $\diamond$
 \end{problem}
 

@@ -18,7 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Refactored `RALU.scala` ALU multiplexing from `switch` to `MuxCase`, conforming with textbook architectural guidelines.
 
 ### Added
-- **RISC-V Processor Architecture, Implementation & Verification (Chapter 18)**:
+- **Performance Optimized Organization: Pipelining and ILP (Chapter 16)**:
+  - Renamed `Latex/04_16_ILP.tex` to `Latex/04_16_Performance_Optimized_Organization.tex` and updated master inclusion in `Latex/00_main.tex`.
+  - Added introductory pedagogical bridge connecting gate-level logic optimizations (Chapter 15) to microarchitectural system organization (Chapter 16).
+  - Formalized processor performance equations ($\text{Execution Time} = \text{IC} \times \text{CPI} \times T_{clock}$), pipeline CPI degradation under stalls, and speedup formulas.
+  - Detailed barrel multithreading microarchitectural principles, explaining how $N = 4$ round-robin interleaved threads across the $k = 4$ stage toyRISC pipeline structurally guarantee zero hazards without stalls or forwarding multiplexers.
+  - Authored Section 16.3.1 analyzing structural hazards and mandatory hardware replication (dedicated PC incrementer in IF vs ALU, Harvard memory ports, multi-ported register files, superscalar ALU/AGU replication).
+  - Integrated Table 16.3 and Boolean equations for ALU operand forwarding controls, establishing the essential priority rule for back-to-back hazards.
+  - Corrected 2-bit counter description to a 4-state automaton and added step-by-step trace Table 16.5 comparing 1-bit vs 2-bit dynamic branch predictors on loops, illustrating the elimination of the loop re-entry misprediction penalty ($(N-1)/N$ vs $(N-2)/N$).
+  - Authored Section 16.5 expansions on dynamic scheduling: Seymour Cray's CDC 6600 Scoreboard (4 stages, stalls on WAR/WAW) and Robert Tomasulo's IBM 360/91 algorithm (3 stages, distributed reservation stations, dynamic register renaming, Common Data Bus broadcast), along with architectural comparison Table 16.6.
+  - Added analytical Problems 16.5 (Pipeline Speedup and Imbalance Analysis), 16.6 (Forwarding Unit Hazard Equations and Priority), and 16.7 (Branch Predictor Performance and CPI Penalty) complete with step-by-step worked mathematical solutions.
+- **The RISC-V Processor: Architecture, Implementation, and Verification (Chapter 18)**:
   - Authored and integrated Chapter 18 (`04_18_1_RISCV.tex`) into Part IV ("Practical Designs") of the textbook, alongside empty placeholder `04_18_2_RISCV_pipelined.tex` in `Latex/00_main.tex`.
   - Detailed the RISC-V RV32I base integer ISA with the `Zmmul` hardware multiplication extension, the Harvard 5-OS hardware composition and 5-function Fetch-Execute microarchitecture, and pure Chisel/Scala verification methodology using `EphemeralSimulator`.
   - Documented 100% pass verification results across all 42 official RISC-V architectural test suites (`riscv-arch-test`) with bit-exact signature matches against Spike golden reference models and updated test results table formatting to fit margins cleanly.

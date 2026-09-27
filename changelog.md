@@ -1,3 +1,13 @@
+# 09/27/2026 06:15 Performance Optimized Organization (Chapter 16) Enhancement
+* **Chapter Renaming (`Latex/04_16_Performance_Optimized_Organization.tex`)**: Renamed `04_16_ILP.tex` to `04_16_Performance_Optimized_Organization.tex` and updated `Latex/00_main.tex`.
+* **Pedagogical Framing & Performance Equations**: Connected Chapter 15 gate-level logic optimization to Chapter 16 microarchitectural organization; formalized processor iron law ($\text{Execution Time} = \text{IC} \times \text{CPI} \times T_{clock}$), pipeline stalls, and speedup formulas.
+* **Interleaved/Barrel Multithreading Analysis**: Foreshadowed $N = 4$ round-robin interleaved barrel multithreading matching the $k = 4$ stage toyRISC pipeline, structurally guaranteeing zero hazards without stalls or forwarding multiplexers.
+* **Structural Hazards & Hardware Replication (Section 16.3.1)**: Added rigorous treatment of resource contention and hardware duplication, contrasting dedicated PC incrementers (+4) and Harvard memory ports in basic pipelines with multiple ALUs, AGUs, and multi-ported register files in superscalar cores.
+* **Forwarding Logic Table & Priority Equations**: Added Table 16.3 and Boolean equations for `ForwardA` and `ForwardB` multiplexer selection, formalizing the imperative priority rule when back-to-back instructions target the same register.
+* **1-Bit vs. 2-Bit Branch Prediction Trace Table**: Corrected 2-bit counter description to a 4-state automaton and added step-by-step trace Table 16.5 comparing 1-bit vs 2-bit dynamic predictors on a 4-iteration loop, showing why 2-bit counters eliminate loop re-entry mispredictions ($(N-1)/N$ vs $(N-2)/N$).
+* **Out-of-Order Execution (Scoreboard vs. Tomasulo)**: Authored comprehensive treatment of dynamic scheduling with Seymour Cray's CDC 6600 centralized Scoreboard (4 stages, stalls on WAR/WAW) and Robert Tomasulo's IBM 360/91 algorithm (3 stages, distributed reservation stations, dynamic register renaming eliminating WAR/WAW, Common Data Bus broadcast), accompanied by architectural comparison Table 16.6.
+* **Analytical Practice Problems with Worked Solutions**: Added Problems 16.5 (Pipeline Speedup and Imbalance Analysis), 16.6 (Forwarding Unit Hazard Equations and Priority), and 16.7 (Branch Predictor Performance and CPI Penalty) complete with step-by-step worked mathematical solutions.
+
 # 09/27/2026 05:40 RISC-V Processor Architecture, Verification & Chapter Structure Refinement
 
 * **RISC-V Chapter 18 Structure (`Latex/04_18_1_RISCV.tex` & `Latex/04_18_2_RISCV_pipelined.tex`)**: Renamed Chapter 18 single-cycle document to `04_18_1_RISCV.tex` and created `04_18_2_RISCV_pipelined.tex` as a pipelined implementation placeholder, both included in `Latex/00_main.tex`.
