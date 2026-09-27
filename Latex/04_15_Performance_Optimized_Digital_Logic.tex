@@ -137,7 +137,7 @@ C_{i+1} &= (A_i \cdot B_i) + (B_i \cdot C_i) + (A_i \cdot C_i)
 \end{align}
 Crucially, the carry bit $C_{i+1}$ is not forwarded to the adjacent bit cell in the same stage; instead, it is output alongside the sum bit. Thus, adding three $N$-bit numbers produces two $N$-bit results (a partial sum vector and a shifted carry vector) with a delay of only \textit{one full adder} ($O(1)$), completely independent of the operand width $N$.
 
-Carry-save adders are interconnected in tree structures—most notably the Wallace tree \cite{wallace1964} and Dadda tree \cite{dadda1965}—to reduce $K$ partial products down to two vectors in $O(\log_{1.5} K)$ levels of logic. Only in the final stage is a fast two-operand adder (such as a CLA or Kogge-Stone adder) used to merge the carry and sum vectors into a final binary result.
+Carry-save adders are interconnected in tree structures to reduce $K$ partial products down to two vectors in $O(\log_{1.5} K)$ levels of logic, as exemplified by the Wallace tree and Dadda tree networks \cite{wallace1964, dadda1965}. Only in the final stage is a fast two-operand adder (such as a CLA or Kogge-Stone adder) used to merge the carry and sum vectors into a final binary result.
 
 \subsection{Parallel Prefix Adders: Kogge-Stone Adder} \label{sec:kogge-stone-adder}
 Parallel prefix adders treat carry computation as a general prefix problem. Binary addition is decomposed into three distinct phases:
@@ -151,7 +151,7 @@ Parallel prefix adders treat carry computation as a general prefix problem. Bina
     \item \textbf{Post-computation}: Compute final sum bits using the evaluated carries: $S_i = p_i \oplus C_i$.
 \end{enumerate}
 
-The \textbf{Kogge-Stone Adder} \cite{kogge1973parallel} is the most prominent parallel prefix topology, optimized for minimum logic depth. It computes carries in $\lceil \log_2 N \rceil$ stages with a uniform fan-out of 2 at each stage. This makes it one of the fastest adder architectures known for 32-bit, 64-bit, and 128-bit integer units. However, this speed comes at the expense of high wiring density and area: Kogge-Stone requires $O(N \log_2 N)$ prefix operator cells and a large number of routing tracks.
+The \textbf{Kogge-Stone Adder} is the most prominent parallel prefix topology, optimized for minimum logic depth \cite{kogge1973parallel}. It computes carries in $\lceil \log_2 N \rceil$ stages with a uniform fan-out of 2 at each stage. This makes it one of the fastest adder architectures known for 32-bit, 64-bit, and 128-bit integer units. However, this speed comes at the expense of high wiring density and area: Kogge-Stone requires $O(N \log_2 N)$ prefix operator cells and a large number of routing tracks.
 
 \subsubsection{Comparison of High-Performance Adder Architectures}
 Table \ref{tab:adder_comparison} summarizes the asymptotic delay, area, fan-out, and routing complexity of the major adder architectures.

@@ -36,7 +36,7 @@ In a modern out-of-order superscalar processor, only a tiny fraction of total di
 When executing an 8-bit or 16-bit arithmetic operation, a general-purpose CPU may expend several nanojoules of energy in control overhead just to deliver a few picojoules of actual arithmetic computation.
 
 \subsection{Domain-Specific Architectures (DSAs) and Amdahl's Law}
-As recognized by John L. Hennessy and David A. Patterson in their ACM Turing Lecture \citep{hennessy2019new}, the primary path forward for computer architecture is the development of \textbf{Domain-Specific Architectures (DSAs)}. Rather than attempting to accelerate all arbitrary software workloads equally, a DSA tailors its instruction set architecture, register storage, and memory dataflow to a specific class of computational problems (such as scientific computing, vector processing, digital signal processing, or neural network inference).
+The primary path forward for computer architecture in the post-scaling era is the development of \textbf{Domain-Specific Architectures (DSAs)}, as recognized in the ACM Turing Lecture by John L. Hennessy and David A. Patterson \cite{hennessy2019new}. Rather than attempting to accelerate all arbitrary software workloads equally, a DSA tailors its instruction set architecture, register storage, and memory dataflow to a specific class of computational problems (such as scientific computing, vector processing, digital signal processing, or neural network inference).
 
 By specializing the hardware architecture to the domain:
 \begin{itemize}
@@ -52,7 +52,7 @@ According to \textbf{Amdahl's Law}, the overall speedup achieved by an accelerat
 where $f$ is the fraction of total execution time spent in the specialized computational kernel. Consequently, practical modern systems are organized as \textbf{heterogeneous architectures}, coupling an efficient general-purpose host CPU (managing operating system tasks, I/O, and irregular serial code) with one or more specialized domain accelerators.
 
 \subsection{Framing DSAs via the RISC-V Modular Architecture}
-The open-standard \textbf{RISC-V} architecture \citep{asanovic2014instruction, riscv-spec} provides the ideal academic and industrial vehicle for exploring domain-specific architectures. Rather than enforcing an immutable monolithic instruction set, RISC-V is architected from first principles as:
+The open-standard \textbf{RISC-V} architecture provides an ideal academic and industrial foundation for exploring domain-specific accelerators and modular ISA extensions \cite{asanovic2014instruction, riscv-spec}. Rather than enforcing an immutable monolithic instruction set, RISC-V is architected from first principles as:
 \begin{enumerate}
     \item A frozen, ultra-minimalist base integer instruction set (\texttt{RV32I} or \texttt{RV64I}) consisting of just 40 instructions.
     \item A library of standard, orthogonal extensions tailored to distinct computational domains:
@@ -81,7 +81,7 @@ Unlike fixed-point integer arithmetic, IEEE 754 floating-point numbers represent
 \end{itemize}
 
 \subsection{The RISC-V Floating-Point Architecture (`F' and `D')}
-In the RISC-V ISA \citep{riscv-spec}, floating-point capability is added through the standard extensions:
+In the RISC-V architecture, floating-point capability is standardized through dedicated modular extensions \cite{riscv-spec}:
 \begin{itemize}
     \item \textbf{RV32F / RV64F}: Single-precision (32-bit) IEEE 754 floating-point.
     \item \textbf{RV32D / RV64D}: Double-precision (64-bit) IEEE 754 floating-point.
@@ -120,7 +120,7 @@ Many scientific, machine learning, multimedia, and graphics algorithms exhibit m
 Historically, computer architects developed two distinct approaches to exploit data-level parallelism:
 
 \subsubsection{1. Fixed-Width Packed SIMD (MMX, SSE, AVX, NEON)}
-In the late 1990s, general-purpose microprocessor vendors introduced packed Single Instruction, Multiple Data (SIMD) extensions \citep{conte1996simd, firasta2008intel}:
+To accelerate multimedia and signal processing, general-purpose microprocessors introduced packed Single Instruction, Multiple Data (SIMD) extensions in the late 1990s \cite{conte1996simd, firasta2008intel}:
 \begin{itemize}
     \item Standard integer registers (or newly added SIMD registers) were partitioned into fixed-width sub-words. For example, a 128-bit register was partitioned into four 32-bit integers, with a single opcode instructing four parallel ALUs to perform four simultaneous additions.
     \item \textbf{Architectural Flaws of Packed SIMD}:
@@ -132,10 +132,10 @@ In the late 1990s, general-purpose microprocessor vendors introduced packed Sing
 \end{itemize}
 
 \subsubsection{2. True Scalable Vector Architectures (Cray-1 to RVV)}
-Pioneered by Seymour Cray in the **CRAY-1** supercomputer in 1976 \citep{cray1978cray1}, true vector architectures operate on deep vectors of configurable length using vector registers and pipelined execution lanes:
+True vector architectures operate on deep vectors of configurable length using vector registers and pipelined execution lanes, a paradigm pioneered in the landmark CRAY-1 supercomputer \cite{cray1978cray1}:
 \begin{itemize}
     \item The instruction specifies operations on entire one-dimensional mathematical vectors, leaving the hardware free to execute the vector across whatever physical width (lanes) the silicon budget permits.
-    \item Modern vector architecture is embodied in the **RISC-V Vector Extension (RVV)** \citep{riscv-spec}, which adopts a **Vector-Length Agnostic (VLA)** design.
+    \item Modern vector architecture is embodied in the \textbf{RISC-V Vector Extension (RVV)}, which adopts a scalable \textbf{Vector-Length Agnostic (VLA)} design \cite{riscv-spec}.
 \end{itemize}
 
 \subsection{The RISC-V Vector Extension (RVV) Architecture}
@@ -175,7 +175,7 @@ loop:
 This exact binary code runs unmodified on any hardware implementation—whether a low-power core with a 128-bit vector datapath or a high-performance datacenter processor with 1024-bit vector registers—always operating at 100\% hardware efficiency without a single scalar cleanup instruction!
 
 \subsection{Vector Execution Lanes and Memory Operations}
-To execute vector instructions efficiently, a vector core partitions its datapath into parallel **lanes**, as shown in Figure \ref{fig:vector_lanes}:
+To execute vector instructions efficiently, a vector core partitions its datapath into parallel \textbf{lanes}, as shown in Figure \ref{fig:vector_lanes}:
 \begin{figure}[htbp]
   \begin{center}
     \small
@@ -202,17 +202,17 @@ RVV supports three fundamental classes of vector memory access:
 \section{Graphics Processing Units (GPUs) and Massively Parallel SIMT}\label{sec:gpu_simt}
 \index{graphics processing unit (GPU)}\index{single instruction, multiple threads (SIMT)}\index{warp}\index{branch divergence}
 
-While vector architectures exploit data-level parallelism through a single thread issuing wide vector instructions, **Graphics Processing Units (GPUs)** take a distinct architectural path: **Single Instruction, Multiple Threads (SIMT)** \citep{owens2008gpu}.
+While vector architectures exploit data-level parallelism through a single thread issuing wide vector instructions, \textbf{Graphics Processing Units (GPUs)} take a distinct architectural path based on \textbf{Single Instruction, Multiple Threads (SIMT)} \cite{owens2008gpu}.
 
 \subsection{SIMD vs. SIMT Programming Models}
 \begin{itemize}
-    \item In **SIMD/Vector**, the programmer writes code that explicitly manipulates vector registers containing multiple data elements.
-    \item In **SIMT**, the programmer writes scalar code designed to execute on a \emph{single thread}. The hardware then spawns thousands of concurrent threads and groups them into lockstep bundles called **warps** (in NVIDIA terminology) or **wavefronts** (in AMD terminology), typically 32 threads wide.
+    \item In \textbf{SIMD/Vector}, the programmer writes code that explicitly manipulates vector registers containing multiple data elements.
+    \item In \textbf{SIMT}, the programmer writes scalar code designed to execute on a \emph{single thread}. The hardware then spawns thousands of concurrent threads and groups them into lockstep bundles called \textbf{warps} (in NVIDIA terminology) or \textbf{wavefronts} (in AMD terminology), typically 32 threads wide.
 \end{itemize}
 A single instruction fetch and decode unit broadcasts a common instruction across all 32 execution units in the warp, achieving SIMD-like execution density while presenting a scalar thread programming interface to software.
 
 \subsection{Hiding Latency Through Massive Thread Scheduling}
-Unlike CPUs, which allocate massive silicon area to deep out-of-order execution windows, multi-level branch predictors, and large caches to minimize instruction latency, GPUs are fundamentally **latency-hiding, throughput-oriented engines**:
+Unlike CPUs, which allocate massive silicon area to deep out-of-order execution windows, multi-level branch predictors, and large caches to minimize instruction latency, GPUs are fundamentally \textbf{latency-hiding, throughput-oriented engines}:
 \begin{itemize}
     \item A GPU core maintains dozens of warps (thousands of active threads) in hardware simultaneously, with their full architectural state held in an immense register file (often $256\,\text{KB}$ per Streaming Multiprocessor).
     \item When Warp 0 initiates an off-chip global memory read that will take 400 clock cycles to complete, the warp scheduler does not stall the pipeline. It immediately switches in \textbf{zero clock cycles} to Warp 1, Warp 2, or Warp 3.
@@ -220,7 +220,7 @@ Unlike CPUs, which allocate massive silicon area to deep out-of-order execution 
 \end{itemize}
 
 \subsection{The Challenge of Branch Divergence}
-The major vulnerability of the SIMT model is **branch divergence**:
+The major vulnerability of the SIMT model is \textbf{branch divergence}:
 \begin{verbatim}
     if (threadIdx.x < 16) {
         // Path A
@@ -240,22 +240,22 @@ When different threads within the same 32-thread warp evaluate a conditional bra
 During branch divergence, execution throughput drops by 50\% or more, illustrating why GPUs achieve maximum efficiency on uniform, regular compute kernels.
 
 \subsection{Open-Source RISC-V GPGPU Architectures}
-The principles of SIMT execution have recently been applied to open-source hardware through architectures such as **Vortex**, a RISC-V GPGPU. Vortex augments the base RISC-V ISA with hardware warp scheduling, SIMT stack convergence instructions, and high-bandwidth shared scratchpad memories, enabling native execution of OpenCL and Vulkan compute workloads on an open-standard RISC-V foundation.
+The principles of SIMT execution have recently been applied to open-source hardware through architectures such as \textbf{Vortex}, a RISC-V GPGPU. Vortex augments the base RISC-V ISA with hardware warp scheduling, SIMT stack convergence instructions, and high-bandwidth shared scratchpad memories, enabling native execution of OpenCL and Vulkan compute workloads on an open-standard RISC-V foundation.
 
 
 \section{Digital Signal Processors (DSPs) and Embedded Compute}\label{sec:dsp_architecture}
 \index{digital signal processor (DSP)}\index{fixed-point arithmetic}\index{multiply-accumulate (MAC)}\index{saturating arithmetic}\index{RISC-V!packed SIMD (P)}
 
-Digital Signal Processors (DSPs) represent one of the earliest and most successful classes of domain-specific architectures \citep{eyre2000evolution}. Tailored for real-time streaming data—such as telecommunications (5G/LTE physical layers), audio processing, radar, and sensor telemetry—DSPs optimize for continuous, deterministic mathematical transformations.
+Digital Signal Processors (DSPs) represent one of the earliest and most successful classes of domain-specific architectures \cite{eyre2000evolution}. Tailored for real-time streaming data—such as telecommunications (5G/LTE physical layers), audio processing, radar, and sensor telemetry—DSPs optimize for continuous, deterministic mathematical transformations.
 
 \subsection{Characteristics of Signal Processing Workloads}
 Signal processing kernels are dominated by two mathematical operations:
 \begin{enumerate}
-    \item **Finite Impulse Response (FIR) Convolution and Correlation**:
+    \item \textbf{Finite Impulse Response (FIR) Convolution and Correlation}:
     \begin{equation}
     y[n] = \sum_{k=0}^{M-1} h[k] \cdot x[n-k]
     \end{equation}
-    \item **Fast Fourier Transforms (FFT)**: Decomposing time-domain signals into frequency spectra via recursive butterfly computations:
+    \item \textbf{Fast Fourier Transforms (FFT)}: Decomposing time-domain signals into frequency spectra via recursive butterfly computations:
     \begin{equation}
     X[k] = A + W_N^k \cdot B
     \end{equation}
@@ -263,7 +263,7 @@ Signal processing kernels are dominated by two mathematical operations:
 Both kernels require millions of back-to-back \textbf{Multiply-Accumulate (MAC)} operations executed on continuous data streams.
 
 \subsection{Fixed-Point Arithmetic and the $Q$-Format}
-While scientific simulations rely on floating-point arithmetic, embedded real-time signal processing historically avoided floating-point due to silicon area, latency, and power constraints. Instead, DSPs utilize **fixed-point arithmetic**, typically formatted as $Q$-numbers:
+While scientific simulations rely on floating-point arithmetic, embedded real-time signal processing historically avoided floating-point due to silicon area, latency, and power constraints. Instead, DSPs utilize \textbf{fixed-point arithmetic}, typically formatted as $Q$-numbers:
 \begin{itemize}
     \item A signed $Q1.15$ number represents a fractional value in the range $[-1.0, +1.0 - 2^{-15}]$ using a 16-bit two's complement integer, where the most significant bit is the sign bit and the remaining 15 bits represent fractional binary digits ($2^{-1}, 2^{-2}, \dots, 2^{-15}$).
     \item When two $Q1.15$ numbers are multiplied, the product is a 32-bit $Q2.30$ number, which must be shifted left by 1 bit to restore the $Q1.31$ format.
@@ -280,7 +280,7 @@ To execute real-time signal processing with maximum efficiency, DSP architecture
 \end{enumerate}
 
 \subsection{The RISC-V Packed-SIMD / DSP Extension (`P')}
-In modern RISC-V systems, DSP capability is integrated via the standard **`P' Extension (Packed-SIMD)**. Rather than introducing distinct DSP registers, the `P` extension partitions existing 32-bit or 64-bit general-purpose integer registers into parallel sub-word vectors (e.g., dual 16-bit or quad 8-bit integers). It provides single-cycle saturating addition, fractional multiplication, and dual-MAC instructions, delivering high-performance audio and communications processing on low-power embedded cores without the silicon area cost of a dedicated vector unit.
+In modern RISC-V systems, DSP capability is integrated via the standard \textbf{`P' Extension (Packed-SIMD)}. Rather than introducing distinct DSP registers, the `P` extension partitions existing 32-bit or 64-bit general-purpose integer registers into parallel sub-word vectors (e.g., dual 16-bit or quad 8-bit integers). It provides single-cycle saturating addition, fractional multiplication, and dual-MAC instructions, delivering high-performance audio and communications processing on low-power embedded cores without the silicon area cost of a dedicated vector unit.
 
 
 \section{Tensor and Matrix Processors for Artificial Intelligence}\label{sec:tensor_matrix_processors}
@@ -289,16 +289,16 @@ In modern RISC-V systems, DSP capability is integrated via the standard **`P' Ex
 In the 2010s, the explosive emergence of deep learning transformed computer architecture. Deep neural networks (convolutional networks, Transformers, and Large Language Models) exhibit compute requirements that dwarf traditional software workloads, growing at over $5\times$ to $10\times$ per year.
 
 \subsection{Mathematical Core: General Matrix Multiply (GEMM)}
-Over 90\% of the computational effort in modern neural network training and inference consists of **General Matrix Multiply (GEMM)** operations:
+Over 90\% of the computational effort in modern neural network training and inference consists of \textbf{General Matrix Multiply (GEMM)} operations:
 \begin{equation}
 C = \alpha (A \times B) + \beta C
 \end{equation}
-Multiplying two $N \times N$ matrices requires $O(N^3)$ arithmetic multiply-accumulate operations operating on only $O(N^2)$ data elements. This high ratio of arithmetic operations to memory bytes—known as **Arithmetic Intensity** (FLOPs per byte transferred)—means that matrix multiplication is intrinsically compute-bound rather than memory-bound, provided that data can be reused effectively on-chip.
+Multiplying two $N \times N$ matrices requires $O(N^3)$ arithmetic multiply-accumulate operations operating on only $O(N^2)$ data elements. This high ratio of arithmetic operations to memory bytes—known as \textbf{Arithmetic Intensity} (FLOPs per byte transferred)—means that matrix multiplication is intrinsically compute-bound rather than memory-bound, provided that data can be reused effectively on-chip.
 
 \subsection{Systolic Arrays: Amortizing Memory Access Through Spatial Reuse}
 In traditional CPU and GPU architectures, every multiplication requires fetching operands from a central register file and writing the result back through cache hierarchies. For high-dimensional matrix multiplication, this register-file communication consumes substantial energy.
 
-In 1982, H. T. Kung introduced the **Systolic Array** architecture. Like the biological circulatory system pumping blood through tissue, a systolic array pumps data operands rhythmically across a 2D grid of tightly coupled Processing Elements (PEs), as depicted in Figure \ref{fig:systolic_array}.
+In 1982, H. T. Kung introduced the \textbf{Systolic Array} architecture. Like the biological circulatory system pumping blood through tissue, a systolic array pumps data operands rhythmically across a 2D grid of tightly coupled Processing Elements (PEs), as depicted in Figure \ref{fig:systolic_array}.
 
 \begin{figure}[htbp]
   \begin{center}
@@ -315,7 +315,7 @@ In 1982, H. T. Kung introduced the **Systolic Array** architecture. Like the bio
   \end{center}
 \end{figure}
 
-In a classic **Weight-Stationary** systolic array (such as the Google Tensor Processing Unit, TPU v1 \citep{jouppi2017indatacenter}):
+A classic 2D systolic array architecture is exemplified by the Google Tensor Processing Unit (TPU v1), which utilizes a \textbf{weight-stationary} dataflow \cite{jouppi2017indatacenter}:
 \begin{enumerate}
     \item Weights from matrix $B$ are loaded once and held stationary inside the local registers of each PE.
     \item Activation values from matrix $A$ stream horizontally across the array from left to right.
@@ -335,7 +335,7 @@ Architectures exploit this by adopting narrow, energy-efficient numerical format
 \end{itemize}
 
 \subsection{RISC-V Matrix Extensions (RV-M / 2D Tiles)}
-To natively support deep learning, the RISC-V ecosystem is standardizing the **RISC-V Matrix Extension (RV-M)**. Building upon the vector extension, RV-M organizes data into 2D matrix tiles (e.g., $m_0$ through $m_7$) and introduces dedicated matrix multiplication primitives that dispatch directly to hardware systolic arrays or 2D matrix execution engines.
+To natively support deep learning, the RISC-V ecosystem is standardizing the \textbf{RISC-V Matrix Extension (RV-M)}. Building upon the vector extension, RV-M organizes data into 2D matrix tiles (e.g., $m_0$ through $m_7$) and introduces dedicated matrix multiplication primitives that dispatch directly to hardware systolic arrays or 2D matrix execution engines.
 
 
 \section{Comparative Synthesis of Domain-Specific Architectures}\label{sec:dsa_comparison}
