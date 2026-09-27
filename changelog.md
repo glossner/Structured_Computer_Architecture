@@ -1,3 +1,16 @@
+# 09/27/2026 08:50 Early Stored-Program Citations, Cache Consolidation, and Range Typography (Chapters 12, 13, & 16)
+* **Early Physical 4-OS Landmark Citations (`Latex/03_12_von_neumann_4-OS.tex`)**:
+  * Added authoritative historical citations in Section 12.4 for early physical single-level stored-program implementations: Maurice V. Wilkes and William Renwick's Cambridge EDSAC (`wilkes1949edsac`, the first operational stored-program computer in regular service, utilizing mercury delay lines), the Moore School EDVAC (`vonNeumann1945`, `gluck1953edvac`), and the Princeton IAS machine designed by Arthur W. Burks, Herman H. Goldstine, and John von Neumann (`burks1946preliminary`, utilizing Williams-Kilburn cathode-ray tubes).
+  * Added explicit cross-references pointing to downstream microarchitectural optimizations: cache memory (Section 16.7.3) and virtual memory paging/TLBs (Section 16.7.4).
+  * Removed redundant introductory paragraph (`\paragraph{Microarchitectural Optimization vs. Fundamental Architecture}`).
+* **Mathematical Range Typography Standardization (`Latex/03_12_von_neumann_4-OS.tex`, `Latex/04_16_Performance_Optimized_Organization.tex`)**:
+  * Replaced 22 non-standard occurrences across Chapters 12 and 16 where `\div` was erroneously rendered for intervals/ranges with standard LaTeX en-dashes (`\text{--}`), while strictly preserving arithmetic division operations in Chapter 1.
+* **Cache Architecture Consolidation (`Latex/03_13_harvard_5-OS.tex`, `Latex/04_16_Performance_Optimized_Organization.tex`)**:
+  * Removed redundant Section 13.3 ("Cache Memories") from Chapter 13, consolidating comprehensive cache microarchitecture into Section 16.7.3 while citing Maurice Wilkes' 1965 slave memories (`wilkes1965slave`) and the IBM System/360 Model 85 (`liptay1968cache`).
+* **ToyRISC Modular Organization (`Latex/03_13_harvard_5-OS.tex`)**:
+  * Commented out Section 13.5 ("ToyRISC Processor") to eliminate redundancy with Chapter 17 (ToyRISC Design), preserving all original text and figures in source comments.
+  * Added an introductory reference paragraph under "How an Instruction Set Architecture is Designed" directing readers to Chapter 17 (`\label{toyRiscDesign}`) and Chapter 16 (`\label{lect5}`).
+
 # 09/27/2026 08:20 Terminology & Historical Attribution Alignment (Chapters 12 & 13)
 * **Terminology Corrections (`Latex/03_12_von_neumann_4-OS.tex`)**:
   * Corrected "four-organ system" to "fourth-order system" (4-OS) and "Memory Organ" to "Memory" in Section 12.4.

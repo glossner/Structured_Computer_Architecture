@@ -168,8 +168,8 @@ On Internal Bus are connected fast devices while on the Input-Output Bus are con
 
 The memory hierarchy is distributed in the version represented in Figure \ref{compSys}  as follows:
 \begin{enumerate}
-    \item Register File in the processor, having a capacity of 32W $\div$ 1024W, accessed for reading or writing in a single clock cycle
-    \item Cache memory, having a capacity of 1MB $\div$ 8MB
+    \item Register File in the processor, having a capacity of $32\text{--}1024\,\text{words}$, accessed for reading or writing in a single clock cycle
+    \item Cache memory, having a capacity of $1\text{--}8\,\text{MB}$
     \item Hard Disk connected through: Bus Bridge and DMA
 \end{enumerate}
 
@@ -179,7 +179,7 @@ The memory hierarchy is distributed in the version represented in Figure \ref{co
 
 In the fourth-order system (4-OS) interpretive abstract model (traditionally designated as the von Neumann abstract model \cite{vonNeumann1945}), the \textbf{Memory} ($\mathbf{M}$) represents a single, uniform, linear address space that stores both program instructions and numerical operands. As examined in the historical analysis of Section \ref{sec:first_draft_facts}, this stored-program concept emerged from the collaborative work at the Moore School of Electrical Engineering by J. Presper Eckert, John Mauchly, Arthur Burks, Herman Goldstine, and John von Neumann, grounded in Alan Turing's mathematical model of computation \cite{Turing36}. In this foundational abstract formulation, storage was conceived without microarchitectural hierarchy: the central processing unit (3-OS) interacted directly with a flat, homogeneous array of addressable storage cells. 
 
-Early physical implementations of the 4-OS model (such as the EDVAC using acoustic mercury delay lines or the Princeton IAS machine using Williams-Kilburn cathode-ray tubes and Selectron vacuum tubes) operated with a single level of primary memory. These early machines contained no cache memories, no translation lookaside buffers (TLBs), and no virtual memory paging mechanisms. The processor fetched every instruction opcode and accessed every data word directly from this uniform memory technology.
+Early physical implementations of the 4-OS model operated with a single level of primary memory. Landmark implementations included the Cambridge EDSAC designed by Maurice V. Wilkes and William Renwick \cite{wilkes1949edsac} (the first full-scale operational stored-program computer in regular service, utilizing acoustic mercury delay lines), the Moore School EDVAC \cite{vonNeumann1945, gluck1953edvac} (also employing mercury delay-line storage), and the Princeton IAS machine designed by Arthur W. Burks, Herman H. Goldstine, and John von Neumann \cite{burks1946preliminary} (utilizing electrostatic Williams-Kilburn cathode-ray tubes). These early machines contained no cache memories (see Section \ref{sec:cache_microarchitecture}), no translation lookaside buffers (TLBs), and no virtual memory paging mechanisms (see Section \ref{sec:virtual_memory_tlb}). The processor fetched every instruction opcode and accessed every data word directly from this uniform memory technology.
 
 However, fundamental physical and economic constraints dictate that no single memory technology can simultaneously satisfy the competing demands of modern computing. Fast memory requires complex electronic circuitry (such as multiple transistors per bit), making it power-intensive, physically bulky, and expensive per bit. Conversely, dense and low-cost storage mechanisms (such as magnetic domains on rotating platters or charge traps in solid-state flash memory) are non-volatile and provide vast capacities, but require access times that are orders of magnitude slower than semiconductor logic. To reconcile these physical realities, practical computing systems organize storage into a tiered \textbf{memory hierarchy}.
 
@@ -191,14 +191,11 @@ Figure \ref{mhy} illustrates the structural tiers in a contemporary memory hiera
 \begin{enumerate}
     \item \textbf{Internal Processor Registers}: Located inside the processor core datapath, compiler-managed, providing single-cycle read and write access times ($< 0.5\,\text{ns}$) with capacities typically under $4\,\text{KB}$ (e.g., 32 32-bit or 64-bit general-purpose registers).
     \item \textbf{Cache Memory}: High-speed Static RAM (SRAM) positioned between the processor registers and main memory. The term derives from the French \emph{cach\'e} (meaning hidden), because cache operation is typically transparent to software execution. Caches are managed entirely by hardware controllers and range in size from $32\,\text{KB}$ to tens of megabytes, with access times from $\sim 0.5\,\text{ns}$ to $5\,\text{ns}$.
-    \item \textbf{Primary (Main) Memory}: Dynamic RAM (DRAM) connected to the processor via the system bus or memory controller. Primary memory holds the active operating system kernel and executing user programs. Capacities typically range from $8\,\text{GB}$ to $128\,\text{GB}$ (and terabytes in enterprise servers), with access latencies of $50\,\text{ns} \div 100\,\text{ns}$.
+    \item \textbf{Primary (Main) Memory}: Dynamic RAM (DRAM) connected to the processor via the system bus or memory controller. Primary memory holds the active operating system kernel and executing user programs. Capacities typically range from $8\,\text{GB}$ to $128\,\text{GB}$ (and terabytes in enterprise servers), with access latencies of $50\text{--}100\,\text{ns}$.
     \item \textbf{Secondary and Auxiliary Storage}: Non-volatile mass storage devices including Solid-State Drives (SSDs), Hard Disk Drives (HDDs), optical media, and magnetic tape. Capacities span hundreds of gigabytes to tens of terabytes, with access latencies ranging from hundreds of microseconds to tens of milliseconds.
 \end{enumerate}
 
 \placedrawing[H]{figures/06_03_memory_hierarchy.lp}{Memory hierarchy from fast and small register files to slow and large auxiliary storage memories such as SSD (solid-state drive), HDD (hard disk drive), optical disk, and magnetic tape.}{mhy}
-
-\paragraph{Microarchitectural Optimization vs. Fundamental Architecture}
-It is essential to distinguish between fundamental architectural structures and microarchitectural performance optimizations. In the abstract 4-OS model, memory is simply a functional component providing addressable storage for instructions and data. \textbf{Cache memory and virtual memory paging are not architectural prerequisites of computation}; rather, they are sophisticated microarchitectural performance optimizations introduced to mitigate the immense speed disparity between fast processors and slower storage technologies. The detailed microarchitecture of caches (address decomposition into tag, index, and offset, direct-mapped versus set-associative placement, write policies, 3 C miss classification, and average memory access time) and virtual memory translation using associative Translation Lookaside Buffers (TLBs) are deferred to Section \ref{sec:memory_optimization}. In the remainder of this section, we examine the fundamental physical and operational characteristics of primary and secondary storage systems.
 
 \subsection{Primary Memory: Semiconductor Storage (SRAM and DRAM)}\label{sec:primary_memory}
 \index{primary memory: byte-addressable volatile semiconductor memory}
@@ -241,11 +238,11 @@ The total access latency of an HDD is determined by three mechanical components:
 
 Key technical parameters of modern HDDs include:
 \begin{itemize}
-    \item \textbf{Storage Capacity}: $1\,\text{TB} \div 30\,\text{TB}$ per drive.
-    \item \textbf{Average Access Latency}: $2.5\,\text{ms} \div 10\,\text{ms}$ (dominated by seek and rotational delays).
+    \item \textbf{Storage Capacity}: $1\text{--}30\,\text{TB}$ per drive.
+    \item \textbf{Average Access Latency}: $2.5\text{--}10\,\text{ms}$ (dominated by seek and rotational delays).
     \item \textbf{Sector Formatting}: Traditionally 512 bytes per sector, modern drives use Advanced Format (4,096 bytes per sector).
-    \item \textbf{Mean Time Between Failures (MTBF)}\index{mean time between failures (MTBF): reliability metric of expected operating time}: Typically $10^6 \div 2.5 \times 10^6$ operating hours ($\sim 114 \div 285$ years), reflecting statistical operating lifetimes across large populations.
-    \item \textbf{Shock Sensitivity}: Mechanical heads can crash against platters under physical shocks ($10 \div 70\,g$ operating, $100 \div 300\,g$ non-operating, where $g \approx 9.8\,\text{m/s}^2$).
+    \item \textbf{Mean Time Between Failures (MTBF)}\index{mean time between failures (MTBF): reliability metric of expected operating time}: Typically $10^6\text{--}2.5 \times 10^6$ operating hours ($\sim 114\text{--}285$ years), reflecting statistical operating lifetimes across large populations.
+    \item \textbf{Shock Sensitivity}: Mechanical heads can crash against platters under physical shocks ($10\text{--}70\,g$ operating, $100\text{--}300\,g$ non-operating, where $g \approx 9.8\,\text{m/s}^2$).
 \end{itemize}
 
 \subsubsection{Solid-State Drives (SSDs)}\index{solid-state drive (SSD): non-volatile flash-based secondary storage}\index{SSD|see{solid-state drive}}
@@ -254,29 +251,29 @@ Solid-State Drives (SSDs) implement non-volatile mass storage entirely through s
 
 Solid-state flash memory exhibits unique operational characteristics that govern SSD organization:
 \begin{itemize}
-    \item \textbf{Asymmetric Granularity}: Flash memory can be read and programmed (written) in units of \textbf{pages} (typically $4\,\text{KB} \div 16\,\text{KB}$), but erasure can only be performed in much larger units called \textbf{erase blocks} (typically $128 \div 512$ pages, or $2\,\text{MB} \div 8\,\text{MB}$). Once a page is written, it cannot be rewritten in place until the entire enclosing block is erased.
+    \item \textbf{Asymmetric Granularity}: Flash memory can be read and programmed (written) in units of \textbf{pages} (typically $4\text{--}16\,\text{KB}$), but erasure can only be performed in much larger units called \textbf{erase blocks} (typically $128\text{--}512$ pages, or $2\text{--}8\,\text{MB}$). Once a page is written, it cannot be rewritten in place until the entire enclosing block is erased.
     \item \textbf{Flash Translation Layer (FTL)}\index{flash translation layer (FTL)}: An internal embedded controller runs firmware that dynamically maps logical block addresses (LBAs) from the host operating system to changing physical flash pages, performing out-of-place writes, background garbage collection, and bad-block management.
-    \item \textbf{Wear Leveling}\index{wear leveling: SSD endurance management}: Flash cells degrade over repeated program/erase (P/E) cycles due to dielectric oxide breakdown (typically $1,000 \div 10,000$ P/E cycles for multi-level cells). The FTL distributes writes evenly across the entire physical media to ensure uniform wear and maximize drive lifespan.
+    \item \textbf{Wear Leveling}\index{wear leveling: SSD endurance management}: Flash cells degrade over repeated program/erase (P/E) cycles due to dielectric oxide breakdown (typically $1{,}000\text{--}10{,}000$ P/E cycles for multi-level cells). The FTL distributes writes evenly across the entire physical media to ensure uniform wear and maximize drive lifespan.
 \end{itemize}
 
 \paragraph{Performance Comparison}
-Reading a $4\,\text{KB}$ page from flash memory requires approximately $25 \div 75\,\mu\text{s}$, compared to $\sim 50\text{--}100\,\text{ns}$ for DDR SDRAM and $5\text{--}10\,\text{ms}$ for an HDD. While flash memory is approximately $500\times$ slower than DRAM, it is roughly $100\text{--}400\times$ faster than rotating magnetic hard disks. In write operations, because programming requires Fowler-Nordheim tunneling or hot-carrier injection, writing a flash page takes $\sim 200 \div 1500\,\mu\text{s}$, while block erasure requires $1 \div 5\,\text{ms}$. Connected via high-speed PCI Express buses using the Non-Volatile Memory Express (NVMe)\index{NVMe: Non-Volatile Memory Express host controller interface} protocol, SSDs deliver throughput exceeding $7\,\text{GB/s}$ and millions of I/O operations per second (IOPS).
+Reading a $4\,\text{KB}$ page from flash memory requires approximately $25\text{--}75\,\mu\text{s}$, compared to $\sim 50\text{--}100\,\text{ns}$ for DDR SDRAM and $5\text{--}10\,\text{ms}$ for an HDD. While flash memory is approximately $500\times$ slower than DRAM, it is roughly $100\text{--}400\times$ faster than rotating magnetic hard disks. In write operations, because programming requires Fowler-Nordheim tunneling or hot-carrier injection, writing a flash page takes $\sim 200\text{--}1500\,\mu\text{s}$, while block erasure requires $1\text{--}5\,\text{ms}$. Connected via high-speed PCI Express buses using the Non-Volatile Memory Express (NVMe)\index{NVMe: Non-Volatile Memory Express host controller interface} protocol, SSDs deliver throughput exceeding $7\,\text{GB/s}$ and millions of I/O operations per second (IOPS).
 
 \subsubsection{Optical Disks\index{optical disk: reflective optical storage medium (CD/DVD)}}
 
 Optical storage devices use laser beams to read and write digital data encoded as microscopic pits and lands along a continuous spiral track on a polycarbonate disc:
 \begin{itemize}
-    \item \textbf{Compact Disc (CD)}: Introduced in 1982 using infrared laser diodes ($780\,\text{nm}$) with a storage capacity of $650 \div 700\,\text{MB}$.
+    \item \textbf{Compact Disc (CD)}: Introduced in 1982 using infrared laser diodes ($780\,\text{nm}$) with a storage capacity of $650\text{--}700\,\text{MB}$.
     \item \textbf{Digital Versatile Disc (DVD)}: Uses red laser diodes ($650\,\text{nm}$) with narrower track pitch, yielding $4.7\,\text{GB}$ per single-layer side and up to $8.5\,\text{GB}$ for dual-layer discs.
     \item \textbf{Blu-ray Disc (BD)}: Uses blue-violet lasers ($405\,\text{nm}$) with tighter optical focusing, delivering $25\,\text{GB}$ per layer ($50\,\text{GB}$ dual-layer, $100\,\text{GB}$ triple-layer BDXL).
 \end{itemize}
-Optical media are predominantly write-once (WORM) or read-only distribution mediums with long access latencies ($50 \div 150\,\text{ms}$).
+Optical media are predominantly write-once (WORM) or read-only distribution mediums with long access latencies ($50\text{--}150\,\text{ms}$).
 
 \subsubsection{Magnetic Tapes\index{magnetic tape: sequential magnetic medium used for backup and archive}}
 
 Magnetic tape data storage records digital bitstreams sequentially onto thin, flexible plastic ribbons coated with magnetic particles, packaged into rugged cartridges. 
 
-Although tape is a strictly sequential-access medium (seeking an arbitrary record can require tens of seconds to physically spool the tape), it offers unmatched volumetric density, exceptional shelf life ($> 30$ years without electrical power), and the lowest storage cost per gigabyte of any enterprise medium. Modern Linear Tape-Open (LTO) cartridges provide native uncompressed capacities of $18 \div 45\,\text{TB}$ (exceeding $100\,\text{TB}$ with hardware compression) and streaming data transfer rates exceeding $400\,\text{MB/s}$. Consequently, magnetic tape remains the gold standard for cloud-scale cold storage, disaster recovery, and regulatory compliance archiving.
+Although tape is a strictly sequential-access medium (seeking an arbitrary record can require tens of seconds to physically spool the tape), it offers unmatched volumetric density, exceptional shelf life ($> 30$ years without electrical power), and the lowest storage cost per gigabyte of any enterprise medium. Modern Linear Tape-Open (LTO) cartridges provide native uncompressed capacities of $18\text{--}45\,\text{TB}$ (exceeding $100\,\text{TB}$ with hardware compression) and streaming data transfer rates exceeding $400\,\text{MB/s}$. Consequently, magnetic tape remains the gold standard for cloud-scale cold storage, disaster recovery, and regulatory compliance archiving.
 
 
 

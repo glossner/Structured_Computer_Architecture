@@ -1235,11 +1235,11 @@ To eliminate this waste, modern processors implement \textbf{Zero-Cycle Move Eli
 \paragraph{3. Decoupled Physical Register File (PRF) Architecture vs. Data-Carrying ROB}
 A pivotal architectural transition occurred between early out-of-order processors of the 1990s and modern processors:
 \begin{itemize}
-    \item \textbf{Data-Carrying ROB (Classic Intel P6 / Pentium Pro)}: In the classic Tomasulo + ROB scheme, speculative arithmetic results are written over the CDB directly into storage fields inside the Reorder Buffer entries. When instructions commit, the values are copied from the ROB into the separate Architectural Register File (ARF). Because each ROB entry must physically house wide 32-bit or 64-bit data registers and multi-ported forwarding multiplexers, the wiring capacitance and power dissipation scale rapidly, capping practical ROB capacities to $32 \div 40$ entries.
+    \item \textbf{Data-Carrying ROB (Classic Intel P6 / Pentium Pro)}: In the classic Tomasulo + ROB scheme, speculative arithmetic results are written over the CDB directly into storage fields inside the Reorder Buffer entries. When instructions commit, the values are copied from the ROB into the separate Architectural Register File (ARF). Because each ROB entry must physically house wide 32-bit or 64-bit data registers and multi-ported forwarding multiplexers, the wiring capacitance and power dissipation scale rapidly, capping practical ROB capacities to $32\text{--}40$ entries.
     \item \textbf{Unified Physical Register File (PRF) (MIPS R10000 \cite{yeager1996mips}, DEC Alpha 21264 \cite{kessler1999alpha}, Intel Sandy Bridge/Golden Cove, AMD Zen, Apple M-Series)}:
     \begin{itemize}
         \item The ROB is completely decoupled from data storage: each ROB entry stores \textbf{only instruction status, exception indicators, and physical register specifiers (tags)}. No data values are stored in the ROB!
-        \item All data values (speculative and committed) reside in a centralized \textbf{Unified Physical Register File (PRF)} containing $128 \div 300+$ physical registers for 32 architectural registers.
+        \item All data values (speculative and committed) reside in a centralized \textbf{Unified Physical Register File (PRF)} containing $128\text{--}300+$ physical registers for 32 architectural registers.
         \item Renaming maps architectural registers to physical registers drawn from a Free List. When execution completes, the result is written once into the allocated physical register.
         \item When the instruction reaches the head of the ROB and commits, the processor merely marks the physical register as committed in the architectural RAT and returns the \emph{previous} physical register assigned to that architectural register back to the Free List.
     \end{itemize}
@@ -1579,14 +1579,14 @@ Spatial locality is exhibited by:
 
 The locality principle provides the theoretical foundation for memory hierarchy design. By transferring \textbf{blocks (lines)} of contiguous bytes upon a miss (exploiting spatial locality) and retaining recently accessed blocks in small, fast SRAM buffers positioned immediately adjacent to the processor core (exploiting temporal locality), the memory hierarchy creates the effective illusion of a storage system that is simultaneously as fast as the smallest on-chip SRAM register and as vast and inexpensive as off-chip DRAM.
 
-\subsection{Cache Memory Microarchitecture}
+\subsection{Cache Memory Microarchitecture}\label{sec:cache_microarchitecture}
 \index{cache memory!placement policies}
 \index{cache memory!address decomposition}
 \index{cache memory!write policies}
 \index{cache memory!miss classification (3 Cs)}
 \index{average memory access time (AMAT)}
 
-The concept of a cache memory was first articulated by Maurice Wilkes in 1965 as a ``slave memory'' and was commercially implemented in hardware in the IBM System/360 Model 85 in 1968. 
+The concept of a cache memory was first articulated by Maurice Wilkes in 1965 as a ``slave memory'' \cite{wilkes1965slave} and was commercially implemented in hardware in the IBM System/360 Model 85 in 1968 \cite{liptay1968cache}. 
 
 \subsubsection{Cache Organization and Address Decomposition}
 A cache is organized into an array of $S$ sets, where each set contains $N$ cache lines (or blocks). Each cache line stores $B = 2^b$ bytes of contiguous data along with a \textbf{Tag} and metadata status bits (a \textbf{Valid bit} indicating valid data, and a \textbf{Dirty bit} indicating modified data in write-back caches).
@@ -1652,8 +1652,8 @@ In multiprocessor shared-memory systems, a fourth category---the \textbf{Coheren
 To balance the competing requirements of single-cycle hit latency and low miss rates, modern processors organize caches into hierarchical levels (L1, L2, and L3):
 \begin{itemize}
     \item \textbf{Level 1 (L1)}: Split into dedicated L1 Instruction (L1i) and L1 Data (L1d) caches ($32\text{--}64\,\text{KB}$ each, 4- to 8-way associative), operating at full core clock frequency with $1\text{--}4$ cycle hit latency.
-    \item \textbf{Level 2 (L2)}: Typically unified per-core cache ($512\,\text{KB} \div 2\,\text{MB}$, 8- to 16-way associative, $10\text{--}14$ cycle latency).
-    \item \textbf{Level 3 (L3)}: Shared Last-Level Cache (LLC) across all cores ($16\,\text{MB} \div 128\,\text{MB}$, 16- to 32-way associative, $30\text{--}50$ cycle latency).
+    \item \textbf{Level 2 (L2)}: Typically unified per-core cache ($512\,\text{KB}\text{--}2\,\text{MB}$, 8- to 16-way associative, $10\text{--}14$ cycle latency).
+    \item \textbf{Level 3 (L3)}: Shared Last-Level Cache (LLC) across all cores ($16\text{--}128\,\text{MB}$, 16- to 32-way associative, $30\text{--}50$ cycle latency).
 \end{itemize}
 
 The performance of a memory hierarchy is quantified by \textbf{Average Memory Access Time (AMAT)}:
@@ -1666,7 +1666,7 @@ where $m_{L1}$ is the L1 miss rate. In a three-level hierarchy backed by off-chi
 \end{equation}
 where $m_{\text{local}, L2}$ and $m_{\text{local}, L3}$ represent the \textbf{local miss rates} of the L2 and L3 caches respectively.
 
-\subsection{Virtual Memory and Translation Lookaside Buffers (TLBs)}\label{lb:vmm}
+\subsection{Virtual Memory and Translation Lookaside Buffers (TLBs)}\label{lb:vmm}\label{sec:virtual_memory_tlb}
 \index{virtual memory: architectural technique abstracting physical memory using page translation}
 \index{translation lookaside buffer (TLB): cache of recent virtual-to-physical address translations}
 \index{content-addressable memory (CAM)!TLB implementation}
@@ -1716,7 +1716,7 @@ The area reduction factor achieved by the associative CAM approach is:
 \begin{equation}
 \frac{S_{\text{TLB}}(\text{RAM})}{S_{\text{TLB}}(\text{AM})} \in O(n/m)
 \end{equation}
-Even though a CAM bit cell (see Figure \ref{cam_cell}) requires more transistors than a standard SRAM cell due to internal comparison logic, the enormous ratio $n/m$ (often $10^3 \div 10^6$) renders the associative CAM implementation vastly smaller, faster, and more energy-efficient.
+Even though a CAM bit cell (see Figure \ref{cam_cell}) requires more transistors than a standard SRAM cell due to internal comparison logic, the enormous ratio $n/m$ (often $10^3\text{--}10^6$) renders the associative CAM implementation vastly smaller, faster, and more energy-efficient.
 
 \subsubsection{Structural Comparison: Cache versus Virtual Memory}
 Table \ref{tab:cache_vs_vm} contrasts the operational parameters of cache memory and virtual memory systems.
@@ -1730,10 +1730,10 @@ Table \ref{tab:cache_vs_vm} contrasts the operational parameters of cache memory
       \hline
       \textbf{Parameter} & \textbf{L1 Hardware Cache} & \textbf{Virtual Memory (Paging)} \\ \hline \hline
       \textbf{Primary Role}        & Speed acceleration        & Space virtualization \& protection \\ \hline
-      \textbf{Transfer Granularity}& Cache line ($32 \div 128\,\text{B}$) & Page ($4\,\text{KB} \div 2\,\text{MB}$) \\ \hline
-      \textbf{Hit Latency}         & $1 \div 4$ clock cycles   & $0.5 \div 1$ clock cycle (TLB hit) \\ \hline
-      \textbf{Miss Penalty}        & $50 \div 200$ clock cycles (DRAM) & $10^5 \div 10^7$ clock cycles (SSD/HDD) \\ \hline
-      \textbf{Typical Miss Rate}   & $1\% \div 5\%$            & $10^{-5}\% \div 10^{-4}\%$ \\ \hline
+      \textbf{Transfer Granularity}& Cache line ($32\text{--}128\,\text{B}$) & Page ($4\,\text{KB}\text{--}2\,\text{MB}$) \\ \hline
+      \textbf{Hit Latency}         & $1\text{--}4$ clock cycles   & $0.5\text{--}1$ clock cycle (TLB hit) \\ \hline
+      \textbf{Miss Penalty}        & $50\text{--}200$ clock cycles (DRAM) & $10^5\text{--}10^7$ clock cycles (SSD/HDD) \\ \hline
+      \textbf{Typical Miss Rate}   & $1\%\text{--}5\%$            & $10^{-5}\%\text{--}10^{-4}\%$ \\ \hline
       \textbf{Placement Policy}    & 4- to 8-way set-associative & Fully associative \\ \hline
       \textbf{Replacement Policy}  & Pseudo-LRU / Random       & Approximated LRU (Clock algorithm) \\ \hline
       \textbf{Management Engine}   & Purely hardware controller& Hardware MMU/TLB + OS page handler \\ \hline
