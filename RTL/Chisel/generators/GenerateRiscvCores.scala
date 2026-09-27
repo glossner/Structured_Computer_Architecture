@@ -68,5 +68,33 @@ object GenerateRiscvCores extends App {
     firtoolOpts = firtoolFlags
   )
 
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I BTFN)...")
+  ChiselStage.emitSystemVerilogFile(
+    new RiscvPipelined(xlen = 32, enableZmmul = false, enableForwarding = true, branchPredictor = "btfn"),
+    args = Array("--target-dir", "synth/rv32i_pipelined_btfn"),
+    firtoolOpts = firtoolFlags
+  )
+
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I Gshare)...")
+  ChiselStage.emitSystemVerilogFile(
+    new RiscvPipelined(xlen = 32, enableZmmul = false, enableForwarding = true, branchPredictor = "gshare"),
+    args = Array("--target-dir", "synth/rv32i_pipelined_gshare"),
+    firtoolOpts = firtoolFlags
+  )
+
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I_Zmmul Pipelined Multiplier + BTFN)...")
+  ChiselStage.emitSystemVerilogFile(
+    new RiscvPipelined(xlen = 32, enableZmmul = true, enableForwarding = true, enablePipelinedMul = true, branchPredictor = "btfn"),
+    args = Array("--target-dir", "synth/zmmul_pipelined_pipemul_btfn"),
+    firtoolOpts = firtoolFlags
+  )
+
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I_Zmmul Pipelined Multiplier + Gshare)...")
+  ChiselStage.emitSystemVerilogFile(
+    new RiscvPipelined(xlen = 32, enableZmmul = true, enableForwarding = true, enablePipelinedMul = true, branchPredictor = "gshare"),
+    args = Array("--target-dir", "synth/zmmul_pipelined_pipemul_gshare"),
+    firtoolOpts = firtoolFlags
+  )
+
   println("RTL generation complete. Verilog files written to synth/")
 }

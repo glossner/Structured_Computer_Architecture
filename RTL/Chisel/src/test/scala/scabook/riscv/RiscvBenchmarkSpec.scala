@@ -132,14 +132,14 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
       assert(completed, s"Single-cycle simulation for $benchName timed out after $cyclesSingle cycles (last PC = 0x${dut.io.imem.addr.peek().litValue.toLong.toHexString})")
     }
 
-    // Helper to run pipelined core with or without forwarding
-    def runPipe(enableFwd: Boolean): (Int, Long) = {
+    // Helper to run pipelined core with or without forwarding and branch prediction
+    def runPipe(enableFwd: Boolean, bp: String = "none"): (Int, Long) = {
       val memPipe = new SimMemory(baseAddr)
       memPipe.loadBinary(binBytes)
       var cycles = 0
       var result = 0L
 
-      simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul, enableForwarding = enableFwd)) { dut =>
+      simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul, enableForwarding = enableFwd, branchPredictor = bp)) { dut =>
         dut.reset.poke(true.B)
         dut.clock.step(5)
         dut.reset.poke(false.B)
@@ -173,33 +173,47 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
           dut.clock.step(1)
           cycles += 1
         }
-        assert(completed, s"Pipelined (fwd=$enableFwd) simulation for $benchName timed out after $cycles cycles")
+        assert(completed, s"Pipelined (fwd=$enableFwd, bp=$bp) simulation for $benchName timed out after $cycles cycles")
       }
       (cycles, result)
     }
 
     // 2. Run 4-Stage Pipelined Core without Forwarding
-    val (cyclesPipeNoFwd, resultPipeNoFwd) = runPipe(false)
+    val (cyclesPipeNoFwd, resultPipeNoFwd) = runPipe(false, "none")
 
-    // 3. Run 4-Stage Pipelined Core with Forwarding (Bypassing)
-    val (cyclesPipeFwd, resultPipeFwd) = runPipe(true)
+    // 3. Run 4-Stage Pipelined Core with Forwarding (Predict Not-Taken)
+    val (cyclesPipeFwd, resultPipeFwd) = runPipe(true, "none")
+
+    // 4. Run 4-Stage Pipelined Core with Forwarding + Static BTFN Branch Prediction
+    val (cyclesPipeBtfn, resultPipeBtfn) = runPipe(true, "btfn")
+
+    // 5. Run 4-Stage Pipelined Core with Forwarding + Dynamic Gshare Branch Prediction
+    val (cyclesPipeGshare, resultPipeGshare) = runPipe(true, "gshare")
 
     // Verification
     assert(resultSingle == resultPipeNoFwd, s"Result mismatch in $benchName (NoFwd)! Single=$resultSingle, Pipe=$resultPipeNoFwd")
     assert(resultSingle == resultPipeFwd, s"Result mismatch in $benchName (Fwd)! Single=$resultSingle, Pipe=$resultPipeFwd")
+    assert(resultSingle == resultPipeBtfn, s"Result mismatch in $benchName (BTFN)! Single=$resultSingle, Pipe=$resultPipeBtfn")
+    assert(resultSingle == resultPipeGshare, s"Result mismatch in $benchName (Gshare)! Single=$resultSingle, Pipe=$resultPipeGshare")
 
     // Performance Metrics
-    val instCount     = cyclesSingle
-    val cpiSingle     = 1.0
-    val cpiPipeNoFwd  = cyclesPipeNoFwd.toDouble / instCount.toDouble
-    val cpiPipeFwd    = cyclesPipeFwd.toDouble / instCount.toDouble
+    val instCount      = cyclesSingle
+    val cpiSingle      = 1.0
+    val cpiPipeNoFwd   = cyclesPipeNoFwd.toDouble / instCount.toDouble
+    val cpiPipeFwd     = cyclesPipeFwd.toDouble / instCount.toDouble
+    val cpiPipeBtfn    = cyclesPipeBtfn.toDouble / instCount.toDouble
+    val cpiPipeGshare  = cyclesPipeGshare.toDouble / instCount.toDouble
 
-    val execTimeSingle    = cyclesSingle * tClkSingle
-    val execTimePipeNoFwd = cyclesPipeNoFwd * tClkPipe
-    val execTimePipeFwd   = cyclesPipeFwd * tClkPipe
-    val speedupNoFwd      = execTimeSingle / execTimePipeNoFwd
-    val speedupFwd        = execTimeSingle / execTimePipeFwd
-    val speedupFwdVsNoFwd = execTimePipeNoFwd / execTimePipeFwd
+    val execTimeSingle     = cyclesSingle * tClkSingle
+    val execTimePipeNoFwd  = cyclesPipeNoFwd * tClkPipe
+    val execTimePipeFwd    = cyclesPipeFwd * tClkPipe
+    val execTimePipeBtfn   = cyclesPipeBtfn * tClkPipe
+    val execTimePipeGshare = cyclesPipeGshare * tClkPipe
+
+    val speedupNoFwd       = execTimeSingle / execTimePipeNoFwd
+    val speedupFwd         = execTimeSingle / execTimePipeFwd
+    val speedupBtfn        = execTimeSingle / execTimePipeBtfn
+    val speedupGshare      = execTimeSingle / execTimePipeGshare
 
     println("=======================================================================")
     println(f"        BENCHMARK RESULTS: $benchName%-40s")
@@ -210,15 +224,18 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     println(f"  Single-Cycle Cycles:            $cyclesSingle%8d   (CPI = $cpiSingle%.2f)")
     println(f"  4-Stage Pipe (No Forwarding):   $cyclesPipeNoFwd%8d   (CPI = $cpiPipeNoFwd%.2f)")
     println(f"  4-Stage Pipe (With Bypassing):  $cyclesPipeFwd%8d   (CPI = $cpiPipeFwd%.2f)")
+    println(f"  4-Stage Pipe (With BTFN BP):    $cyclesPipeBtfn%8d   (CPI = $cpiPipeBtfn%.2f)")
+    println(f"  4-Stage Pipe (With Gshare BP):  $cyclesPipeGshare%8d   (CPI = $cpiPipeGshare%.2f)")
     println("-----------------------------------------------------------------------")
     println(f"  Stalls (No Forwarding):         ${cyclesPipeNoFwd - cyclesSingle}%8d cycles (${(cpiPipeNoFwd - 1.0)*100}%.1f%% overhead)")
     println(f"  Stalls (With Bypassing):        ${cyclesPipeFwd - cyclesSingle}%8d cycles (${(cpiPipeFwd - 1.0)*100}%.1f%% overhead)")
-    println(f"  Stall Elimination:              ${cyclesPipeNoFwd - cyclesPipeFwd}%8d stalls saved (${(cyclesPipeNoFwd - cyclesPipeFwd).toDouble / (cyclesPipeNoFwd - cyclesSingle).toDouble * 100}%.1f%% of all stalls eliminated)")
+    println(f"  Stalls (With BTFN BP):          ${cyclesPipeBtfn - cyclesSingle}%8d cycles (${(cpiPipeBtfn - 1.0)*100}%.1f%% overhead)")
+    println(f"  Stalls (With Gshare BP):        ${cyclesPipeGshare - cyclesSingle}%8d cycles (${(cpiPipeGshare - 1.0)*100}%.1f%% overhead)")
     println("-----------------------------------------------------------------------")
     println(f"  ASAP7 7nm Clock Period:         Single (FE)=$tClkSingle%.3f ns (${1000.0/tClkSingle}%.1f MHz), Pipe=$tClkPipe%.3f ns (${1000.0/tClkPipe}%.1f MHz)")
-    println(f"  Execution Time:                 Single=$execTimeSingle%.2f ns, NoFwd=$execTimePipeNoFwd%.2f ns, Fwd=$execTimePipeFwd%.2f ns")
-    println(f"  Speedup vs Single-Cycle:        No Forwarding = $speedupNoFwd%.2fx, With Bypassing = $speedupFwd%.2fx")
-    println(f"  Speedup from Bypassing:         $speedupFwdVsNoFwd%.2fx over unforwarded pipeline")
+    println(f"  Execution Time:                 Single=$execTimeSingle%.2f ns, NoFwd=$execTimePipeNoFwd%.2f ns, Fwd=$execTimePipeFwd%.2f ns, BTFN=$execTimePipeBtfn%.2f ns, Gshare=$execTimePipeGshare%.2f ns")
+    println(f"  Speedup vs Single-Cycle:        NoFwd=$speedupNoFwd%.2fx, Fwd=$speedupFwd%.2fx, BTFN=$speedupBtfn%.2fx, Gshare=$speedupGshare%.2fx")
+    println(f"  Speedup over Baseline Pipe:     BTFN=${cyclesPipeFwd.toDouble / cyclesPipeBtfn.toDouble}%.2fx, Gshare=${cyclesPipeFwd.toDouble / cyclesPipeGshare.toDouble}%.2fx")
     println("=======================================================================\n")
   }
 

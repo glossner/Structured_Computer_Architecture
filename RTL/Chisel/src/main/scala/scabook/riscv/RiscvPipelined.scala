@@ -9,35 +9,41 @@ import scabook.multipliers.{PipelinedMultiplierStage1, PipelinedMultiplierStage2
 
 /** Pipeline Register Bundles */
 class IfIdBundle(val xlen: Int = 32) extends Bundle {
-  val valid = Bool()
-  val pc    = UInt(xlen.W)
-  val inst  = UInt(xlen.W)
+  val valid       = Bool()
+  val pc          = UInt(xlen.W)
+  val inst        = UInt(xlen.W)
+  val predTaken   = Bool()
+  val predTarget  = UInt(xlen.W)
+  val predHistory = UInt(8.W)
 }
 
 class IdExBundle(val xlen: Int = 32) extends Bundle {
-  val valid     = Bool()
-  val pc        = UInt(xlen.W)
-  val inst      = UInt(xlen.W)
-  val rs1       = UInt(5.W)
-  val rs2       = UInt(5.W)
-  val rd        = UInt(5.W)
-  val funct3    = UInt(3.W)
-  val rs1Data   = UInt(xlen.W)
-  val rs2Data   = UInt(xlen.W)
-  val imm       = UInt(xlen.W)
-  val aluOp     = UInt(5.W)
-  val aluSrc    = Bool()
-  val regWrite  = Bool()
-  val memRead   = Bool()
-  val memWrite  = Bool()
-  val memToReg  = Bool()
-  val branch    = Bool()
-  val jump      = Bool()
-  val isJal     = Bool()
-  val isJalr    = Bool()
-  val isLui     = Bool()
-  val isAuipc   = Bool()
-  val isMul     = Bool()
+  val valid       = Bool()
+  val pc          = UInt(xlen.W)
+  val inst        = UInt(xlen.W)
+  val rs1         = UInt(5.W)
+  val rs2         = UInt(5.W)
+  val rd          = UInt(5.W)
+  val funct3      = UInt(3.W)
+  val rs1Data     = UInt(xlen.W)
+  val rs2Data     = UInt(xlen.W)
+  val imm         = UInt(xlen.W)
+  val aluOp       = UInt(5.W)
+  val aluSrc      = Bool()
+  val regWrite    = Bool()
+  val memRead     = Bool()
+  val memWrite    = Bool()
+  val memToReg    = Bool()
+  val branch      = Bool()
+  val jump        = Bool()
+  val isJal       = Bool()
+  val isJalr      = Bool()
+  val isLui       = Bool()
+  val isAuipc     = Bool()
+  val isMul       = Bool()
+  val predTaken   = Bool()
+  val predTarget  = UInt(xlen.W)
+  val predHistory = UInt(8.W)
 }
 
 class ExMemBundle(val xlen: Int = 32) extends Bundle {
@@ -79,7 +85,8 @@ class RiscvPipelined(
   val initPC: BigInt = 0,
   val enableZmmul: Boolean = true,
   val enableForwarding: Boolean = true,
-  val enablePipelinedMul: Boolean = true
+  val enablePipelinedMul: Boolean = true,
+  val branchPredictor: String = "none"
 ) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
@@ -91,9 +98,10 @@ class RiscvPipelined(
   })
 
   // Hardware Subsystems
-  val decoder = Module(new RiscvDecoder)
-  val alu     = Module(new RiscvALU(width = xlen, enableZmmul = enableZmmul && !enablePipelinedMul))
-  val regFile = Module(new RiscvRegFile(width = xlen))
+  val decoder   = Module(new RiscvDecoder)
+  val alu       = Module(new RiscvALU(width = xlen, enableZmmul = enableZmmul && !enablePipelinedMul))
+  val regFile   = Module(new RiscvRegFile(width = xlen))
+  val predictor = Module(new BranchPredictor(xlen = xlen, predictorType = branchPredictor))
 
   // Pipelined Multiplier Modules
   val mulStage1 = if (enableZmmul && enablePipelinedMul) Some(Module(new PipelinedMultiplierStage1(xlen))) else None
@@ -175,15 +183,40 @@ class RiscvPipelined(
     (id_ex.funct3 === "b111".U) -> !alu.io.lessThanU
   ))
 
-  val branchTaken = id_ex.valid && id_ex.branch && branchCond
-  val jalTaken    = id_ex.valid && id_ex.isJal
-  val jalrTaken   = id_ex.valid && id_ex.isJalr
-  val exRedirect  = branchTaken || jalTaken || jalrTaken
-
+  val branchTaken  = id_ex.valid && id_ex.branch && branchCond
   val branchTarget = id_ex.pc + id_ex.imm
   val jalTarget    = id_ex.pc + id_ex.imm
   val jalrTarget   = Cat((exRs1 + id_ex.imm)(xlen - 1, 1), 0.U(1.W))
-  val exTargetPC   = Mux(jalrTaken, jalrTarget, branchTarget)
+
+  // Branch & Jump Misprediction Detection:
+  // When predicted correctly (outcome and target match), NO pipeline flush occurs (0 bubbles).
+  // On misprediction, pipeline is flushed (2-bubble penalty) and redirected to the correct path.
+  val isBranch = id_ex.valid && id_ex.branch
+  val branchMispredicted = isBranch && (
+    (branchTaken =/= id_ex.predTaken) ||
+    (branchTaken && (id_ex.predTarget =/= branchTarget))
+  )
+  val branchRecoveryPC = Mux(branchTaken, branchTarget, id_ex.pc + 4.U)
+
+  val isJal = id_ex.valid && id_ex.isJal
+  val jalMispredicted = isJal && (!id_ex.predTaken || (id_ex.predTarget =/= jalTarget))
+
+  val isJalr = id_ex.valid && id_ex.isJalr
+  val jalrRedirect = isJalr
+
+  val exRedirect = branchMispredicted || jalMispredicted || jalrRedirect
+  val exTargetPC = Mux(jalrRedirect, jalrTarget,
+                   Mux(jalMispredicted, jalTarget,
+                       branchRecoveryPC))
+
+  // Branch Predictor Update (from EX stage resolution)
+  predictor.io.updateValid  := id_ex.valid && (id_ex.branch || id_ex.isJal)
+  predictor.io.updateIsBr   := id_ex.branch
+  predictor.io.updateIsJal  := id_ex.isJal
+  predictor.io.updatePC     := id_ex.pc
+  predictor.io.actualTaken  := Mux(id_ex.isJal, true.B, branchTaken)
+  predictor.io.actualTarget := Mux(id_ex.isJal, jalTarget, branchTarget)
+  predictor.io.prevHistory  := id_ex.predHistory
 
   // EX -> MEM/WB Register update
   ex_mem.valid     := id_ex.valid
@@ -259,74 +292,93 @@ class RiscvPipelined(
   // ID -> EX Pipeline Register update
   when(exRedirect) {
     // Control transfer flush overrides decode
-    id_ex.valid    := false.B
-    id_ex.regWrite := false.B
-    id_ex.memRead  := false.B
-    id_ex.memWrite := false.B
-    id_ex.branch   := false.B
-    id_ex.jump     := false.B
-    id_ex.isJal    := false.B
-    id_ex.isJalr   := false.B
-    id_ex.isLui    := false.B
-    id_ex.isAuipc  := false.B
-    id_ex.isMul    := false.B
+    id_ex.valid       := false.B
+    id_ex.regWrite    := false.B
+    id_ex.memRead     := false.B
+    id_ex.memWrite    := false.B
+    id_ex.branch      := false.B
+    id_ex.jump        := false.B
+    id_ex.isJal       := false.B
+    id_ex.isJalr      := false.B
+    id_ex.isLui       := false.B
+    id_ex.isAuipc     := false.B
+    id_ex.isMul       := false.B
+    id_ex.predTaken   := false.B
+    id_ex.predTarget  := 0.U
+    id_ex.predHistory := 0.U
   }.elsewhen(stall) {
     // Inject bubble into EX on RAW hazard stall
-    id_ex.valid    := false.B
-    id_ex.regWrite := false.B
-    id_ex.memRead  := false.B
-    id_ex.memWrite := false.B
-    id_ex.branch   := false.B
-    id_ex.jump     := false.B
-    id_ex.isJal    := false.B
-    id_ex.isJalr   := false.B
-    id_ex.isLui    := false.B
-    id_ex.isAuipc  := false.B
-    id_ex.isMul    := false.B
+    id_ex.valid       := false.B
+    id_ex.regWrite    := false.B
+    id_ex.memRead     := false.B
+    id_ex.memWrite    := false.B
+    id_ex.branch      := false.B
+    id_ex.jump        := false.B
+    id_ex.isJal       := false.B
+    id_ex.isJalr      := false.B
+    id_ex.isLui       := false.B
+    id_ex.isAuipc     := false.B
+    id_ex.isMul       := false.B
+    id_ex.predTaken   := false.B
+    id_ex.predTarget  := 0.U
+    id_ex.predHistory := 0.U
   }.otherwise {
-    id_ex.valid    := if_id.valid
-    id_ex.pc       := if_id.pc
-    id_ex.inst     := if_id.inst
-    id_ex.rs1      := d.rs1
-    id_ex.rs2      := d.rs2
-    id_ex.rd       := d.rd
-    id_ex.funct3   := f.funct3
-    id_ex.rs1Data  := rs1Val
-    id_ex.rs2Data  := rs2Val
-    id_ex.imm      := d.imm
-    id_ex.aluOp    := c.aluOp
-    id_ex.aluSrc   := c.aluSrc
-    id_ex.regWrite := c.regWrite
-    id_ex.memRead  := c.memRead
-    id_ex.memWrite := c.memWrite
-    id_ex.memToReg := c.memToReg
-    id_ex.branch   := c.branch
-    id_ex.jump     := c.jump
-    id_ex.isJal    := (f.opcode === RiscvOpcodes.JAL)
-    id_ex.isJalr   := (f.opcode === RiscvOpcodes.JALR)
-    id_ex.isLui    := (f.opcode === RiscvOpcodes.LUI)
-    id_ex.isAuipc  := (f.opcode === RiscvOpcodes.AUIPC)
-    id_ex.isMul    := enableZmmul.B && f.isMul && (f.opcode === RiscvOpcodes.OP)
+    id_ex.valid       := if_id.valid
+    id_ex.pc          := if_id.pc
+    id_ex.inst        := if_id.inst
+    id_ex.rs1         := d.rs1
+    id_ex.rs2         := d.rs2
+    id_ex.rd          := d.rd
+    id_ex.funct3      := f.funct3
+    id_ex.rs1Data     := rs1Val
+    id_ex.rs2Data     := rs2Val
+    id_ex.imm         := d.imm
+    id_ex.aluOp       := c.aluOp
+    id_ex.aluSrc      := c.aluSrc
+    id_ex.regWrite    := c.regWrite
+    id_ex.memRead     := c.memRead
+    id_ex.memWrite    := c.memWrite
+    id_ex.memToReg    := c.memToReg
+    id_ex.branch      := c.branch
+    id_ex.jump        := c.jump
+    id_ex.isJal       := (f.opcode === RiscvOpcodes.JAL)
+    id_ex.isJalr      := (f.opcode === RiscvOpcodes.JALR)
+    id_ex.isLui       := (f.opcode === RiscvOpcodes.LUI)
+    id_ex.isAuipc     := (f.opcode === RiscvOpcodes.AUIPC)
+    id_ex.isMul       := enableZmmul.B && f.isMul && (f.opcode === RiscvOpcodes.OP)
+    id_ex.predTaken   := if_id.predTaken
+    id_ex.predTarget  := if_id.predTarget
+    id_ex.predHistory := if_id.predHistory
   }
 
   // ==========================================
   // STAGE 1: INSTRUCTION FETCH (IF)
   // ==========================================
+  predictor.io.pc := pcReg
+
   io.imem.addr := pcReg
   val ifInst = io.imem.inst
 
+  val ifNextPC = Mux(predictor.io.predTaken, predictor.io.predTarget, pcReg + 4.U)
+
   when(exRedirect) {
-    pcReg        := exTargetPC
-    if_id.valid  := false.B
+    pcReg             := exTargetPC
+    if_id.valid       := false.B
+    if_id.predTaken   := false.B
+    if_id.predTarget  := 0.U
+    if_id.predHistory := 0.U
   }.elsewhen(stall) {
     // Freeze PC and IF/ID register on hazard stall
     pcReg        := pcReg
     if_id        := if_id
   }.otherwise {
-    pcReg        := pcReg + 4.U
-    if_id.valid  := true.B
-    if_id.pc     := pcReg
-    if_id.inst   := ifInst
+    pcReg             := ifNextPC
+    if_id.valid       := true.B
+    if_id.pc          := pcReg
+    if_id.inst        := ifInst
+    if_id.predTaken   := predictor.io.predTaken
+    if_id.predTarget  := predictor.io.predTarget
+    if_id.predHistory := predictor.io.predHistory
   }
 
   // Observability Ports
