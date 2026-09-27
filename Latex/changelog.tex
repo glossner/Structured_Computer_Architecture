@@ -7,6 +7,21 @@
 This section summarizes notable changes to the textbook, code listings, and hardware testbenches since the release of the First Edition PDF (\texttt{Structured\_Computer\_Architecture\_1st\_edition\_2026\_06\_03.pdf}, June 3, 2026).
 
 \begin{itemize}
+    \item \textbf{Single-Stream FIR/MAC Acceleration via Pipelined Multiplier Datapath, Intermediate Registers, and Forwarding in Chapter 19}:
+    \begin{itemize}
+        \item \textit{2-Stage Pipelined Multiplier Architecture (\texttt{PipelinedMultiplier.scala}, Section \ref{riscvPipelinedMultiplier})}: Designed and implemented a modular 2-stage pipelined multiplier:
+        (1) \textbf{Stage 1 in EX (\texttt{PipelinedMultiplierStage1})}: 17-partial-product Radix-4 Booth recoding and 6-level CSA compressor tree reducing to two 64-bit redundant vectors ($Sum$ and $Carry$) in carry-free fashion with delay $\approx 0.61\,\text{ns}$, well within the EX stage timing budget.
+        (2) \textbf{Intermediate Pipeline Registers (\texttt{ex\_mem})}: Synchronously latches intermediate vectors (\texttt{mulSum}, \texttt{mulCarry}, \texttt{mulOp}, \texttt{isMul}) into the inter-stage register, completely decoupling tree reduction from final addition.
+        (3) \textbf{Stage 2 in MEM/WB (\texttt{PipelinedMultiplierStage2})}: 64-bit vector-merging adder computing final sum and slicing $[31:0]$ for \texttt{MUL} or $[63:32]$ for \texttt{MULH*}, requiring $\approx 0.52\,\text{ns}$.
+        \item \textit{Zero-Stall Multiply-Accumulate (MAC) Forwarding}: Integrated with the distance-1 forwarding network. In canonical FIR/MAC loops (\texttt{mul t0, t1, t0} followed by \texttt{add a5, t0, a5}), \texttt{add} enters EX while \texttt{mul} enters MEM/WB without hazard stalls ($\texttt{isLoadUse} = 0$). Stage 2 produces \texttt{mulStage2Result} onto \texttt{exMemFwdData}, which is bypassed directly to ALU operand A in EX with \textbf{0 stall cycles}, sustaining an issue rate of \textbf{1 instruction entering the pipeline per clock cycle}!
+        \item \textit{ASAP7 7\,nm FinFET Physical Synthesis}:
+        Standalone 2-stage pipelined multiplier synthesized to 6,891 cells, 127 DFFs, and $554.07\,\mu\text{m}^2$ with a maximum stage delay of $0.65\,\text{ns}$ ($3.3\times$ peak operation throughput over combinational Booth).
+        Full core \texttt{RiscvPipelined} with pipelined multiplier synthesized to 19,079 cells, 1,563 DFFs, and \textbf{1,729.57\,$\mu$m$^2$ silicon area}---a \textbf{22.6\% area reduction} ($-505.98\,\mu\text{m}^2$, saving 3,630 standard cells) over the unpipelined core ($2,235.55\,\mu\text{m}^2$) due to standard cell drive-strength optimization.
+        The operating clock period was restored from $2.462\,\text{ns}$ ($406.2\,\text{MHz}$) to \textbf{1.363\,ns (733.7\,MHz)}, delivering an immediate \textbf{+80.6\% frequency boost}.
+        \item \textit{Benchmark Verification and Speedup}:
+        Verified 100\% pass across all 38 RV32I and 4 Zmmul official conformance tests.
+        On the DSP hardware multiply benchmark (804 instructions, 999 cycles), execution time dropped from $3,338.21\,\text{ns}$ (single-cycle) and $2,459.54\,\text{ns}$ (unpipelined core with bypassing) down to \textbf{1,361.64\,ns ($1.36\,\mu$s)}, achieving a \textbf{2.45$\times$ speedup} over single-cycle, \textbf{2.36$\times$} over unforwarded pipeline, and \textbf{1.81$\times$} over the unpipelined forwarded core.
+    \end{itemize}
     \item \textbf{Hardware Data Bypassing, ASAP7 7\,nm FinFET Synthesis, and CoreMark/Dhrystone Rerun in Chapter 19}:
     \begin{itemize}
         \item \textit{Hardware Implementation of Bypassing (\texttt{RiscvPipelined.scala}, Section \ref{riscvBypassing})}: Implemented comprehensive data bypassing and forwarding across the 4-stage RV32I pipeline:

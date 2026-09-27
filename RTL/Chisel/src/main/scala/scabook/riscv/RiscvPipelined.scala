@@ -5,6 +5,7 @@ package scabook.riscv
 import chisel3._
 import chisel3.util._
 import scabook.memory.RiscvRegFile
+import scabook.multipliers.{PipelinedMultiplierStage1, PipelinedMultiplierStage2}
 
 /** Pipeline Register Bundles */
 class IfIdBundle(val xlen: Int = 32) extends Bundle {
@@ -36,6 +37,7 @@ class IdExBundle(val xlen: Int = 32) extends Bundle {
   val isJalr    = Bool()
   val isLui     = Bool()
   val isAuipc   = Bool()
+  val isMul     = Bool()
 }
 
 class ExMemBundle(val xlen: Int = 32) extends Bundle {
@@ -55,6 +57,10 @@ class ExMemBundle(val xlen: Int = 32) extends Bundle {
   val isJalr    = Bool()
   val isLui     = Bool()
   val isAuipc   = Bool()
+  val isMul     = Bool()
+  val mulOp     = UInt(5.W)
+  val mulSum    = UInt((2 * xlen).W)
+  val mulCarry  = UInt((2 * xlen).W)
 }
 
 /** RISC-V RV32I_Zmmul 4-Stage Pipelined Processor Core (Stall-on-Hazard).
@@ -63,11 +69,18 @@ class ExMemBundle(val xlen: Int = 32) extends Bundle {
   *   1. IF (Instruction Fetch): Program counter generation and instruction memory fetch.
   *   2. ID (Instruction Decode): Instruction decode, operand fetch from register file with
   *      internal write-through bypass, and hazard detection unit (stalling on RAW hazards).
-  *   3. EX (Execute): ALU computation (RV32I and Zmmul), branch condition evaluation,
+  *   3. EX (Execute): ALU computation (RV32I and Zmmul Stage 1), branch condition evaluation,
   *      and jump target calculation with pipeline flush on control transfer.
-  *   4. MEM/WB (Memory & Writeback): Data memory read/write and register file writeback.
+  *   4. MEM/WB (Memory & Writeback): Data memory read/write, Zmmul Stage 2 vector-merging adder,
+  *      forwarding to EX, and register file writeback.
   */
-class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul: Boolean = true, val enableForwarding: Boolean = true) extends Module {
+class RiscvPipelined(
+  val xlen: Int = 32,
+  val initPC: BigInt = 0,
+  val enableZmmul: Boolean = true,
+  val enableForwarding: Boolean = true,
+  val enablePipelinedMul: Boolean = true
+) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
     val dmem     = new DmemPort(xlen, xlen)
@@ -79,8 +92,12 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
 
   // Hardware Subsystems
   val decoder = Module(new RiscvDecoder)
-  val alu     = Module(new RiscvALU(width = xlen, enableZmmul = enableZmmul))
+  val alu     = Module(new RiscvALU(width = xlen, enableZmmul = enableZmmul && !enablePipelinedMul))
   val regFile = Module(new RiscvRegFile(width = xlen))
+
+  // Pipelined Multiplier Modules
+  val mulStage1 = if (enableZmmul && enablePipelinedMul) Some(Module(new PipelinedMultiplierStage1(xlen))) else None
+  val mulStage2 = if (enableZmmul && enablePipelinedMul) Some(Module(new PipelinedMultiplierStage2(xlen))) else None
 
   // Pipeline Registers
   val if_id  = RegInit(0.U.asTypeOf(new IfIdBundle(xlen)))
@@ -98,7 +115,16 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   io.dmem.memWrite  := ex_mem.valid && ex_mem.memWrite
   io.dmem.writeData := ex_mem.rs2Data
 
+  val mulStage2Result = WireDefault(0.U(xlen.W))
+  if (mulStage2.isDefined) {
+    mulStage2.get.io.sumIn   := ex_mem.mulSum
+    mulStage2.get.io.carryIn := ex_mem.mulCarry
+    mulStage2.get.io.mulOp   := ex_mem.mulOp
+    mulStage2Result          := mulStage2.get.io.result
+  }
+
   val wbData = MuxCase(ex_mem.aluResult, Seq(
+    ex_mem.isMul                    -> mulStage2Result,
     ex_mem.memToReg                 -> io.dmem.readData,
     (ex_mem.isJal || ex_mem.isJalr) -> (ex_mem.pc + 4.U),
     ex_mem.isLui                    -> ex_mem.imm,
@@ -118,6 +144,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   // Forward from ex_mem to EX stage if ex_mem writes to rd and rd matches rs1/rs2.
   val exMemWillWrite = ex_mem.valid && ex_mem.regWrite && (ex_mem.rd =/= 0.U)
   val exMemFwdData = MuxCase(ex_mem.aluResult, Seq(
+    ex_mem.isMul                    -> mulStage2Result,
     (ex_mem.isJal || ex_mem.isJalr) -> (ex_mem.pc + 4.U),
     ex_mem.isLui                    -> ex_mem.imm,
     ex_mem.isAuipc                  -> (ex_mem.pc + ex_mem.imm)
@@ -132,6 +159,12 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   alu.io.opA   := exRs1
   alu.io.opB   := Mux(id_ex.aluSrc, id_ex.imm, exRs2)
   alu.io.aluOp := id_ex.aluOp
+
+  if (mulStage1.isDefined) {
+    mulStage1.get.io.a     := exRs1
+    mulStage1.get.io.b     := Mux(id_ex.aluSrc, id_ex.imm, exRs2)
+    mulStage1.get.io.mulOp := id_ex.aluOp
+  }
 
   val branchCond = MuxCase(false.B, Seq(
     (id_ex.funct3 === "b000".U) -> alu.io.zero,
@@ -169,6 +202,10 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   ex_mem.isJalr    := id_ex.isJalr
   ex_mem.isLui     := id_ex.isLui
   ex_mem.isAuipc   := id_ex.isAuipc
+  ex_mem.isMul     := id_ex.valid && id_ex.isMul
+  ex_mem.mulOp     := id_ex.aluOp
+  ex_mem.mulSum    := (if (mulStage1.isDefined) mulStage1.get.io.sumOut else 0.U)
+  ex_mem.mulCarry  := (if (mulStage1.isDefined) mulStage1.get.io.carryOut else 0.U)
 
   // ==========================================
   // STAGE 2: INSTRUCTION DECODE (ID) & HAZARD DETECTION
@@ -232,6 +269,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
     id_ex.isJalr   := false.B
     id_ex.isLui    := false.B
     id_ex.isAuipc  := false.B
+    id_ex.isMul    := false.B
   }.elsewhen(stall) {
     // Inject bubble into EX on RAW hazard stall
     id_ex.valid    := false.B
@@ -244,6 +282,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
     id_ex.isJalr   := false.B
     id_ex.isLui    := false.B
     id_ex.isAuipc  := false.B
+    id_ex.isMul    := false.B
   }.otherwise {
     id_ex.valid    := if_id.valid
     id_ex.pc       := if_id.pc
@@ -267,6 +306,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
     id_ex.isJalr   := (f.opcode === RiscvOpcodes.JALR)
     id_ex.isLui    := (f.opcode === RiscvOpcodes.LUI)
     id_ex.isAuipc  := (f.opcode === RiscvOpcodes.AUIPC)
+    id_ex.isMul    := enableZmmul.B && f.isMul && (f.opcode === RiscvOpcodes.OP)
   }
 
   // ==========================================
@@ -292,6 +332,6 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   // Observability Ports
   io.pc       := ex_mem.pc
   io.inst     := ex_mem.inst
-  io.aluOut   := ex_mem.aluResult
+  io.aluOut   := Mux(ex_mem.isMul, mulStage2Result, ex_mem.aluResult)
   io.regWrite := wbWen
 }

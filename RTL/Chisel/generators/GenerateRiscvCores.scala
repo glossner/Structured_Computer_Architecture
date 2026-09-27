@@ -49,8 +49,22 @@ object GenerateRiscvCores extends App {
 
   println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I_Zmmul)...")
   ChiselStage.emitSystemVerilogFile(
-    new RiscvPipelined(xlen = 32, enableZmmul = true),
+    new RiscvPipelined(xlen = 32, enableZmmul = true, enableForwarding = true, enablePipelinedMul = false),
     args = Array("--target-dir", "synth/zmmul_pipelined"),
+    firtoolOpts = firtoolFlags
+  )
+
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I_Zmmul with Pipelined Multiplier)...")
+  ChiselStage.emitSystemVerilogFile(
+    new RiscvPipelined(xlen = 32, enableZmmul = true, enableForwarding = true, enablePipelinedMul = true),
+    args = Array("--target-dir", "synth/zmmul_pipelined_pipemul"),
+    firtoolOpts = firtoolFlags
+  )
+
+  println("Generating SystemVerilog for PipelinedMultiplier...")
+  ChiselStage.emitSystemVerilogFile(
+    new scabook.multipliers.PipelinedMultiplier(32),
+    args = Array("--target-dir", "synth/pipemul"),
     firtoolOpts = firtoolFlags
   )
 
