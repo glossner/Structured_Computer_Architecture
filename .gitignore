@@ -451,3 +451,13 @@ _minted*
 *.ilg
 *.ind
 
+# Physical design and ASIC synthesis artifacts
+synth/
+synth_out/
+runs/
+*.netlist
+*.rpt
+*.synth.v
+*.synth.json
+
+
