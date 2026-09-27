@@ -15,7 +15,7 @@ Combinational logic circuits (CLCs) that have a very high depth cause the system
 
 In Figure \ref{fig47} the pipeline technique is illustrated. In Figure \ref{fig47}a, the frequency at which the system clock can work is given by the propagation time through the $CLC_{f \circ g}$ to which is added the time associated with the propagation through the registers.
 
-\placedrawing[H]{figures/05b_01_pipelining.lp}{Pipelining. {\bf a.} The initial circuit, without pipeline register.  {\bf b.} The pipelined version of the circuit.}{fig47}
+\placedrawing[htbp]{figures/05b_01_pipelining.lp}{Pipelining. {\bf a.} The initial circuit, without pipeline register.  {\bf b.} The pipelined version of the circuit.}{fig47}
 
 \begin{equation}
     T_{clock} = t_{regProp} + t_{CLC_{f \circ g}} + t_{set-up} \simeq t_{CLC_{f \circ g}}
@@ -81,14 +81,13 @@ The operating frequency of the toyRISC processor presented section \ref{toyrisc}
 
 The micro-architecture is described is the same as the one presented in Listing \ref{lst:toyRISCdefines} from the chapter \ref{lect4}. The same for the Instruction Set Architecture which is in Table \ref{tab:riscISA}.
 
+\placedrawing[htbp]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
 
 The three pipeline registers introduced in design divide the execution of an instruction in four stages:
 \begin{description}
     \item[INSTRUCTION FETCH (IF)]: the content of the register {\tt pc} (program counter) addresses in the program memory the binary code of an instruction; in the same time the module {\tt next} computes the value for the next {\tt pc}. The execution time for this stage is:
         $$t_{IF} = t_{pc} + max(t_{next}, t_{ACCto Program Memory}) + t_{suPipeReg1}$$
         In the pipeline register {\bf PipeReg\_1} is loaded the information requested to finish the execution of the fetched instruction
-
-\placedrawing[H]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
         
     \item[OPERANDS FETCH (OF)]: from the register are fetched the two operands of the instruction using the fields {\tt leftAddr} and {\tt rightAddr} fetched in the previous cycle from the program memory. In {\bf pipeReg\_2} are loaded the two fetched operands and the information needed in the next cycles to end the execution of the instruction. The execution time for this stage is:
         $$t_{OF} = t_{PipeReg1} + t_{regFile} + t_{suPipeReg2}$$
@@ -162,7 +161,7 @@ These dependencies generate hazardous behaviors in the pipelined processor due t
 
 A \textbf{structural hazard} occurs when two or more overlapping instructions in the pipeline attempt to access the same physical hardware resource simultaneously. When a required hardware block cannot support all concurrent requests, one or more instructions must stall until the resource is freed, degrading processor throughput.
 
-\subsubsection{1. Pipelined Structural Hazards and Dedicated PC Adder Replication}
+\subsubsection{Pipelined Structural Hazards and Dedicated PC Adder Replication}
 In a non-pipelined, single-cycle computing system (such as the Harvard 5-OS core discussed in Chapter \ref{lect6a}), execution is strictly sequential. Consequently, a single arithmetic logic unit (ALU) can theoretically be time-multiplexed to perform both arithmetic computations and sequential program counter incrementing ($\text{pc} \leftarrow \text{pc} + 4$).
 
 In a pipelined processor, however, this time-multiplexing is impossible. On \textbf{every single clock cycle}, the Instruction Fetch (\texttt{IF}) stage must calculate the sequential next address ($\text{pc} + 4$) concurrently while the Execution (\texttt{EX}) stage evaluates an arithmetic instruction or computes a branch target ($\text{pc} + \text{offset}$). If the processor attempted to share a single ALU between \texttt{IF} and \texttt{EX}, a structural hazard would occur on every cycle, stalling instruction fetch whenever arithmetic was performed and halving throughput.
@@ -175,7 +174,7 @@ To eliminate this structural hazard, pipelined organization mandates \textbf{har
     \item \textbf{Multi-Ported Register Files}: The register file must provide multiple independent read ports (at least two for binary operations in \texttt{OF}) and a concurrent write port in \texttt{WB} so that operand reading and result write-back do not create structural contention.
 \end{itemize}
 
-\subsubsection{2. Superscalar Structural Hazards and Execution Unit Replication}
+\subsubsection{Superscalar Structural Hazards and Execution Unit Replication}
 When the microarchitecture is expanded from a scalar pipeline (issuing 1 instruction per cycle) to a \textbf{superscalar} organization (issuing $N$ instructions per cycle), structural hazards multiply:
 \begin{itemize}
     \item If two independent arithmetic instructions are issued simultaneously in the same cycle, a core with only one integer ALU suffers a structural stall.
@@ -355,8 +354,6 @@ By adding hardware, the data dependency can be resolved, {\bf in all cases}, wit
 
 Thus, forwarding control is done by a circuit which analyses the binary code of three successive instructions. Three situations can occur:
 
-\placedrawing[H]{figures/05b_03_forwarding.lp}{The  change used to reduce hazards imposed by data  dependencies.}{brDelRed}
-
 \begin{verbatim}
     xxxxxx_00001_xxx...x                // identified in PipeReg_3
     xxxxxx_yyyyy_00001_xxx...x          // identified in PipeReg_2
@@ -384,7 +381,7 @@ or
     xxxxxx_yyyyy_00001_00011_xxx...x    // identified in PipeReg_2
 \end{verbatim}
 
-
+\placedrawing[htbp]{figures/05b_03_forwarding.lp}{The change used to reduce hazards imposed by data dependencies.}{brDelRed}
 
 The structure of the processor is modified as shown in Figure \ref{brDelRed}, where a new level in the pipeline is added and the operands at the ALU inputs are selected using multiplexers with additional inputs. The selection for the augmented multiplexers is computed combinationally as {\tt opSel[3:0]} in {\tt DECODE} and synchronized in {\bf PipeReg2} as {\tt opSel2[3:0]} to avoid an additional delay in selecting ALU operands. Thus, {\tt result} is used as an operand in the EXECUTE stage of the pipeline, if the forwarding mechanism decides, as {\tt result3} connected to inputs 1 or as {\tt result4} to inputs 2 of the selection multiplexers at the ALU operand inputs. The value of {\tt result3} is forwarded when the dependency is identified with the result of the instruction issued one clock cycle before the current one (EX hazard). The value of {\tt result4} is forwarded when the dependency is identified with the result of the instruction issued two clock cycles before the current one (MEM hazard).
 
@@ -1013,9 +1010,9 @@ More at: \url{https://www.geeksforgeeks.org/ieee-standard-754-floating-point-num
 For the purpose we are pursuing, it is enough to understand that the operation with represented floating-point numbers involves a pipeline or a sequence of elementary operations of one clock cycle. The number of cycles will be different depending on the operation, minimum for addition and maximum for division.
 \end{comment}
 
-\subsubsection{Dynamic Scheduling with the Scoreboard (CDC 6600)}\label{sec:scoreboard}\index{Scoreboard!CDC 6600 dynamic scheduling}\index{Cray, Seymour (1925-1996)}
+\subsubsection{Dynamic Scheduling with the Scoreboard (CDC 6600)}\label{sec:scoreboard}\index{Scoreboard!CDC 6600 dynamic scheduling}\index{Cray, Seymour (1925-1996)}\index{Thornton, James E. (1925-2005)}
 
-The earliest dynamic scheduling technique for out-of-order execution was the \emph{Scoreboard}, invented by Seymour Cray for the Control Data Corporation (CDC) 6600 supercomputer in 1964. The CDC 6600 incorporated multiple independent functional units (floating-point adders, multipliers, a divider, shift units, and integer ALUs) operating in parallel. 
+The earliest dynamic scheduling technique for out-of-order execution was the \emph{Scoreboard}, developed by Seymour Cray and James E. Thornton for the Control Data Corporation (CDC) 6600 supercomputer in 1964 \citep{thornton1964, thornton1970}. The CDC 6600 incorporated multiple independent functional units (floating-point adders, multipliers, a divider, shift units, and integer ALUs) operating in parallel. 
 
 The scoreboard is a centralized hardware control unit that maintains the status of all active instructions, functional units, and registers. It dynamically steers instruction progress through four execution stages:
 \begin{enumerate}
@@ -1033,7 +1030,7 @@ Although the scoreboard achieved unprecedented performance for its time by enabl
 
 \subsubsection{Tomasulo's Algorithm and Dynamic Register Renaming (IBM 360/91)}\label{sec:tomasulo}\index{Tomasulo's algorithm: dynamic scheduling in out-of-order execution}\index{Tomasulo, Robert (1934-2008)}
 
-To overcome the performance bottlenecks of scoreboarding, Robert Tomasulo invented a dynamic scheduling algorithm at IBM in 1967 for the System/360 Model 91 floating-point unit. Tomasulo's algorithm introduces three revolutionary microarchitectural concepts:
+To overcome the performance bottlenecks of scoreboarding, Robert M. Tomasulo invented an algorithm for dynamic instruction scheduling with register renaming at IBM in 1967 for the System/360 Model 91 floating-point unit \citep{tomasulo1967}. Tomasulo's algorithm introduces three revolutionary microarchitectural concepts:
 \begin{enumerate}
     \item \textbf{Distributed Reservation Stations}: Instead of a centralized control structure, small storage buffers called \emph{Reservation Stations} (RS) are placed directly at the input of each functional unit. Instructions are dispatched immediately into an available reservation station, freeing the instruction issue logic to fetch and decode subsequent instructions.
     \item \textbf{Dynamic Register Renaming}: Register specifiers are replaced by \emph{tags} identifying the reservation station that will produce the result. If a source operand is not yet available at issue time, the reservation station stores the tag of the producing unit rather than the operand value. Because operands are buffered and referenced by tags rather than architectural register names, \textbf{WAR and WAW hazards are completely eliminated without stalling}.
@@ -1061,26 +1058,72 @@ Complementing the reservation stations, the processor's register file includes a
     \item \textbf{Qi}: The identifier of the reservation station producing the result to be stored into register $R_i$. If $Q_i = 0$ (or blank), no currently active instruction is writing to $R_i$, meaning the value stored in the register file is architecturally valid.
 \end{itemize}
 
-\subsubsection{Comparative Summary: Scoreboard vs. Tomasulo}\label{sec:ooo_comparison}
+\subsubsection{Speculative Execution, Precise Interrupts, and the Reorder Buffer}\label{sec:rob}
+\index{reorder buffer (ROB)!speculative execution}\index{precise interrupts!out-of-order execution}\index{Smith, James E.}\index{Pleszkun, Andrew R.}\index{Sohi, Gurindar S.}
 
-Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational trade-offs between the CDC 6600 Scoreboard and the IBM 360/91 Tomasulo dynamic scheduling approaches.
+While Tomasulo's algorithm dynamically eliminates false dependencies (WAR and WAW) and tolerates long execution latencies, it possesses a fundamental architectural limitation: \textbf{imprecise exceptions}. In classic Tomasulo scheduling, results are written out of order directly to the architectural register file as soon as each functional unit completes. 
+
+If an instruction triggers a hardware exception (such as an arithmetic overflow, divide by zero, or virtual memory page fault), or if a conditional branch is speculatively mispredicted, subsequent instructions that executed out of order may have already permanently overwritten architectural registers. Consequently, the processor cannot reconstruct the exact state of the program at the point of the fault, making software debugging, page-fault handling, and speculative branch recovery impossible.
+
+To resolve this critical flaw, James E. Smith and Andrew R. Pleszkun introduced the \textbf{Reorder Buffer (ROB)} in 1988 \citep{smith1988precise}. Gurindar S. Sohi extended this approach with the Register Update Unit (RUU) \citep{sohi1990instruction}, and Smith and Sohi synthesized the foundational framework for modern speculative superscalar microarchitectures \citep{smith1991}.
+
+The core insight of the Reorder Buffer is to \textbf{decouple execution completion from architectural state update}:
+\begin{itemize}
+    \item Instructions are dispatched and issued \textbf{in strict program order}.
+    \item Instructions execute and produce results \textbf{out of order}.
+    \item Completed results are buffered \textbf{speculatively} in the Reorder Buffer.
+    \item Instructions commit and update the permanent architectural register file and memory \textbf{strictly in program order}.
+\end{itemize}
+
+\paragraph{ROB Organization and Entry Fields}
+The Reorder Buffer is organized as a circular FIFO queue managed by head (commit) and tail (issue) pointers. When an instruction is decoded and dispatched, it is assigned a unique sequential slot at the tail of the ROB. The index of this ROB slot acts as the dynamic renaming tag for the instruction's destination register. 
+
+Each entry in the Reorder Buffer contains the following fields:
+\begin{itemize}
+    \item \textbf{Type}: Identifies the instruction class (e.g., branch, store, integer ALU, floating-point, load).
+    \item \textbf{Destination}: Specifies the target architectural register number ($rd$) for register-writing instructions, or the computed memory destination for store instructions.
+    \item \textbf{Value}: Holds the speculative data result computed by the functional unit once execution completes.
+    \item \textbf{Ready}: A 1-bit status flag indicating whether the functional unit has finished execution and broadcast its result to the ROB.
+    \item \textbf{Exception}: Status flags indicating whether an arithmetic overflow, memory alignment fault, or page fault was raised during execution.
+\end{itemize}
+
+\paragraph{Four-Stage Speculative Out-of-Order Execution}
+With a Reorder Buffer, instruction execution proceeds through four distinct stages:
+\begin{enumerate}
+    \item \textbf{Issue / Dispatch (In-Order)}: The next instruction in program order is decoded. If both a reservation station and an entry at the tail of the ROB are available, the instruction is allocated both resources. The destination register in the register status table is updated to point to the newly assigned ROB tag ($Q_i = \text{ROB}_{\text{tail}}$). If a source operand is already available in the architectural register file, it is read; if it is currently in flight in an active ROB entry, it is copied from the ROB (if ready) or the producing ROB tag is recorded in the reservation station.
+    \item \textbf{Execute (Out-of-Order)}: As soon as all required source operands become available in the reservation station (via CDB forwarding or direct dispatch), the functional unit executes the operation.
+    \item \textbf{Write Result (Out-of-Order)}: When the functional unit completes, it broadcasts its computed result and ROB tag over the Common Data Bus (CDB). The result is written into the assigned ROB entry, and its \textit{Ready} bit is set to 1. Simultaneously, any waiting reservation stations snoop the CDB and capture the value. \textbf{The architectural register file is not touched during this stage}.
+    \item \textbf{Commit / Retire (Strictly In-Order)}: Only the instruction at the \textbf{head} of the ROB is evaluated for retirement. When the head entry has $\textit{Ready} = 1$:
+    \begin{itemize}
+        \item \textit{Normal Completion}: If no exception occurred, the speculative value stored in the ROB entry is written permanently into the architectural register file (or committed to data cache/memory if it is a store instruction). The head pointer advances, freeing the ROB entry.
+        \item \textit{Branch Misprediction}: If the head instruction is a conditional branch that was mispredicted, all speculative entries currently in the ROB are instantaneously flushed in a single clock cycle, the processor redirects the program counter to the alternate target, and execution restarts without any corrupted architectural registers!
+        \item \textit{Precise Exception}: If an exception flag is set, the pipeline and all subsequent ROB entries are discarded. Because no instruction past the faulting instruction has been allowed to commit to the architectural register file, the processor state is 100\% \textbf{precise}, allowing the operating system exception handler to service the interrupt and resume execution correctly.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Comparative Summary: Scoreboard, Tomasulo, and Reorder Buffer}\label{sec:ooo_comparison}
+
+Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational trade-offs across the three landmark generations of dynamic instruction scheduling.
 
 \begin{table}[H]
   \begin{center}
     \caption{Architectural Comparison of Dynamic Scheduling Approaches.}
     \label{tab:scoreboard_vs_tomasulo}
     \small
-    \begin{tabular}{|l|l|l|}
+    \begin{tabular}{|l|l|l|l|}
       \hline
-      \textbf{Architectural Feature} & \textbf{CDC 6600 Scoreboard (1964)} & \textbf{IBM 360/91 Tomasulo (1967)} \\ \hline \hline
-      \textbf{Control Architecture}  & Centralized scoreboard unit          & Distributed reservation stations per FU \\ \hline
-      \textbf{Register Renaming}     & None (references architectural regs) & Dynamic renaming via RS tags and $Q_i$ \\ \hline
-      \textbf{RAW Hazard Handling}   & Stalls \textit{Read Operands} stage  & Snoops Common Data Bus (CDB) in RS \\ \hline
-      \textbf{WAR Hazard Handling}   & \textbf{Stalls} \textit{Write Result} stage & \textbf{Eliminated} by operand buffering \& tags \\ \hline
-      \textbf{WAW Hazard Handling}   & \textbf{Stalls} \textit{Issue} stage        & \textbf{Eliminated} by overwriting register $Q_i$ \\ \hline
-      \textbf{Result Routing}        & Point-to-point write to regfile      & Broadcast via Common Data Bus (CDB) \\ \hline
-      \textbf{Operand Buffering}     & In register file only                & In reservation station value fields ($V_j, V_k$) \\ \hline
-      \textbf{Hardware Overhead}     & Moderate centralized status tables   & High (associative tag comparators + CDB) \\ \hline
+      \textbf{Feature} & \textbf{Scoreboard (1964)} & \textbf{Tomasulo (1967)} & \textbf{Tomasulo + ROB (1988)} \\ 
+                       & \citep{thornton1964}       & \citep{tomasulo1967}     & \citep{smith1988precise, smith1991} \\ \hline \hline
+      \textbf{Control Unit}      & Centralized scoreboard      & Distributed RS           & Distributed RS + Circular ROB \\ \hline
+      \textbf{Renaming}          & None (architectural regs)   & Via RS tags \& $Q_i$     & Dynamic via ROB entry tags \\ \hline
+      \textbf{RAW Hazards}       & Stalls \textit{Read Op}     & Waits in RS; snoops CDB  & Waits in RS; snoops CDB/ROB \\ \hline
+      \textbf{WAR Hazards}       & \textbf{Stalls} Writeback   & \textbf{Eliminated}      & \textbf{Eliminated} by renaming \\ \hline
+      \textbf{WAW Hazards}       & \textbf{Stalls} Issue       & \textbf{Eliminated}      & \textbf{Eliminated} by renaming \\ \hline
+      \textbf{Speculative State} & In register file only       & In RS / register file    & Buffered in ROB until commit \\ \hline
+      \textbf{Commit Order}      & Out-of-order                & Out-of-order             & \textbf{Strictly in-order} \\ \hline
+      \textbf{Exceptions}        & \textbf{Imprecise}          & \textbf{Imprecise}       & \textbf{Precise interrupts} \\ \hline
+      \textbf{Branch Recovery}   & Stalls at branch            & Stalls at branch         & \textbf{Instant flush of ROB} \\ \hline
+      \textbf{Hardware Cost}     & Moderate centralized logic  & High (RS + CDB routing)  & Highest (RS + CDB + FIFO ROB) \\ \hline
     \end{tabular}
   \end{center}
 \end{table}
