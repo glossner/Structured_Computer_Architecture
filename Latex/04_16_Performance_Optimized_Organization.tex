@@ -744,7 +744,7 @@ In static prediction, all decisions are made at compile time, before the executi
 
 \subsubsection{Dynamic Branch Prediction}
 
-Dynamic branch prediction\index{branch prediction!dynamic branch prediction} predicts branches based on dynamic information collected at run-time. It requires additional hardware. As examples, I have chosen two of the simplest prediction mechanisms.
+Dynamic branch prediction\index{branch prediction!dynamic branch prediction} predicts branch directions and targets based on execution history collected at run-time using dedicated hardware structures. Foundational studies on dynamic branch prediction, saturating up/down counters, and Branch Target Buffers (BTBs)\index{branch target buffer (BTB)} were introduced by J.~E.~Smith \citep{smith1981study} and Lee and A.~J.~Smith \citep{lee1984branch}. We first examine the two classic bimodal counter mechanisms before discussing modern two-level adaptive predictors.
 
 \paragraph{Last-time, one-bit predictor}
 is the simplest solution  which uses a two state automaton whose behavior is described in Figure \ref{bp1}. We will code the state {\tt prediction not taken} with 0, and the state {\tt prediction taken} with 1. The automaton is a {\em saturated} 1-bit counter. If is incremented from 0 goes to 1, if is decremented from 1 goes to 0. But if it is incremented from 1, stays in 1, while decremented from 0 stays in 0. This 2-state automaton says whether the branch was recently taken or not. Based on this, the processor fetches the next instruction from the target address or sequential address. If the prediction is wrong, flushes the pipeline and also flips prediction. So, every time a wrong prediction is made, the prediction bit is flipped.
@@ -805,6 +805,40 @@ As shown in Table \ref{tab:branch_trace}, the 1-bit predictor incurs \textbf{two
 Consequently, for an $N$-iteration loop, the 1-bit predictor correctly predicts only $N-2$ branch occurrences, giving an accuracy of $(N-2)/N$. For $N = 4$, its steady-state accuracy is only $2/4 = 50\%$.
 
 In contrast, the 2-bit counter predictor incurs only \textbf{a single misprediction} upon loop exit. When the loop terminates on Iteration 4, the counter decrements from Strongly Taken (11) to Weakly Taken (10). Because the most significant bit remains 1, the predictor continues to predict Taken! When the loop re-executes on Pass 2, Iteration 1 is correctly predicted as Taken, and the counter immediately increments back to Strongly Taken (11). Its accuracy is $(N-1)/N$, which is $3/4 = 75\%$ for $N = 4$, and rises to $90\%$ for $N = 10$.
+
+\paragraph{Two-Level Adaptive Predictors and Correlated Branches (Yeh and Patt)}
+\label{sec:yeh_patt}
+\index{branch prediction!two-level adaptive}
+\index{Patt, Yale N.}
+\index{Yeh, Tse-Yu}
+\index{branch history register (BHR)}
+\index{pattern history table (PHT)}
+\index{branch correlation}
+\index{gshare predictor}
+\index{tournament predictor}
+
+While 1-bit and 2-bit bimodal counters track the history of individual branches in isolation, real programs contain branches whose outcomes strongly correlate either with their own recent past outcomes or with the outcomes of other preceding branches (known as \emph{branch correlation}\index{branch correlation}). For example, consider an alternating loop condition or a sequence of dependent conditional statements such as:
+\begin{verbatim}
+    if (aa == 2)
+        aa = 0;
+    if (bb == 2)
+        bb = 0;
+    if (aa != bb) { ... }
+\end{verbatim}
+If both preceding conditions are true, the third branch is guaranteed not to be taken. An isolated 2-bit counter indexed solely by the branch address cannot capture this inter-branch correlation because it does not record which path led to the branch.
+
+In landmark research, Tse-Yu Yeh and Yale N.~Patt \citep{yeh1991twolevel, yeh1992alternative} solved this limitation by introducing \textbf{Two-Level Adaptive Branch Prediction}. Yale Patt's research group had previously demonstrated with the High Performance Substrate (HPS) architecture \citep{patt1985hps} that aggressive out-of-order execution and wide superscalar dispatch cannot succeed without near-perfect branch prediction, because branch misprediction penalties flush large instruction windows.
+
+The key insight of Yeh and Patt was to decouple dynamic branch prediction into two distinct levels of history:
+\begin{enumerate}
+    \item \textbf{First Level: Branch History Register (BHR / GHR)}: A $k$-bit shift register that records the actual outcomes of the last $k$ branches (shifting in a 1 for Taken and a 0 for Not Taken). This history can be tracked globally across all branches in a Global History Register (GHR) to capture inter-branch correlation, or locally per branch instruction (BHR) to capture recurring loop patterns.
+    \item \textbf{Second Level: Pattern History Table (PHT)}: An array of $2^k$ 2-bit saturating counters. Instead of indexing counters directly by the branch address, the predictor uses the $k$-bit branch history pattern as an index (or combines the branch address with the history pattern) to select a dedicated 2-bit saturating counter.
+\end{enumerate}
+
+Yeh and Patt classified two-level adaptive predictors into nine variations based on whether the history register is Global ($G$), Per-branch ($P$), or Set-associative ($S$), and whether the pattern table is Global ($g$), Per-branch ($p$), or Set-associative ($s$)---yielding configurations such as \emph{GAg}, \emph{GAp}, \emph{PAg}, and \emph{PAp} \citep{yeh1992alternative}. By maintaining separate saturating counters for each specific sequence of recent branch outcomes (e.g., distinguishing the behavior after pattern \texttt{1010} from pattern \texttt{1111}), Yeh and Patt demonstrated that two-level adaptive predictors shattered the accuracy ceiling of isolated 2-bit counters, elevating prediction accuracy from $\sim 85\text{--}90\%$ to over $97\%$.
+
+Building upon Yeh and Patt's two-level framework, Scott McFarling \citep{mcfarling1993combining} introduced the \textbf{gshare predictor}, which computes a bitwise XOR of the global branch history register with the branch instruction address (PC) to index the PHT, significantly reducing aliasing (conflict interference) between different branches. McFarling also pioneered \textbf{combining (tournament) predictors}, which use a secondary array of 2-bit counters to dynamically select between two different prediction strategies (such as a local bimodal predictor and a global two-level predictor) based on which predictor has historically demonstrated greater accuracy for that specific branch. Yeh and Patt's two-level adaptive techniques and their derivatives (including gshare, tournament predictors, and modern neural perceptron predictors) formed the core branch prediction engine in virtually all high-performance microprocessors, including the Intel Pentium Pro/II/III/4/Core, AMD K6/Athlon/Zen, and DEC Alpha 21264.
+
 
 \section{Programming Pipelined Processors}
 
