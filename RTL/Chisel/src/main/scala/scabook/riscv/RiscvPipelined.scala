@@ -67,7 +67,7 @@ class ExMemBundle(val xlen: Int = 32) extends Bundle {
   *      and jump target calculation with pipeline flush on control transfer.
   *   4. MEM/WB (Memory & Writeback): Data memory read/write and register file writeback.
   */
-class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0) extends Module {
+class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul: Boolean = true) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
     val dmem     = new DmemPort(xlen, xlen)
@@ -79,7 +79,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0) extends Module 
 
   // Hardware Subsystems
   val decoder = Module(new RiscvDecoder)
-  val alu     = Module(new RiscvALU(width = xlen))
+  val alu     = Module(new RiscvALU(width = xlen, enableZmmul = enableZmmul))
   val regFile = Module(new RiscvRegFile(width = xlen))
 
   // Pipeline Registers

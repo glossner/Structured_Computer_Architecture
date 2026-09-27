@@ -8,7 +8,7 @@ While the single-cycle processor developed in Section \ref{riscvArch} executes e
 \begin{equation}
 T_{\text{clock, single}} \ge T_{\text{fetch}} + T_{\text{decode}} + T_{\text{ALU}} + T_{\text{dmem}} + T_{\text{wb}} + T_{\text{setup}}.
 \end{equation}
-In advanced physical processes, this monolithic combinational path limits clock frequencies. To improve computational throughput, this section develops a 4-stage pipelined implementation of the \texttt{RV32I\_Zmmul} processor, designated \texttt{RiscvPipelined}. Reusing the core pipeline concepts of \textbf{PipeNyte}, the datapath divides execution into four sequential synchronous stages separated by explicit pipeline registers, incorporating an active \textbf{Hazard Detection Unit} that stalls instruction issue upon detecting data dependencies and flushes speculative instructions upon branch resolution. Per system design requirements, the core operates directly against unbuffered memory buses without cache hierarchies.
+In advanced physical processes, this monolithic combinational path limits clock frequencies. To improve computational throughput, this section develops a 4-stage pipelined implementation of the base \texttt{RV32I} processor, designated \texttt{RiscvPipelined} (and explores its extension to \texttt{RV32I\_Zmmul}). Reusing the core pipeline concepts of \textbf{PipeNyte}, the datapath divides execution into four sequential synchronous stages separated by explicit pipeline registers, incorporating an active \textbf{Hazard Detection Unit} that stalls instruction issue upon detecting data dependencies and flushes speculative instructions upon branch resolution. Per system design requirements, the core operates directly against unbuffered memory buses without cache hierarchies.
 
 \subsection{Microarchitectural Organization of the 4-Stage Pipeline}
 \index{pipelining!microarchitectural stages}\index{PipeNyte!4-stage architecture}
@@ -24,7 +24,7 @@ The 4-stage pipeline partitions the Fetch-Execute cycle into four balanced opera
     The ID stage also houses the \textbf{Hazard Detection Unit}. If an instruction in ID depends on a result produced by an in-flight instruction currently in the EX stage, the hazard detection unit asserts a pipeline stall.
     
     \item \textbf{Stage 3: Execute (EX)}:
-    Executes arithmetic, logical, shift, and multiplication operations via the 32-bit executive ALU (\texttt{RiscvALU}), supporting both base RV32I instructions and the standard \texttt{Zmmul} multiplication extension. The EX stage evaluates branch conditions (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}, \texttt{BLTU}, \texttt{BGEU}) and calculates branch/jump target addresses:
+    Executes arithmetic, logical, and shift operations via the 32-bit executive ALU (\texttt{RiscvALU}), with optional support for the standard \texttt{Zmmul} multiplication extension. The EX stage evaluates branch conditions (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}, \texttt{BLTU}, \texttt{BGEU}) and calculates branch/jump target addresses:
     \begin{align}
     \text{Target}_{\text{branch/jal}} &= \text{PC}_{\text{EX}} + \text{imm}_{\text{EX}}, \\
     \text{Target}_{\text{jalr}} &= (\text{rs1}_{\text{EX}} + \text{imm}_{\text{EX}}) \ \& \ \sim 1.
@@ -184,22 +184,22 @@ Because the branch resolves in Stage 3 (EX), the two younger instructions that e
 Control redirection unconditionally overrides hazard stalls: if an instruction in ID was stalled awaiting an operand, but the instruction in EX branches or jumps, the stalled instruction is flushed and the stall condition is dismissed.
 
 
-\section{Performance Evaluation and ASIC Physical Design}\label{riscvPerformance}
-\index{performance evaluation!single-cycle vs pipelined}\index{ASIC synthesis!SkyWater 130nm}\index{SkyWater 130nm!standard cell synthesis}
+\section{Performance Evaluation and ASIC Physical Design of the RV32I Pipeline}\label{riscvPerformance}
+\index{performance evaluation!pure RV32I}\index{ASIC synthesis!SkyWater 130nm}\index{SkyWater 130nm!standard cell synthesis}
 
-To evaluate the architectural trade-offs between the unpipelined (\texttt{RiscvFetchExecute}) and 4-stage pipelined (\texttt{RiscvPipelined}) processors, both designs were subjected to two rigorous verification and evaluation flows:
+To establish a rigorous baseline for pipelined processor design, the unpipelined (\texttt{RiscvFetchExecute}) and 4-stage pipelined (\texttt{RiscvPipelined}) processors were first configured in the pure, baseline \texttt{RV32I} architecture (with hardware multiplication disabled, \texttt{enableZmmul = false}). Both designs were subjected to three evaluation workflows:
 \begin{enumerate}
-    \item Architectural conformance verification against the complete official RISC-V test suite.
-    \item Cycle-accurate execution of a realistic Digital Signal Processing (DSP) benchmark application.
+    \item Architectural conformance verification against the official RISC-V \texttt{RV32I} test suite.
+    \item Cycle-accurate execution of a real Digital Signal Processing (DSP) benchmark application.
     \item Full standard-cell ASIC synthesis targeting the open-source \textbf{SkyWater 130\,nm} process technology.
 \end{enumerate}
 
-\subsection{Architectural Conformance Verification}
-\index{conformance testing!pipelined verification}
+\subsection{Architectural Conformance Verification of the RV32I Core}
+\index{conformance testing!RV32I verification}
 
-The \texttt{RiscvPipelined} processor was verified against all 42 official RISC-V architectural test suites (38 RV32I base tests and 4 Zmmul multiplication tests) using Chisel's \texttt{EphemeralSimulator}. The test harness monitors memory writes to the designated \texttt{tohost} signature address and performs automated word-by-word comparison against golden Spike reference signatures.
+The \texttt{RiscvPipelined} processor was verified against all 38 official RISC-V \texttt{RV32I} architectural test suites using Chisel's \texttt{EphemeralSimulator}. The simulation harness drives instructions into memory, monitors write accesses to the designated \texttt{tohost} signature address, and performs automated word-by-word comparison against golden Spike reference signatures.
 
-As detailed in Table \ref{tab:pipelined_conformance_results}, the 4-stage pipelined processor achieved a \textbf{100\% pass rate} across all 42 test suites, verifying functional compliance with the RISC-V unprivileged specification.
+As shown in Table \ref{tab:rv32i_pipelined_conformance_results}, the 4-stage pipelined \texttt{RV32I} processor achieved a \textbf{100\% pass rate} across all 38 test suites, validating architectural compliance with the unprivileged specification.
 
 \begin{table}[htbp]
 \centering
@@ -216,20 +216,19 @@ Branches (B-type)       & 6  & 18,240  & 60,256 \\
 Loads (\texttt{LB}, \texttt{LH}, \texttt{LW}, etc.) & 5 & 2,860 & 3,567 \\
 Stores (\texttt{SB}, \texttt{SH}, \texttt{SW})      & 3 & 1,980 & 2,543 \\
 Synchronization (\texttt{FENCE})                    & 1 & 148   & 180   \\
-Zmmul Extension (\texttt{MUL}, \texttt{MULH}, etc.) & 4 & 9,690 & 23,801 \\
 \hline
-\textbf{Total / Summary} & \textbf{42 Suites} & \textbf{86,964 Cycles} & \textbf{159,717 Cycles} \\
+\textbf{Total / Summary} & \textbf{38 Suites} & \textbf{77,274 Cycles} & \textbf{135,916 Cycles} \\
 \hline
 \end{tabular}
-\caption{Architectural conformance verification results and cycle counts for single-cycle vs. 4-stage pipelined implementations (100\% signature match across all tests).}\label{tab:pipelined_conformance_results}
+\caption{Official RISC-V \texttt{RV32I} architectural conformance results and cycle counts for single-cycle vs. 4-stage pipelined cores (100\% signature match across all 38 test suites).}\label{tab:rv32i_pipelined_conformance_results}
 \end{table}
 
-Across the 42 conformance suites, the total execution cycle count increased from 86,964 cycles on the single-cycle core to 159,717 cycles on the pipelined core, corresponding to an average $\text{CPI}$ of 1.83 across the test programs. The additional cycles stem directly from the 1-cycle stalls on back-to-back RAW data dependencies and the 2-cycle flushes incurred on taken branches.
+Across the 38 test suites, the cumulative execution cycle count increased from 77,274 cycles on the single-cycle core to 135,916 cycles on the pipelined core, yielding an average CPI of 1.76 across the verification suite. This overhead reflects the 1-cycle stalls on back-to-back Read-After-Write (RAW) data dependencies and the 2-cycle flushes incurred whenever conditional branches or unconditional jumps are taken.
 
-\subsection{Benchmark Program Performance: FIR Filter and Matrix Multiplication}
-\index{benchmark!FIR filter and matrix multiplication}\index{CPI!measured benchmark performance}
+\subsection{Benchmark Program Performance: Pure RV32I Software Multiply Workload}
+\index{benchmark!pure RV32I DSP workload}\index{CPI!pure RV32I benchmark}
 
-To evaluate actual processor performance under realistic algorithmic workloads, a real DSP computation program was executed on both processor cores. The program executes two standard kernel algorithms:
+To evaluate processor performance under realistic algorithmic execution, a real DSP benchmark application was executed on both cores. The workload consists of two core signal processing kernels:
 \begin{enumerate}
     \item A \textbf{16-point 4-tap Finite Impulse Response (FIR) filter}:
     \begin{equation}
@@ -240,89 +239,240 @@ To evaluate actual processor performance under realistic algorithmic workloads, 
     \mathbf{res}[i] = \sum_{j=0}^{3} \mathbf{A}[i][j] \cdot \mathbf{v}[j], \quad i \in [0, 3].
     \end{equation}
 \end{enumerate}
-The program was compiled with Clang targeting \texttt{rv32i\_zmmul} with optimization flag \texttt{-O1}, generating 804 machine instructions featuring loops, array memory accesses (\texttt{LW}, \texttt{SW}), integer additions, and hardware multiplications (\texttt{MUL}).
+In the pure \texttt{RV32I} implementation, hardware multiplication instructions are unavailable. Consequently, all integer multiplications are resolved by the compiler via software subroutines using the standard shift-and-add algorithm (\texttt{\_\_mulsi3}). The benchmark program executes 6,511 machine instructions.
 
-Table \ref{tab:benchmark_comparison} compares the execution metrics of the two processors on this benchmark application.
+Table \ref{tab:rv32i_benchmark_comparison} presents the cycle-accurate execution metrics for both processors on the pure \texttt{RV32I} DSP workload.
 
 \begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Metric} & \textbf{Single-Cycle Core} & \textbf{4-Stage Pipelined Core} & \textbf{Ratio / Delta} \\
+\textbf{Metric} & \textbf{Single-Cycle RV32I} & \textbf{4-Stage Pipelined RV32I} & \textbf{Ratio / Delta} \\
 \hline
-Instructions Executed ($I$)          & 804           & 804           & $1.00\times$ \\
-Execution Cycles ($C$)               & 804           & 1,090         & $+35.6\%$ cycles \\
-Clock Cycles per Instruction (CPI)   & 1.00          & 1.36          & $+0.36$ CPI \\
-RAW Hazard Stalls + Branch Flushes   & 0 cycles      & 286 cycles    & 286 cycles \\
+Instructions Executed ($I$)          & 6,511         & 6,511         & $1.00\times$ \\
+Execution Cycles ($C$)               & 6,511         & 10,645        & $+63.5\%$ cycles \\
+Clock Cycles per Instruction (CPI)   & 1.00          & 1.63          & $+0.63$ CPI \\
+RAW Hazard Stalls + Branch Flushes   & 0 cycles      & 4,134 cycles  & 4,134 cycles \\
 Calculated Benchmark Result (\texttt{tohost}) & 0x00000711 (1809) & 0x00000711 (1809) & Exact Match \\
 \hline
 \end{tabular}
-\caption{Cycle-accurate performance metrics of single-cycle vs. 4-stage pipelined core on the DSP benchmark workload.}\label{tab:benchmark_comparison}
+\caption{Cycle-accurate performance metrics of single-cycle vs. 4-stage pipelined core on the pure \texttt{RV32I} DSP benchmark workload.}\label{tab:rv32i_benchmark_comparison}
 \end{table}
 
-On this workload, the 4-stage pipeline executes the 804-instruction benchmark in 1,090 clock cycles, achieving an effective $\text{CPI}$ of \textbf{1.36}. Over 73\% of instructions retire without any stall delay; data hazard stalls and loop branch flushes account for only 286 total overhead cycles.
+The 4-stage pipelined processor completes the 6,511-instruction workload in 10,645 clock cycles, yielding an effective CPI of \textbf{1.63}. While the software shift-and-add multiplication routine exhibits frequent loop branches and register dependencies, over 61\% of instructions execute with zero stall penalties. Both cores produce the exact golden signature result (\texttt{tohost = 0x00000711}, decimal 1809).
 
-\subsection{Physical ASIC Synthesis on SkyWater 130\,nm Technology}
-\index{synthesis!SkyWater 0.13um results}\index{critical path!multiplier delay analysis}
+\subsection{Physical ASIC Synthesis of the Pure RV32I Core on SkyWater 130\,nm Technology}
+\index{synthesis!SkyWater 0.13um RV32I}\index{critical path!RV32I pipeline}
 
-To quantify physical silicon area and critical-path operating frequencies, both processors were synthesized to gate-level netlists using \textbf{Yosys} and mapped to the open-source \textbf{SkyWater 130\,nm} high-density standard cell library (\texttt{sky130\_fd\_sc\_hd}) at the typical process corner ($V_{dd} = 1.80\,\text{V}$, $T = 25^\circ\text{C}$). Standard cell timing models were analyzed using ABC static timing analysis with load capacitance constraints ($C_{\text{load}} = 10\,\text{fF}$).
+Both the single-cycle and 4-stage pipelined \texttt{RV32I} cores were synthesized to gate-level netlists using \textbf{Yosys} and mapped to the open-source \textbf{SkyWater 130\,nm} high-density standard cell library (\texttt{sky130\_fd\_sc\_hd}) at the typical process corner ($V_{dd} = 1.80\,\text{V}$, $T = 25^\circ\text{C}$). Critical path static timing analysis was performed under standard load capacitance constraints ($C_{\text{load}} = 10\,\text{fF}$).
 
-Table \ref{tab:sky130_synthesis_comparison} summarizes the physical design metrics for both processors.
+Table \ref{tab:sky130_rv32i_synthesis} summarizes the physical design metrics for the pure \texttt{RV32I} cores.
 
 \begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Physical Design Metric} & \textbf{Single-Cycle Core} & \textbf{4-Stage Pipelined Core} & \textbf{Delta / Comparison} \\
+\textbf{Physical Design Metric} & \textbf{Single-Cycle RV32I} & \textbf{4-Stage Pipelined RV32I} & \textbf{Delta / Comparison} \\
 \hline
 Process Technology              & SkyWater 130\,nm (0.13\,$\mu$m) & SkyWater 130\,nm (0.13\,$\mu$m) & Standard Cell HD \\
 Operating Voltage / Corner      & 1.80\,V, 25$^\circ$C (TT)       & 1.80\,V, 25$^\circ$C (TT)       & Typical Corner \\
 \hline
-Total Cell Count                & 19,235 cells                   & 19,747 cells                   & $+2.66\%$ cells \\
+Total Standard Cell Count       & 6,812 cells                    & 8,438 cells                    & $+23.9\%$ cells \\
 Sequential Elements (DFFs)      & 1,023 flip-flops               & 1,434 flip-flops               & $+411$ flip-flops (+40.2\%) \\
 Sequential Cell Area            & 20,480\,$\mu$m$^2$             & 28,708\,$\mu$m$^2$             & $+40.2\%$ \\
-Total Silicon Area              & \textbf{138,186\,$\mu$m$^2$}   & \textbf{151,075\,$\mu$m$^2$}   & \textbf{+9.33\% area} \\
+Total Silicon Area              & \textbf{53,902\,$\mu$m$^2$}    & \textbf{68,710\,$\mu$m$^2$}    & \textbf{+27.5\% area} \\
 \hline
-Critical Path Delay ($T_{\text{clk}}$) & \textbf{13.64\,ns}       & \textbf{13.25\,ns}             & $-2.86\%$ delay \\
-Maximum Clock Frequency ($f_{\text{max}}$) & \textbf{73.31\,MHz}  & \textbf{75.47\,MHz}            & \textbf{+2.95\% frequency} \\
+Critical Path Delay ($T_{\text{clk}}$, core) & \textbf{10.57\,ns} & \textbf{7.17\,ns}             & \textbf{$-32.2\%$ delay} \\
+Maximum Clock Frequency ($f_{\text{max}}$, core) & \textbf{94.60\,MHz} & \textbf{139.47\,MHz}     & \textbf{+47.4\% frequency} \\
 \hline
-Benchmark Execution Time ($T$)  & 10,967\,ns                     & 14,443\,ns                     & Core alone ($T_{\text{mem}} = 0$) \\
-With Realistic Memory ($T_{\text{mem}} = 5$\,ns) & 18,974\,ns   & 14,443\,ns                     & \textbf{1.31$\times$ Pipelined Speedup} \\
+Clock Period with Memory ($T_{\text{mem}} = 5$\,ns) & 20.57\,ns    & 7.17\,ns                       & \textbf{$-65.1\%$ cycle period} \\
+System Clock Frequency with Memory               & 48.61\,MHz     & 139.47\,MHz                    & \textbf{+186.9\% frequency} \\
+\hline
+Benchmark Execution Time ($T_{\text{mem}} = 5$\,ns) & 133,931\,ns & 76,325\,ns                     & \textbf{1.75$\times$ Application Speedup} \\
 \hline
 \end{tabular}
-\caption{SkyWater 130\,nm ASIC synthesis and timing comparison between \texttt{RiscvFetchExecute} and \texttt{RiscvPipelined}.}\label{tab:sky130_synthesis_comparison}
+\caption{SkyWater 130\,nm ASIC synthesis, timing, and benchmark performance comparison between single-cycle and 4-stage pipelined \texttt{RV32I} processors.}\label{tab:sky130_rv32i_synthesis}
 \end{table}
 
-\subsubsection{Architectural Analysis of Critical Path Delay and Multiplier Bottleneck}
-\index{multiplier!unpipelined EX bottleneck}\index{Amdahl's law!critical path delay}
+\subsubsection{Architectural Analysis of the RV32I Pipelined Speedup}
 
-Examining the synthesis timing results reveals a crucial architectural insight regarding pipeline balancing:
+The synthesis and performance results of the pure \texttt{RV32I} baseline illustrate classic computer architecture principles:
 \begin{enumerate}
-    \item \textbf{The Multiplier Bottleneck}:
-    In both architectures, the 32-bit multiplier supporting the \texttt{Zmmul} extension was implemented as single-cycle combinational logic inside \texttt{RiscvALU}. Standalone synthesis of \texttt{RiscvALU} in SkyWater 130\,nm demonstrates that the $32 \times 32$ multiplier logic array alone requires an intrinsic propagation delay of \textbf{11.09\,ns} and occupies \textbf{88,870\,$\mu\text{m}^2$} (64.3\% of the entire single-cycle processor area!).
+    \item \textbf{Well-Balanced Stage Delays}:
+    In the pure \texttt{RV32I} architecture, the execution stage contains only simple integer arithmetic, logic, and shift operations. Standalone synthesis of the pure \texttt{RV32I} ALU indicates an intrinsic delay of 6.11\,ns. When embedded in the processor, the four pipeline stages exhibit well-balanced propagation delays: $T_{\text{IF}} \approx 5\,\text{ns}$, $T_{\text{ID}} \approx 4\,\text{ns}$, $T_{\text{EX}} = 7.17\,\text{ns}$, and $T_{\text{MEM}} \approx 5\,\text{ns}$.
     
-    In the 4-stage pipeline, because the multiplier resides entirely in the EX stage, the EX stage delay is dominated by this 11.09\,ns combinational block plus input multiplexing and flip-flop setup time, establishing a critical path of \textbf{13.25\,ns} ($f_{\text{max}} = 75.47\,\text{MHz}$).
+    Consequently, pipelining cuts the core combinational critical path from 10.57\,ns down to 7.17\,ns, producing a \textbf{+47.4\% operating frequency boost} ($94.60\,\text{MHz} \to 139.47\,\text{MHz}$) for an area overhead of only 27.5\% ($53,902\,\mu\text{m}^2 \to 68,710\,\mu\text{m}^2$).
     
-    \item \textbf{Impact on Theoretical vs. Actual Speedup}:
-    If all pipeline stages were perfectly balanced and delay could be divided evenly across $N = 4$ stages, the theoretical frequency speedup would approach $4\times$. However, because the unpipelined multiplier cannot be divided without adding internal multiplier pipeline registers, the EX stage remains a delay bottleneck.
-    
-    \item \textbf{The Role of Real Memory Latency}:
-    In the idealized simulation where external memory responds combinationally in 0\,ns, the single-cycle core requires only 13.64\,ns per cycle. However, in practical physical hardware, memory access requires finite latency ($T_{\text{mem}} \approx 3\text{--}6\,\text{ns}$).
-    
-    In the single-cycle architecture, the clock period must accommodate \textbf{both} the instruction memory read access ($T_{\text{imem}}$) and the data memory read access ($T_{\text{dmem}}$) within the very same cycle:
+    \item \textbf{The Power of Memory Latency Overlap}:
+    In real hardware systems, memory access is not instantaneous ($T_{\text{mem}} \approx 3\text{--}6\,\text{ns}$). In the single-cycle core, instruction fetch and data memory access must both complete within the \textit{same} clock period:
     \begin{equation}
-    T_{\text{clk, single}} = T_{\text{imem}} + T_{\text{core}} + T_{\text{dmem}} = 5\,\text{ns} + 13.64\,\text{ns} + 5\,\text{ns} = 23.64\,\text{ns} \quad (f_{\text{max}} = 42.3\,\text{MHz}).
+    T_{\text{clk, single}} = T_{\text{imem}} + T_{\text{core}} + T_{\text{dmem}} = 5\,\text{ns} + 10.57\,\text{ns} + 5\,\text{ns} = 20.57\,\text{ns} \quad (48.61\,\text{MHz}).
     \end{equation}
-    In contrast, the 4-stage pipeline distributes instruction memory fetch to Stage 1 (IF) and data memory access to Stage 4 (MEM/WB). Because each stage operates in a separate clock cycle, memory latency overlaps concurrently with execution:
+    In the 4-stage pipeline, instruction fetch and data memory access occur in separate clock cycles (Stage 1 and Stage 4, respectively). Because memory latency overlaps with instruction execution, the clock period is governed solely by the maximum stage delay:
     \begin{equation}
-    T_{\text{clk, pipe}} = \max(T_{\text{imem}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{dmem}}) = \max(5\,\text{ns}, 13.25\,\text{ns}) = 13.25\,\text{ns} \quad (f_{\text{max}} = 75.47\,\text{MHz}).
+    T_{\text{clk, pipe}} = \max(T_{\text{imem}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{dmem}}) = \max(5\,\text{ns}, 7.17\,\text{ns}) = 7.17\,\text{ns} \quad (139.47\,\text{MHz}).
     \end{equation}
-    Consequently, under realistic system memory conditions, the 4-stage pipelined processor completes the 804-instruction benchmark in \textbf{14,443\,ns}, compared to \textbf{18,974\,ns} for the single-cycle processor---delivering an \textbf{actual performance speedup of 1.31$\times$} despite the 35.6\% stall overhead!
+    This decouples system clock frequency from cumulative memory latency, achieving a \textbf{+186.9\% frequency increase} ($48.61\,\text{MHz} \to 139.47\,\text{MHz}$).
     
-    \item \textbf{Performance in Integer-Only Architectures}:
-    If the $32 \times 32$ multiplier is excluded (base \texttt{RV32I}) or implemented as a multi-cycle iterative unit, the integer ALU critical path is only $\approx 2.5\,\text{ns}$. The 4-stage pipeline can then achieve clock periods of $T_{\text{clk}} \approx 3.5\text{--}4.0\,\text{ns}$ ($f_{\text{max}} \approx 250\text{--}285\,\text{MHz}$), yielding a \textbf{theoretical speedup of $\approx 4\times$} and an \textbf{actual application speedup exceeding 2.8$\times$}.
+    \item \textbf{Net Application Speedup}:
+    Despite the pipeline CPI increasing from 1.00 to 1.63 (+63.5\% cycles due to hazard stalls and branch flushes), the 2.87$\times$ clock frequency advantage easily dominates the cycle penalty:
+    \begin{equation}
+    \text{Speedup} = \frac{T_{\text{exec, single}}}{T_{\text{exec, pipe}}} = \frac{6,511 \times 20.57\,\text{ns}}{10,645 \times 7.17\,\text{ns}} = \frac{133,931\,\text{ns}}{76,325\,\text{ns}} = \mathbf{1.75\times}.
+    \end{equation}
+    The pipelined \texttt{RV32I} core delivers a \textbf{1.75$\times$ application speedup} on the real DSP workload.
+\end{enumerate}
+
+
+\section{Microarchitectural Case Study: Hardware Multiplication (Zmmul) and the Pipeline Balancing Dilemma}\label{riscvZmmulCaseStudy}
+\index{Zmmul extension!microarchitectural case study}\index{pipeline balancing!multiplier bottleneck}\index{Amdahl's law!clock period unbalancing}
+
+Having established the baseline performance of the 4-stage \texttt{RV32I} pipeline, we now examine what happens when hardware multiplication is added. In scientific computing, machine learning, and digital signal processing, multiplication is ubiquitous. Implementing multiplication in software via shift-and-add requires roughly 35 instructions per multiply, bloating code size and consuming significant execution cycles. 
+
+To accelerate multiplication, the RISC-V standard defines the \texttt{Zmmul} extension, introducing four 32-bit multiplication instructions: \texttt{MUL} (lower 32 bits), \texttt{MULH} (upper 32 bits, signed $\times$ signed), \texttt{MULHSU} (upper 32 bits, signed $\times$ unsigned), and \texttt{MULHU} (upper 32 bits, unsigned $\times$ unsigned).
+
+A naive microarchitectural approach is to simply integrate a $32 \times 32$ combinational multiplier directly into the execution stage ALU (\texttt{RiscvALU}). However, this case study reveals how an unpipelined complex execution unit catastrophically destroys pipeline stage balancing.
+
+\subsection{Physical Area and Critical Path of Standalone ALUs}
+\index{ALU!multiplier area explosion}\index{SkyWater 130nm!ALU synthesis}
+
+To isolate the physical impact of the multiplier, the standalone \texttt{RiscvALU} was synthesized targeting the SkyWater 130\,nm standard cell library in two configurations:
+\begin{enumerate}
+    \item \textbf{Pure RV32I ALU (\texttt{enableZmmul = false})}: Supporting integer addition, subtraction, set-less-than, logical operations (\texttt{AND}, \texttt{OR}, \texttt{XOR}), and shifts (\texttt{SLL}, \texttt{SRL}, \texttt{SRA}).
+    \item \textbf{RV32I\_Zmmul ALU (\texttt{enableZmmul = true})}: The base ALU augmented with the complete $32 \times 32$ multiplier logic array.
+\end{enumerate}
+
+Table \ref{tab:alu_synthesis_comparison} contrasts the physical synthesis results of the two execution units.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{ALU Synthesis Metric} & \textbf{Pure RV32I ALU} & \textbf{RV32I\_Zmmul ALU} & \textbf{Impact of Multiplier} \\
+\hline
+Standard Cell Count          & 1,164 cells            & 13,587 cells             & \textbf{11.7$\times$ cell count} \\
+Total Silicon Area           & \textbf{6,341\,$\mu$m$^2$} & \textbf{88,870\,$\mu$m$^2$} & \textbf{14.0$\times$ area explosion} \\
+Critical Path Delay          & \textbf{6.11\,ns}      & \textbf{11.09\,ns}       & \textbf{+81.5\% delay penalty} \\
+Maximum Operating Frequency  & 163.67\,MHz            & 90.17\,MHz               & $-44.9\%$ frequency \\
+\hline
+\end{tabular}
+\caption{SkyWater 130\,nm ASIC synthesis comparison between standalone pure \texttt{RV32I} ALU and \texttt{RV32I\_Zmmul} ALU.}\label{tab:alu_synthesis_comparison}
+\end{table}
+
+The physical design data exposes a dramatic disparity:
+\begin{itemize}
+    \item Adding a single-cycle $32 \times 32$ multiplier increases ALU silicon area by \textbf{14.0$\times$} (from $6,341\,\mu\text{m}^2$ to $88,870\,\mu\text{m}^2$).
+    \item Remarkably, the $32 \times 32$ multiplier logic array alone ($>82,500\,\mu\text{m}^2$) is \textbf{larger than the entire pure \texttt{RV32I} 4-stage pipelined processor core} ($68,710\,\mu\text{m}^2$)!
+    \item The intrinsic propagation delay through the multiplier logic array is \textbf{11.09\,ns}, increasing the ALU critical path by +81.5\% over the pure integer ALU (6.11\,ns).
+\end{itemize}
+
+\subsection{Impact on Full Core Synthesis: The Frequency Collapse}
+\index{pipeline unbalancing!frequency collapse}\index{critical path!multiplier bottleneck}
+
+When this monolithic combinational multiplier is integrated into the processor cores, it exerts a profound effect on core timing and area. Table \ref{tab:riscv_grand_comparison} compares the physical synthesis and benchmark metrics across all four processor configurations in SkyWater 130\,nm technology.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Metric} & \textbf{RV32I Single-Cycle} & \textbf{RV32I 4-Stage Pipe} & \textbf{Zmmul Single-Cycle} & \textbf{Zmmul 4-Stage Pipe} \\
+\hline
+Process Technology              & SkyWater 130\,nm & SkyWater 130\,nm & SkyWater 130\,nm & SkyWater 130\,nm \\
+Total Standard Cells            & 6,812            & 8,438            & 19,235           & 19,747 \\
+Sequential Elements (DFFs)      & 1,023            & 1,434            & 1,023            & 1,434 \\
+Total Silicon Area ($\mu$m$^2$) & \textbf{53,902}  & \textbf{68,710}  & \textbf{138,186} & \textbf{151,075} \\
+ALU Silicon Area ($\mu$m$^2$)   & 6,341            & 6,341            & 88,870           & 88,870 \\
+\hline
+Core Critical Path Delay ($T_{\text{clk}}$) & \textbf{10.57\,ns} & \textbf{7.17\,ns} & \textbf{13.64\,ns} & \textbf{13.25\,ns} \\
+Core Clock Frequency ($f_{\text{max}}$)     & 94.60\,MHz         & 139.47\,MHz       & 73.31\,MHz         & 75.47\,MHz \\
+\textbf{Pipelining Frequency Boost}         & ---                & \textbf{+47.4\%}  & ---                & \textbf{+2.95\%} \\
+\hline
+Clock Period ($T_{\text{mem}} = 5$\,ns)     & 20.57\,ns          & 7.17\,ns          & 23.64\,ns          & 13.25\,ns \\
+System Frequency ($T_{\text{mem}} = 5$\,ns) & 48.61\,MHz         & 139.47\,MHz       & 42.30\,MHz         & 75.47\,MHz \\
+\hline
+Benchmark Multiplier Type       & Software (\texttt{\_\_mulsi3}) & Software (\texttt{\_\_mulsi3}) & Hardware (\texttt{MUL}) & Hardware (\texttt{MUL}) \\
+Benchmark Instructions ($I$)    & 6,511            & 6,511            & 804              & 804 \\
+Benchmark Execution Cycles ($C$)& 6,511            & 10,645           & 804              & 1,090 \\
+Effective Workload CPI          & 1.00             & 1.63             & 1.00             & 1.36 \\
+RAW Stalls + Branch Flushes     & 0                & 4,134            & 0                & 286 \\
+\hline
+Execution Time ($T_{\text{mem}} = 5$\,ns)   & 133,931\,ns & 76,325\,ns       & 18,974\,ns       & 14,443\,ns \\
+\textbf{Pipelined Application Speedup}      & ---         & \textbf{1.75$\times$} & ---         & \textbf{1.31$\times$} \\
+\hline
+\end{tabular}
+\caption{Comprehensive SkyWater 130\,nm ASIC synthesis, timing, and benchmark comparison across pure \texttt{RV32I} and \texttt{RV32I\_Zmmul} architectures in single-cycle and 4-stage pipelined configurations.}\label{tab:riscv_grand_comparison}
+\end{table}
+
+The comparative synthesis data reveals the \textbf{frequency collapse} caused by pipeline unbalancing:
+\begin{enumerate}
+    \item \textbf{Destruction of the Pipelining Advantage}:
+    In the baseline \texttt{RV32I} core, dividing the datapath into four stages lowered critical path delay from 10.57\,ns to 7.17\,ns, yielding a \textbf{+47.4\% core clock frequency increase}.
+    
+    However, when the unpipelined multiplier is incorporated into the execution stage, the EX stage delay expands to 13.25\,ns (dominated by the 11.09\,ns multiplier plus multiplexer routing and setup times). Because the execute stage cannot run any faster, the 4-stage pipelined clock frequency collapses from $139.47\,\text{MHz}$ down to $75.47\,\text{MHz}$.
+    
+    Comparing the pipelined core to the single-cycle core with \texttt{Zmmul} ($73.31\,\text{MHz} \to 75.47\,\text{MHz}$), pipelining achieves a nearly negligible \textbf{+2.95\% frequency gain}! The entire advantage of datapath pipelining has been bottlenecked by a single oversized combinational stage.
+    
+    \item \textbf{Massive Area Overhead}:
+    Incorporating the single-cycle multiplier inflates the single-cycle core area by +156\% ($53,902\,\mu\text{m}^2 \to 138,186\,\mu\text{m}^2$) and the 4-stage pipelined core area by +120\% ($68,710\,\mu\text{m}^2 \to 151,075\,\mu\text{m}^2$).
+\end{enumerate}
+
+\subsection{Benchmark Performance: Algorithmic Gain vs. Pipeline Inefficiency}
+\index{benchmark!hardware multiply}\index{algorithmic speedup vs microarchitectural speedup}
+
+To evaluate the algorithmic benefit of hardware multiplication, the DSP benchmark application was recompiled targeting \texttt{rv32i\_zmmul} with optimization flag \texttt{-O1}:
+\begin{itemize}
+    \item \textbf{Instruction Count Reduction}:
+    Replacing software shift-and-add subroutines with single hardware \texttt{MUL} instructions slashes the dynamic instruction count from 6,511 to 804 instructions---an \textbf{8.1$\times$ reduction in instructions executed}!
+    
+    \item \textbf{Pipelined Cycle Performance}:
+    On the 4-stage pipeline, the 804 instructions execute in 1,090 clock cycles ($\text{CPI} = 1.36$). Hazard stalls and branch flushes account for only 286 cycles, because the hardware multiplication eliminates the complex loop branches and shift dependencies inherent in software multiplication.
+    
+    \item \textbf{Execution Time Comparison}:
+    Under realistic memory latency ($T_{\text{mem}} = 5\,\text{ns}$):
+    \begin{itemize}
+        \item Single-Cycle \texttt{RV32I\_Zmmul}: $804 \times 23.64\,\text{ns} = 18,974\,\text{ns}$.
+        \item 4-Stage Pipelined \texttt{RV32I\_Zmmul}: $1,090 \times 13.25\,\text{ns} = 14,443\,\text{ns}$.
+        \item Pipelined Speedup: $18,974\,\text{ns} / 14,443\,\text{ns} = \mathbf{1.31\times}$.
+    \end{itemize}
+\end{itemize}
+
+Notice the critical distinction:
+\begin{itemize}
+    \item In pure \texttt{RV32I}, the pipeline stages are well balanced, enabling pipelining to deliver a \textbf{1.75$\times$ application speedup}.
+    \item In \texttt{RV32I\_Zmmul}, the unpipelined multiplier unbalances the pipeline, degrading pipelined speedup to only \textbf{1.31$\times$}.
+    \item Although the application runs $5.3\times$ faster in absolute wall-clock time with hardware multiplication ($14,443\,\text{ns}$ vs. $76,325\,\text{ns}$), this speedup is almost entirely \textit{algorithmic} (8.1$\times$ fewer instructions). The \textit{microarchitectural efficiency} of pipelining was severely compromised by the unpipelined multiplier bottleneck.
+\end{itemize}
+
+\subsection{Architectural Solutions: Restoring Pipeline Balance}
+\index{pipeline balancing!architectural solutions}\index{multi-cycle multiplier}\index{pipelined multiplier}
+
+The case study illustrates \textbf{Amdahl's Law applied to pipeline cycle time}:
+\begin{equation}
+T_{\text{clk}} = \max\left(T_{\text{IF}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{MEM}}\right) + T_{\text{overhead}}.
+\end{equation}
+When one stage is significantly slower than the rest, improving or subdividing the other stages yields diminishing returns.
+
+How do production computer architects resolve this dilemma when integrating multiplication and other complex functional units?
+\begin{enumerate}
+    \item \textbf{Multi-Cycle Execution Unit}:
+    Rather than forcing the entire processor to run at a slow 13.25\,ns clock period to accommodate the multiplier, the multiplier is designed as a multi-cycle iterative unit (e.g., taking 2 to 4 cycles). 
+    
+    When a non-multiplying instruction enters EX, it completes in a single fast clock cycle (e.g., 7.17\,ns). When a \texttt{MUL} instruction enters EX, the Hazard Detection Unit asserts a temporary stall for 2--3 cycles while the multiplier computes. Because multiplications typically represent only 5--15\% of instructions in real workloads, running 90\% of instructions at 139.47\,MHz with occasional 3-cycle stalls yields vastly superior overall performance compared to running 100\% of instructions at 75.47\,MHz.
+    
+    \item \textbf{Internally Pipelined Multiplier}:
+    In high-performance processors, the multiplier logic array is itself divided into multiple synchronous pipeline stages separated by internal pipeline registers:
+    \begin{itemize}
+        \item \textbf{Stage 1}: Booth recoding and partial product generation.
+        \item \textbf{Stage 2}: Carry-save reduction tree (Wallace tree or Dadda tree compression).
+        \item \textbf{Stage 3}: Final carry-propagate addition (lookahead adder).
+    \end{itemize}
+    By inserting pipeline registers within the multiplier, each sub-stage delay is reduced to $\approx 3.5\,\text{ns}$, restoring pipeline balance and allowing the entire processor to operate at high frequencies ($>250\,\text{MHz}$) with a multiplier throughput of 1 instruction per cycle and a latency of 3 cycles.
+    
+    \item \textbf{Decoupled Execution and Out-of-Order Issue}:
+    More advanced architectures decouple long-latency arithmetic operations into independent execution pipelines with dedicated issue queues (reservation stations) and scoreboarding, allowing independent subsequent instructions to bypass the multiplier without stalling.
 \end{enumerate}
 
 
@@ -332,14 +482,13 @@ Examining the synthesis timing results reveals a crucial architectural insight r
 This chapter presented the comprehensive architecture, microarchitectural implementation, formal verification, and physical ASIC design of the open standard RISC-V processor:
 \begin{itemize}
     \item The RISC-V Instruction Set Architecture organizes execution around a clean 32-bit regular format with symmetric register source/destination fields, fixed opcode locations, and sign bits fixed at bit 31 across all formats.
-    \item The base \texttt{RV32I} instruction set was augmented with the standard \texttt{Zmmul} extension, providing high-performance 32-bit signed and unsigned multiplication instructions (\texttt{MUL}, \texttt{MULH}, \texttt{MULHSU}, \texttt{MULHU}).
     \item A single-cycle Harvard 5-OS processor core (\texttt{RiscvFetchExecute}) was implemented by modularly integrating library automata developed across prior chapters: \texttt{ProgramCounter}, \texttt{RiscvDecoder}, \texttt{RiscvImmGen}, \texttt{RiscvRegFile}, \texttt{RiscvALU}, and \texttt{RiscvDataMemory}.
     \item A 4-stage pipelined processor core (\texttt{RiscvPipelined}) was developed, partitioning the datapath into Instruction Fetch (IF), Instruction Decode (ID), Execute (EX), and Memory/Write-Back (MEM/WB) stages.
     \item An active Hazard Detection Unit was designed to detect Read-After-Write (RAW) data dependencies and stall the pipeline by freezing the PC and IF/ID registers while injecting bubbles into ID/EX. Internal register file write-through bypass was incorporated to reduce RAW stall penalties to a single cycle.
     \item Branch and jump conditions are evaluated in the EX stage, incurring a 2-cycle control hazard penalty on taken transfers while executing non-taken branches with zero cycle overhead.
-    \item Both processor cores were verified against all 42 official RISC-V architectural conformance test suites using Chisel simulation, achieving a 100\% signature match against Spike golden references.
-    \item A real DSP benchmark program (16-point 4-tap FIR filter + 4x4 matrix-vector multiplication) was executed on both cores, measuring a practical CPI of 1.36 on the 4-stage pipeline.
-    \item Full physical synthesis targeting the open-source SkyWater 130\,nm standard cell library was conducted for both cores, demonstrating the physical area costs (+9.3\% area overhead for pipeline registers), critical path timing bottlenecks (the 11.09\,ns unpipelined multiplier array), and the substantial system-level performance gains realized when overlapping memory latencies.
+    \item Both processor cores were verified against all official RISC-V architectural conformance test suites (38 RV32I suites and 4 Zmmul suites) using Chisel simulation, achieving a 100\% signature match against Spike golden references.
+    \item Full physical synthesis targeting the open-source SkyWater 130\,nm standard cell library was conducted for the baseline \texttt{RV32I} cores. The 4-stage pipeline delivered a +47.4\% core clock frequency increase ($94.6\,\text{MHz} \to 139.5\,\text{MHz}$) and a +186.9\% system clock frequency increase when overlapping realistic 5\,ns memory latency ($48.6\,\text{MHz} \to 139.5\,\text{MHz}$), achieving a measured \textbf{1.75$\times$ application speedup} on a real DSP benchmark.
+    \item A dedicated microarchitectural case study evaluated the standard \texttt{Zmmul} hardware multiplication extension. While adding hardware \texttt{MUL} reduced benchmark instruction count by 8.1$\times$, integrating an unpipelined $32 \times 32$ multiplier into the EX stage caused a 14.0$\times$ ALU area explosion ($6,341\,\mu\text{m}^2 \to 88,870\,\mu\text{m}^2$) and an 11.09\,ns critical path bottleneck. This bottleneck caused a \textbf{frequency collapse} (pipelined frequency gain dropped from +47.4\% down to +2.95\%), demonstrating the necessity of pipeline balancing and motivating multi-cycle or internally pipelined execution units.
 \end{itemize}
 
 
@@ -415,18 +564,32 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Based on the SkyWater 130\,nm synthesis data in Table \ref{tab:sky130_synthesis_comparison}:
+Compare the physical synthesis data of the pure \texttt{RV32I} core (Table \ref{tab:sky130_rv32i_synthesis}) with the \texttt{RV32I\_Zmmul} core (Table \ref{tab:riscv_grand_comparison}):
 \begin{enumerate}
-    \item Explain why the silicon area of \texttt{RiscvPipelined} is 9.3\% larger than \texttt{RiscvFetchExecute}.
-    \item Why did the maximum operating frequency of the pipelined core only improve from 73.3\,MHz to 75.5\,MHz when synthesized without external memory constraints?
-    \item What microarchitectural modification to the multiplier would allow the pipelined core to achieve $>200$\,MHz operating frequencies?
+    \item In pure \texttt{RV32I}, pipelining increased the core clock frequency by +47.4\% ($94.6\,\text{MHz} \to 139.5\,\text{MHz}$). Why did pipelining the \texttt{RV32I\_Zmmul} core only improve core frequency by +2.95\% ($73.3\,\text{MHz} \to 75.5\,\text{MHz}$)?
+    \item Calculate the silicon area overhead of adding the unpipelined multiplier to the 4-stage pipelined processor in SkyWater 130\,nm technology.
+    \item State Amdahl's Law as it applies to pipeline stage delays and clock periods.
+    \item Propose two microarchitectural techniques that would allow the processor to retain the high operating frequency of pure \texttt{RV32I} while providing hardware multiplication acceleration.
 \end{enumerate}
 
 \textbf{Solution}:
 \begin{enumerate}
-    \item The 9.3\% area overhead ($151,075\,\mu\text{m}^2$ vs. $138,186\,\mu\text{m}^2$) is primarily caused by the addition of 411 sequential D-flip-flops (+40.2\% sequential area) required to implement the \texttt{if\_id}, \texttt{id\_ex}, and \texttt{ex\_mem} pipeline registers, along with the multiplexers and comparator logic of the Hazard Detection Unit.
-    \item The operating frequency was constrained because the $32 \times 32$ multiplier in \texttt{RiscvALU} is an unpipelined combinational array with an intrinsic propagation delay of 11.09\,ns. Because the multiplier is executed in a single cycle in the EX stage, the EX stage delay limits the minimum clock period to 13.25\,ns regardless of how fast the IF, ID, and MEM stages are.
-    \item Pipelining the multiplier into 2 or 3 internal synchronous stages (e.g., partial product generation/compression in stage 1, carry-propagate addition in stage 2), or implementing a multi-cycle iterative radix-4 Booth multiplier, would reduce the EX stage combinational delay to $\approx 3.0\text{--}4.0\,\text{ns}$, allowing the core clock frequency to exceed 250\,MHz.
+    \item In pure \texttt{RV32I}, all pipeline stages have balanced delays ($T \approx 4\text{--}7\,\text{ns}$). In \texttt{RV32I\_Zmmul}, the unpipelined $32 \times 32$ multiplier logic array in the EX stage requires 11.09\,ns of combinational delay, making the EX stage critical path 13.25\,ns. By Amdahl's Law for clock periods, the clock frequency is constrained by the slowest stage ($\max_i T_i$). Thus, the pipelined core cannot run faster than 75.47\,MHz regardless of the speed of the other three stages.
+    \item The silicon area increases from $68,710\,\mu\text{m}^2$ (pure RV32I 4-stage) to $151,075\,\mu\text{m}^2$ (RV32I\_Zmmul 4-stage). This represents an increase of:
+    \begin{equation}
+    \Delta \text{Area} = 151,075 - 68,710 = 82,365\,\mu\text{m}^2 \quad (+120\% \ \text{silicon area overhead}).
+    \end{equation}
+    \item Amdahl's Law for clock periods dictates that:
+    \begin{equation}
+    T_{\text{clk}} \ge \max_{1 \le i \le N} (T_{\text{stage}, i}) + T_{\text{reg\_overhead}}.
+    \end{equation}
+    The minimum clock period of a synchronous pipeline is strictly bounded by the delay of the single slowest stage. Subdividing or optimizing the remaining $N-1$ stages cannot reduce the clock period below the slowest stage's delay.
+    \item Two microarchitectural techniques:
+    \begin{itemize}
+        \item \textbf{Multi-cycle Multiplier}: Implement the multiplier as a multi-cycle iterative unit (e.g., 3-cycle stall only on \texttt{MUL}), keeping the base processor clock at 139.5\,MHz for all other instructions.
+        \item \textbf{Pipelined Multiplier}: Subdivide the multiplier logic array into 2 or 3 internal synchronous pipeline stages (partial product generation, tree compression, final adder), reducing each stage's delay to $<4\,\text{ns}$.
+    \end{itemize}
 \end{enumerate}
 $\diamond$
 \end{problem}
+

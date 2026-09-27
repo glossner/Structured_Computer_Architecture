@@ -91,7 +91,7 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
     }
   }
 
-  def runTest(testName: String, tohostAddr: Long, beginSig: Long, endSig: Long, maxCycles: Int = 150000): Int = {
+  def runTest(testName: String, tohostAddr: Long, beginSig: Long, endSig: Long, maxCycles: Int = 150000, enableZmmul: Boolean = true): Int = {
     val binPath = Paths.get(s"src/test/resources/conformance/${testName}.bin")
     val refPath = Paths.get(s"src/test/resources/conformance/${testName}.reference.sig")
     assert(Files.exists(binPath), s"Test binary $binPath not found")
@@ -106,7 +106,7 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
 
     var cyclesRan = 0
 
-    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr)) { dut =>
+    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul)) { dut =>
       dut.reset.poke(true.B)
       dut.clock.step(5)
       dut.reset.poke(false.B)
@@ -169,14 +169,27 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
       (name, tohost, beginSig, endSig)
     }
 
-    "RiscvPipelined" should "pass all official RV32I and Zmmul architectural conformance tests" in {
-      println(s"\nExecuting ${testEntries.length} official RISC-V architectural conformance tests on RiscvPipelined (4-stage):")
+    val rv32iEntries = testEntries.filter(!_._1.contains("mul"))
+    val zmmulEntries = testEntries.filter(_._1.contains("mul"))
+
+    "RiscvPipelined" should "pass all 38 official RV32I architectural conformance tests (enableZmmul = false)" in {
+      println(s"\nExecuting ${rv32iEntries.length} official RV32I architectural conformance tests on RiscvPipelined (pure RV32I, no multiplier):")
       var totalCycles = 0
-      for ((name, tohost, beginSig, endSig) <- testEntries) {
-        val c = runTest(name, tohost, beginSig, endSig)
+      for ((name, tohost, beginSig, endSig) <- rv32iEntries) {
+        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = false)
         totalCycles += c
       }
-      println(f"\nAll ${testEntries.length} conformance tests passed! Total pipelined cycles: $totalCycles")
+      println(f"\nAll ${rv32iEntries.length} RV32I conformance tests passed! Total pipelined cycles: $totalCycles")
+    }
+
+    it should "pass all 4 official Zmmul architectural conformance tests (enableZmmul = true)" in {
+      println(s"\nExecuting ${zmmulEntries.length} official Zmmul architectural conformance tests on RiscvPipelined (with multiplier):")
+      var totalCycles = 0
+      for ((name, tohost, beginSig, endSig) <- zmmulEntries) {
+        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = true)
+        totalCycles += c
+      }
+      println(f"\nAll ${zmmulEntries.length} Zmmul conformance tests passed! Total pipelined cycles: $totalCycles")
     }
   }
 }

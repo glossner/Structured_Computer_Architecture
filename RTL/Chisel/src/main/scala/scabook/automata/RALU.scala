@@ -11,7 +11,7 @@ object RALU {
 }
 
 /** 2-OS Execution Engine loop-coupling RiscvRegFile and RiscvALU. */
-class RALU(val width: Int = 32) extends Module {
+class RALU(val width: Int = 32, val enableZmmul: Boolean = true) extends Module {
   val io = IO(new Bundle {
     val rs1Addr, rs2Addr, rdAddr    = Input(UInt(5.W))
     val regWrite, useImm, memToReg  = Input(Bool())
@@ -24,7 +24,7 @@ class RALU(val width: Int = 32) extends Module {
   })
 
   val regFile = Module(new RiscvRegFile(width))
-  val alu     = Module(new RiscvALU(width))
+  val alu     = Module(new RiscvALU(width, enableZmmul = enableZmmul))
 
   regFile.io.rs1 := io.rs1Addr
   regFile.io.rs2 := io.rs2Addr

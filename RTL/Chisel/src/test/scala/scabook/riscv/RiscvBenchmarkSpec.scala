@@ -79,12 +79,12 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     }
   }
 
-  val binPath = Paths.get("src/test/resources/benchmark/dsp_bench.bin")
   val baseAddr = 0x80000000L
   val tohostAddr = 0x80001000L
-  val maxCycles = 100000
+  val maxCycles = 500000
 
-  "RiscvBenchmark" should "execute DSP benchmark on both Single-Cycle and 4-Stage cores and compare performance" in {
+  def runBenchmark(binPath: java.nio.file.Path, enableZmmul: Boolean, benchName: String,
+                   tClkSingle: Double, tClkPipe: Double): Unit = {
     assert(Files.exists(binPath), s"Benchmark binary $binPath not found")
     val binBytes = Files.readAllBytes(binPath)
 
@@ -94,7 +94,7 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     var cyclesSingle = 0
     var resultSingle = 0L
 
-    simulate(new RiscvFetchExecute(xlen = 32, initPC = baseAddr)) { dut =>
+    simulate(new RiscvFetchExecute(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul)) { dut =>
       dut.reset.poke(true.B)
       dut.clock.step(5)
       dut.reset.poke(false.B)
@@ -128,7 +128,7 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
         dut.clock.step(1)
         cyclesSingle += 1
       }
-      assert(completed, "Single-cycle simulation timed out")
+      assert(completed, s"Single-cycle simulation for $benchName timed out after $cyclesSingle cycles")
     }
 
     // 2. Run 4-Stage Pipelined Core (RiscvPipelined)
@@ -137,7 +137,7 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     var cyclesPipe = 0
     var resultPipe = 0L
 
-    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr)) { dut =>
+    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul)) { dut =>
       dut.reset.poke(true.B)
       dut.clock.step(5)
       dut.reset.poke(false.B)
@@ -171,31 +171,30 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
         dut.clock.step(1)
         cyclesPipe += 1
       }
-      assert(completed, "Pipelined simulation timed out")
+      assert(completed, s"Pipelined simulation for $benchName timed out after $cyclesPipe cycles")
     }
 
     // Verification
-    assert(resultSingle == resultPipe, s"Result mismatch! Single=$resultSingle, Pipe=$resultPipe")
+    assert(resultSingle == resultPipe, s"Result mismatch in $benchName! Single=$resultSingle, Pipe=$resultPipe")
 
     // Performance Metrics
-    val instCount = cyclesSingle // In single-cycle core, each retired instruction takes exactly 1 cycle
+    val instCount = cyclesSingle
     val cpiSingle = 1.0
     val cpiPipe   = cyclesPipe.toDouble / instCount.toDouble
-
-    // SkyWater 130nm synthesis results:
-    // Single-cycle: T_clk = 13.64 ns (f_max = 73.31 MHz)
-    // 4-stage pipeline: T_clk = 13.25 ns (f_max = 75.47 MHz)
-    val tClkSingle = 13.64 // ns
-    val tClkPipe   = 13.25 // ns
 
     val execTimeSingle = cyclesSingle * tClkSingle // ns
     val execTimePipe   = cyclesPipe * tClkPipe     // ns
 
-    val speedupActual = execTimeSingle / execTimePipe
-    val speedupCycleOnly = cyclesSingle.toDouble / cyclesPipe.toDouble
+    val tMem = 5.0 // ns realistic memory latency
+    val tClkSingleMem = tClkSingle + 2 * tMem
+    val tClkPipeMem   = math.max(tClkPipe, tMem)
+
+    val execTimeSingleMem = cyclesSingle * tClkSingleMem
+    val execTimePipeMem   = cyclesPipe * tClkPipeMem
+    val speedupActualMem  = execTimeSingleMem / execTimePipeMem
 
     println("=======================================================================")
-    println("        REAL PROGRAM BENCHMARK RESULTS (FIR FILTER + MATRIX-VEC)       ")
+    println(f"        BENCHMARK RESULTS: $benchName%-40s")
     println("=======================================================================")
     println(f"  Instructions Executed:      $instCount%6d")
     println(f"  Benchmark Result (tohost):   0x$resultSingle%08x ($resultSingle%d)")
@@ -204,10 +203,23 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     println(f"  4-Stage Pipelined Cycles:   $cyclesPipe%6d   (CPI = $cpiPipe%.2f)")
     println(f"  Pipeline Stall Overhead:    ${cyclesPipe - cyclesSingle}%6d cycles (${(cpiPipe - 1.0)*100}%.1f%% penalty)")
     println("-----------------------------------------------------------------------")
-    println(f"  SkyWater 130nm T_clk (Single):   $tClkSingle%.2f ns  (f_max = ${1000.0/tClkSingle}%.2f MHz)")
-    println(f"  SkyWater 130nm T_clk (4-Stage):  $tClkPipe%.2f ns  (f_max = ${1000.0/tClkPipe}%.2f MHz)")
-    println(f"  Execution Time (Single-Cycle):   $execTimeSingle%.2f ns")
-    println(f"  Execution Time (4-Stage Pipe):   $execTimePipe%.2f ns")
-    println("=======================================================================")
+    println(f"  SkyWater 130nm Core T_clk:   Single=$tClkSingle%.2f ns (${1000.0/tClkSingle}%.1f MHz), Pipe=$tClkPipe%.2f ns (${1000.0/tClkPipe}%.1f MHz)")
+    println(f"  Core Execution Time:        Single=$execTimeSingle%.1f ns, Pipe=$execTimePipe%.1f ns")
+    println(f"  With Memory ($tMem%.0fns) T_clk:     Single=$tClkSingleMem%.2f ns (${1000.0/tClkSingleMem}%.1f MHz), Pipe=$tClkPipeMem%.2f ns (${1000.0/tClkPipeMem}%.1f MHz)")
+    println(f"  System Execution Time:      Single=$execTimeSingleMem%.1f ns, Pipe=$execTimePipeMem%.1f ns")
+    println(f"  Actual System Speedup:      $speedupActualMem%.2fx")
+    println("=======================================================================\n")
+  }
+
+  "RiscvBenchmark" should "execute pure RV32I benchmark on Single-Cycle and 4-Stage cores" in {
+    val rv32iBin = Paths.get("src/test/resources/benchmark/rv32i_bench.bin")
+    // SkyWater 130nm RV32I synthesis: Single T_clk = 10.57 ns, Pipe T_clk = 7.17 ns
+    runBenchmark(rv32iBin, enableZmmul = false, "Pure RV32I Benchmark (DSP Kernel with Soft Multiply)", 10.57, 7.17)
+  }
+
+  it should "execute RV32I_Zmmul benchmark on Single-Cycle and 4-Stage cores" in {
+    val zmmulBin = Paths.get("src/test/resources/benchmark/dsp_bench.bin")
+    // SkyWater 130nm RV32I_Zmmul synthesis: Single T_clk = 13.64 ns, Pipe T_clk = 13.25 ns
+    runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Hardware Multiply)", 13.64, 13.25)
   }
 }
