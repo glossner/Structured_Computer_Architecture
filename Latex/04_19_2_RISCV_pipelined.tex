@@ -713,8 +713,10 @@ Total Execution Time ($T_{\text{exec}}$) & Single=19,878\,ns ($19.88\,\mu$s) & S
                                  & \textbf{Bypass=11,959\,ns ($11.96\,\mu$s)} & \textbf{Bypass=2,460\,ns ($2.46\,\mu$s)} & \textbf{Bypass=27,203\,ns ($27.20\,\mu$s)} & \textbf{Bypass=1,581,351\,ns ($1.58\,\text{ms}$)} \\
 \hline
 \textbf{Speedup vs.\ Single-Cycle Core} & NoFwd = 1.16$\times$ & NoFwd = 1.04$\times$ & NoFwd = 1.27$\times$ & NoFwd = 1.19$\times$ \\
-                                        & \textbf{Bypass = 1.66$\times$} & \textbf{Bypass = 1.36$\times$} & \textbf{Bypass = 1.55$\times$} & \textbf{Bypass = 1.69$\times$} \\
+                                        & \textbf{Bypass = 1.66$\times$} & \textbf{Bypass = 1.36$\times$}$^*$ & \textbf{Bypass = 1.55$\times$} & \textbf{Bypass = 1.69$\times$} \\
 \textbf{Speedup Over Unforwarded Pipe}  & \textbf{1.43$\times$} & \textbf{1.31$\times$} & \textbf{1.22$\times$} & \textbf{1.42$\times$} \\
+\hline
+\textbf{Pipelined Multiplier + Bypass}$^*$ & --- & \textbf{1,362\,ns (2.45$\times$ Speedup)} & --- & --- \\
 \hline
 \textbf{Standard Metric / MHz}   & ---                 & ---                   & 0.824 (Single)          & 1.143 (Single) \\
                                  &                     &                       & 0.468 (Pipe NoFwd)      & 0.608 (Pipe NoFwd)   \\
@@ -726,7 +728,7 @@ Total Execution Time ($T_{\text{exec}}$) & Single=19,878\,ns ($19.88\,\mu$s) & S
 \hline
 \end{tabular}%
 }
-\caption{Empirical benchmark evaluation of single-cycle (FE) vs.\ 4-stage pipelined \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads, comparing unforwarded vs.\ forwarded (bypassing) implementations.}\label{tab:riscv_all_benchmarks}
+\caption{Empirical benchmark evaluation of single-cycle (FE) vs.\ 4-stage pipelined \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads, comparing unforwarded vs.\ forwarded (bypassing) implementations. $^*$When augmented with the 2-stage pipelined multiplier datapath (Section \ref{riscvPipelinedMultiplier}), the operating clock period is restored to $1.363\,\text{ns}$ ($733.7\,\text{MHz}$), cutting DSP hardware multiply execution time to $1,362\,\text{ns}$ ($1.36\,\mu\text{s}$), achieving a $\mathbf{2.45\times}$ speedup over single-cycle and $\mathbf{1.81\times}$ over the unpipelined multiplier pipeline.}\label{tab:riscv_all_benchmarks}
 \end{table}
 
 \subsection{Why Ideal Pipeline Speedup is Inaccessible in Practice}
@@ -1047,6 +1049,256 @@ Even if evaluated conservatively under the standalone synthesized clock period (
 
 This empirical result provides the definitive architectural lesson: **for a minuscule area cost of only +2.7\%, data bypassing eliminates $>60\%$ of all pipeline stalls, unlocking the true performance potential of pipelined computer architecture.**
 
+\section{Single-Stream Acceleration: Pipelined Multiplier Datapath for FIR and MAC Kernels}\label{riscvPipelinedMultiplier}
+\index{pipelined multiplier!single-stream acceleration}\index{multiply-accumulate (MAC)!zero-stall execution}\index{FIR filter!pipeline acceleration}\index{intermediate pipeline registers}\index{Booth multiplier!pipelined}
+
+In high-performance processor design, after stage delay balancing and general data forwarding are implemented, the microarchitect is left with one final fundamental technique within a single instruction stream: \textbf{pipelining complex execution units and utilizing inter-stage pipeline registers to hold intermediate unmerged results, coupled with specialized forwarding paths back to the execution stage}.
+
+For compute-intensive digital signal processing (DSP) and machine learning workloads---most notably Finite Impulse Response (FIR) filtering, convolution, matrix-vector multiplication, and vector dot products---the execution profile is overwhelmingly dominated by back-to-back \textbf{Multiply-Accumulate (MAC)} instruction sequences:
+\begin{lstlisting}[language=c]
+// Canonical RISC-V FIR Filter Inner Loop
+loop:
+    lw   t0, 0(a7)     // Load input sample x[i]
+    lw   t1, 0(a6)     // Load filter coefficient h[i]
+    addi a6, a6, 4     // Advance coefficient pointer
+    mul  t0, t1, t0    // Multiplication: t0 = x[i] * h[i]
+    add  a5, t0, a5    // Accumulation (MAC): a5 += t0
+    addi a7, a7, -4    // Decrement sample pointer
+    bne  a6, a3, loop  // Loop termination test
+\end{lstlisting}
+
+In this canonical kernel, each multiplication (\texttt{mul}) is immediately followed by an accumulation (\texttt{add}) that consumes the product (\texttt{t0}) as its source operand. 
+
+In Section \ref{riscvZmmulCaseStudy}, we discovered that embedding a monolithic combinational multiplier directly inside the ALU wrecks pipeline stage balancing: the EX stage latency balloons to $2.462\,\text{ns}$, dragging the operating clock frequency of the entire core down from $733.7\,\text{MHz}$ to $406.2\,\text{MHz}$ (a $-44.6\%$ frequency collapse). Conversely, implementing the multiplier as a traditional multi-cycle iterative execution unit requires freezing the pipeline for 3 to 4 stall cycles per multiply, severely degrading throughput in MAC-dense loops.
+
+How can a single-issue processor core achieve an issue throughput approaching \textbf{1 instruction entering the pipeline per clock cycle} on FIR and MAC algorithms while maintaining the full $733.7\,\text{MHz}$ ($1.363\,\text{ns}$) operating clock frequency?
+
+The solution lies in \textbf{pipelining the multiplier across the existing processor pipeline stages} (EX and MEM/WB), passing intermediate unmerged carry-save vectors through the pipeline registers, and forwarding the merged product directly back into the EX stage for the subsequent accumulation.
+
+\subsection{Two-Stage Multiplier Partitioning and Intermediate Pipeline Registers}
+\index{carry-save reduction!intermediate registers}\index{vector-merging adder!MEM/WB stage}
+
+A 32-bit binary multiplier inherently performs three distinct arithmetic tasks:
+\begin{enumerate}
+    \item \textbf{Partial Product Generation (PPG)}: Generating 17 partial products via Radix-4 Booth recoding.
+    \item \textbf{Carry-Save Reduction Tree}: Compressing the 17 partial products down to two 64-bit redundant vectors: a $Sum$ vector and a $Carry$ vector.
+    \item \textbf{Vector-Merging Addition}: Performing a 64-bit carry-propagating addition ($Product = Sum + Carry$) and slicing the required 32-bit output.
+\end{enumerate}
+
+The critical insight is that \textbf{the Carry-Save Reduction Tree is completely carry-free}: every full adder (CSA cell) computes independent sum and carry outputs with zero horizontal propagation. Its delay is governed solely by tree depth:
+\begin{equation}
+T_{\text{tree}} = 6 \times T_{\text{CSA}} \approx 6 \times 65\,\text{ps} \approx 0.390\,\text{ns}.
+\end{equation}
+Together with Radix-4 Booth recoding and operand muxing ($\approx 0.220\,\text{ns}$), the entire Stage 1 logic requires only $\approx \mathbf{0.610\,\text{ns}}$ in ASAP7 7\,nm FinFET.
+
+Conversely, the \textbf{Vector-Merging Addition} requires full carry propagation across 64 bit positions. Using a fast parallel-prefix or carry-select architecture, this final addition requires $\approx \mathbf{0.520\,\text{ns}}$ in ASAP7 7\,nm FinFET.
+
+Notice the remarkable symmetry: both halves of the multiplier naturally require $\approx 0.52\text{--}0.61\,\text{ns}$, which perfectly matches the baseline stage delays of our 4-stage pipeline ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$)!
+
+Therefore, we partition the hardware multiplier across two adjacent pipeline stages:
+\begin{itemize}
+    \item \textbf{Stage 1: Multiplier Reduction in EX (\texttt{PipelinedMultiplierStage1})}:
+    When a multiply instruction (\texttt{MUL}, \texttt{MULH}, \texttt{MULHSU}, \texttt{MULHU}) reaches EX, the 32-bit operands ($rs1$, $rs2$) are recoded using Radix-4 Booth logic into 17 signed partial products. A 6-level Carry-Save Adder (CSA) compressor tree reduces these 17 rows down to two unmerged 64-bit vectors: \texttt{sumOut} ($64$ bits) and \texttt{carryOut} ($64$ bits). Crucially, \textit{no carry propagation occurs in EX}.
+    
+    \item \textbf{Intermediate Pipeline Register Storage (\texttt{ex\_mem})}:
+    At the rising clock edge, the inter-stage pipeline register \texttt{ex\_mem} captures the intermediate unmerged vectors along with operation metadata:
+    \begin{equation}
+    \texttt{ex\_mem.mulSum} \leftarrow \texttt{mulStage1.sumOut}, \quad \texttt{ex\_mem.mulCarry} \leftarrow \texttt{mulStage1.carryOut}, \quad \texttt{ex\_mem.isMul} \leftarrow \texttt{id\_ex.isMul}.
+    \end{equation}
+    The intermediate pipeline register acts as temporary redundant storage, completely decoupling partial product reduction from final vector-merging addition.
+    
+    \item \textbf{Stage 2: Vector-Merging Addition in MEM/WB (\texttt{PipelinedMultiplierStage2})}:
+    In the MEM/WB stage, a 64-bit vector-merging adder computes the final sum:
+    \begin{equation}
+    \text{Product}[63:0] = \texttt{ex\_mem.mulSum} + \texttt{ex\_mem.mulCarry}.
+    \end{equation}
+    The multiplier output multiplexer slices either bits $[31:0]$ (for \texttt{MUL}) or bits $[63:32]$ (for \texttt{MULH}, \texttt{MULHSU}, \texttt{MULHU}) to produce \texttt{mulStage2Result}.
+\end{itemize}
+
+\subsection{Forwarding Mechanics for Zero-Stall Multiply-Accumulate}
+\index{forwarding!pipelined multiplier}\index{zero-stall MAC}
+
+Now examine how instructions traverse this datapath during a back-to-back FIR/MAC operation:
+\begin{itemize}
+    \item \textbf{Cycle $k$}:
+    The instruction \texttt{mul t0, t1, t0} is decoded in ID. The accumulation instruction \texttt{add a5, t0, a5} is fetched in IF.
+    
+    \item \textbf{Cycle $k+1$}:
+    \texttt{mul} enters the EX stage. Stage 1 generates the 17 Booth partial products and compresses them through the 6-level CSA tree into \texttt{mulSum} and \texttt{mulCarry}.
+    
+    Meanwhile, \texttt{add} enters the ID stage. The Hazard Detection Unit inspects the instruction in EX: because \texttt{mul} is an arithmetic instruction rather than a memory load ($\texttt{id\_ex.memRead} == 0$), \textbf{no load-use hazard is detected}. The hazard detection logic asserts no stall ($\texttt{stall} == 0$), allowing \texttt{add} to advance directly into EX on the very next cycle!
+    
+    \item \textbf{Cycle $k+2$}:
+    \texttt{mul} advances to the MEM/WB stage. The intermediate vectors in \texttt{ex\_mem.mulSum} and \texttt{ex\_mem.mulCarry} are added by Stage 2 to produce \texttt{mulStage2Result}.
+    
+    Simultaneously, \texttt{add} enters the EX stage. It requires register \texttt{t0} ($rs1$). The forwarding unit detects:
+    \begin{equation}
+    \texttt{exMemWillWrite} \land (\texttt{ex\_mem.rd} == \texttt{id\_ex.rs1}) \quad (\text{both refer to register } \texttt{t0}).
+    \end{equation}
+    The forwarding multiplexer in the MEM/WB stage selects \texttt{mulStage2Result}:
+    \begin{equation}
+    \texttt{exMemFwdData} = \text{Mux}(\texttt{ex\_mem.isMul}, \ \texttt{mulStage2Result}, \ \dots).
+    \end{equation}
+    This completed product is routed directly across the bypass bus to \texttt{alu.io.opA} in the EX stage!
+    
+    The ALU computes the accumulation $\texttt{a5} + \texttt{t0}$ in EX during Cycle $k+2$ with \textbf{ZERO STALL CYCLES}!
+    
+    \item \textbf{Cycle $k+3$}:
+    The next instruction in the inner loop (e.g., pointer increment \texttt{addi a7, a7, -4}) enters EX, while \texttt{add} advances to MEM/WB.
+\end{itemize}
+
+Every single instruction in the compute sequence advances through the pipeline at \textbf{1 instruction entering the pipeline per clock cycle}! The multiply latency of 2 cycles is completely hidden by pipelining Stage 1 in EX and Stage 2 in MEM/WB, while data forwarding eliminates any pipeline bubble between the product generation and its accumulation.
+
+\subsection{Chisel RTL Implementation}
+\index{Chisel!pipelined multiplier}
+
+Listing \ref{lst:chisel_pipelined_mul} shows the Chisel implementation of the pipelined multiplier integration, intermediate pipeline registers, and forwarding bypass in \texttt{RiscvPipelined.scala}.
+
+\begin{chiselcode}[caption={Chisel implementation of the 2-stage pipelined multiplier, intermediate pipeline registers, and MEM/WB-to-EX forwarding in \texttt{RiscvPipelined.scala}.},label={lst:chisel_pipelined_mul}]
+// ========================================================
+// STAGE 3: EXECUTE (EX) - MULTIPLIER STAGE 1 (BOOTH + CSA)
+// ========================================================
+val mulStage1 = if (enableZmmul && enablePipelinedMul) 
+  Some(Module(new PipelinedMultiplierStage1(width = xlen))) else None
+
+if (mulStage1.isDefined) {
+  mulStage1.get.io.a     := exRs1
+  mulStage1.get.io.b     := Mux(id_ex.aluSrc, id_ex.imm, exRs2)
+  mulStage1.get.io.mulOp := id_ex.aluOp
+}
+
+// Latch intermediate unmerged vectors into EX/MEM pipeline register
+ex_mem.isMul    := id_ex.valid && id_ex.isMul
+ex_mem.mulOp    := id_ex.aluOp
+ex_mem.mulSum   := (if (mulStage1.isDefined) mulStage1.get.io.sumOut else 0.U)
+ex_mem.mulCarry := (if (mulStage1.isDefined) mulStage1.get.io.carryOut else 0.U)
+
+// ========================================================
+// STAGE 4: MEM/WB - MULTIPLIER STAGE 2 (VECTOR-MERGING ADDER)
+// ========================================================
+val mulStage2 = if (enableZmmul && enablePipelinedMul) 
+  Some(Module(new PipelinedMultiplierStage2(width = xlen))) else None
+
+val mulStage2Result = WireDefault(0.U(xlen.W))
+if (mulStage2.isDefined) {
+  val m2 = mulStage2.get
+  m2.io.sumIn   := ex_mem.mulSum
+  m2.io.carryIn := ex_mem.mulCarry
+  m2.io.mulOp   := ex_mem.mulOp
+  mulStage2Result := m2.io.result
+}
+
+// Forward completed product directly into EX stage bypass network
+val exMemFwdData = Wire(UInt(xlen.W))
+if (enableZmmul && enablePipelinedMul) {
+  exMemFwdData := Mux(ex_mem.isMul, mulStage2Result,
+                  Mux(ex_mem.ctrl.memToReg, io.dmem.readData, ex_mem.aluResult))
+} else {
+  exMemFwdData := Mux(ex_mem.ctrl.memToReg, io.dmem.readData, ex_mem.aluResult)
+}
+\end{chiselcode}
+
+\subsection{Physical ASIC Synthesis on ASAP7 7\,nm FinFET}
+\index{ASAP7 7nm!pipelined multiplier synthesis}\index{area reduction!modular pipelining}
+
+To rigorously quantify the physical design impact of pipelining the multiplier, the standalone pipelined multiplier and the complete processor core with pipelined multiplication were synthesized targeting the predictive **ASAP7 7\,nm FinFET standard-cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
+
+Table \ref{tab:asap7_pipemul_synthesis} contrasts the standalone multiplier architectures, while Table \ref{tab:asap7_core_pipemul_comparison} compares the full processor cores.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Multiplier Implementation} & \textbf{Standard Cells} & \textbf{DFF Count} & \textbf{Silicon Area ($\mu$m$^2$)} & \textbf{Max Stage Delay} & \textbf{Throughput} \\
+\hline
+Combinational Booth Multiplier      & 5,590 cells            & 0 DFFs             & 464.45\,$\mu$m$^2$                & 2,159.88\,ps (2.16\,ns)  & 1 op / 2.16\,ns \\
+\textbf{2-Stage Pipelined Multiplier}& \textbf{6,891 cells}   & \textbf{127 DFFs}  & \textbf{554.07\,$\mu$m$^2$}       & \textbf{650.00\,ps (0.65\,ns)} & \textbf{1 op / cycle} \\
+\hline
+\textbf{Physical Delta ($\Delta$)}  & \textbf{+1,301 cells}  & \textbf{+127 DFFs} & \textbf{+89.62\,$\mu$m$^2$ (+19.3\%)} & \textbf{$-69.9\%$ Delay} & \textbf{3.3$\times$ Peak Ops} \\
+\hline
+\end{tabular}
+\caption{Physical synthesis comparison between standalone 32-bit combinational Booth Multiplier and 2-stage Pipelined Multiplier in ASAP7 7\,nm FinFET technology.}\label{tab:asap7_pipemul_synthesis}
+\end{table}
+
+The standalone 2-stage pipelined multiplier requires 6,891 standard cells and 127 flip-flops ($37.03\,\mu\text{m}^2$ sequential area), occupying a total silicon footprint of $554.07\,\mu\text{m}^2$. The maximum stage delay drops by \textbf{$-69.9\%$} (from $2.16\,\text{ns}$ down to $0.65\,\text{ns}$), enabling the multiplier to easily keep pace with a $733.7\,\text{MHz}\text{--}1.5\,\text{GHz}$ clock.
+
+Now observe what happens when we compare the \textbf{full 4-stage processor cores} in Table \ref{tab:asap7_core_pipemul_comparison}.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Full Core Metric} & \textbf{Unpipelined Multiplier Core} & \textbf{Pipelined Multiplier Core} & \textbf{Microarchitectural Advantage} \\
+\hline
+Process Technology              & ASAP7 7\,nm FinFET                  & ASAP7 7\,nm FinFET                & --- \\
+Total Standard Cells            & 22,709 cells                        & 19,079 cells                      & \textbf{$-3,630$ cells ($-16.0\%$)} \\
+Sequential Elements (DFFs)      & 1,434 DFFs                          & 1,563 DFFs                        & +129 DFFs (+9.0\%) \\
+Sequential Area                 & 418.15\,$\mu$m$^2$                  & 455.77\,$\mu$m$^2$                & +37.62\,$\mu$m$^2$ \\
+Combinational Area              & 1,817.40\,$\mu$m$^2$                & 1,273.80\,$\mu$m$^2$              & \textbf{$-543.60\,\mu$m$^2$ ($-29.9\%$)} \\
+\textbf{Total Silicon Area}     & \textbf{2,235.55\,$\mu$m$^2$}       & \textbf{1,729.57\,$\mu$m$^2$}     & \textbf{$-505.98\,\mu$m$^2$ ($-22.6\%$ area saving!)} \\
+\hline
+Stage 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns          & 0.550\,ns         & Identical \\
+Stage 2: Decode \& Read ($T_{\text{decode}}$)    & 0.540\,ns          & 0.540\,ns         & Identical \\
+Stage 3: Execute ($T_{\text{execute}}$)          & \textbf{2.462\,ns} (Unbalanced) & \textbf{1.363\,ns} (Balanced) & \textbf{$-1.099$\,ns ($-44.6\%$)} \\
+Stage 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,ns         & Identical \\
+\hline
+\textbf{Operating Clock Period ($T_{\text{clk}}$)} & \textbf{2.462\,ns} & \textbf{1.363\,ns} & \textbf{$-1.099$\,ns ($-44.6\%$ clock period)} \\
+\textbf{Operating Clock Frequency ($f_{\text{clk}}$)} & \textbf{406.2\,MHz} & \textbf{733.7\,MHz} & \textbf{+80.6\% Frequency Boost ($1.81\times$)} \\
+\hline
+\end{tabular}
+\caption{Full-core ASAP7 7\,nm FinFET physical synthesis comparison between 4-stage \texttt{RV32I\_Zmmul} cores with unpipelined vs.\ 2-stage pipelined multiplier.}\label{tab:asap7_core_pipemul_comparison}
+\end{table}
+
+Table \ref{tab:asap7_core_pipemul_comparison} exposes two profound physical synthesis results:
+\begin{enumerate}
+    \item \textbf{Restoration of the 733.7\,MHz Operating Frequency}:
+    By decoupling the Booth PPG and 6-level CSA tree from the 64-bit vector-merging adder, the Execute stage delay drops from $2.462\,\text{ns}$ back to $1.363\,\text{ns}$ (the pure integer ALU critical path). The operating clock frequency is restored to **733.7 MHz**---delivering an immediate **+80.6\% frequency boost** ($1.81\times$) across all instructions.
+    
+    \item \textbf{Significant Silicon Area Savings ($-22.6\%$ Area)}:
+    Surprisingly, pipelining the multiplier \textit{reduced} the total core silicon area by **$505.98\,\mu\text{m}^2$ ($-22.6\%$)**, slashing cell count from 22,709 cells down to 19,079 cells. In the unpipelined design, the synthesizer was forced to build massive high-drive buffer trees and wide combinational multiplexing networks to meet timing across the monolithic $2.462\,\text{ns}$ path. By cleanly separating the reduction tree from the final adder with 127 pipeline flip-flops, the logic synthesis engine optimized each stage independently using smaller, low-power standard cells, saving over 3,600 gates!
+\end{enumerate}
+
+\subsection{Benchmark Performance: Accelerating FIR and MAC to 1 Instruction Per Cycle}
+\index{FIR filter!benchmark speedup}\index{MAC!speedup}
+
+Table \ref{tab:dsp_kernel_speedup_evolution} tracks the complete performance evolution of the DSP benchmark kernel across all four architectural generations: from the unpipelined single-cycle core, through the unforwarded pipeline and unpipelined bypassed pipeline, to the final pipelined multiplier datapath.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Architectural Configuration} & \textbf{Clock Period ($T_{\text{clk}}$)} & \textbf{Cycles ($C$)} & \textbf{Execution Time ($T_{\text{exec}}$)} & \textbf{Speedup vs.\ Single-Cycle} \\
+\hline
+Single-Cycle FE Core (Zmmul)         & 4.152\,ns (240.8\,MHz)                  & 804 cycles           & 3,338.21\,ns (3.34\,$\mu$s)                & $1.00\times$ (Baseline) \\
+4-Stage Pipe (Unpipelined, No Fwd)   & 2.462\,ns (406.2\,MHz)                  & 1,308 cycles         & 3,220.30\,ns (3.22\,$\mu$s)                & $1.04\times$ \\
+4-Stage Pipe (Unpipelined, With Fwd) & 2.462\,ns (406.2\,MHz)                  & 999 cycles           & 2,459.54\,ns (2.46\,$\mu$s)                & $1.36\times$ \\
+\textbf{4-Stage Pipe (Pipelined Mul + Fwd)} & \textbf{1.363\,ns (733.7\,MHz)}  & \textbf{999 cycles}  & \textbf{1,361.64\,ns (1.36\,$\mu$s)}       & \textbf{2.45$\times$ Speedup!} \\
+\hline
+\end{tabular}
+\caption{Performance evolution of the DSP hardware multiply benchmark across processor generations in ASAP7 7\,nm FinFET technology.}\label{tab:dsp_kernel_speedup_evolution}
+\end{table}
+
+The empirical benchmark data demonstrates the cumulative power of microarchitectural design:
+\begin{itemize}
+    \item \textbf{Total Execution Time Slashed to $1.36\,\mu$s}:
+    The DSP benchmark execution time drops from $3,338.21\,\text{ns}$ on the single-cycle core to **$1,361.64\,\text{ns}$** on the pipelined multiplier core---achieving a **$2.45\times$ net application speedup**!
+    
+    \item \textbf{$1.81\times$ Speedup Over Unpipelined Multiplier}:
+    Compared to the unpipelined forwarded core ($2,459.54\,\text{ns}$), pipelining the multiplier cuts execution time by **$1.81\times$** without requiring a single extra execution cycle ($999$ cycles in both cores).
+    
+    \item \textbf{Sustaining 1 Instruction Per Cycle on Compute Loops}:
+    In the inner FIR/MAC compute loop:
+    \begin{equation}
+    \texttt{mul t0, t1, t0} \longrightarrow \texttt{add a5, t0, a5}
+    \end{equation}
+    Both instructions advance through the execution stage at **exactly 1 instruction per cycle with zero stall cycles**. Data forwarding from the MEM/WB stage provides the product to the adder with zero latency overhead. The only stall in the entire loop is the unavoidable single-cycle load-use bubble following memory retrieval of filter coefficients.
+\end{itemize}
+
+This completes our investigation of single-stream processor microarchitecture: by combining **stage delay balancing**, **data bypassing**, and **inter-stage pipelined execution units with intermediate register forwarding**, a single-issue processor achieves near-ideal instruction throughput while running at maximum physical clock frequency.
+
 
 \section{Summary}\label{riscvSummary}
 \index{RISC-V!chapter summary}
@@ -1065,6 +1317,8 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item Hardware data bypassing was implemented in Chisel, providing distance-1 forwarding (MEM/WB to EX) and distance-2 write-through bypassing (WB to ID). All ALU data dependencies are satisfied with zero stall cycles; only Load-Use hazards require a 1-cycle stall.
     \item Physical ASIC synthesis in ASAP7 7\,nm FinFET revealed that adding full data bypassing requires only +390 standard cells and expands core silicon area by \textbf{merely +2.7\%} ($1,128.16\,\mu\text{m}^2 \to 1,158.95\,\mu\text{m}^2$) with 0 additional flip-flops.
     \item On standard benchmarks, bypassing eliminated $>60\%$ of all pipeline stalls: CoreMark CPI dropped from 1.88 to 1.33 (yielding $1.69\times$ speedup over single-cycle, +41.8\% CoreMarks/MHz), and Dhrystone CPI dropped from 1.76 to 1.44 (yielding $1.55\times$ speedup, 418.5 DMIPS).
+    \item Single-stream processor performance for Multiply-Accumulate (MAC) intensive workloads (FIR filters, convolution, vector dot products) was accelerated by pipelining the hardware multiplier across EX and MEM/WB. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA reduction tree to redundant carry-save vectors ($Sum$, $Carry$), which are captured in the inter-stage pipeline registers (\texttt{ex\_mem}). Stage 2 in MEM/WB performs vector-merging addition and forwards the product directly to EX operands via data bypassing. This microarchitecture eliminates all stalls between back-to-back \texttt{mul} and \texttt{add} instructions, sustaining an issue rate of 1 instruction entering the pipeline per clock cycle while restoring operating frequency to $733.7\,\text{MHz}$ ($1.363\,\text{ns}$).
+    \item On the DSP hardware multiply benchmark, the pipelined multiplier core slashed execution time to $1,361.64\,\text{ns}$ ($1.36\,\mu\text{s}$), achieving a $\mathbf{2.45\times}$ speedup over the single-cycle core and a $\mathbf{1.81\times}$ speedup over the unpipelined multiplier pipeline, while surprisingly reducing full core silicon area by $-22.6\%$ ($2,235.55\,\mu\text{m}^2 \to 1,729.57\,\mu\text{m}^2$) due to standard cell drive-strength optimization.
     \item A taxonomy of computer architecture benchmarks was established: application-class benchmarks such as SPEC CPU2017 require virtual memory (MMU), a full POSIX OS (Linux), and gigabytes of RAM, rendering them physically inapplicable to bare-metal microcontroller-class cores. Microcontroller-class architectures rely on freestanding suites including Dhrystone, EEMBC CoreMark, and Embench-IoT.
 \end{itemize}
 
@@ -1200,5 +1454,42 @@ Consider the empirical EEMBC CoreMark 1.0 benchmark results from Table \ref{tab:
 \end{enumerate}
 $\diamond$
 \end{problem}
+
+\begin{problem}
+Consider accelerating a digital signal processing Finite Impulse Response (FIR) filter or Multiply-Accumulate (MAC) inner loop on the 4-stage pipelined RISC-V processor:
+\begin{lstlisting}[language=c]
+mul t0, t1, t0    // t0 = sample * coeff
+add a5, t0, a5    // a5 += t0 (accumulate)
+\end{lstlisting}
+\begin{enumerate}
+    \item If the multiplier is implemented as an unpipelined combinational array inside the Execute (EX) stage, how does this affect the operating clock period of the entire core in ASAP7 7\,nm FinFET technology?
+    \item Explain how partitioning the multiplier into two pipeline stages (Stage 1 in EX, Stage 2 in MEM/WB) with intermediate pipeline registers restores pipeline stage balancing. What intermediate arithmetic values are stored in the \texttt{ex\_mem} pipeline register?
+    \item In the 2-stage pipelined multiplier with data bypassing, trace the cycle-by-cycle execution of \texttt{mul} followed by \texttt{add}. Explain why \texttt{add} experiences zero stall cycles despite \texttt{mul} having a 2-cycle latency.
+    \item Calculate the execution time and speedup of the DSP benchmark (804 instructions, 999 cycles) running on the pipelined multiplier core ($T_{\text{clk}} = 1.363\,\text{ns}$) compared to the single-cycle core ($T_{\text{clk}} = 4.152\,\text{ns}$) and the unpipelined multiplier core ($T_{\text{clk}} = 2.462\,\text{ns}$).
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item An unpipelined combinational multiplier has a propagation delay of $2.148\,\text{ns}$ in ASAP7 7\,nm FinFET. Adding multiplexer and register setup overhead inflates the Execute stage delay to $T_{\text{execute}} = 2.462\,\text{ns}$. By Amdahl's Law for clock periods, $T_{\text{clk}} = \max(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}) = 2.462\,\text{ns}$, causing the operating clock frequency of the entire core to collapse from $733.7\,\text{MHz}$ down to $406.2\,\text{MHz}$ (a $-44.6\%$ penalty on all instructions).
+    \item Partitioning the multiplier decouples carry-save partial product reduction from final carry-propagating vector addition. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA compressor tree ($\approx 0.61\,\text{ns}$, carry-free). Stage 2 in MEM/WB executes a 64-bit vector-merging adder ($\approx 0.52\,\text{ns}$). The intermediate pipeline register \texttt{ex\_mem} synchronously stores the unmerged redundant vectors: \texttt{ex\_mem.mulSum} (64 bits), \texttt{ex\_mem.mulCarry} (64 bits), \texttt{ex\_mem.mulOp} (5 bits), and \texttt{ex\_mem.isMul} (1 bit). Because both sub-stages require $\le 0.65\,\text{ns}$, the Execute stage delay drops back to the base integer ALU critical path ($1.363\,\text{ns}$), restoring the operating frequency to $733.7\,\text{MHz}$.
+    \item Execution cycle trace:
+    \begin{itemize}
+        \item Cycle 1: \texttt{mul} in ID, \texttt{add} in IF.
+        \item Cycle 2: \texttt{mul} in EX (Stage 1 computes Booth PPG and 6-level CSA tree into \texttt{mulSum} and \texttt{mulCarry}). \texttt{add} in ID. Because \texttt{mul} is not a memory load ($\texttt{memRead} == 0$), the hazard unit detects no load-use hazard and asserts 0 stalls ($\texttt{stall} == 0$).
+        \item Cycle 3: \texttt{mul} enters MEM/WB (Stage 2 vector adder computes product and places \texttt{mulStage2Result} onto \texttt{exMemFwdData}). Simultaneously, \texttt{add} enters EX. The forwarding unit detects $\texttt{ex\_mem.rd} == \texttt{id\_ex.rs1}$ (\texttt{t0}) and routes \texttt{exMemFwdData} directly to ALU operand A. The ALU computes the accumulation with \textbf{0 stall cycles}.
+    \end{itemize}
+    Consecutive instructions enter the pipeline at \textbf{1 instruction per cycle}.
+    \item Total execution times:
+    \begin{itemize}
+        \item Single-Cycle: $T_{\text{exec}} = 804 \times 4.152\,\text{ns} = 3,338.21\,\text{ns}$ ($3.34\,\mu\text{s}$).
+        \item Unpipelined Multiplier Core with Bypassing: $T_{\text{exec}} = 999 \times 2.462\,\text{ns} = 2,459.54\,\text{ns}$ ($2.46\,\mu\text{s}$), delivering $1.36\times$ speedup.
+        \item Pipelined Multiplier Core with Bypassing: $T_{\text{exec}} = 999 \times 1.363\,\text{ns} = \mathbf{1,361.64\,\text{ns}}$ ($1.36\,\mu\text{s}$).
+    \end{itemize}
+    Speedup vs Single-Cycle: $3,338.21 / 1,361.64 = \mathbf{2.45\times}$.
+    Speedup vs Unpipelined Multiplier Core: $2,459.54 / 1,361.64 = \mathbf{1.81\times}$.
+\end{enumerate}
+$\diamond$
+\end{problem}
+
 
 

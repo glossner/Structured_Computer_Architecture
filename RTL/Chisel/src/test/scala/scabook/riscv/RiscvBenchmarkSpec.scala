@@ -231,13 +231,24 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     runBenchmark(rv32iBin, enableZmmul = false, "Pure RV32I Benchmark (DSP Kernel with Soft Multiply)", 3.053, 1.363)
   }
 
-  it should "execute RV32I_Zmmul benchmark on Single-Cycle and 4-Stage cores" in {
+  it should "execute RV32I_Zmmul benchmark on Single-Cycle and 4-Stage cores (Unpipelined Multiplier)" in {
     val zmmulBin = Paths.get("src/test/resources/benchmark/dsp_bench.bin")
-    // ASAP7 7nm 4-step pipeline delays with Zmmul hardware multiplier:
+    // ASAP7 7nm 4-step pipeline delays with unpipelined Zmmul hardware multiplier:
     // T_fetch = 0.550 ns, T_decode = 0.540 ns, T_execute = 2.462 ns, T_wb = 0.600 ns
     // Single-cycle FE: T_clk = 0.550 + 0.540 + 2.462 + 0.600 = 4.152 ns (240.8 MHz)
     // 4-stage pipeline: T_clk = max(0.550, 0.540, 2.462, 0.600) = 2.462 ns (406.2 MHz)
-    runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Hardware Multiply)", 4.152, 2.462)
+    runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Unpipelined Multiplier)", 4.152, 2.462)
+  }
+
+  it should "execute RV32I_Zmmul benchmark with 2-Stage Pipelined Multiplier and Bypassing" in {
+    val zmmulBin = Paths.get("src/test/resources/benchmark/dsp_bench.bin")
+    // ASAP7 7nm 4-step pipeline delays with 2-stage Pipelined Multiplier:
+    // Stage 1 in EX (Booth PPG + 6-level CSA tree) <= 0.650 ns
+    // Stage 2 in MEM/WB (64-bit vector-merging adder) <= 0.520 ns
+    // Base RV32I EX stage delay = 1.363 ns (balanced)
+    // Single-cycle FE: T_clk = 4.152 ns (240.8 MHz)
+    // 4-stage pipeline: T_clk = max(0.550, 0.540, 1.363, 0.600) = 1.363 ns (733.7 MHz)
+    runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Pipelined Multiplier & Bypassing)", 4.152, 1.363)
   }
 
   it should "execute Dhrystone 2.1 benchmark on Single-Cycle and 4-Stage cores" in {

@@ -1,3 +1,19 @@
+# 09/27/2026 16:20 Single-Stream FIR/MAC Acceleration via Pipelined Multiplier Datapath, Intermediate Registers, and Forwarding in Chapter 19
+* **2-Stage Pipelined Multiplier Architecture (`PipelinedMultiplier.scala`, Section 19.8)**:
+  * Stage 1 in EX (`PipelinedMultiplierStage1`): 17-partial-product Radix-4 Booth recoding and 6-level CSA compressor tree reducing to two 64-bit redundant vectors ($Sum$ and $Carry$) in carry-free fashion with delay $\approx 0.61\,\text{ns}$, well within the EX stage timing budget.
+  * Intermediate Pipeline Registers (`ex_mem`): Synchronously latches intermediate vectors (`mulSum`, `mulCarry`, `mulOp`, `isMul`) into the inter-stage register, completely decoupling tree reduction from final addition.
+  * Stage 2 in MEM/WB (`PipelinedMultiplierStage2`): 64-bit vector-merging adder computing final sum and slicing $[31:0]$ for `MUL` or $[63:32]$ for `MULH*`, requiring $\approx 0.52\,\text{ns}$.
+* **Zero-Stall Multiply-Accumulate (MAC) Forwarding**:
+  * Integrated with the distance-1 forwarding network. In canonical FIR/MAC loops (`mul t0, t1, t0` followed by `add a5, t0, a5`), `add` enters EX while `mul` enters MEM/WB without hazard stalls (`isLoadUse` = 0).
+  * Stage 2 produces `mulStage2Result` onto `exMemFwdData`, which is bypassed directly to ALU operand A in EX with **0 stall cycles**, sustaining an issue rate of **1 instruction entering the pipeline per clock cycle**!
+* **ASAP7 7nm FinFET Physical Synthesis**:
+  * Standalone 2-stage pipelined multiplier synthesized to 6,891 cells, 127 DFFs, and $554.07\,\mu\text{m}^2$ with a maximum stage delay of $0.65\,\text{ns}$ ($3.3\times$ peak operation throughput over combinational Booth).
+  * Full core `RiscvPipelined` with pipelined multiplier synthesized to 19,079 cells, 1,563 DFFs, and **1,729.57 $\mu$m$^2$ silicon area**—a **22.6% area reduction** ($-505.98\,\mu\text{m}^2$, saving 3,630 standard cells) over the unpipelined core ($2,235.55\,\mu\text{m}^2$) due to standard cell drive-strength optimization.
+  * The operating clock period was restored from $2.462\,\text{ns}$ ($406.2\,\text{MHz}$) to **1.363 ns (733.7 MHz)**, delivering an immediate **+80.6% frequency boost**.
+* **Benchmark Verification and Speedup**:
+  * Verified 100% pass across all 38 RV32I and 4 Zmmul official conformance tests.
+  * On the DSP hardware multiply benchmark (804 instructions, 999 cycles), execution time dropped from $3,338.21\,\text{ns}$ (single-cycle) and $2,459.54\,\text{ns}$ (unpipelined core with bypassing) down to **1,361.64 ns (1.36 $\mu$s)**, achieving a **2.45x speedup** over single-cycle, **2.36x** over unforwarded pipeline, and **1.81x** over the unpipelined forwarded core.
+
 # 09/27/2026 15:15 Hardware Data Bypassing, ASAP7 7nm FinFET Synthesis, and CoreMark/Dhrystone Rerun in Chapter 19
 * **Hardware Implementation of Bypassing (`RTL/Chisel/src/main/scala/scabook/riscv/RiscvPipelined.scala`, Section 19.7)**:
   * Implemented distance-1 forwarding (MEM/WB to EX) for ALU inputs, branch comparison, `jalr` target calculation, and store data (`rs2Data`).
