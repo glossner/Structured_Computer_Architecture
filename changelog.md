@@ -1,3 +1,8 @@
+# 09/27/2026 12:45 Overleaf Compatibility: Remove Symbolic Links
+* **Overleaf Compatibility (`Latex/latexcad/latexcad.sty`)**:
+  * Removed git symbolic link files from repository to satisfy Overleaf's git import engine.
+  * Converted `Latex/latexcad/latexcad.sty` to a standard regular file (mode 100644).
+
 # 09/27/2026 12:35 RV32I Workload Evaluation: Dhrystone 2.1, EEMBC CoreMark 1.0, Physical Pipeline Balancing Barriers, and Benchmark Taxonomy
 * **RV32I Workload Evaluation (`Latex/04_19_2_RISCV_pipelined.tex`, `RTL/Chisel/src/test/scala/scabook/riscv/RiscvBenchmarkSpec.scala`, `Latex/bibliography.bib`)**:
   * Ported and executed Dhrystone 2.1 (20 iterations) and EEMBC CoreMark 1.0 (1 iteration, 2 KB data footprint, 874,891 dynamic instructions) bare-metal on both single-cycle (`RiscvFetchExecute`) and 4-stage pipelined (`RiscvPipelined`) pure `RV32I` cores. Both benchmarks achieved 100% data validation matching golden signatures (`tohost = 1` with full CRC pass).
