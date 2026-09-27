@@ -1,3 +1,11 @@
+# 09/27/2026 09:15 Front Matter: First Edition Preface Restoration & Second Edition Placeholder
+* **First Edition Preface Restoration (`Latex/00_main.tex`, `README.md`)**:
+  * Restored the original First Edition signed and dated entry (June 3rd, 2026) in both `Latex/00_main.tex` and `README.md`, preserving the historical toolchain statement indicating testing with Chisel 6.6.0.
+* **Second Edition Preface Placeholder (`Latex/00_main.tex`, `README.md`)**:
+  * Created a dedicated placeholder for the Preface to the Second Edition positioned before the First Edition preface in both `Latex/00_main.tex` and `README.md`.
+  * Detailed the hardware construction environment upgrade to Chisel 7.15.0 and Scala 2.13.18 (supported by CIRCT firtool 1.158.0 and `EphemeralSimulator`).
+  * Added explicit references to the BreadBoard Computer Zoo repository (`https://github.com/glossner/BBzoo`) and the KryptoNyte RISC-V processor family repository (`https://github.com/Ypologist/KryptoNyte`).
+
 # 09/27/2026 09:10 ToyRISC Architecture and ISA Migration to Chapter 17 (Chapters 13 & 17)
 * **ToyRISC Architecture, Organization, and ISA Migration (`Latex/04_17_1_ToyRISC_organization.tex`, `Latex/03_13_harvard_5-OS.tex`)**:
   * Migrated non-redundant ToyRISC architecture, organization, loop-connected automata analysis, ISA specifications, opcode macro definitions (`A11_DEFINES.vh`), 28-instruction opcode Table 17.1, program execution trace Example 17.1, and single-cycle critical-path timing formulations from Section 13.5 into Chapter 17 (Section 17.1, `Latex/04_17_1_ToyRISC_organization.tex`).

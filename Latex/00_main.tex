@@ -309,10 +309,30 @@ And thus, the most important negative result in the history of mathematics under
 %\addcontentsline{toc}{chapter}{Forward}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Preface
+% Preface to the Second Edition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter*{Preface}
-\addcontentsline{toc}{chapter}{Preface}
+\chapter*{Preface to the Second Edition}
+\addcontentsline{toc}{chapter}{Preface to the Second Edition}
+
+[Placeholder for Preface to the Second Edition]
+
+Notable updates in this second edition include:
+\begin{itemize}
+    \item Upgraded the hardware construction environment to Chisel 7.15.0 and Scala 2.13.18 (supported by CIRCT firtool 1.158.0 and the \texttt{EphemeralSimulator} cycle-accurate simulation framework).
+    \item Reference and integration with the BreadBoard Computer Zoo repository (\url{https://github.com/glossner/BBzoo}), documenting diverse historical and modern computer architecture implementations.
+    \item Reference and integration with the KryptoNyte RISC-V processor family repository (\url{https://github.com/Ypologist/KryptoNyte}), covering the ZeroNyte (fetch-execute), PipeNyte (pipelined), TetraNyte (barrel-multithreaded), and OctoNyte processor cores and ASIC design flows.
+\end{itemize}
+
+\vspace{\baselineskip}\par \noindent
+John Glossner and Gheorghe M. \c{S}tefan
+\vspace{\baselineskip}\par \noindent
+[Date TBD]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preface to the First Edition
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Preface to the First Edition}
+\addcontentsline{toc}{chapter}{Preface to the First Edition}
 
 This textbook arose from an introductory course on Computer Architecture taught at Rivier University in the Fall of 2024. %It draws on Gheorghe M. \c{S}tefan's years of teaching Computer Architecture at the University of Bucharest.
 
@@ -359,7 +379,7 @@ In our opinion, an advantage of the order-based approach is that it roughly foll
 
 Although we write primarily for our students, we have both industry experience and have shipped multiple machines in volume. The code we provide bridges the gap between theoretical models and commercial implementations. The code starts very simple using behavioral constructs but progresses towards code that can be used in commercial machines. Over time, it is our hope that these examples continue to expand.
 
-The descriptions of the structures and the simulation of their behavior are written in both SystemVerilog and Chisel HDL. The Chisel code has unit tests and has been tested using Chisel 7.15.0 and Scala 2.13.18. Some of the SystemVerilog code has unit tests. All SystemVerilog codes have been validated using the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}}. It should also be executed using online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}}.
+The descriptions of the structures and the simulation of their behavior are written in both SystemVerilog and Chisel HDL. The Chisel code has unit tests and has been tested using Chisel 6.6.0. Some of the SystemVerilog code has unit tests. All SystemVerilog codes have been validated using the AMD/Xilinx Vivado Design Suite \footnote{\url{https://www.xilinx.com/content/xilinx/en/support/download.html/}}. It should also be executed using online tools such as EDA Playground \footnote{\url{https://www.edaplayground.com}}.
 
 Because this book's code is executable, it should not contain any syntax errors. The same files used for design descriptions are directly imported into the book.
 

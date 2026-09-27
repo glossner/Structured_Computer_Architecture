@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-27
 
 ### Changed
+- **Front Matter: First Edition Preface Restoration and Second Edition Placeholder**:
+  - Restored the original signed and dated First Edition preface (June 3rd, 2026) in both `Latex/00_main.tex` and `README.md`, preserving the historical toolchain note referencing Chisel 6.6.0 testing.
+  - Added a placeholder for the Preface to the Second Edition in both `Latex/00_main.tex` and `README.md`, documenting the upgrade to Chisel 7.15.0 and Scala 2.13.18 (supported by CIRCT firtool 1.158.0 and `EphemeralSimulator`) along with explicit references to the BreadBoard Computer Zoo repository ([https://github.com/glossner/BBzoo](https://github.com/glossner/BBzoo)) and the KryptoNyte RISC-V processor family repository ([https://github.com/Ypologist/KryptoNyte](https://github.com/Ypologist/KryptoNyte)).
 - **ToyRISC Architecture, Organization, and ISA Migration (Chapters 13 & 17)**:
   - Migrated non-redundant ToyRISC architecture, organization, loop-connected automata analysis, ISA specifications, opcode macro definitions (`A11_DEFINES.vh`), 28-instruction opcode Table 17.1, program execution trace Example 17.1, and single-cycle critical-path timing formulations from Section 13.5 into Chapter 17 (Section 17.1, `Latex/04_17_1_ToyRISC_organization.tex`).
   - Maintained Section 13.5 in `Latex/03_13_harvard_5-OS.tex` fully commented out in source, eliminating redundancy while preserving historical text.
