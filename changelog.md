@@ -1,3 +1,12 @@
+# 09/27/2026 08:20 Terminology & Historical Attribution Alignment (Chapters 12 & 13)
+* **Terminology Corrections (`Latex/03_12_von_neumann_4-OS.tex`)**:
+  * Corrected "four-organ system" to "fourth-order system" (4-OS) and "Memory Organ" to "Memory" in Section 12.4.
+  * Replaced "functional organ" with "functional component" and "arithmetic organ" with "central processing unit (3-OS)".
+  * Audited the entire repository and confirmed zero remaining instances of "organ" across all `.tex` files.
+* **Historical Attribution Alignment with Section 13.4.2**:
+  * Harmonized the stored-program writeup in Section 12.4 with co-author Stefan Gheorghe's attribution in Section 13.4.2 (`Latex/03_13_harvard_5-OS.tex`).
+  * Explicitly cross-referenced Section 13.4.2 to acknowledge the collaborative genesis of the EDVAC stored-program design by J. Presper Eckert, John Mauchly, Arthur Burks, Herman Goldstine, and John von Neumann at the Moore School of Electrical Engineering, grounded in Alan Turing's mathematical model.
+
 # 09/27/2026 08:00 Instruction Compounding (SCISM) & Modern Superscalar Dispatch Frontiers (Chapter 16)
 * **Instruction Compounding & SCISM (Section 16.5.6 - `Latex/04_16_Performance_Optimized_Organization.tex`)**:
   * Documented the quadratic $O(W^2)$ dependency checking bottleneck in wide superscalar issue logic and credited Stamatis Vassiliadis, Bart Blaner, and Richard J. Eickemeyer for inventing the Scalable Compound Instruction Set Machine (SCISM, IBM 1994) and Compound ALU (CALU, 1993).

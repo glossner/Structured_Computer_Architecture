@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-26
 
 ### Fixed
+- **Terminology and Historical Attribution Alignment (Chapters 12 & 13)**:
+  - Corrected "four-organ system" to "fourth-order system" (4-OS) and "Memory Organ" to "Memory" in Section 12.4 (`Latex/03_12_von_neumann_4-OS.tex`).
+  - Verified and eliminated all obsolete "organ" terminology across the entire textbook codebase.
+  - Harmonized the Section 12.4 stored-program writeup with co-author Stefan Gheorghe's historical attribution in Section 13.4.2 (`Latex/03_13_harvard_5-OS.tex`), explicitly recognizing the collaborative EDVAC work of the Moore School team (J. Presper Eckert, John Mauchly, Arthur Burks, Herman Goldstine, and John von Neumann) based on Alan Turing's mathematical model.
 - **Bibliographic Citation Standardization (Chapters 15, 16, & 18)**:
   - Standardized citations across Chapters 15, 16, and 18 to appear as parenthetical references at the end of sentences using `\cite{...}` (leveraging the document's `\let\cite\citep` macro definition), rendering consistent `(Author, Year)` parenthetical citations throughout the text.
 - **Chisel Listing Splitting & Layout (Chapters 9 & 10)**:
