@@ -1,3 +1,19 @@
+# 09/27/2026 13:15 4-Stage Pipelined RV32I: ASAP7 7nm FinFET ASIC Synthesis, No Forwarding, SRAM Memory Latency Modeling, and Benchmark Evaluation
+* **ASAP7 7nm FinFET Physical ASIC Synthesis & Microarchitectural Multiplier Case Study (`Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Migrated technology process from SkyWater 130nm to the predictive ASAP7 7nm FinFET PDK (`asap7sc7p5t_28`, 7.5-track standard cells, RVT, $V_{dd} = 0.70\,\text{V}$, $25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$) using Yosys and ABC.
+  * Synthesized single-cycle `RV32I` core (9,730 cells, 1,023 DFFs, $904.24\,\mu\text{m}^2$, $T_{\text{clk, core}} = 1.590\,\text{ns}$, $628.9\,\text{MHz}$) and 4-stage pipelined `RV32I` core (11,584 cells, 1,434 DFFs, $1,128.16\,\mu\text{m}^2$, $T_{\text{clk, core}} = 1.363\,\text{ns}$, $733.7\,\text{MHz}$, +16.7% core clock frequency).
+  * Synthesized standalone ALUs and full cores with `Zmmul` hardware multiplier: unpipelined $32 \times 32$ multiplier logic array caused an 11.5$\times$ ALU area explosion ($103.31 \to 1,186.67\,\mu\text{m}^2$) and +105.3% delay ($1.047 \to 2.148\,\text{ns}$). Monolithic integration in EX stage collapsed pipelined core frequency to $406.2\,\text{MHz}$ (+6.2% gain over single-cycle), demonstrating Amdahl's Law for clock periods.
+* **SRAM Memory Latency Modeling & Overlapping (`Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Modeled standard single-cycle memory latency using a small 7nm FinFET SRAM macro ($T_{\text{mem}} = 0.50\,\text{ns}$, 500 ps).
+  * Single-cycle core includes memory delay in the clock cycle: $T_{\text{clk}} = T_{\text{core}} + 2 T_{\text{mem}} = 1.590 + 1.00 = 2.590\,\text{ns}$ ($386.1\,\text{MHz}$).
+  * 4-stage pipelined core covers memory delay within IF and MEM stages ($T_{\text{mem}} \le T_{\text{stage}}$), running at $T_{\text{clk}} = 1.363\,\text{ns}$ ($733.7\,\text{MHz}$), providing a 1.90$\times$ system frequency multiplier.
+* **Baseline No-Forwarding Microarchitecture & Conformance (`RTL/Chisel/src/main/scala/scabook/riscv/RiscvPipelined.scala`)**:
+  * Removed write-through bypass from MEM/WB to ID to establish pure unbypassed baseline: distance-1 RAW hazards stall 2 cycles, distance-2 RAW hazards stall 1 cycle.
+  * Achieved 100% pass rate across all 38 official RISC-V `RV32I` architectural test suites (168,638 cycles) and all 4 official `Zmmul` test suites (32,892 cycles) with exact golden signature matches against Spike.
+* **Empirical Workload Benchmarking & Pipeline Balancing Analysis (`Latex/04_19_2_RISCV_pipelined.tex`, `RTL/Chisel/src/test/scala/scabook/riscv/RiscvBenchmarkSpec.scala`)**:
+  * Executed DSP kernel (soft mul: 6,511 insts, CPI 1.93; hard mul: 804 insts, CPI 1.63), Dhrystone 2.1 (24,311 cycles, CPI 1.76, 0.468 DMIPS/MHz, 343.8 DMIPS, 1.08$\times$ system speedup), and EEMBC CoreMark 1.0 (1,643,060 cycles, CPI 1.88, 0.608 CoreMark/MHz, 446.5 CoreMarks, 1.01$\times$ system speedup).
+  * Analyzed why the pipelined `RV32I` runs only a tiny bit faster ($1.01\times\text{--}1.08\times$): stage delay quantization limits core frequency scaling to $1.167\times$, sequential register overhead adds $\approx 55\,\text{ps}$ per stage boundary, and without forwarding, RAW hazard stalls expand CPI to $1.76\text{--}1.88$, consuming almost the entire $1.90\times$ system frequency multiplier.
+
 # 09/27/2026 12:45 Overleaf Compatibility: Remove Symbolic Links
 * **Overleaf Compatibility (`Latex/latexcad/latexcad.sty`)**:
   * Removed git symbolic link files from repository to satisfy Overleaf's git import engine.

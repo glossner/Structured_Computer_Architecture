@@ -186,8 +186,10 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     val execTimeSingle = cyclesSingle * tClkSingle // ns
     val execTimePipe   = cyclesPipe * tClkPipe     // ns
 
-    val tMem = 5.0 // ns realistic memory latency
+    val tMem = 0.50 // ns (500 ps small standard SRAM access time in ASAP7 7nm)
+    // Single-cycle must budget for instruction fetch + datapath + data memory access in 1 clock cycle:
     val tClkSingleMem = tClkSingle + 2 * tMem
+    // Pipelined processor covers SRAM memory access within dedicated IF and MEM stages (T_mem <= T_clk):
     val tClkPipeMem   = math.max(tClkPipe, tMem)
 
     val execTimeSingleMem = cyclesSingle * tClkSingleMem
@@ -202,37 +204,37 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     println("-----------------------------------------------------------------------")
     println(f"  Single-Cycle Cycles:        $cyclesSingle%6d   (CPI = $cpiSingle%.2f)")
     println(f"  4-Stage Pipelined Cycles:   $cyclesPipe%6d   (CPI = $cpiPipe%.2f)")
-    println(f"  Pipeline Stall Overhead:    ${cyclesPipe - cyclesSingle}%6d cycles (${(cpiPipe - 1.0)*100}%.1f%% penalty)")
+    println(f"  Pipeline Stall Overhead:    ${cyclesPipe - cyclesSingle}%6d cycles (${(cpiPipe - 1.0)*100}%.1f%% penalty, no forwarding)")
     println("-----------------------------------------------------------------------")
-    println(f"  SkyWater 130nm Core T_clk:   Single=$tClkSingle%.2f ns (${1000.0/tClkSingle}%.1f MHz), Pipe=$tClkPipe%.2f ns (${1000.0/tClkPipe}%.1f MHz)")
-    println(f"  Core Execution Time:        Single=$execTimeSingle%.1f ns, Pipe=$execTimePipe%.1f ns")
-    println(f"  With Memory ($tMem%.0fns) T_clk:     Single=$tClkSingleMem%.2f ns (${1000.0/tClkSingleMem}%.1f MHz), Pipe=$tClkPipeMem%.2f ns (${1000.0/tClkPipeMem}%.1f MHz)")
-    println(f"  System Execution Time:      Single=$execTimeSingleMem%.1f ns, Pipe=$execTimePipeMem%.1f ns")
+    println(f"  ASAP7 7nm Core T_clk:        Single=$tClkSingle%.3f ns (${1000.0/tClkSingle}%.1f MHz), Pipe=$tClkPipe%.3f ns (${1000.0/tClkPipe}%.1f MHz)")
+    println(f"  Core Execution Time:        Single=$execTimeSingle%.2f ns, Pipe=$execTimePipe%.2f ns")
+    println(f"  With SRAM ($tMem%.2fns) T_clk:     Single=$tClkSingleMem%.3f ns (${1000.0/tClkSingleMem}%.1f MHz), Pipe=$tClkPipeMem%.3f ns (${1000.0/tClkPipeMem}%.1f MHz, covered)")
+    println(f"  System Execution Time:      Single=$execTimeSingleMem%.2f ns, Pipe=$execTimePipeMem%.2f ns")
     println(f"  Actual System Speedup:      $speedupActualMem%.2fx")
     println("=======================================================================\n")
   }
 
   "RiscvBenchmark" should "execute pure RV32I benchmark on Single-Cycle and 4-Stage cores" in {
     val rv32iBin = Paths.get("src/test/resources/benchmark/rv32i_bench.bin")
-    // SkyWater 130nm RV32I synthesis: Single T_clk = 10.57 ns, Pipe T_clk = 7.17 ns
-    runBenchmark(rv32iBin, enableZmmul = false, "Pure RV32I Benchmark (DSP Kernel with Soft Multiply)", 10.57, 7.17)
+    // ASAP7 7nm RV32I synthesis: Single T_clk = 1.590 ns, Pipe T_clk = 1.363 ns
+    runBenchmark(rv32iBin, enableZmmul = false, "Pure RV32I Benchmark (DSP Kernel with Soft Multiply)", 1.590, 1.363)
   }
 
   it should "execute RV32I_Zmmul benchmark on Single-Cycle and 4-Stage cores" in {
     val zmmulBin = Paths.get("src/test/resources/benchmark/dsp_bench.bin")
-    // SkyWater 130nm RV32I_Zmmul synthesis: Single T_clk = 13.64 ns, Pipe T_clk = 13.25 ns
-    runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Hardware Multiply)", 13.64, 13.25)
+    // ASAP7 7nm RV32I_Zmmul synthesis: Single T_clk = 2.616 ns, Pipe T_clk = 2.462 ns
+    runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Hardware Multiply)", 2.616, 2.462)
   }
 
   it should "execute Dhrystone 2.1 benchmark on Single-Cycle and 4-Stage cores" in {
     val dhryBin = Paths.get("src/test/resources/benchmark/dhrystone.bin")
-    // SkyWater 130nm RV32I synthesis: Single T_clk = 10.57 ns, Pipe T_clk = 7.17 ns
-    runBenchmark(dhryBin, enableZmmul = false, "Dhrystone 2.1 Benchmark (20 runs)", 10.57, 7.17, tohostAddr = 0x80040000L, maxCycles = 500000)
+    // ASAP7 7nm RV32I synthesis: Single T_clk = 1.590 ns, Pipe T_clk = 1.363 ns
+    runBenchmark(dhryBin, enableZmmul = false, "Dhrystone 2.1 Benchmark (20 runs)", 1.590, 1.363, tohostAddr = 0x80040000L, maxCycles = 500000)
   }
 
   it should "execute EEMBC CoreMark benchmark on Single-Cycle and 4-Stage cores" in {
     val coremarkBin = Paths.get("src/test/resources/benchmark/coremark.bin")
-    // SkyWater 130nm RV32I synthesis: Single T_clk = 10.57 ns, Pipe T_clk = 7.17 ns
-    runBenchmark(coremarkBin, enableZmmul = false, "EEMBC CoreMark 1.0 Benchmark (1 iteration)", 10.57, 7.17, tohostAddr = 0x80040000L, maxCycles = 2000000)
+    // ASAP7 7nm RV32I synthesis: Single T_clk = 1.590 ns, Pipe T_clk = 1.363 ns
+    runBenchmark(coremarkBin, enableZmmul = false, "EEMBC CoreMark 1.0 Benchmark (1 iteration)", 1.590, 1.363, tohostAddr = 0x80040000L, maxCycles = 2000000)
   }
 }
