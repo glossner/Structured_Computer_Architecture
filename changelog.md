@@ -1,3 +1,15 @@
+# 09/27/2026 11:30 4-Stage Pipelined RV32I_Zmmul Implementation, Hazard Stalling, Conformance Verification, and SkyWater 130nm ASIC Synthesis
+* **4-Stage Pipelined RV32I_Zmmul Core (`RTL/Chisel/src/main/scala/scabook/riscv/RiscvPipelined.scala`, `Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Designed and implemented a 4-stage pipelined processor core (`RiscvPipelined.scala`, Section 19.2) for the `RV32I_Zmmul` architecture in Chisel 7.15.0, partitioning the Fetch-Execute cycle into IF, ID, EX, and MEM/WB stages without cache hierarchies (direct memory access).
+  * Implemented an active Hazard Detection Unit that stalls the pipeline on RAW data dependencies against uncommitted instructions in the EX stage (freezes `pcReg` and `if_id`, injects bubble into `id_ex`).
+  * Added internal register file write-through forwarding bypass from MEM/WB to ID to resolve distance-2 dependencies without stalls (0 cycles) and distance-1 dependencies with a single stall cycle (1 cycle).
+  * Evaluated branch and jump target resolution in the EX stage with pipeline flushing (2-cycle penalty on taken branches/jumps, 0-cycle penalty on fall-through).
+  * Verified 100% pass rate across all 42 official RISC-V architectural test suites (38 RV32I base suites + 4 Zmmul extension suites) with exact word-for-word golden signature matching (`RiscvPipelinedConformanceSpec.scala`).
+  * Formulated and executed a DSP workload kernel combining a 16-point 4-tap FIR filter and a $4 \times 4$ matrix-vector multiplication (`dsp_bench.bin`) on both single-cycle and pipelined cores, validating identical computational results (`tohost = 0x00000711`) across 804 executed instructions ($\text{CPI} = 1.00$ single-cycle vs. $\text{CPI} = 1.36$ pipelined).
+  * Synthesized both cores to open-source SkyWater 130nm high-density standard cells (`sky130_fd_sc_hd`) using Yosys and ABC, evaluating cell count (19,235 vs. 19,747), sequential flip-flops (1,023 vs. 1,434, +40.2%), silicon area ($138,186\,\mu\text{m}^2$ vs. $151,075\,\mu\text{m}^2$, +9.33%), and critical path delay.
+  * Identified the unpipelined $32 \times 32$ multiplier logic array in `RiscvALU` ($11.09\,\text{ns}$ delay, $88,870\,\mu\text{m}^2$ area) as the primary critical path bottleneck. Under realistic memory latency ($T_{\text{mem}} = 5\,\text{ns}$), overlapping memory across pipeline stages delivers an actual application speedup of $1.31\times$ ($14,443\,\text{ns}$ vs. $18,974\,\text{ns}$).
+  * Consolidated the unified Chapter 19 Summary and Exercises into Section 19.2, de-duplicated Section 19.1, and configured `.gitignore` to isolate physical design intermediate files.
+
 # 09/27/2026 10:15 Chapter 16 Organization Refinements: Structural Hazards, Branch Prediction, Out-of-Order Frontiers, and Table Legibility
 * **Chapter 16 Organization Refinements (`Latex/04_16_Performance_Optimized_Organization.tex`, `Latex/bibliography.bib`)**:
   * Dynamically linked the opening introductory reference in Section 16 to Chapter 15 (`\label{chap:perf_opt_logic}`) instead of Chapter 11.
