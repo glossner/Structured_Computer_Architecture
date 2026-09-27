@@ -1,3 +1,18 @@
+# 09/27/2026 14:45 Physical Synthesis Realities: EDA Baseline Multipliers vs. Explicit Architectures in Chapter 15
+* **EDA Baseline Multiplier Mechanics (`Latex/04_15_Performance_Optimized_Digital_Logic.tex`, Section 15.3.6)**:
+  * Documented the internal EDA transformation of HDL multiplication expressions (`*` / `$mul`) in Yosys and Berkeley ABC. Proved that Yosys does not synthesize naive shift-and-add logic; the `alumacc` pass transforms operations into multiply-accumulate macro-cells (`$macc`), and `maccmap` decomposes `$macc` into a bit-slice carry-save compressor tree with a Brent-Kung parallel prefix vector-merging adder (`$lcu_brent_kung`), followed by ABC AIG cut-based delay rewriting.
+  * Revealed that supporting RISC-V `Zmmul` dynamic signedness caused Yosys to instantiate two complete 64-bit carry-save compressor trees behind an output multiplexer, explaining the 10,240 cell count and $1,083.36\,\mu\text{m}^2$ baseline area.
+* **Why Array Multipliers Synthesized to Lowest Delay ($1.968\,\text{ns}$)**:
+  * Demonstrated that single-gate 2-input AND partial product generation requires merely $\approx 15\,\text{ps}$ in ASAP7 7nm FinFET without recoding or multiplexing overhead, allowing ABC's AIG cut-based optimization to balance the flat multi-operand sum into a shallow reduction tree that reaches the vector-merging adder earlier than architectures with complex front-ends.
+* **The Radix-4 Booth Trade-Off**:
+  * Detailed the front-end recoding penalty (3-bit window decode, 5:1 multiplexing, negation logic = $\approx 150\text{--}200\,\text{ps}$) versus tree reduction savings (saving 2 carry-save levels = $\approx 80\,\text{ps}$). At 32 bits, the front-end penalty exceeds tree savings, making unpipelined Booth slightly slower ($2.160\,\text{ns}$ vs. $1.968\,\text{ns}$).
+  * Proved that Booth achieves a massive **57.1% area reduction** ($464.45\,\mu\text{m}^2$, lowest of all architectures) and eliminates routing congestion. Demonstrated that for 64-bit and 128-bit datapaths, logarithmic tree savings easily dominate the constant front-end penalty.
+* **Wallace Tree Limitations in Standard Cells**:
+  * Analyzed why explicit structural netlists of full adders restrict ABC Boolean optimization and how irregular, non-planar wiring creates routing congestion and parasitic wire RC delays in deep-submicron FinFET nodes ($2.089\,\text{ns}$).
+* **Redundant Binary Multipliers in Standard Cells vs. Custom DSP Silicon**:
+  * Explained why automated standard-cell synthesis penalizes RBM ($1,072.65\,\mu\text{m}^2$, $2.246\,\text{ns}$) due to dual-rail encoding and scattered standard-cell placement, contrasting this with custom DSP datapaths (e.g., the multithreaded Sandblaster DSP) where pitch-matched bit-slice tiling and modular H-tree interconnects provide deterministic wire lengths and noise immunity.
+  * Highlighted that DSP multiply-accumulate (MAC) loops accumulate directly in redundant binary format across cycles in constant $O(1)$ time, eliminating the final two's complement subtractor from the inner loop critical path.
+
 # 09/27/2026 14:30 High-Performance Multipliers in Chapter 15 and ASAP7 7nm FinFET Synthesis for Zmmul Acceleration in Chapter 19
 * **High-Performance Multipliers in Chapter 15 (`Latex/04_15_Performance_Optimized_Digital_Logic.tex`)**:
   * Added Section 15.3 on high-performance multipliers covering:
