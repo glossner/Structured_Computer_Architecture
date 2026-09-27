@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-27
 
 ### Changed
+- **Balancing the RV32I Pipeline: ASAP7 7nm FinFET Synthesis of High-Performance Adders and Selection (Chapters 15 & 19)**:
+  - **Ripple-Carry Bottleneck Diagnosis**: Identified that the unoptimized 32-bit ripple-carry adder (RCA, $1.045\,\text{ns}$) in the baseline ALU has approximately $2\times$ the delay of any other pipeline stage ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$), acting as the primary constraint on processor clock frequency ($733.7\,\text{MHz}$).
+  - **ASAP7 7nm FinFET Synthesis of Chapter 15 Adders**: Implemented in Chisel, verified with unit test suites, and synthesized 5 adder architectures from Chapter 15 to gate-level netlists mapped to ASAP7 7nm FinFET (`asap7sc7p5t_28`, RVT, $0.70\,\text{V}$, $25^\circ\text{C}$):
+    - Ripple-Carry Adder (RCA): 106 cells, $13.91\,\mu\text{m}^2$, $1,045.43\,\text{ps}$ ($1.045\,\text{ns}$), $0.96\,\text{GHz}$ (baseline).
+    - Carry Lookahead Adder (CLA): 122 cells, $12.98\,\mu\text{m}^2$, $987.99\,\text{ps}$ ($0.988\,\text{ns}$), $1.01\,\text{GHz}$ ($1.06\times$ speedup).
+    - Brent-Kung Parallel Prefix Adder (BKA): 144 cells, $14.83\,\mu\text{m}^2$, $836.25\,\text{ps}$ ($0.836\,\text{ns}$), $1.20\,\text{GHz}$ ($1.25\times$ speedup).
+    - Kogge-Stone Parallel Prefix Adder (KSA): 190 cells, $17.48\,\mu\text{m}^2$, $712.57\,\text{ps}$ ($0.713\,\text{ns}$), $1.40\,\text{GHz}$ ($1.47\times$ speedup).
+    - Carry Select Adder (CSA): 190 cells, $18.01\,\mu\text{m}^2$, **519.83 ps (0.520 ns)**, **1.92 GHz** (**2.01x speedup**).
+  - **Adder Selection and Pipeline Balancing (Section 19.4)**: Selected the Carry Select Adder as the optimal design for 32-bit standard cells, reducing adder delay by $50.3\%$ ($0.520\,\text{ns}$). Provided concise Chisel code illustrating only the adder invocation. Restored pipeline balance ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{execute}} \approx 0.600\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$), dropping the worst-case clock period to $0.600\,\text{ns}$ and unlocking an operating frequency of **1.67 GHz** ($+127.2\%$ frequency boost, $2.27\times$ over the unoptimized pipeline).
 - **Chapter 16 Organization Refinements: Structural Hazards, Branch Prediction, Out-of-Order Frontiers, and Table Legibility**:
   - Dynamically linked the opening introductory reference in Section 16 to Chapter 15 (`\label{chap:perf_opt_logic}`) instead of Chapter 11.
   - Removed Section 16.2 "Architectural Insight" on barrel multithreading hazard elimination to prevent redundancy with Section 16.6 (`\label{sec:barrel_multithreading}`).
