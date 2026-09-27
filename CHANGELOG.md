@@ -19,10 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **RISC-V Processor Architecture, Implementation & Verification (Chapter 18)**:
-  - Authored and integrated Chapter 18 (`04_18_RISCV.tex`) into Part IV ("Practical Designs") of the textbook, uncommented in `Latex/00_main.tex`.
+  - Authored and integrated Chapter 18 (`04_18_1_RISCV.tex`) into Part IV ("Practical Designs") of the textbook, alongside empty placeholder `04_18_2_RISCV_pipelined.tex` in `Latex/00_main.tex`.
   - Detailed the RISC-V RV32I base integer ISA with the `Zmmul` hardware multiplication extension, the Harvard 5-OS hardware composition and 5-function Fetch-Execute microarchitecture, and pure Chisel/Scala verification methodology using `EphemeralSimulator`.
-  - Documented 100% pass verification results across all 42 official RISC-V architectural test suites (`riscv-arch-test`) with bit-exact signature matches against Spike golden reference models.
-  - Provided an industrial comparative study against the tapeout-verified `ZeroNyte` core from KryptoNyte, analyzing architectural trade-offs in branch condition evaluation, memory alignment, and object-oriented register file design.
+  - Documented 100% pass verification results across all 42 official RISC-V architectural test suites (`riscv-arch-test`) with bit-exact signature matches against Spike golden reference models and updated test results table formatting to fit margins cleanly.
+  - Streamlined Chapter 13 (`03_13_harvard_5-OS.tex`) by replacing redundant inline Chisel core listings with a clean cross-reference to Chapter 18.
 - **Modular RV32I_Zmmul Architecture & Datapath Elements (Chapters 8, 9, & 10)**:
   - Implemented `RiscvConstants.scala`: Defined standard RV32I opcodes (`RiscvOpcodes`), direct-wire 5-bit ALU control codes (`AluOp`), object-oriented instruction view (`RiscvFields`), and typed interconnect bundles (`DecodedControl`, `DecodedInstruction`).
   - Implemented `RiscvDecoder.scala`: Synthesizable RV32I_Zmmul instruction decoder with zero gate-delay direct-wire opcode routing (`aluOp = {inst[25], inst[30], inst[14:12]}`) for R-type instructions and full control signal generation. Verified with `RiscvDecoderTest.scala`.

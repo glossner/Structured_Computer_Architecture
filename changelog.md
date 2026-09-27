@@ -1,9 +1,10 @@
-# 09/26/2026 17:10 RISC-V Processor Architecture, Verification & Chapter 18 Documentation
+# 09/27/2026 05:40 RISC-V Processor Architecture, Verification & Chapter Structure Refinement
 
-* **RISC-V Chapter 18 Integration (`Latex/04_18_RISCV.tex`)**: Authored and integrated Chapter 18 into Part IV ("Practical Designs") of the textbook, uncommenting `\include{04_18_RISCV}` in `Latex/00_main.tex`. Provided comprehensive documentation of the RV32I base ISA and `Zmmul` extension, the Harvard 5-OS loop structure, 5-function Fetch-Execute microarchitecture, and pedagogical problem set.
-* **Architectural Conformance Verification Documentation**: Documented the pure Chisel/Scala verification methodology with `EphemeralSimulator` running all 42 official RISC-V architectural tests (`riscv-arch-test`: 38 RV32I + 4 Zmmul) without external Verilog/Verilator compilation, achieving 100% exact signature matches against Spike golden reference signatures. Detailed architectural corner cases uncovered during verification (JALR target calculation, shift amount masking, signed/unsigned comparisons, sub-word alignment, and x0 invariance).
-* **Industrial Architectural Comparison**: Documented a detailed structural and microarchitectural comparison between the textbook `RiscvFetchExecute` core and the tapeout-proven `ZeroNyte` core from KryptoNyte, exploring branch condition evaluation, memory alignment, and object-oriented register file design.
-* **Cross-References and Index Generation**: Linked Chapter 13 Section 13.7 directly to Chapter 18, populated the comprehensive subject index with RISC-V entries, and validated error-free compilation of the 606-page textbook with XeLaTeX and MakeIndex.
+* **RISC-V Chapter 18 Structure (`Latex/04_18_1_RISCV.tex` & `Latex/04_18_2_RISCV_pipelined.tex`)**: Renamed Chapter 18 single-cycle document to `04_18_1_RISCV.tex` and created `04_18_2_RISCV_pipelined.tex` as a pipelined implementation placeholder, both included in `Latex/00_main.tex`.
+* **Streamlined Chapter 13 (`03_13_harvard_5-OS.tex`)**: Removed duplicated Chisel core listings from Chapter 13 and replaced them with a direct cross-reference to Chapter 18.
+* **Refined Conformance Results Table**: Streamlined Table 18.2 to two columns (`Category` and `Architectural Test Suites`) bounded to `\textwidth` via `tabularx` to cleanly eliminate table margin overflow.
+* **Modular Pipeline Alignment**: Removed Section 18.5 (ZeroNyte comparative study) to defer structural hazards and comparative analysis to the upcoming pipelined design chapter.
+* **Error-Free Textbook Compilation**: Verified full book compilation (599 pages) with XeLaTeX, MakeIndex, and 100% test pass rate across all Chisel suites.
 
 # 09/26/2026 12:00 Modular RV32I_Zmmul Architecture & Datapath RTL Integration
 
