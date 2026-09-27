@@ -268,14 +268,14 @@ The 4-stage pipelined processor completes the 6,511-instruction workload in 12,5
 
 Both the single-cycle and 4-stage pipelined \texttt{RV32I} cores were synthesized to gate-level netlists using \textbf{Yosys} and mapped to the \textbf{ASAP7 7\,nm FinFET Predictive PDK} (\texttt{asap7sc7p5t\_28}, 7.5-track standard cells, Regular $V_t$) at the typical process corner ($V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$). Critical path static timing analysis was performed under standard load capacitance constraints ($C_{\text{load}} = 2.0\,\text{fF}$).
 
-Table \ref{tab:asap7_rv32i_synthesis} summarizes the physical design metrics for the pure \texttt{RV32I} cores.
+Table \ref{tab:asap7_rv32i_synthesis} summarizes the physical design metrics, pipeline stage delay decomposition, and benchmark performance comparison for the pure \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology.
 
 \begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Physical Design Metric} & \textbf{Single-Cycle RV32I} & \textbf{4-Stage Pipelined RV32I} & \textbf{Delta / Comparison} \\
+\textbf{Physical Design \& Timing Metric} & \textbf{Single-Cycle (FE) RV32I} & \textbf{4-Stage Pipelined RV32I} & \textbf{Delta / Comparison} \\
 \hline
 Process Technology              & ASAP7 7\,nm FinFET          & ASAP7 7\,nm FinFET          & 7.5-Track RVT \\
 Operating Voltage / Corner      & 0.70\,V, 25$^\circ$C (TT)   & 0.70\,V, 25$^\circ$C (TT)   & Typical Corner \\
@@ -285,46 +285,57 @@ Sequential Elements (DFFs)      & 1,023 flip-flops            & 1,434 flip-flops
 Sequential Cell Area            & 298.31\,$\mu$m$^2$          & 418.15\,$\mu$m$^2$          & $+40.2\%$ \\
 Total Silicon Area              & \textbf{904.24\,$\mu$m$^2$} & \textbf{1,128.16\,$\mu$m$^2$} & \textbf{+24.8\% area} \\
 \hline
-Critical Path Delay ($T_{\text{clk}}$, core) & \textbf{1.590\,ns} & \textbf{1.363\,ns}         & \textbf{$-14.3\%$ delay} \\
-Maximum Clock Frequency ($f_{\text{max}}$, core) & \textbf{628.9\,MHz} & \textbf{733.7\,MHz}   & \textbf{+16.7\% frequency} \\
+\multicolumn{4}{|l|}{\textbf{Pipeline Step Delays (ASAP7 7\,nm FinFET)}} \\
 \hline
-Clock Period with SRAM ($T_{\text{mem}} = 0.50$\,ns) & 2.590\,ns & 1.363\,ns                  & \textbf{$-47.4\%$ cycle period} \\
-System Clock Frequency with Memory               & 386.1\,MHz     & 733.7\,MHz                 & \textbf{+90.0\% frequency} \\
+Step 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns                   & 0.550\,ns                   & $t_{\text{cq, PC}} + T_{\text{sram}} + t_{\text{setup}}$ \\
+Step 2: Decode \& Reg Read ($T_{\text{decode}}$) & 0.540\,ns                  & 0.540\,ns                   & $T_{\text{decoder}} + T_{\text{regfile\_read}}$ \\
+Step 3: Execute ($T_{\text{execute}}$)          & 1.363\,ns                   & 1.363\,ns                   & $T_{\text{alu}} + T_{\text{branch}} + t_{\text{setup}}$ \\
+Step 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns                   & 0.600\,ns                   & $T_{\text{sram}} + T_{\text{wb\_mux}} + t_{\text{setup}}$ \\
 \hline
-Benchmark Execution Time ($T_{\text{mem}} = 0.50$\,ns) & 16,863\,ns & 17,140\,ns               & \textbf{0.98$\times$ Speedup (no fwd)} \\
+\textbf{Operating Clock Period ($T_{\text{clk}}$)} & \textbf{3.053\,ns} (Sum)  & \textbf{1.363\,ns} (Max)    & \textbf{$-1.690$\,ns ($-55.4\%$)} \\
+\textbf{Operating Clock Frequency ($f_{\text{clk}}$)} & \textbf{327.5\,MHz}    & \textbf{733.7\,MHz}         & \textbf{+124.0\% frequency ($2.24\times$)} \\
+\hline
+DSP Benchmark Execution Cycles ($C$)           & 6,511 cycles (CPI 1.00)     & 12,575 cycles (CPI 1.93)    & $+93.1\%$ stalls (no fwd) \\
+DSP Benchmark Execution Time                   & 19,878\,ns ($19.88\,\mu$s)  & 17,140\,ns ($17.14\,\mu$s)  & \textbf{1.16$\times$ Actual Speedup} \\
 \hline
 \end{tabular}
-\caption{ASAP7 7\,nm FinFET ASIC synthesis, timing, and benchmark performance comparison between single-cycle and 4-stage pipelined \texttt{RV32I} processors.}\label{tab:asap7_rv32i_synthesis}
+\caption{ASAP7 7\,nm FinFET ASIC synthesis, 4-step pipeline delay decomposition, and benchmark performance comparison between single-cycle (FE) and 4-stage pipelined \texttt{RV32I} processors.}\label{tab:asap7_rv32i_synthesis}
 \end{table}
 
 \subsubsection{Architectural Analysis of the RV32I Pipelined Speedup}
 
 The synthesis and performance results of the pure \texttt{RV32I} baseline in ASAP7 7\,nm FinFET illustrate fundamental computer architecture principles:
 \begin{enumerate}
-    \item \textbf{Stage Delay Quantization and Imbalance}:
-    In the pure \texttt{RV32I} architecture, the execution stage contains only simple integer arithmetic, logic, and shift operations. Standalone synthesis of the pure \texttt{RV32I} ALU indicates an intrinsic delay of 1.05\,ns. When embedded in the processor with multiplexers and register timing, the Execute stage critical path is $1.363\,\text{ns}$, while Instruction Decode requires $\approx 0.8\,\text{ns}$ and Memory/Write-Back requires $\approx 0.7\,\text{ns}$.
+    \item \textbf{The 4-Step Pipeline Delay Model}:
+    In a processor implementation, instruction execution consists of four essential physical operations:
+    \begin{itemize}
+        \item \textbf{SRAM Fetch ($T_{\text{fetch}}$)}: The program counter updates, address is driven to instruction SRAM, and the 32-bit instruction word is retrieved. Modeled with a small standard 7\,nm FinFET SRAM macro ($T_{\text{sram}} = 0.500\,\text{ns}$), plus register clock-to-Q and setup, $T_{\text{fetch}} = \mathbf{0.550\,\text{ns}}$ (550\,ps).
+        \item \textbf{Decode and Register Read ($T_{\text{decode}}$)}: The instruction decoder decodes opcodes and generates immediates ($0.209\,\text{ns}$), while the dual-read register file retrieves source register values $rs1$ and $rs2$ ($0.283\,\text{ns}$). With control steering, $T_{\text{decode}} = \mathbf{0.540\,\text{ns}}$ (540\,ps).
+        \item \textbf{Execute ($T_{\text{execute}}$)}: The 32-bit ALU performs arithmetic, shifting, or comparison ($1.046\,\text{ns}$), followed by branch condition evaluation ($0.120\,\text{ns}$) and pipeline register setup, yielding $T_{\text{execute}} = \mathbf{1.363\,\text{ns}}$ (1,363\,ps).
+        \item \textbf{SRAM Data Memory and Write-Back ($T_{\text{sram\_wb}}$)}: For load instructions, the memory address is presented to the data SRAM ($T_{\text{sram}} = 0.500\,\text{ns}$), the retrieved data is multiplexed with ALU and jump results ($0.080\,\text{ns}$), and routed to the register file write port ($0.020\,\text{ns}$ setup), totaling $T_{\text{sram\_wb}} = \mathbf{0.600\,\text{ns}}$ (600\,ps).
+    \end{itemize}
     
-    Consequently, pipelining reduces the core combinational critical path from 1.590\,ns down to 1.363\,ns, producing a \textbf{+16.7\% core operating frequency boost} ($628.9\,\text{MHz} \to 733.7\,\text{MHz}$) for an area overhead of 24.8\% ($904.24\,\mu\text{m}^2 \to 1,128.16\,\mu\text{m}^2$).
-    
-    \item \textbf{Memory Access Latency in Single-Cycle vs.\ Pipelined Designs}:
-    In real hardware systems, memory access is implemented using on-chip SRAM macros. For a small standard 7\,nm FinFET SRAM macro (such as a 2\,KB to 4\,KB instruction or data cache/scratchpad), read access delay is approximately $T_{\text{mem}} \approx 0.50\,\text{ns}$ (500\,ps).
-    
-    In the \textbf{single-cycle processor}, an instruction must complete instruction fetch ($T_{\text{mem}}$), datapath decode/ALU execution ($T_{\text{core}}$), and data memory read/write ($T_{\text{mem}}$) within a single clock cycle:
+    \item \textbf{FE Core Sum vs.\ Pipelined Core Max}:
+    In the \textbf{single-cycle Fetch-Execute (FE) processor}, every instruction must traverse all four steps in series within a single clock cycle:
     \begin{equation}
-    T_{\text{clk, single}} = T_{\text{core}} + 2 \times T_{\text{mem}} = 1.590\,\text{ns} + 2(0.50\,\text{ns}) = 2.590\,\text{ns} \quad (386.1\,\text{MHz}).
+    T_{\text{clk, FE}} = T_{\text{fetch}} + T_{\text{decode}} + T_{\text{execute}} + T_{\text{sram\_wb}} = 0.550 + 0.540 + 1.363 + 0.600 = \mathbf{3.053\,\text{ns}} \quad (327.5\,\text{MHz}).
     \end{equation}
-    In the \textbf{4-stage pipelined processor}, instruction fetch and data memory access are decoupled into separate, dedicated pipeline stages (Stage 1 and Stage 4, respectively). Because the small SRAM delay ($0.50\,\text{ns}$) is smaller than the pipeline stage clock period ($1.363\,\text{ns}$), the memory access delay is \textbf{entirely covered} within the existing pipeline budget ($T_{\text{mem}} \le T_{\text{clk, pipe}}$):
+    In the \textbf{4-stage pipelined processor}, synchronous pipeline registers decouple the four steps into independent pipeline stages. The clock period is constrained only by the single longest pipeline step:
     \begin{equation}
-    T_{\text{clk, pipe}} = \max\left(T_{\text{core, pipe}}, T_{\text{mem}}\right) = 1.363\,\text{ns} \quad (733.7\,\text{MHz}).
+    T_{\text{clk, pipe}} = \max\left(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}\right) = \max(0.550, 0.540, 1.363, 0.600) = \mathbf{1.363\,\text{ns}} \quad (733.7\,\text{MHz}).
     \end{equation}
-    Covering memory access latency within dedicated pipeline stages increases system operating frequency by \textbf{+90.0\%} ($386.1\,\text{MHz} \to 733.7\,\text{MHz}$, a $1.90\times$ frequency ratio).
+    The clock period delta between the FE core and the pipelined core is therefore:
+    \begin{equation}
+    \Delta T = T_{\text{clk, FE}} - T_{\text{clk, pipe}} = 3.053\,\text{ns} - 1.363\,\text{ns} = \mathbf{1.690\,\text{ns}}.
+    \end{equation}
+    This reduction of $1.690\,\text{ns}$ represents the sum of the other three stages that are now overlapped across clock cycles, delivering a \textbf{+124.0\% system frequency boost} ($2.240\times$ frequency multiplier).
     
     \item \textbf{The Impact of Omitting Data Forwarding}:
-    Despite the $1.90\times$ system clock frequency advantage, the 4-stage pipeline's CPI increases from 1.00 to 1.93 (+93.1\% execution cycles) due to frequent 2-cycle and 1-cycle stalls on RAW hazards in the software multiply loop.
+    Despite the $2.240\times$ system clock frequency advantage, the 4-stage pipeline's CPI increases from 1.00 to 1.93 (+93.1\% execution cycles) due to frequent 2-cycle and 1-cycle stalls on RAW hazards in the software multiply loop.
     \begin{equation}
-    \text{Speedup} = \frac{T_{\text{exec, single}}}{T_{\text{exec, pipe}}} = \frac{6,511 \times 2.590\,\text{ns}}{12,575 \times 1.363\,\text{ns}} = \frac{16,863\,\text{ns}}{17,140\,\text{ns}} = \mathbf{0.98\times}.
+    \text{Speedup} = \frac{T_{\text{exec, FE}}}{T_{\text{exec, pipe}}} = \frac{6,511 \times 3.053\,\text{ns}}{12,575 \times 1.363\,\text{ns}} = \frac{19,878\,\text{ns}}{17,140\,\text{ns}} = \mathbf{1.16\times}.
     \end{equation}
-    Without data forwarding, the hazard stall overhead completely counterbalances the frequency gain! This benchmark confirms that while pipelining successfully covers SRAM latency, data forwarding is essential to unleash its actual performance potential.
+    Because hazard stalls consume more than half of the $2.24\times$ frequency advantage, the pipelined processor runs only $16\%$ faster ($1.16\times$) on this workload. This benchmark demonstrates that while pipelining successfully overlaps SRAM latency and decouples stage delays, data forwarding is essential to eliminate stall bubbles and achieve full pipeline potential.
 \end{enumerate}
 
 
@@ -381,7 +392,7 @@ When this monolithic combinational multiplier is integrated into the processor c
 \scriptsize
 \begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Metric} & \textbf{RV32I Single-Cycle} & \textbf{RV32I 4-Stage Pipe} & \textbf{Zmmul Single-Cycle} & \textbf{Zmmul 4-Stage Pipe} \\
+\textbf{Metric} & \textbf{RV32I Single-Cycle (FE)} & \textbf{RV32I 4-Stage Pipe} & \textbf{Zmmul Single-Cycle (FE)} & \textbf{Zmmul 4-Stage Pipe} \\
 \hline
 Process Technology              & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET \\
 Total Standard Cells            & 9,730            & 11,584           & 21,336           & 22,709 \\
@@ -389,12 +400,14 @@ Sequential Elements (DFFs)      & 1,023            & 1,434            & 1,023   
 Total Silicon Area ($\mu$m$^2$) & \textbf{904.24}  & \textbf{1,128.16} & \textbf{2,031.49} & \textbf{2,235.55} \\
 ALU Silicon Area ($\mu$m$^2$)   & 103.31           & 103.31           & 1,186.67         & 1,186.67 \\
 \hline
-Core Critical Path Delay ($T_{\text{clk}}$) & \textbf{1.590\,ns} & \textbf{1.363\,ns} & \textbf{2.616\,ns} & \textbf{2.462\,ns} \\
-Core Clock Frequency ($f_{\text{max}}$)     & 628.9\,MHz         & 733.7\,MHz        & 382.3\,MHz         & 406.2\,MHz \\
-\textbf{Pipelining Frequency Boost}         & ---                & \textbf{+16.7\%}  & ---                & \textbf{+6.25\%} \\
+Step 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns          & 0.550\,ns         & 0.550\,ns          & 0.550\,ns \\
+Step 2: Decode \& Reg Read ($T_{\text{decode}}$) & 0.540\,ns         & 0.540\,ns         & 0.540\,ns          & 0.540\,ns \\
+Step 3: Execute ($T_{\text{execute}}$)          & 1.363\,ns          & 1.363\,ns         & 2.462\,ns          & 2.462\,ns \\
+Step 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,ns         & 0.600\,ns          & 0.600\,ns \\
 \hline
-Clock Period ($T_{\text{mem}} = 0.50$\,ns)  & 2.590\,ns          & 1.363\,ns         & 3.616\,ns          & 2.462\,ns \\
-System Frequency ($T_{\text{mem}} = 0.50$\,ns)& 386.1\,MHz       & 733.7\,MHz        & 276.5\,MHz         & 406.2\,MHz \\
+Operating Clock Period ($T_{\text{clk}}$)       & \textbf{3.053\,ns} (Sum) & \textbf{1.363\,ns} (Max) & \textbf{4.152\,ns} (Sum) & \textbf{2.462\,ns} (Max) \\
+Operating Clock Frequency ($f_{\text{clk}}$)    & 327.5\,MHz         & 733.7\,MHz        & 240.8\,MHz         & 406.2\,MHz \\
+\textbf{Pipelining Frequency Boost}             & ---                & \textbf{+124.0\% ($2.24\times$)} & --- & \textbf{+68.7\% ($1.69\times$)} \\
 \hline
 Benchmark Multiplier Type       & Software (\texttt{\_\_mulsi3}) & Software (\texttt{\_\_mulsi3}) & Hardware (\texttt{MUL}) & Hardware (\texttt{MUL}) \\
 Benchmark Instructions ($I$)    & 6,511            & 6,511            & 804              & 804 \\
@@ -402,21 +415,21 @@ Benchmark Execution Cycles ($C$)& 6,511            & 12,575           & 804     
 Effective Workload CPI          & 1.00             & 1.93             & 1.00             & 1.63 \\
 RAW Stalls + Branch Flushes     & 0                & 6,064            & 0                & 504 \\
 \hline
-Execution Time ($T_{\text{mem}} = 0.50$\,ns)& 16,863\,ns & 17,140\,ns       & 2,907\,ns        & 3,220\,ns \\
-\textbf{Pipelined Application Speedup}      & ---         & \textbf{0.98$\times$} & ---         & \textbf{0.90$\times$} \\
+Execution Time ($T_{\text{exec}}$) & 19,878\,ns ($19.88\,\mu$s) & 17,140\,ns ($17.14\,\mu$s) & 3,338\,ns ($3.34\,\mu$s) & 3,220\,ns ($3.22\,\mu$s) \\
+\textbf{Pipelined Application Speedup}      & ---         & \textbf{1.16$\times$} & ---         & \textbf{1.04$\times$} \\
 \hline
 \end{tabular}
-\caption{Comprehensive ASAP7 7\,nm FinFET ASIC synthesis, timing, and benchmark comparison across pure \texttt{RV32I} and \texttt{RV32I\_Zmmul} architectures in single-cycle and 4-stage pipelined configurations (no forwarding).}\label{tab:riscv_grand_comparison}
+\caption{Comprehensive ASAP7 7\,nm FinFET ASIC synthesis, 4-step pipeline delay decomposition, and benchmark comparison across pure \texttt{RV32I} and \texttt{RV32I\_Zmmul} architectures in single-cycle (FE) and 4-stage pipelined configurations (no forwarding).}\label{tab:riscv_grand_comparison}
 \end{table}
 
 The comparative synthesis data reveals the \textbf{frequency collapse} caused by pipeline unbalancing:
 \begin{enumerate}
     \item \textbf{Destruction of the Pipelining Advantage}:
-    In the baseline \texttt{RV32I} core, dividing the datapath into four stages lowered critical path delay from 1.590\,ns to 1.363\,ns, yielding a \textbf{+16.7\% core clock frequency increase}.
+    In the baseline \texttt{RV32I} core, dividing the datapath into four stages lowered the clock period from 3.053\,ns (the sum of all four pipeline steps) to 1.363\,ns (the maximum step delay, EX), yielding a \textbf{+124.0\% clock frequency increase} ($2.240\times$).
     
-    However, when the unpipelined multiplier is incorporated into the execution stage, the EX stage delay expands to 2.462\,ns (dominated by the 2.148\,ns multiplier plus multiplexer routing and register setup times). Because the execute stage cannot run any faster, the 4-stage pipelined clock frequency collapses from $733.7\,\text{MHz}$ down to $406.2\,\text{MHz}$.
+    However, when the unpipelined multiplier is incorporated into the execution stage, the EX stage delay expands to 2.462\,ns (dominated by the 2.148\,ns multiplier logic array plus multiplexer routing and register setup times). Because the execute stage cannot run any faster, the 4-stage pipelined clock frequency collapses from $733.7\,\text{MHz}$ down to $406.2\,\text{MHz}$.
     
-    Comparing the pipelined core to the single-cycle core with \texttt{Zmmul} ($382.3\,\text{MHz} \to 406.2\,\text{MHz}$), pipelining achieves a nearly negligible \textbf{+6.25\% frequency gain}! The entire advantage of datapath pipelining has been bottlenecked by a single oversized combinational stage.
+    Comparing the pipelined core to the single-cycle core with \texttt{Zmmul} ($240.8\,\text{MHz} \to 406.2\,\text{MHz}$), pipelining achieves only a \textbf{+68.7\% frequency gain} ($1.687\times$). The frequency advantage of pipelining has been severely attenuated by the oversized combinational multiplier stage.
     
     \item \textbf{Massive Area Overhead}:
     Incorporating the single-cycle multiplier inflates the single-cycle core area by +125\% ($904.24\,\mu\text{m}^2 \to 2,031.49\,\mu\text{m}^2$) and the 4-stage pipelined core area by +98\% ($1,128.16\,\mu\text{m}^2 \to 2,235.55\,\mu\text{m}^2$).
@@ -434,19 +447,19 @@ To evaluate the algorithmic benefit of hardware multiplication, the DSP benchmar
     On the 4-stage pipeline, the 804 instructions execute in 1,308 clock cycles ($\text{CPI} = 1.63$). Hazard stalls and branch flushes account for 504 cycles.
     
     \item \textbf{Execution Time Comparison}:
-    Under realistic SRAM latency ($T_{\text{mem}} = 0.50\,\text{ns}$):
+    Under the 4-step pipeline delay model:
     \begin{itemize}
-        \item Single-Cycle \texttt{RV32I\_Zmmul}: $804 \times 3.616\,\text{ns} = 2,907\,\text{ns}$.
-        \item 4-Stage Pipelined \texttt{RV32I\_Zmmul}: $1,308 \times 2.462\,\text{ns} = 3,220\,\text{ns}$.
-        \item Pipelined Speedup: $2,907\,\text{ns} / 3,220\,\text{ns} = \mathbf{0.90\times}$.
+        \item Single-Cycle \texttt{RV32I\_Zmmul}: $804 \times 4.152\,\text{ns} = 3,338\,\text{ns}$ ($3.34\,\mu\text{s}$).
+        \item 4-Stage Pipelined \texttt{RV32I\_Zmmul}: $1,308 \times 2.462\,\text{ns} = 3,220\,\text{ns}$ ($3.22\,\mu\text{s}$).
+        \item Pipelined Speedup: $3,338\,\text{ns} / 3,220\,\text{ns} = \mathbf{1.04\times}$.
     \end{itemize}
 \end{itemize}
 
 Notice the critical distinction:
 \begin{itemize}
-    \item In pure \texttt{RV32I}, the pipeline stages are relatively well balanced, enabling the system speedup to reach \textbf{0.98$\times$} despite lacking data forwarding.
-    \item In \texttt{RV32I\_Zmmul}, the unpipelined multiplier unbalances the pipeline, reducing pipelined speedup to \textbf{0.90$\times$}.
-    \item Although the application runs $5.3\times$ faster in absolute wall-clock time with hardware multiplication ($3,220\,\text{ns}$ vs.\ $17,140\,\text{ns}$), this speedup is almost entirely \textit{algorithmic} (8.1$\times$ fewer instructions). The \textit{microarchitectural efficiency} of pipelining was severely compromised by the unpipelined multiplier bottleneck.
+    \item In pure \texttt{RV32I}, the pipeline stages are relatively well balanced, enabling the system speedup to reach \textbf{1.16$\times$} despite lacking data forwarding.
+    \item In \texttt{RV32I\_Zmmul}, the unpipelined multiplier unbalances the pipeline, reducing pipelined speedup to \textbf{1.04$\times$}.
+    \item Although the application runs $5.32\times$ faster in absolute wall-clock time with hardware multiplication ($3,220\,\text{ns}$ vs.\ $17,140\,\text{ns}$), this speedup is almost entirely \textit{algorithmic} (8.1$\times$ fewer instructions). The \textit{microarchitectural efficiency} of pipelining was severely compromised by the unpipelined multiplier bottleneck.
 \end{itemize}
 
 \subsection{Architectural Solutions: Restoring Pipeline Balance}
@@ -509,43 +522,35 @@ Single-Cycle CPI                 & 1.00                & 1.00                  &
 4-Stage Pipelined CPI (No Fwd)   & \textbf{1.93}       & \textbf{1.63}         & \textbf{1.76}       & \textbf{1.88} \\
 Hazard Stall Overhead            & 6,064 (+93.1\%)     & 504 (+62.7\%)         & 10,485 (+75.8\%)    & 768,169 (+87.8\%) \\
 \hline
-Core Clock Delay ($T_{\text{clk}}$)  & Single=1.590\,ns    & Single=2.616\,ns      & Single=1.590\,ns    & Single=1.590\,ns \\
-(ASAP7 7\,nm FinFET ASIC)        & Pipe=1.363\,ns      & Pipe=2.462\,ns        & Pipe=1.363\,ns      & Pipe=1.363\,ns \\
-Core Frequency ($f_{\text{max}}$)& Single=628.9\,MHz   & Single=382.3\,MHz     & Single=628.9\,MHz   & Single=628.9\,MHz \\
-                                 & Pipe=733.7\,MHz     & Pipe=406.2\,MHz       & Pipe=733.7\,MHz     & Pipe=733.7\,MHz \\
+Operating Clock Delay ($T_{\text{clk}}$)  & Single=3.053\,ns (Sum) & Single=4.152\,ns (Sum) & Single=3.053\,ns (Sum) & Single=3.053\,ns (Sum) \\
+(ASAP7 7\,nm FinFET ASIC)        & Pipe=1.363\,ns (Max)   & Pipe=2.462\,ns (Max)   & Pipe=1.363\,ns (Max)   & Pipe=1.363\,ns (Max) \\
+Clock Period Delta ($\Delta T$)  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns} \\
+Operating Frequency ($f_{\text{clk}}$)& Single=327.5\,MHz & Single=240.8\,MHz     & Single=327.5\,MHz   & Single=327.5\,MHz \\
+                                 & Pipe=733.7\,MHz ($2.24\times$) & Pipe=406.2\,MHz ($1.69\times$) & Pipe=733.7\,MHz ($2.24\times$) & Pipe=733.7\,MHz ($2.24\times$) \\
 \hline
-Core Execution Time (no memory)  & Single=10,352\,ns   & Single=2,103\,ns      & Single=21,983\,ns   & Single=1,391,077\,ns \\
-                                 & Pipe=17,140\,ns     & Pipe=3,220\,ns        & Pipe=33,136\,ns     & Pipe=2,239,491\,ns \\
-\textbf{Core-Only Speedup}       & \textbf{0.60$\times$} & \textbf{0.65$\times$} & \textbf{0.66$\times$} & \textbf{0.62$\times$} \\
-\hline
-System Delay ($T_{\text{mem}} = 0.50$\,ns)& Single=2.590\,ns & Single=3.616\,ns & Single=2.590\,ns & Single=2.590\,ns \\
-(SRAM delay covered in pipeline) & Pipe=1.363\,ns      & Pipe=2.462\,ns        & Pipe=1.363\,ns      & Pipe=1.363\,ns \\
-System Frequency ($f_{\text{sys}}$) & Single=386.1\,MHz & Single=276.5\,MHz    & Single=386.1\,MHz   & Single=386.1\,MHz \\
-                                 & Pipe=733.7\,MHz     & Pipe=406.2\,MHz       & Pipe=733.7\,MHz     & Pipe=733.7\,MHz \\
-\hline
-System Execution Time            & Single=16,863\,ns   & Single=2,907\,ns      & Single=35,809\,ns   & Single=2,265,968\,ns \\
-                                 & Pipe=17,140\,ns     & Pipe=3,220\,ns        & Pipe=33,136\,ns     & Pipe=2,239,491\,ns \\
-\textbf{Actual System Speedup}   & \textbf{0.98$\times$} & \textbf{0.90$\times$} & \textbf{1.08$\times$} & \textbf{1.01$\times$} \\
+Total Execution Time ($T_{\text{exec}}$) & Single=19,878\,ns ($19.88\,\mu$s) & Single=3,338\,ns ($3.34\,\mu$s) & Single=42,211\,ns ($42.21\,\mu$s) & Single=2,671,042\,ns ($2.67\,\text{ms}$) \\
+                                 & Pipe=17,140\,ns ($17.14\,\mu$s)   & Pipe=3,220\,ns ($3.22\,\mu$s)   & Pipe=33,136\,ns ($33.14\,\mu$s)   & Pipe=2,239,491\,ns ($2.24\,\text{ms}$) \\
+\textbf{Actual Pipelined Speedup}& \textbf{1.16$\times$} & \textbf{1.04$\times$} & \textbf{1.27$\times$} & \textbf{1.19$\times$} \\
 \hline
 \textbf{Standard Metric / MHz}   & ---                 & ---                   & \textbf{0.824} (Single) & \textbf{1.143} (Single) \\
                                  &                     &                       & \textbf{0.468} (Pipe)   & \textbf{0.608} (Pipe)   \\
 \hline
-\textbf{Aggregate Performance}   & ---                 & ---                   & \textbf{318.2} DMIPS (Single) & \textbf{441.3} CoreMarks (Single) \\
-(at System $f_{\text{sys}}$)     &                     &                       & \textbf{343.8} DMIPS (Pipe)   & \textbf{446.5} CoreMarks (Pipe)  \\
+\textbf{Aggregate Performance}   & ---                 & ---                   & \textbf{269.9} DMIPS (Single) & \textbf{374.3} CoreMarks (Single) \\
+(at Operating $f_{\text{clk}}$)  &                     &                       & \textbf{343.4} DMIPS (Pipe)   & \textbf{446.1} CoreMarks (Pipe)  \\
 \hline
 \end{tabular}%
 }
-\caption{Empirical benchmark evaluation of single-cycle vs.\ 4-stage pipelined \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads (no forwarding).}\label{tab:riscv_all_benchmarks}
+\caption{Empirical benchmark evaluation of single-cycle (FE) vs.\ 4-stage pipelined \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads (no forwarding).}\label{tab:riscv_all_benchmarks}
 \end{table}
 
 \subsection{Why Ideal Pipeline Speedup is Inaccessible in Practice}
 \index{pipeline speedup!theoretical vs actual}\index{pipeline balancing!physical impediments}\index{stage delay quantization}\index{clock overhead}
 
-A common observation among novice computer architects is that a pipelined processor runs ``only a tiny bit faster'' than a single-cycle core, or in some configurations even slightly slower. In introductory textbooks, pipelining an $N$-stage processor is frequently described as achieving a theoretical speedup of:
+A common observation among novice computer architects is that a pipelined processor runs ``only a tiny bit faster'' than a single-cycle core (e.g., $1.16\times\text{--}1.27\times$), far below the ideal theoretical $N$-fold speedup. In introductory textbooks, pipelining an $N$-stage processor is frequently described as achieving a theoretical speedup of:
 \begin{equation}
 S_{\text{ideal}} = N.
 \end{equation}
-For our 4-stage pipeline ($N = 4$), naive theory predicts a $4.0\times$ speedup. Yet, as demonstrated in Table \ref{tab:riscv_all_benchmarks}, the measured speedup in physical 7\,nm silicon is between $1.01\times$ and $1.08\times$ when overlapping memory latency, and actually \textit{less than 1.0$\times$} ($0.60\times\text{--}0.66\times$) when comparing core execution times alone!
+For our 4-stage pipeline ($N = 4$), naive theory predicts a $4.0\times$ speedup. Yet, as demonstrated in Table \ref{tab:riscv_all_benchmarks}, the measured speedup in physical 7\,nm silicon is between $1.04\times$ and $1.27\times$.
 
 Why is ideal pipeline speedup impossible to achieve in physical silicon? The actual speedup of a pipelined processor over a single-cycle implementation is governed by the classic processor performance equation:
 \begin{equation}
@@ -562,19 +567,29 @@ In physical hardware, three fundamental physical barriers guarantee that neither
 \index{pipeline balancing!delay quantization}\index{Amdahl's Law!for clock periods}
 Combinational logic cannot be sliced arbitrarily like a fluid. Logic circuits are constructed from discrete boolean primitives: multiplexers, adders, decoders, shifters, and comparator trees. In our pure \texttt{RV32I} core:
 \begin{itemize}
-    \item The complete unpipelined combinational critical path from instruction register through decode, 32-bit ALU, and writeback multiplexers is $1.590\,\text{ns}$ in ASAP7 7\,nm.
-    \item When partitioned into four stages, the Execute (EX) stage requires $1.363\,\text{ns}$ (dominated by the 32-bit adder, barrel shifter, branch comparator, and ALU output multiplexers).
-    \item The Instruction Decode (ID) and Memory/Write-Back (MEM/WB) stages require only $\approx 0.8\,\text{ns}$ and $\approx 0.7\,\text{ns}$, respectively.
+    \item The four physical pipeline steps have differing atomic delays in ASAP7 7\,nm FinFET:
+    \begin{itemize}
+        \item Step 1: SRAM Fetch ($T_{\text{fetch}} = 0.550\,\text{ns}$).
+        \item Step 2: Decode and Register Read ($T_{\text{decode}} = 0.540\,\text{ns}$).
+        \item Step 3: Execute ($T_{\text{execute}} = 1.363\,\text{ns}$, dominated by the 32-bit ALU, adder, barrel shifter, and branch comparator).
+        \item Step 4: SRAM Data Memory and Write-Back ($T_{\text{sram\_wb}} = 0.600\,\text{ns}$).
+    \end{itemize}
+    \item In the single-cycle Fetch-Execute (FE) core, the clock period must encompass the sum of all four steps:
+    \begin{equation}
+    T_{\text{clk, FE}} = 0.550 + 0.540 + 1.363 + 0.600 = \mathbf{3.053\,\text{ns}} \quad (327.5\,\text{MHz}).
+    \end{equation}
+    \item In the 4-stage pipelined core, synchronous registers decouple the four steps into independent pipeline stages, so the clock period is constrained by the maximum step delay:
+    \begin{equation}
+    T_{\text{clk, pipe}} = \max(0.550, 0.540, 1.363, 0.600) = \mathbf{1.363\,\text{ns}} \quad (733.7\,\text{MHz}).
+    \end{equation}
+    \item The frequency improvement achieved by pipelining is:
+    \begin{equation}
+    \frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}} = \frac{3.053\,\text{ns}}{1.363\,\text{ns}} = \mathbf{2.240\times} \quad (\text{a } +124.0\% \text{ frequency gain}).
+    \end{equation}
 \end{itemize}
-Because synchronous sequential pipelines require all stages to operate at a common clock period, the clock period is strictly bounded by the slowest stage:
-\begin{equation}
-T_{\text{clk, pipe}} = \max\left(T_{\text{IF}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{MEM}}\right) + T_{\text{overhead}} = 1.363\,\text{ns}.
-\end{equation}
-Consequently, the frequency improvement is only:
-\begin{equation}
-\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}} = \frac{1.590\,\text{ns}}{1.363\,\text{ns}} = 1.167\times \quad (\text{a } +16.7\% \text{ frequency gain, far below } 4.0\times).
-\end{equation}
-As noted by experienced computer designers, \textbf{it is exceedingly difficult to perfectly balance pipeline stages in practice}. The atomic nature of major arithmetic blocks (such as a 32-bit adder or shifter) creates an irreducible floor for the execution stage delay. Stage delay imbalance alone annihilates $(4.0 - 1.167) / 4.0 = \mathbf{70.8\%}$ of the theoretical speedup before a single instruction has executed!
+While $2.240\times$ is a substantial frequency improvement, it is significantly below the theoretical $4.0\times$ limit!
+
+As noted by experienced computer designers, \textbf{it is exceedingly difficult to perfectly balance pipeline stages in practice}. The atomic nature of major arithmetic blocks (such as the 32-bit ALU in the EX stage) creates an irreducible bottleneck ($1.363\,\text{ns}$), whereas the fetch, decode, and writeback steps each require only $\approx 0.54\text{--}0.60\,\text{ns}$. Stage delay imbalance alone annihilates $(4.0 - 2.24) / 4.0 = \mathbf{44.0\%}$ of the theoretical 4-fold speedup before a single instruction has executed!
 
 \subsubsection{2. Sequential Register Overhead}
 \index{pipeline register overhead}\index{setup time}\index{clock-to-Q delay}
@@ -605,36 +620,29 @@ Across real embedded workloads, this hazard overhead severely expands the effect
     \item \textbf{DSP Kernel (Soft Mul)}: $\text{CPI}_{\text{pipe}} = 1.93$ (+93.1\% cycle penalty).
 \end{itemize}
 
-Now observe what happens when we calculate the net core performance speedup (without memory latency):
+Now observe what happens when we calculate the net application speedup:
 \begin{equation}
-\text{Speedup}_{\text{core}} = \left(\frac{1}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}}\right) = \left(\frac{1}{1.88}\right) \times 1.167 = 0.532 \times 1.167 = \mathbf{0.621\times}.
+\text{Speedup} = \left(\frac{1}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}}\right)
 \end{equation}
-In isolation, the core without forwarding is $38\%$ slower than the single-cycle core! The modest 16.7\% frequency improvement obtained from pipelining the datapath is completely overwhelmed by the 87.8\% cycle penalty caused by pipeline stalls.
-
-\subsubsection{The System-Level Reality: Covering Memory Access Latency}
-\index{memory latency overlapping}\index{Harvard architecture!pipelined overlap}
-Why, then, does the pipelined processor run faster at the system level? The answer lies in the memory interface:
 \begin{itemize}
-    \item In a \textbf{single-cycle machine}, the clock cycle must encompass the entire round-trip latency of instruction memory access ($T_{\text{imem}}$), core combinational datapath delay ($T_{\text{core}}$), and data memory access ($T_{\text{dmem}}$) sequentially within a single tick:
+    \item \textbf{CoreMark 1.0}:
     \begin{equation}
-    T_{\text{clk, single}} = T_{\text{core}} + 2 \times T_{\text{mem}} = 1.590\,\text{ns} + 2(0.50\,\text{ns}) = 2.590\,\text{ns} \quad (386.1\,\text{MHz}).
+    \text{Speedup}_{\text{CoreMark}} = \left(\frac{1}{1.878}\right) \times 2.240 = 0.532 \times 2.240 = \mathbf{1.19\times} \quad (+19.3\%).
     \end{equation}
-    \item In a \textbf{pipelined machine}, instruction fetch (IF) and data memory access (MEM) occur in completely separate pipeline stages separated by synchronous registers. Because the small SRAM delay ($0.50\,\text{ns}$) is smaller than the stage cycle time ($1.363\,\text{ns}$), the memory latency is \textbf{entirely covered}:
+    \item \textbf{Dhrystone 2.1}:
     \begin{equation}
-    T_{\text{clk, pipe}} = \max\left(T_{\text{core}}, T_{\text{mem}}\right) = \max(1.363\,\text{ns}, 0.50\,\text{ns}) = 1.363\,\text{ns} \quad (733.7\,\text{MHz}).
+    \text{Speedup}_{\text{Dhrystone}} = \left(\frac{1}{1.758}\right) \times 2.240 = 0.569 \times 2.240 = \mathbf{1.27\times} \quad (+27.4\%).
+    \end{equation}
+    \item \textbf{DSP Kernel (Soft Mul)}:
+    \begin{equation}
+    \text{Speedup}_{\text{DSP}} = \left(\frac{1}{1.931}\right) \times 2.240 = 0.518 \times 2.240 = \mathbf{1.16\times} \quad (+16.0\%).
     \end{equation}
 \end{itemize}
-Covering memory latency increases system operating frequency by:
-\begin{equation}
-\frac{T_{\text{clk, single, sys}}}{T_{\text{clk, pipe, sys}}} = \frac{2.590\,\text{ns}}{1.363\,\text{ns}} = \mathbf{1.900\times}.
-\end{equation}
-Multiplying this $1.900\times$ frequency advantage by the CPI factor ($1 / \text{CPI}_{\text{pipe}}$) yields the net system speedup:
-\begin{equation}
-\text{Speedup}_{\text{sys}} = 1.900 \times \frac{1}{1.88} = \mathbf{1.01\times} \quad (\text{CoreMark}), \quad 1.900 \times \frac{1}{1.76} = \mathbf{1.08\times} \quad (\text{Dhrystone}).
-\end{equation}
-Because the $1.90\times$ frequency scaling is almost entirely offset by the $\sim 1.8\times$ CPI expansion from stalls, the pipelined processor runs ``only a tiny bit faster'' ($1.01\times\text{--}1.08\times$). 
 
-This profound result provides the pedagogical foundation for the subsequent study of \textbf{data forwarding}: by adding bypass paths from EX and MEM/WB back to the ALU, the CPI penalty can be dramatically suppressed, unlocking the full $1.9\times$ system speedup made possible by memory-overlapped pipelining.
+This explains precisely why the pipelined processor runs ``only a tiny bit faster'' ($1.16\times\text{--}1.27\times$):
+The $2.24\times$ frequency multiplier earned by overlapping the four pipeline steps is almost entirely eaten away by the $1.76\times\text{--}1.93\times$ CPI expansion caused by RAW hazard stalls and branch flushes!
+
+This profound result provides the pedagogical foundation for the subsequent study of \textbf{data forwarding}: by adding bypass paths from EX and MEM/WB back to the ALU, the CPI penalty can be dramatically suppressed (driving CPI back toward 1.00), unlocking the full $2.24\times$ speedup made possible by pipelining.
 
 \subsection{Benchmark Taxonomy: Dhrystone, CoreMark, Embench, and SPEC CPU}
 \index{benchmark!taxonomy}\index{SPEC CPU}\index{Embench-IoT}
@@ -677,9 +685,9 @@ For microcontroller-class architectures (such as \texttt{RV32I}, ARM Cortex-M0/M
     \begin{equation}
     \text{DMIPS/MHz} = \frac{10^6}{\text{Cycles per Dhrystone Run} \times 1,757}.
     \end{equation}
-    Our single-cycle \texttt{RV32I} core scores $\mathbf{0.824\,\text{DMIPS/MHz}}$ ($\mathbf{318.2\,\text{DMIPS}}$ at system frequency), while the 4-stage pipeline without forwarding scores $\mathbf{0.468\,\text{DMIPS/MHz}}$ ($\mathbf{343.8\,\text{DMIPS}}$ at system frequency, reflecting its 1.76 CPI). Although historically widespread, Dhrystone has fallen out of modern favor because its tight loops can be disproportionately affected by compiler string inlining and dead-code elimination.
+    Our single-cycle \texttt{RV32I} core scores $\mathbf{0.824\,\text{DMIPS/MHz}}$ ($\mathbf{269.9\,\text{DMIPS}}$ at operating frequency), while the 4-stage pipeline without forwarding scores $\mathbf{0.468\,\text{DMIPS/MHz}}$ ($\mathbf{343.4\,\text{DMIPS}}$ at operating frequency, reflecting its 1.76 CPI). Although historically widespread, Dhrystone has fallen out of modern favor because its tight loops can be disproportionately affected by compiler string inlining and dead-code elimination.
     
-    \item \textbf{EEMBC CoreMark}: Developed by EEMBC to replace Dhrystone, CoreMark executes realistic algorithms (matrix manipulation, linked lists, state machines) specifically designed to prevent optimizing compilers from eliminating computation. Its self-checking CRC guarantees that every algorithmic step produces valid data. On our single-cycle \texttt{RV32I} core, CoreMark delivers $\mathbf{1.143\,\text{CoreMark/MHz}}$ ($\mathbf{441.3\,\text{CoreMarks}}$ at system frequency), while the 4-stage pipeline delivers $\mathbf{0.608\,\text{CoreMark/MHz}}$ ($\mathbf{446.5\,\text{CoreMarks}}$ at system frequency, reflecting its 1.88 CPI).
+    \item \textbf{EEMBC CoreMark}: Developed by EEMBC to replace Dhrystone, CoreMark executes realistic algorithms (matrix manipulation, linked lists, state machines) specifically designed to prevent optimizing compilers from eliminating computation. Its self-checking CRC guarantees that every algorithmic step produces valid data. On our single-cycle \texttt{RV32I} core, CoreMark delivers $\mathbf{1.143\,\text{CoreMark/MHz}}$ ($\mathbf{374.3\,\text{CoreMarks}}$ at operating frequency), while the 4-stage pipeline delivers $\mathbf{0.608\,\text{CoreMark/MHz}}$ ($\mathbf{446.1\,\text{CoreMarks}}$ at operating frequency, reflecting its 1.88 CPI).
     
     \item \textbf{Embench-IoT}: Developed by the Free and Open Source Silicon (FOSSi) Foundation in collaboration with David Patterson, Embench is a modern, open-source suite of 19 real-world embedded programs (e.g., AES encryption, Huffman decoding, Minver, QR-code, Wic) designed specifically to provide a reproducible, open-source alternative to proprietary benchmarks for microcontroller-class RISC-V cores.
 \end{itemize}
@@ -696,9 +704,9 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item An active Hazard Detection Unit was designed to detect Read-After-Write (RAW) data dependencies and stall the pipeline by freezing the PC and IF/ID registers while injecting bubbles into ID/EX. In our baseline processor without data forwarding, distance-1 RAW hazards incur a 2-cycle stall penalty and distance-2 RAW hazards incur a 1-cycle stall penalty until the producing instruction commits in the MEM/WB stage.
     \item Branch and jump conditions are evaluated in the EX stage, incurring a 2-cycle control hazard penalty on taken transfers while executing non-taken branches with zero cycle overhead.
     \item Both processor cores were verified against all official RISC-V architectural conformance test suites (38 RV32I suites and 4 Zmmul suites) using Chisel simulation, achieving a 100\% signature match against Spike golden references.
-    \item Full physical synthesis targeting the predictive ASAP7 7\,nm FinFET standard cell library was conducted for the baseline \texttt{RV32I} and \texttt{RV32I\_Zmmul} cores. The 4-stage pipelined \texttt{RV32I} delivered a +16.7\% core clock frequency increase ($628.9\,\text{MHz} \to 733.7\,\text{MHz}$) and a +90.0\% system clock frequency increase when overlapping realistic 0.50\,ns standard SRAM memory latency ($386.1\,\text{MHz} \to 733.7\,\text{MHz}$).
-    \item Comprehensive physical benchmark evaluation was performed across DSP kernels, Dhrystone 2.1 (20 runs), and EEMBC CoreMark 1.0 (1 iteration, 2K data footprint). The 4-stage pipeline achieved $100\%$ validation matching golden signatures, scoring $0.468\,\text{DMIPS/MHz}$ ($343.8\,\text{DMIPS}$ at system frequency) and $0.608\,\text{CoreMark/MHz}$ ($446.5\,\text{CoreMarks}$ at system frequency).
-    \item Pipelining an $N$-stage processor was shown to be bounded in practice by three physical barriers: (1) stage delay quantization/imbalance (Amdahl's Law for clock periods, where atomic blocks like the 32-bit ALU restrict core frequency scaling to only $1.17\times$), (2) sequential flip-flop overhead ($t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}} \approx 55\,\text{ps}$ per stage in 7\,nm FinFET), and (3) hazard-induced CPI expansion ($\text{CPI} \approx 1.76\text{--}1.88$ without forwarding). Without memory latency, the pipelined core is slower than single-cycle ($0.62\times$ on CoreMark); real system performance gains ($1.01\times\text{--}1.08\times$) arise fundamentally from overlapping memory access latency across clock cycles.
+    \item Full physical synthesis targeting the predictive ASAP7 7\,nm FinFET standard cell library was conducted for the baseline \texttt{RV32I} and \texttt{RV32I\_Zmmul} cores. Under the 4-step pipeline delay model, the 4-stage pipelined \texttt{RV32I} reduced the clock period from $3.053\,\text{ns}$ (sum of 4 steps) to $1.363\,\text{ns}$ (max of 4 steps), delivering a $\Delta T = 1.690\,\text{ns}$ reduction and a +124.0\% clock frequency increase ($327.5\,\text{MHz} \to 733.7\,\text{MHz}$, a $2.24\times$ frequency multiplier).
+    \item Comprehensive physical benchmark evaluation was performed across DSP kernels, Dhrystone 2.1 (20 runs), and EEMBC CoreMark 1.0 (1 iteration, 2K data footprint). The 4-stage pipeline achieved $100\%$ validation matching golden signatures, scoring $0.468\,\text{DMIPS/MHz}$ ($343.4\,\text{DMIPS}$ at operating frequency) and $0.608\,\text{CoreMark/MHz}$ ($446.1\,\text{CoreMarks}$ at operating frequency).
+    \item Pipelining an $N$-stage processor was shown to be bounded in practice by three physical barriers: (1) stage delay quantization and imbalance (Amdahl's Law for clock periods, where atomic blocks like the 32-bit ALU restrict frequency scaling to $2.24\times$, far below the ideal $4.0\times$), (2) sequential flip-flop overhead ($t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}} \approx 55\,\text{ps}$ per stage in 7\,nm FinFET), and (3) hazard-induced CPI expansion ($\text{CPI} \approx 1.76\text{--}1.93$ without forwarding). Because the $2.24\times$ frequency multiplier is largely offset by the $\sim 1.8\times$ CPI expansion from stalls, the pipelined processor runs ``only a tiny bit faster'' ($1.16\times\text{--}1.27\times$), demonstrating why data forwarding is crucial to harvest the full performance benefits of pipelining.
     \item A taxonomy of computer architecture benchmarks was established: application-class benchmarks such as SPEC CPU2017 require virtual memory (MMU), a full POSIX OS (Linux), and gigabytes of RAM, rendering them physically inapplicable to bare-metal microcontroller-class cores. Microcontroller-class architectures rely on freestanding suites including Dhrystone, EEMBC CoreMark, and Embench-IoT.
 \end{itemize}
 
@@ -777,7 +785,7 @@ $\diamond$
 \begin{problem}
 Compare the physical synthesis data of the pure \texttt{RV32I} core (Table \ref{tab:asap7_rv32i_synthesis}) with the \texttt{RV32I\_Zmmul} core (Table \ref{tab:riscv_grand_comparison}):
 \begin{enumerate}
-    \item In pure \texttt{RV32I}, pipelining increased the core clock frequency by +16.7\% ($628.9\,\text{MHz} \to 733.7\,\text{MHz}$). Why did pipelining the \texttt{RV32I\_Zmmul} core only improve core frequency by +6.2\% ($382.3\,\text{MHz} \to 406.2\,\text{MHz}$)?
+    \item In pure \texttt{RV32I}, pipelining increased the clock frequency by +124.0\% ($327.5\,\text{MHz} \to 733.7\,\text{MHz}$, a $2.24\times$ multiplier). Why did pipelining the \texttt{RV32I\_Zmmul} core only improve frequency by +68.7\% ($240.8\,\text{MHz} \to 406.2\,\text{MHz}$, a $1.69\times$ multiplier)?
     \item Calculate the silicon area overhead of adding the unpipelined multiplier to the 4-stage pipelined processor in ASAP7 7\,nm FinFET technology.
     \item State Amdahl's Law as it applies to pipeline stage delays and clock periods.
     \item Propose two microarchitectural techniques that would allow the processor to retain the high operating frequency of pure \texttt{RV32I} while providing hardware multiplication acceleration.
@@ -785,7 +793,7 @@ Compare the physical synthesis data of the pure \texttt{RV32I} core (Table \ref{
 
 \textbf{Solution}:
 \begin{enumerate}
-    \item In pure \texttt{RV32I}, all pipeline stages have relatively balanced delays ($T \approx 0.7\text{--}1.36\,\text{ns}$). In \texttt{RV32I\_Zmmul}, the combinational $32 \times 32$ multiplier logic array requires $2.148\,\text{ns}$ of standalone delay, making the EX stage critical path $2.462\,\text{ns}$. By Amdahl's Law for clock periods, the clock frequency is constrained by the slowest stage ($\max_i T_i$). Thus, the pipelined core cannot run faster than $406.2\,\text{MHz}$ regardless of the speed of the other three stages (which each require $<0.8\,\text{ns}$).
+    \item In pure \texttt{RV32I}, the four physical pipeline steps are relatively well balanced ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{execute}} = 1.363\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$). The single-cycle FE core requires the sum ($3.053\,\text{ns}$), while the pipelined core requires the max ($1.363\,\text{ns}$), yielding a $3.053 / 1.363 = 2.240\times$ frequency multiplier (+124.0\%). In \texttt{RV32I\_Zmmul}, the combinational $32 \times 32$ multiplier logic array requires $2.148\,\text{ns}$ of delay, expanding the EX step critical path to $2.462\,\text{ns}$. The single-cycle FE core requires $0.550 + 0.540 + 2.462 + 0.600 = 4.152\,\text{ns}$ ($240.8\,\text{MHz}$), while the pipelined core is bounded by the slowest stage ($\max_i T_i = 2.462\,\text{ns}$, $406.2\,\text{MHz}$). Pipelining achieves only a $4.152 / 2.462 = 1.687\times$ frequency scaling (+68.7\%). By Amdahl's Law for clock periods, the pipeline frequency is bottlenecked by the monolithic combinational multiplier, severing the advantage gained from pipelining the remaining three stages.
     \item The silicon standard cell area increases from $1,128.16\,\mu\text{m}^2$ (pure RV32I 4-stage) to $2,235.55\,\mu\text{m}^2$ (RV32I\_Zmmul 4-stage). This represents an increase of:
     \begin{equation}
     \Delta \text{Area} = 2,235.55 - 1,128.16 = 1,107.39\,\mu\text{m}^2 \quad (+98.2\% \ \text{silicon area overhead}).
@@ -806,44 +814,30 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Consider the empirical EEMBC CoreMark 1.0 benchmark results from Table \ref{tab:riscv_all_benchmarks} executing on the pure \texttt{RV32I} single-cycle core ($T_{\text{clk}} = 1.590\,\text{ns}$) and 4-stage pipelined core ($T_{\text{clk}} = 1.363\,\text{ns}$):
+Consider the empirical EEMBC CoreMark 1.0 benchmark results from Table \ref{tab:riscv_all_benchmarks} executing on the pure \texttt{RV32I} single-cycle (FE) core ($T_{\text{clk}} = 3.053\,\text{ns}$) and 4-stage pipelined core ($T_{\text{clk}} = 1.363\,\text{ns}$):
 \begin{enumerate}
-    \item A student expects a 4-stage pipeline to achieve a $4.0\times$ speedup over the single-cycle core. Compute the actual core-only speedup (without memory latency) using the instruction count $I = 874,891$, single-cycle cycles $C_1 = 874,891$, and pipelined cycles $C_4 = 1,643,060$. Explain why the pipelined core is actually slower than the single-cycle core in isolation.
-    \item In a realistic system, instruction and data memories exhibit a standard small SRAM access latency of $T_{\text{mem}} = 0.50\,\text{ns}$ in ASAP7 7\,nm FinFET technology. Compute the single-cycle and pipelined system clock periods, system frequencies, and total system execution times. What is the actual system speedup?
+    \item A student expects a 4-stage pipeline to achieve a $4.0\times$ speedup over the single-cycle core. Compute the actual benchmark speedup using instruction count $I = 874,891$, single-cycle cycles $C_1 = 874,891$, and pipelined cycles $C_4 = 1,643,060$.
+    \item Decompose the actual speedup into its frequency multiplier factor and CPI factor. Explain why the pipelined core runs ``only a tiny bit faster'' ($1.19\times$) despite a $2.24\times$ clock frequency increase.
     \item Why cannot desktop/server benchmarks such as SPEC CPU2017 be executed directly on bare-metal \texttt{RV32I} microcontroller cores? What modern open-source benchmark suite was created to evaluate microcontroller-class RISC-V processors?
 \end{enumerate}
 
 \textbf{Solution}:
 \begin{enumerate}
-    \item Core-only execution times:
+    \item Total execution times:
     \begin{equation}
-    T_{\text{exec, single}} = C_1 \times T_{\text{clk, single}} = 874,891 \times 1.590\,\text{ns} = 1,391,077\,\text{ns}.
+    T_{\text{exec, FE}} = C_1 \times T_{\text{clk, FE}} = 874,891 \times 3.053\,\text{ns} = 2,671,042\,\text{ns} \quad (2.671\,\text{ms}).
     \end{equation}
     \begin{equation}
-    T_{\text{exec, pipe}} = C_4 \times T_{\text{clk, pipe}} = 1,643,060 \times 1.363\,\text{ns} = 2,239,491\,\text{ns}.
+    T_{\text{exec, pipe}} = C_4 \times T_{\text{clk, pipe}} = 1,643,060 \times 1.363\,\text{ns} = 2,239,491\,\text{ns} \quad (2.239\,\text{ms}).
     \end{equation}
     \begin{equation}
-    \text{Speedup}_{\text{core}} = \frac{1,391,077\,\text{ns}}{2,239,491\,\text{ns}} = \mathbf{0.621\times}.
+    \text{Actual Speedup} = \frac{2,671,042\,\text{ns}}{2,239,491\,\text{ns}} = \mathbf{1.193\times} \quad (+19.3\% \ \text{performance gain}).
     \end{equation}
-    The pipelined core in isolation is $37.9\%$ slower because stage delay imbalance limits the core frequency scaling factor to $1.590 / 1.363 = 1.167\times$, while RAW data hazard stalls and branch flushes (without forwarding) inflate the pipelined CPI to $C_4 / I = 1.878$ ($+87.8\%$ cycle overhead). Because $1.878 > 1.167$, the stall overhead completely negates the frequency advantage.
-    \item With $0.50\,\text{ns}$ memory latency:
+    \item Using the performance equation:
     \begin{equation}
-    T_{\text{sys, single}} = T_{\text{core}} + 2 T_{\text{mem}} = 1.590 + 2(0.50) = 2.590\,\text{ns} \quad (f_{\text{sys, single}} = 386.10\,\text{MHz}).
+    \text{Speedup} = \left(\frac{\text{CPI}_{\text{single}}}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}}\right) = \left(\frac{1.00}{1.878}\right) \times \left(\frac{3.053\,\text{ns}}{1.363\,\text{ns}}\right) = 0.532 \times 2.240 = \mathbf{1.193\times}.
     \end{equation}
-    \begin{equation}
-    T_{\text{sys, pipe}} = \max(T_{\text{core}}, T_{\text{mem}}) = \max(1.363, 0.50) = 1.363\,\text{ns} \quad (f_{\text{sys, pipe}} = 733.68\,\text{MHz}).
-    \end{equation}
-    Total system execution times:
-    \begin{equation}
-    T_{\text{sys-exec, single}} = 874,891 \times 2.590\,\text{ns} = 2,265,968\,\text{ns}.
-    \end{equation}
-    \begin{equation}
-    T_{\text{sys-exec, pipe}} = 1,643,060 \times 1.363\,\text{ns} = 2,239,491\,\text{ns}.
-    \end{equation}
-    \begin{equation}
-    \text{Actual System Speedup} = \frac{2,265,968\,\text{ns}}{2,239,491\,\text{ns}} = \mathbf{1.012\times} \quad (+1.2\% \ \text{performance gain}).
-    \end{equation}
-    Memory latency overlapping increases the operating frequency ratio to $2.590 / 1.363 = 1.900\times$, pulling the pipelined core out of its $0.62\times$ deficit to deliver a net $1.01\times$ system speedup even with severe no-forwarding stalls.
+    Pipelining provides a $2.240\times$ frequency multiplier by overlapping the four physical pipeline steps across clock cycles. However, in the absence of data forwarding, RAW data hazard stalls (2-cycle stalls for distance-1, 1-cycle stall for distance-2) and 2-cycle taken branch flushes inflate the CPI from 1.00 to 1.878 (+87.8\% cycle overhead). This CPI penalty factor ($1 / 1.878 = 0.532$) devours nearly three-quarters of the frequency gain, leaving only a modest $+19.3\%$ net speedup.
     \item SPEC CPU2017 cannot run on bare-metal \texttt{RV32I} microcontroller cores because SPEC benchmarks require a Memory Management Unit (MMU) with virtual memory paging, a full POSIX operating system (Linux), multi-gigabyte RAM capacity, glibc with dynamic file I/O, and commercial proprietary licenses. The modern open-source embedded alternative created by David Patterson and the FOSSi consortium is \textbf{Embench-IoT}.
 \end{enumerate}
 $\diamond$
