@@ -528,56 +528,8 @@ between the software engineer  and hardware engineer. We will list and comment f
 \end{itemize}
 
 
-\ifthenelse{\boolean{chiselversion}}{
-\section{RISC-V Fetch-Execute Processor (Chisel)}\label{sec:riscv_fetch_execute_chisel}
-\index{fetch-execute processor!RISC-V}
-\index{Harvard architecture!RISC-V Fetch-Execute processor}
+For a complete hardware implementation of an open-standard instruction set architecture embodying these Harvard 5-OS design principles, see Chapter \ref{riscvProcessor}, where the complete 32-bit RISC-V (RV32I\_Zmmul) single-cycle Fetch-Execute processor core is presented along with its synthesizable Chisel implementation, direct library module reuse, and cycle-accurate architectural conformance verification.
 
-With the operational principles of instruction set architectures established, we now assemble the digital building blocks developed throughout Chapters \ref{lect1}--\ref{lect3} into a complete, synthesizable Harvard computer implementing the 32-bit RISC-V (RV32I\_Zmmul) ISA in Chisel.
-
-\subsection{The 5-OS Harvard Architecture in Hardware}
-Following the exact organizational model of the \textbf{\textit{toyRISC}} processor shown in Figure \ref{fig43}, the computing system is organized as a fifth-order system (5-OS) structured through five fundamental feedback loops:
-\begin{enumerate}
-    \item \textbf{1st loop (1-OS)}: The elementary memory loop that stores state inside individual flip-flops and register cells (such as the storage cells within the register file and the program counter register).
-    \item \textbf{2nd loop (2-OS)}: The internal feedback loops of the two constituent simple automata:
-    \begin{itemize}
-        \item \textbf{PC Automaton}: The Program Counter automaton (\texttt{ProgramCounter}, Listing \ref{lst:chisel_program_counter}) maintains the current instruction address in register \texttt{pcReg} and calculates the sequential next address ($\text{pc} + 4$).
-        \item \textbf{RALU Automaton}: The executive automaton (\texttt{RALU}, Listing \ref{lst:chisel_ralu}) couples the 32-register RISC-V register file (\texttt{RiscvRegFile}, Listing \ref{lst:chisel_riscv_regfile}) with the RV32I\_Zmmul ALU (\texttt{RiscvALU}, Listing \ref{lst:chisel_riscv_alu}). In each cycle, operands fetched from the register file are processed by the ALU, and the computed result feeds back into the destination register write port.
-    \end{itemize}
-    \item \textbf{3rd loop (3-OS)}: The structural interaction closing the loop between the \textbf{PC automaton} and the \textbf{RALU automaton}:
-    \begin{itemize}
-        \item The RALU provides condition evaluation flags (\texttt{zeroFlag}, \texttt{lessThanFlag}, \texttt{lessThanUFlag}) and computed jump target addresses ($\text{rs1} + \text{imm}$) to the PC automaton to evaluate conditional branches and perform indirect jumps (\texttt{JALR}).
-        \item The PC automaton sends the subroutine return address ($\text{pc} + 4$) to the RALU write-back path to be saved into the link register (\texttt{ra}, register $x1$) for call instructions (\texttt{JAL}, \texttt{JALR}).
-    \end{itemize}
-    \item \textbf{4th loop (4-OS)}: The loop closed over the \textbf{Program Memory}:
-    The PC automaton presents the current execution address to the external Program Memory via \texttt{io.imem.addr}. The returned instruction word (\texttt{io.imem.inst}) is delivered to the instruction decoder (\texttt{RiscvDecoder}, Listing \ref{lst:chisel_riscv_decoder}) to command the processor datapath. The processor and Program Memory together constitute a 4-OS.
-    \item \textbf{5th loop (5-OS)}: The loop closed over the \textbf{Data Memory}:
-    The RALU drives the computed effective address (\texttt{aluResult}) and store data (\texttt{rs2Data}) to the byte-addressable data memory (\texttt{RiscvDataMemory}, Listing \ref{lst:chisel_riscv_datamemory}), and receives load data back from memory into the register file write port, completing the 5th loop to form the full 5-OS computing system.
-\end{enumerate}
-
-\subsection{Logical Functions of the Fetch-Execute Cycle}
-The processor executes each instruction across five coordinated logical functions that complete within a single clock cycle:
-\begin{enumerate}
-    \item \textbf{Instruction Fetch (IF)}: The \texttt{ProgramCounter} presents the active execution address \texttt{pc.io.pc} onto the instruction bus \texttt{io.imem.addr}. Unbuffered instruction memory returns the 32-bit instruction word \texttt{inst} combinationally.
-    \item \textbf{Instruction Decode (ID) \& Immediate Generation}: The instruction word is decoded by \texttt{RiscvDecoder}. Direct-wire opcode bitstrings $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ map directly to the ALU operation code (\texttt{c.aluOp}), while source register addresses (\texttt{rs1}, \texttt{rs2}) and destination register address (\texttt{rd}) are unpacked. Concurrently, the integrated immediate generator (\texttt{RiscvImmGen}) sign-extends immediate constants matching the instruction format (I, S, B, U, or J) into \texttt{d.imm}.
-    \item \textbf{Operand Fetch \& ALU Execution (EX)}: Source register values (\texttt{rs1Data}, \texttt{rs2Data}) are read combinationally from \texttt{RiscvRegFile} inside \texttt{RALU}. An operand multiplexer selects either \texttt{rs2Data} or the sign-extended immediate \texttt{d.imm} based on \texttt{c.aluSrc}. The \texttt{RiscvALU} computes the result and generates comparison flags (\texttt{zeroFlag}, \texttt{lessThanFlag}, and \texttt{lessThanUFlag}) for branch condition evaluation.
-    \item \textbf{Data Memory Access \& Register Write-Back (MEM/WB)}: For load and store operations, the effective memory address computed by the ALU is driven to the byte-addressable data memory (\texttt{byteMemory}), accompanied by access controls (\texttt{memRead}, \texttt{memWrite}) and access granularity (\texttt{funct3}). For loads, read data is returned combinationally. The write-back multiplexer selects between \texttt{aluResult}, memory load data, subroutine link address ($\text{pc} + 4$), and upper immediate values (\texttt{LUI}, \texttt{AUIPC}), routing the result to the register file's destination port on the positive clock edge when \texttt{regWrite} is asserted.
-    \item \textbf{Next Program Counter Generation (PC)}: Branch comparison logic evaluates condition flags against \texttt{funct3}. When a branch condition is satisfied or an unconditional jump (\texttt{JAL}, \texttt{JALR}) is executed, the target address ($\text{pc} + \text{imm}$ or $\text{rs1} + \text{imm}$) is loaded into the PC automaton via mode \texttt{Mode.Jalr}. Otherwise, the PC automaton increments sequentially by $+4$ (\texttt{Mode.Plus4}).
-\end{enumerate}
-
-\subsection{Chisel Implementation \& Reusable Library Modules}
-Listing \ref{lst:chisel_riscv_fetch_execute} shows the complete Chisel implementation of the \texttt{RiscvFetchExecute} core and the \texttt{RiscvSystem} test harness. The implementation directly reuses the hardware library elements developed in preceding chapters:
-\begin{itemize}
-    \item \texttt{ProgramCounter} (Listing \ref{lst:chisel_program_counter}, Chapter \ref{lect3}): Provides 32-bit address generation with link calculation and absolute/relative vectored jumping.
-    \item \texttt{RiscvDecoder} \& \texttt{RiscvImmGen} (Listing \ref{lst:chisel_riscv_decoder}, Chapter \ref{lect1}): Extracts typed control signals and sign-extended immediate constants with zero gate delay.
-    \item \texttt{RALU} (Listing \ref{lst:chisel_ralu}, Chapter \ref{lect3}): Reuses the 32-register architectural register file (\texttt{RiscvRegFile}, Listing \ref{lst:chisel_riscv_regfile}, Chapter \ref{registerFile}) and the RV32I\_Zmmul arithmetic logic unit (\texttt{RiscvALU}, Listing \ref{lst:chisel_riscv_alu}, Chapter \ref{alu1}).
-    \item \texttt{RiscvDataMemory} (Listing \ref{lst:chisel_riscv_datamemory}, Chapter \ref{syncMem}): Instantiated as \texttt{byteMemory} in \texttt{RiscvSystem}, providing byte, halfword, and word memory operations with combinational read access.
-\end{itemize}
-
-By coupling the processor with unbuffered memory models, each instruction completes execution within a single clock cycle without requiring wait states, interlocks, or pipeline stalls. For an in-depth treatment of the RISC-V architecture, cycle-accurate Chisel/Scala verification passing all 42 official architectural conformance tests, and comparative analysis against industrial single-cycle cores such as \texttt{ZeroNyte}, see Chapter \ref{riscvProcessor}.
-
-\includechiselcode[caption={RISC-V 5-OS Harvard Fetch-Execute Processor (Chisel: RiscvFetchExecute.scala)}, label={lst:chisel_riscv_fetch_execute}, firstline=10, firstnumber=10, lastline=158]{\chiselSourceDir/riscv/RiscvFetchExecute.scala}
-}% End Chisel Version
 
 
 \section{Problems}

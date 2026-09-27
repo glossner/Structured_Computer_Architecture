@@ -198,43 +198,37 @@ Listing \ref{lst:chisel_conformance_spec} illustrates the Chisel/Scala conforman
 \subsection{Conformance Results}
 \index{conformance testing!results summary}
 
-All 42 official architectural conformance test suites execute and pass against the \texttt{RiscvFetchExecute} processor in Chisel/Scala simulation with a 100\% exact signature match. Table \ref{tab:conformance_results} details the test results.
+All 42 official architectural conformance test suites execute and pass against the \texttt{RiscvFetchExecute} processor in Chisel/Scala simulation with a 100\% exact signature match against Spike golden reference signatures (spanning 86,964 simulation cycles and 16,140 verified signature words). Table \ref{tab:conformance_results} details the verified test suites by instruction category.
 
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{|l|l|c|c|c|}
+\begin{tabularx}{\textwidth}{|l|X|}
 \hline
-\textbf{Category} & \textbf{Test Suites} & \textbf{Status} & \textbf{Cycle Count} & \textbf{Signature Words} \\
+\textbf{Category} & \textbf{Architectural Test Suites (All Pass)} \\
 \hline
-\textbf{Arithmetic (R-type)} & \texttt{add-01}, \texttt{sub-01}, \texttt{sll-01}, \texttt{slt-01}, & \textbf{PASS} & 509--3,931 & 91--724 \\
-                             & \texttt{sltu-01}, \texttt{xor-01}, \texttt{srl-01}, \texttt{sra-01}, & & & \\
-                             & \texttt{or-01}, \texttt{and-01} & & & \\
+\textbf{Arithmetic (R-type)} & \texttt{add-01}, \texttt{sub-01}, \texttt{sll-01}, \texttt{slt-01}, \texttt{sltu-01}, \texttt{xor-01}, \texttt{srl-01}, \texttt{sra-01}, \texttt{or-01}, \texttt{and-01} \\
 \hline
-\textbf{Immediate (I-type)}  & \texttt{addi-01}, \texttt{slli-01}, \texttt{slti-01}, \texttt{sltiu-01}, & \textbf{PASS} & 410--2,671 & 89--701 \\
-                             & \texttt{xori-01}, \texttt{srli-01}, \texttt{srai-01}, \texttt{ori-01}, & & & \\
-                             & \texttt{andi-01} & & & \\
+\textbf{Immediate (I-type)}  & \texttt{addi-01}, \texttt{slli-01}, \texttt{slti-01}, \texttt{sltiu-01}, \texttt{xori-01}, \texttt{srli-01}, \texttt{srai-01}, \texttt{ori-01}, \texttt{andi-01} \\
 \hline
-\textbf{Upper Immediates}     & \texttt{lui-01}, \texttt{auipc-01} & \textbf{PASS} & 240--494 & 65--66 \\
+\textbf{Upper Immediates}     & \texttt{lui-01}, \texttt{auipc-01} \\
 \hline
-\textbf{Jumps}               & \texttt{jal-01}, \texttt{jalr-01} & \textbf{PASS} & 1,043--1,558 & 34--35 \\
+\textbf{Jumps}               & \texttt{jal-01}, \texttt{jalr-01} \\
 \hline
-\textbf{Branches (B-type)}   & \texttt{beq-01}, \texttt{bne-01}, \texttt{blt-01}, & \textbf{PASS} & 5,532--6,857 & 582--728 \\
-                             & \texttt{bge-01}, \texttt{bltu-01}, \texttt{bgeu-01} & & & \\
+\textbf{Branches (B-type)}   & \texttt{beq-01}, \texttt{bne-01}, \texttt{blt-01}, \texttt{bge-01}, \texttt{bltu-01}, \texttt{bgeu-01} \\
 \hline
-\textbf{Loads (I-type)}      & \texttt{lb-align-01}, \texttt{lbu-align-01}, \texttt{lh-align-01}, & \textbf{PASS} & 616--632 & 34--35 \\
-                             & \texttt{lhu-align-01}, \texttt{lw-align-01} & & & \\
+\textbf{Loads (I-type)}      & \texttt{lb-align-01}, \texttt{lbu-align-01}, \texttt{lh-align-01}, \texttt{lhu-align-01}, \texttt{lw-align-01} \\
 \hline
-\textbf{Stores (S-type)}     & \texttt{sb-align-01}, \texttt{sh-align-01}, \texttt{sw-align-01} & \textbf{PASS} & 609--630 & 70--73 \\
+\textbf{Stores (S-type)}     & \texttt{sb-align-01}, \texttt{sh-align-01}, \texttt{sw-align-01} \\
 \hline
-\textbf{Synchronization}     & \texttt{fence-01} & \textbf{PASS} & 117 & 3 \\
+\textbf{Synchronization}     & \texttt{fence-01} \\
 \hline
-\textbf{Zmmul Multiplication}& \texttt{mul-01}, \texttt{mulh-01}, \texttt{mulhsu-01}, \texttt{mulhu-01} & \textbf{PASS} & 3,465--4,034 & 616--754 \\
+\textbf{Zmmul Multiplication}& \texttt{mul-01}, \texttt{mulh-01}, \texttt{mulhsu-01}, \texttt{mulhu-01} \\
 \hline
-\multicolumn{2}{|l|}{\textbf{Total / Summary}} & \textbf{42/42 PASS} & \textbf{86,964 cycles} & \textbf{16,140 verified words} \\
+\multicolumn{2}{|l|}{\textbf{Total / Summary}: 42 official test suites (38 RV32I + 4 Zmmul) --- 100\% signature match} \\
 \hline
-\end{tabular}
-\caption{Official RISC-V architectural conformance verification results for \texttt{RiscvFetchExecute}.}\label{tab:conformance_results}
+\end{tabularx}
+\caption{Official RISC-V architectural conformance verification test suites for \texttt{RiscvFetchExecute}.}\label{tab:conformance_results}
 \end{table}
 
 \subsection{Architectural Nuances Uncovered by Conformance Testing}
@@ -255,60 +249,6 @@ Executing the official conformance test suite against \texttt{RiscvFetchExecute}
 \end{enumerate}
 
 
-\section{Comparative Study: Educational vs. Industrial Single-Cycle Cores}\label{riscvComparison}
-\index{ZeroNyte: industrial single-cycle core}\index{processor architecture!comparative analysis}
-
-To bridge the gap between academic formal models and industrial silicon implementations, it is instructive to compare the textbook \texttt{RiscvFetchExecute} core with \textbf{ZeroNyte}, a tapeout-verified single-cycle RV32I core developed in the KryptoNyte project that similarly passes all official conformance tests. Table \ref{tab:core_comparison} presents a comprehensive structural comparison.
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|p{6cm}|p{6cm}|}
-\hline
-\textbf{Dimension} & \textbf{ZeroNyte (Industrial Core)} & \textbf{RiscvFetchExecute (Textbook Core)} \\
-\hline
-\textbf{Architectural Model} & Single-cycle Fetch-Execute & Single-cycle Harvard 5-OS \\
-\hline
-\textbf{ISA Scope} & Base RV32I integer & RV32I + \texttt{Zmmul} (Hardware Multiplier) \\
-\hline
-\textbf{Reset Vector} & Hardwired \texttt{0x80000000} & Parameterized (\texttt{initPC}, default 0) \\
-\hline
-\textbf{Instruction Decoder} & Function-based decode table mapping to synthetic 5-bit enum & Direct-wire bit extraction $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ \\
-\hline
-\textbf{Branch Evaluation} & Dedicated parallel comparators in datapath (\texttt{r1 === r2Reg}, \texttt{< SInt}, \texttt{< UInt}) & Loop 3 ALU flag sharing (\texttt{zeroFlag}, \texttt{lessThanFlag}, \texttt{lessThanUFlag}) \\
-\hline
-\textbf{Memory Alignment} & CPU-side \texttt{StoreUnit} and load unpackers & Memory-side encapsulation inside \texttt{RiscvDataMemory} \\
-\hline
-\textbf{Register File} & Inherits \texttt{RegFileMTMem} (\textit{is-a} OOP pattern) with Chisel \texttt{Mem} & Discrete composition with \texttt{RegInit(VecInit(...))} inside \texttt{RALU} \\
-\hline
-\textbf{Bus Interfaces} & TileLink-UL master port + legacy port & Decoupled Harvard \texttt{ImemPort} and \texttt{DmemPort} \\
-\hline
-\textbf{Interrupts / CSRs} & 8-source interrupt controller with priority and claim/complete & Decoupled for clean modular presentation \\
-\hline
-\textbf{Debug Support} & JTAG TAP interface and co-simulation ports & Observability bundle (\texttt{pc}, \texttt{inst}, \texttt{aluOut}, \texttt{regWrite}) \\
-\hline
-\end{tabular}
-\caption{Architectural comparison between industrial ZeroNyte and textbook RiscvFetchExecute.}\label{tab:core_comparison}
-\end{table}
-
-\subsection{Key Design Trade-offs}
-
-\subsubsection{1. Branch Condition Evaluation: Dedicated Comparators vs. Loop 3 Flag Sharing}
-In \texttt{ZeroNyte}, branch conditions are evaluated using dedicated equality and magnitude comparators operating directly on register file read ports \texttt{r1} and \texttt{r2Reg} in parallel with the ALU. This design choice removes the ALU adder carry chain from the critical path of the branch target generation logic. In contrast, \texttt{RiscvFetchExecute} strictly adheres to the theoretical Loop 3 architecture: the ALU executes a subtraction operation and outputs comparison flags (\texttt{zeroFlag}, \texttt{lessThanFlag}, \texttt{lessThanUFlag}) that drive the PC automaton. This maximizes hardware reuse and preserves the formal 5-OS abstraction at the expense of a slightly longer combinational path.
-
-\subsubsection{2. Memory Boundary: CPU-Side StoreUnit vs. Encapsulated Byte Memory}
-In high-performance SoCs, external memory systems (such as AXI4 or TileLink crossbars) accept word-aligned addresses accompanied by byte-enable masks. Consequently, \texttt{ZeroNyte} incorporates a dedicated \texttt{StoreUnit} on the CPU side to compute byte write masks and shift store data into the appropriate byte lanes. Conversely, \texttt{RiscvFetchExecute} maintains a clean boundary: the core simply transmits unshifted data, address, and \texttt{funct3} across \texttt{DmemPort}, delegating lane steerage and sign extension entirely to the memory subsystem (\texttt{RiscvDataMemory}).
-
-\subsubsection{3. Object-Oriented Register File Inheritance}
-\texttt{ZeroNyte} illustrates the classic object-oriented \textit{is-a} relationship in hardware description:
-\begin{verbatim}
-class RegFile2R1WMem(width: Int = 32, depth: Int = 32)
-  extends RegFileMTMem(width, depth, numThreads = 1,
-                       numReadPorts = 2, numWritePorts = 1)
-\end{verbatim}
-Here, the 2-read 1-write register file \textit{is a} specialized instance of a multi-threaded memory-based generator. In \texttt{RiscvFetchExecute}, the register file is instantiated directly inside \texttt{RALU}, emphasizing pedagogical simplicity and structural transparency.
-
-
 \section{Summary}\label{riscvSummary}
 
 This chapter presented the complete architecture, hardware implementation, and verification of the RISC-V open standard processor:
@@ -316,7 +256,6 @@ This chapter presented the complete architecture, hardware implementation, and v
     \item The RISC-V ISA organizes instruction execution across regular 32-bit formats with uniform register positions and immediate sign bits.
     \item The \texttt{RV32I\_Zmmul} processor is structured as a Harvard 5-OS computing system, integrating five reusable hardware modules developed across prior chapters: \texttt{ProgramCounter}, \texttt{RiscvDecoder}, \texttt{RiscvImmGen}, \texttt{RiscvRegFile}, \texttt{RiscvALU}, and \texttt{RiscvDataMemory}.
     \item Using pure Chisel/Scala simulation with \texttt{EphemeralSimulator}, the processor was rigorously verified against all 42 official RISC-V architectural conformance tests, achieving a 100\% exact match against Spike golden reference signatures.
-    \item A comparative study against the industrial \texttt{ZeroNyte} core demonstrated how the formal 5-OS model maps to production silicon practices, including TileLink bus integration, dedicated branch comparators, and object-oriented hardware design.
 \end{itemize}
 
 
@@ -347,7 +286,7 @@ $\diamond$
 \end{problem}
 
 \begin{problem}
-Describe the trade-off between evaluating branch conditions using dedicated comparators (as in \texttt{ZeroNyte}) versus reusing the ALU comparison flags (as in \texttt{RiscvFetchExecute}). Which approach minimizes total silicon area, and which approach minimizes critical path delay?
+Describe the trade-off between evaluating branch conditions using dedicated datapath comparators directly on the register file outputs versus reusing the ALU comparison flags (as in \texttt{RiscvFetchExecute}). Which approach minimizes total silicon area, and which approach minimizes critical path delay?
 
 \textbf{Solution}:
 Reusing ALU comparison flags minimizes total silicon area because the existing 32-bit subtractor in the ALU generates the zero, signed less-than, and unsigned less-than condition flags without duplicating comparator logic. However, evaluating branch conditions through dedicated parallel comparators directly on the register file outputs minimizes critical path delay, because branch resolution can proceed concurrently with ALU execution and avoid the carry propagation delay of the ALU adder.
