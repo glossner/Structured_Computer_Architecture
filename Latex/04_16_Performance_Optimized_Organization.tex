@@ -1343,6 +1343,323 @@ Although hardware multithreading is implemented primarily within the microarchit
 \end{enumerate}
 
 
+\section{Memory Hierarchy and Cache Optimization}\label{sec:memory_optimization}
+\index{memory hierarchy: tiered storage organization from fast registers to slow auxiliary storage}
+\index{cache memory!organization and optimization}
+\index{memory wall: increasing disparity between processor clock speed and memory latency}
+\index{locality principle: temporal and spatial tendency of program access patterns}
+
+As demonstrated in Chapter \ref{ch:von_neumann_4-OS}, the classical von Neumann abstract model conceptualizes storage as a uniform, flat linear address space where instructions and operands reside together without microarchitectural hierarchy. In early computers such as the EDVAC and the Princeton IAS machine, the central processing unit interacted directly with a single memory technology (such as mercury acoustic delay lines or electrostatic Williams tubes) at uniform speed \cite{vonNeumann1945}.
+
+However, modern high-performance microprocessors cannot operate directly against a single flat memory store. While processor execution pipelines have achieved multi-gigahertz clock frequencies and aggressive superscalar issue rates, dense semiconductor memory (DRAM) is governed by analog charge transfer dynamics that improve at an incomparably slower pace. Consequently, caching and memory hierarchy optimization are indispensable microarchitectural mechanisms designed to bridge this performance chasm.
+
+\subsection{The Processor-Memory Performance Gap and the Memory Wall}\label{sec:memory_wall}
+
+Throughout the history of semiconductor microprocessors, processing logic and primary memory followed dramatically divergent technological trajectories.
+
+Between 1980 and the mid-2000s, microprocessor performance expanded at an extraordinary rate of approximately $52\%$ per year \cite{Hennessy19}. This unprecedented growth was sustained by the simultaneous convergence of architectural innovations (deep instruction pipelining, superscalar multi-issue, dynamic out-of-order execution, and branch prediction) and physical device scaling governed by Robert Dennard's MOSFET scaling laws. Dennard scaling permitted transistor switching speeds to increase in direct proportion to circuit density while maintaining constant power density per unit chip area.
+
+In contrast, commodity Dynamic RAM (DRAM) followed an optimization trajectory focused overwhelmingly on \textbf{capacity and cost-per-bit} rather than access latency. Storing a bit of information in DRAM requires charging or discharging a minute capacitor through a single access transistor (the 1T-1C cell). The physics of capacitive charge transfer, long capacitive bitline charging delays, analog sense amplifier sensing times, and external bus multiplexing severely constrained latency improvements. Over the same era, DRAM access latency improved at an average rate of only $\sim 7\%$ per year \cite{Patterson97}.
+
+In 1995, Wm. A. Wulf and Sally A. McKee formalized this divergence and coined the term \textbf{The Memory Wall} \cite{wulf1995hitting}. Wulf and McKee proved that because processor clock speeds improve exponentially faster than memory access times, the fraction of execution time spent waiting for off-chip memory references approaches $100\%$, rendering further processor frequency gains completely futile unless accompanied by aggressive caching and memory latency hiding techniques.
+
+\begin{figure}[htbp]
+\begin{center}
+\resizebox{0.95\linewidth}{!}{
+\begin{tikzpicture}[x=0.22cm, y=1.0cm]
+  % Define colors
+  \definecolor{cpuColor}{RGB}{20, 80, 180}
+  \definecolor{aggColor}{RGB}{120, 30, 160}
+  \definecolor{dramBwColor}{RGB}{220, 110, 10}
+  \definecolor{dramLatColor}{RGB}{190, 25, 25}
+
+  % Shaded region for Memory Wall
+  \fill[red!8] (0,0) -- (5, 0.5) -- (10, 1.1) -- (15, 2.0) -- (20, 2.8) -- (24, 3.2) -- (25, 3.2) -- (30, 3.35) -- (35, 3.45) -- (40, 3.55) -- (44, 3.65)
+    -- (44, 0.80) -- (40, 0.78) -- (35, 0.75) -- (30, 0.72) -- (25, 0.68) -- (20, 0.62) -- (15, 0.49) -- (10, 0.32) -- (5, 0.15) -- (0,0) -- cycle;
+
+  % Grid lines
+  \draw[gray!20, thin] (0,0) grid[xstep=5, ystep=1] (45,5);
+
+  % Axes
+  \draw[->, thick] (0,0) -- (46,0) node[right, font=\footnotesize] {Year};
+  \draw[->, thick] (0,0) -- (0,5.3) node[above, font=\footnotesize] {Performance (Relative to 1980)};
+
+  % X-ticks
+  \foreach \yr/\x in {1980/0, 1985/5, 1990/10, 1995/15, 2000/20, 2005/25, 2010/30, 2015/35, 2020/40, 2024/44} {
+    \draw (\x, 0.08) -- (\x, -0.08) node[below, font=\scriptsize] {\yr};
+  }
+
+  % Y-ticks (log scale: 10^0 to 10^5)
+  \foreach \pwr/\y in {1/0, 10/1, 100/2, 1000/3, {10,000}/4, {100,000}/5} {
+    \draw (0.3, \y) -- (-0.3, \y) node[left, font=\scriptsize] {$\pwr\times$};
+  }
+
+  % Milestones
+  \draw[gray!60, dashed, thick] (15, 0) -- (15, 4.8);
+  \node[rotate=90, anchor=south, font=\tiny, text=gray!80] at (14.5, 2.2) {Wulf \& McKee (1995)};
+
+  \draw[gray!60, dashed, thick] (24, 0) -- (24, 4.8);
+  \node[rotate=90, anchor=south, font=\tiny, text=gray!80] at (23.5, 2.0) {Dennard Scaling Breakdown (2004)};
+
+  % Curve 1: Single-Thread CPU Performance (52%/yr until 2004, then 3.5%/yr)
+  \draw[cpuColor, very thick, mark=*] plot[mark size=1.5pt] coordinates {
+    (0, 0.0)    % 1980: 1x
+    (5, 0.5)    % 1985: ~3x
+    (10, 1.18)  % 1990: ~15x
+    (15, 2.0)   % 1995: ~100x
+    (20, 2.78)  % 2000: ~600x
+    (24, 3.18)  % 2004: ~1500x
+    (30, 3.34)  % 2010: ~2200x
+    (35, 3.45)  % 2015: ~2800x
+    (40, 3.54)  % 2020: ~3500x
+    (44, 3.60)  % 2024: ~4000x
+  };
+  \node[cpuColor, anchor=south west, font=\scriptsize\bfseries] at (25, 3.4) {Single-Thread CPU};
+
+  % Curve 2: Aggregate Compute (Multicore / Accelerators: 3x every 2 years from 2004)
+  \draw[aggColor, very thick, dashed, mark=triangle*] plot[mark size=1.8pt] coordinates {
+    (24, 3.18)  % 2004
+    (30, 3.8)   % 2010: ~6300x
+    (35, 4.4)   % 2015: ~25,000x
+    (40, 5.0)   % 2020: ~100,000x
+  };
+  \node[aggColor, anchor=south west, font=\scriptsize\bfseries] at (31, 4.5) {Aggregate Accelerators / AI};
+
+  % Curve 3: DRAM Bandwidth
+  \draw[dramBwColor, very thick, dashdotdotted, mark=square*] plot[mark size=1.5pt] coordinates {
+    (0, 0.0)    % 1980: 1x
+    (10, 0.6)   % 1990: ~4x
+    (20, 1.4)   % 2000: ~25x (SDRAM / DDR)
+    (30, 2.18)  % 2010: ~150x (DDR3)
+    (40, 3.0)   % 2020: ~1000x (DDR4/DDR5/HBM)
+  };
+  \node[dramBwColor, anchor=north west, font=\scriptsize\bfseries] at (31, 2.9) {DRAM Bandwidth};
+
+  % Curve 4: DRAM Latency (Cycle time improvement)
+  \draw[dramLatColor, very thick, mark=diamond*] plot[mark size=1.8pt] coordinates {
+    (0, 0.0)    % 1980: 1x (250ns)
+    (5, 0.15)   % 1985: ~1.4x (180ns)
+    (10, 0.32)  % 1990: ~2.1x (120ns)
+    (15, 0.49)  % 1995: ~3.1x (80ns)
+    (20, 0.62)  % 2000: ~4.2x (60ns)
+    (25, 0.68)  % 2005: ~4.8x (52ns)
+    (30, 0.72)  % 2010: ~5.2x (48ns)
+    (35, 0.75)  % 2015: ~5.6x (45ns)
+    (40, 0.78)  % 2020: ~6.0x (42ns)
+    (44, 0.80)  % 2024: ~6.3x (40ns)
+  };
+  \node[dramLatColor, anchor=north west, font=\scriptsize\bfseries] at (25, 0.6) {DRAM Latency ($\approx 7\%$/yr $\to$ flat)};
+
+  % The Memory Wall label
+  \node[font=\footnotesize\bfseries, fill=white, inner sep=2pt, draw=red!40] at (18, 1.8) {The Memory Wall};
+  \draw[<->, red!80, thick] (40, 0.9) -- (40, 3.45) node[midway, right, font=\tiny\bfseries] {$>600\times$ Gap};
+
+\end{tikzpicture}
+}
+\caption{The Processor-Memory Performance Gap (1980--2024). Single-thread CPU performance increased by $\sim 3,500\times$ between 1980 and 2020, while DRAM latency improved by only $\sim 6\times$ (dropping from $\sim 250\,\text{ns}$ to $\sim 40\text{--}50\,\text{ns}$ and flattening post-2005), establishing an enduring $>600\times$ single-thread latency gap. Concurrently, aggregate compute capacity in multicore processors, GPUs, and AI TPUs expanded beyond $100,000\times$, producing the modern AI Memory Wall \cite{Hennessy19, wulf1995hitting, Patterson97, rupp2020microprocessor, gholami2021ai}.}
+\label{fig:processor_memory_gap}
+\end{center}
+\end{figure}
+
+Figure \ref{fig:processor_memory_gap} charts the evolution of this performance gap from 1980 through 2024 across four key dimensions:
+\begin{enumerate}
+    \item \textbf{Single-Thread CPU Performance}: Grew at $\sim 52\%$ annually until 2004, when the collapse of Dennard scaling halted clock frequency increases at $\sim 3\text{--}4\,\text{GHz}$. Since 2005, single-thread performance has grown at an evolutionary pace of $\sim 3.5\%$ per year via microarchitectural IPC refinements, reaching an aggregate growth of $\sim 3,500\times$ \cite{rupp2020microprocessor}.
+    \item \textbf{DRAM Latency}: Improved by a factor of only $\sim 6\times$ over four decades, dropping from $250\,\text{ns}$ in 1980 to $\sim 40\text{--}50\,\text{ns}$ in modern DDR4/DDR5 SDRAM, before essentially flattening. Consequently, an unmitigated access to main memory consumes several hundred processor clock cycles.
+    \item \textbf{DRAM Bandwidth}: Mitigated through synchronous, multi-channel, and double-data-rate (DDR) signaling, and more recently through 3D stacked High-Bandwidth Memory (HBM), scaling bandwidth by $>1,000\times$.
+    \item \textbf{Aggregate Compute and the Modern AI Memory Wall}: The post-Dennard era redirected Moore's law scaling toward parallel computing: multi-core processors, massively parallel GPUs, and domain-specific AI accelerators (e.g., Google TPUs, Groq LPUs, and NVIDIA Tensor Core GPUs). Aggregate computing throughput has continued doubling every 24 months, exceeding $100,000\times$ the 1980 baseline. In modern deep learning workloads (e.g., large transformer models), memory bandwidth and memory capacity constitute the primary performance limiter, a phenomenon known as the \textbf{AI Memory Wall} \cite{gholami2021ai}.
+\end{enumerate}
+
+\subsection{The Locality Principle}\label{locprinc}
+\index{locality principle: temporal and spatial tendency of program access patterns}
+\index{locality principle!temporal locality}
+\index{locality principle!spatial locality}
+
+Despite the formidable gap between processor and DRAM speeds, computer systems achieve high performance because programs do not reference memory uniformly or randomly. Instead, empirical program execution strongly adheres to the \textbf{Locality Principle}:
+
+\paragraph{Temporal Locality (Locality in Time)}
+If a specific memory location is referenced at time $t$, there is a high probability that the exact same location will be referenced again in the near future ($t + \Delta t$).
+Temporal locality is exhibited by:
+\begin{itemize}
+    \item \textbf{Program Loops}: Repeatedly executing the same sequence of instructions within an iterative loop body.
+    \item \textbf{Scalar Variables}: Frequently reading and updating loop induction variables, counters, and accumulators.
+    \item \textbf{Call Stack}: Repeatedly accessing local variables, return pointers, and parameters residing at the top of the stack frame.
+\end{itemize}
+
+\paragraph{Spatial Locality (Locality in Space)}
+If a memory location at address $A$ is referenced, there is a high probability that memory locations residing physically near $A$ (i.e., in the range $A \pm \delta$) will be referenced soon.
+Spatial locality is exhibited by:
+\begin{itemize}
+    \item \textbf{Sequential Instruction Execution}: Instructions are fetched sequentially from contiguous program memory addresses, punctuated only by occasional branch instructions.
+    \item \textbf{Array and Vector Traversals}: Processing elements of one-dimensional arrays, matrices, vectors, or string buffers stored in contiguous memory rows.
+    \item \textbf{Record and Object Fields}: Reading adjacent fields stored sequentially within a common data structure or class instance.
+\end{itemize}
+
+The locality principle provides the theoretical foundation for memory hierarchy design. By transferring \textbf{blocks (lines)} of contiguous bytes upon a miss (exploiting spatial locality) and retaining recently accessed blocks in small, fast SRAM buffers positioned immediately adjacent to the processor core (exploiting temporal locality), the memory hierarchy creates the effective illusion of a storage system that is simultaneously as fast as the smallest on-chip SRAM register and as vast and inexpensive as off-chip DRAM.
+
+\subsection{Cache Memory Microarchitecture}
+\index{cache memory!placement policies}
+\index{cache memory!address decomposition}
+\index{cache memory!write policies}
+\index{cache memory!miss classification (3 Cs)}
+\index{average memory access time (AMAT)}
+
+The concept of a cache memory was first articulated by Maurice Wilkes in 1965 as a ``slave memory'' and was commercially implemented in hardware in the IBM System/360 Model 85 in 1968. 
+
+\subsubsection{Cache Organization and Address Decomposition}
+A cache is organized into an array of $S$ sets, where each set contains $N$ cache lines (or blocks). Each cache line stores $B = 2^b$ bytes of contiguous data along with a \textbf{Tag} and metadata status bits (a \textbf{Valid bit} indicating valid data, and a \textbf{Dirty bit} indicating modified data in write-back caches).
+
+When the CPU issues an $m$-bit physical memory address, the cache hardware decomposes the address into three orthogonal bitfields:
+\begin{equation}
+\underbrace{a_{m-1} \quad \cdots \quad a_{s+b}}_{\text{Tag } (t \text{ bits})} \quad\mid\quad \underbrace{a_{s+b-1} \quad \cdots \quad a_b}_{\text{Index } (s \text{ bits})} \quad\mid\quad \underbrace{a_{b-1} \quad \cdots \quad a_0}_{\text{Block Offset } (b \text{ bits})}
+\end{equation}
+where:
+\begin{itemize}
+    \item \textbf{Block Offset} ($b = \log_2 B$ bits): Selects the specific byte(s) within the $B$-byte cache line.
+    \item \textbf{Set Index} ($s = \log_2 S$ bits): Selects exactly one of the $S$ sets in the cache array.
+    \item \textbf{Tag} ($t = m - s - b$ bits): Uniquely identifies which physical memory block is currently occupying that cache line.
+\end{itemize}
+
+The total data capacity of the cache is $C = S \times N \times B$ bytes.
+
+\subsubsection{Cache Placement Policies}
+Caches are categorized according to their associativity, which defines how many locations in the cache a given memory block can occupy:
+\begin{enumerate}
+    \item \textbf{Direct-Mapped Cache ($N = 1$)}: Each memory block maps to exactly one predetermined set:
+    \[
+    \text{Set Index} = (\text{Block Address}) \pmod S
+    \]
+    Direct-mapped caches require only a single tag comparator and zero multiplexing logic, providing the fastest hit time. However, if two frequently accessed memory blocks share the same index, they will repeatedly evict each other in a destructive cycle known as \textbf{thrashing}.
+    
+    \item \textbf{Set-Associative Cache ($N$-Way Associative, $N > 1$)}: Each set contains $N$ distinct line slots (ways). A memory block maps to a specific set based on its index bits, but can reside in any of the $N$ ways within that set. The cache controller checks all $N$ tags concurrently using $N$ parallel comparators. Set associativity drastically reduces conflict misses at the expense of slightly higher lookup latency and silicon area.
+    
+    \item \textbf{Fully Associative Cache ($S = 1, N = C/B$)}: There are no set index bits ($s = 0$, so $t = m - b$). Any memory block can reside in any cache line in the entire array. Finding a block requires searching every line simultaneously using Content-Addressable Memory (CAM) cells or parallel comparators. Because fully associative search logic is silicon-intensive, it is typically restricted to small, latency-critical structures such as Translation Lookaside Buffers (TLBs) and small victim caches.
+\end{enumerate}
+
+\subsubsection{Cache Replacement Policies}
+When a miss occurs in an $N$-way set-associative cache and all $N$ ways in the target set are currently occupied, one block must be evicted to make room for the newly fetched line. Common replacement strategies include:
+\begin{itemize}
+    \item \textbf{Least Recently Used (LRU)}: Tracks access history and replaces the block that has remained unreferenced for the longest period. LRU provides the lowest miss rates for typical workloads but requires $N(N-1)/2$ state bits per set to implement true LRU ordering.
+    \item \textbf{Pseudo-LRU (PLRU)}: Approximates LRU using a binary decision tree requiring only $N - 1$ bits per set, providing near-LRU hit rates with minimal hardware overhead.
+    \item \textbf{Random Replacement}: Selects an eviction victim uniformly at random using a pseudorandom number generator. Requires zero state bits per line and performs remarkably close to LRU for large cache capacities.
+\end{itemize}
+
+\subsubsection{Write Policies}
+Because store instructions modify cache data, the microarchitecture must maintain memory consistency between the cache and lower memory levels:
+\begin{itemize}
+    \item \textbf{Write-Through}: Every store operation updates both the cache line and the underlying backing memory simultaneously. To prevent processor stalls on writes, stores are enqueued in a \textbf{Write Buffer}. While simple and inherently coherent, write-through creates high write traffic on the memory bus.
+    \item \textbf{Write-Back}: Stores update only the cache line, setting a 1-bit \textbf{Dirty bit} in the line's tag array. The line is written back to main memory only when it is evicted. Write-back drastically reduces memory bus traffic because multiple updates to the same cache line occur entirely in SRAM without off-chip transactions.
+    \item \textbf{Allocation on Write Miss}: A \textbf{Write-Allocate} cache fetches the entire block into the cache upon a write miss (typically paired with write-back). A \textbf{No-Write-Allocate} (write-around) cache bypasses the cache and updates lower memory directly upon a write miss (typically paired with write-through).
+\end{itemize}
+
+\subsubsection{The 3 Cs Model of Cache Misses}
+\index{cache misses!compulsory (cold)}
+\index{cache misses!capacity}
+\index{cache misses!conflict}
+\index{Hill, Mark D.}
+
+In his doctoral dissertation, Mark D. Hill formalized the classic \textbf{3 Cs model} to classify cache misses into three distinct categories based on their underlying cause \cite{hill1987aspects}:
+\begin{enumerate}
+    \item \textbf{Compulsory (Cold) Misses}: The very first reference to a memory block. Because the block has never been loaded into the cache, compulsory misses cannot be avoided by altering cache capacity or associativity. They can only be reduced by increasing the block size $B$ (which prefetches contiguous data via spatial locality) or through speculative hardware prefetching.
+    \item \textbf{Capacity Misses}: Misses that occur because the cache cannot contain all the blocks needed to execute the program's active working set. A capacity miss occurs when a previously accessed block was evicted solely because the total cache capacity $C$ was exhausted. Capacity misses can be eliminated only by increasing total cache size.
+    \item \textbf{Conflict (Collision) Misses}: Misses that occur in direct-mapped or set-associative caches when multiple active memory blocks map to the very same set index, evicting each other even though the total cache capacity has not been exhausted. Conflict misses are nonexistent in fully associative caches and decrease monotonically as associativity $N$ increases.
+\end{enumerate}
+In multiprocessor shared-memory systems, a fourth category---the \textbf{Coherence Miss} (the 4th C)---occurs when a cache line is invalidated by a write operation from another processor core.
+
+\subsubsection{Multi-Level Caches and Average Memory Access Time (AMAT)}
+To balance the competing requirements of single-cycle hit latency and low miss rates, modern processors organize caches into hierarchical levels (L1, L2, and L3):
+\begin{itemize}
+    \item \textbf{Level 1 (L1)}: Split into dedicated L1 Instruction (L1i) and L1 Data (L1d) caches ($32\text{--}64\,\text{KB}$ each, 4- to 8-way associative), operating at full core clock frequency with $1\text{--}4$ cycle hit latency.
+    \item \textbf{Level 2 (L2)}: Typically unified per-core cache ($512\,\text{KB} \div 2\,\text{MB}$, 8- to 16-way associative, $10\text{--}14$ cycle latency).
+    \item \textbf{Level 3 (L3)}: Shared Last-Level Cache (LLC) across all cores ($16\,\text{MB} \div 128\,\text{MB}$, 16- to 32-way associative, $30\text{--}50$ cycle latency).
+\end{itemize}
+
+The performance of a memory hierarchy is quantified by \textbf{Average Memory Access Time (AMAT)}:
+\begin{equation}
+\text{AMAT} = t_{\text{hit}, L1} + m_{L1} \times \text{Miss Penalty}_{L1}
+\end{equation}
+where $m_{L1}$ is the L1 miss rate. In a three-level hierarchy backed by off-chip DRAM:
+\begin{equation}
+\text{Miss Penalty}_{L1} = t_{\text{hit}, L2} + m_{\text{local}, L2} \times \left( t_{\text{hit}, L3} + m_{\text{local}, L3} \times t_{\text{DRAM}} \right)
+\end{equation}
+where $m_{\text{local}, L2}$ and $m_{\text{local}, L3}$ represent the \textbf{local miss rates} of the L2 and L3 caches respectively.
+
+\subsection{Virtual Memory and Translation Lookaside Buffers (TLBs)}\label{lb:vmm}
+\index{virtual memory: architectural technique abstracting physical memory using page translation}
+\index{translation lookaside buffer (TLB): cache of recent virtual-to-physical address translations}
+\index{content-addressable memory (CAM)!TLB implementation}
+
+Just as cache memory transparently bridges the processor-DRAM gap, \textbf{Virtual Memory} bridges primary DRAM and secondary storage (SSDs/HDDs) while providing vital architectural abstractions:
+\begin{enumerate}
+    \item \textbf{Address Space Virtualization}: Each process is granted the illusion of a vast, contiguous, private linear address space independent of actual physical memory size.
+    \item \textbf{Protection and Isolation}: Hardware access permissions (Read, Write, Execute) prevent erroneous or malicious processes from corrupting the address spaces of the operating system or other user tasks.
+    \item \textbf{Demand Paging}: Pages are brought into physical DRAM from secondary storage only when referenced, allowing programs whose memory requirements exceed physical RAM capacity to execute seamlessly.
+\end{enumerate}
+
+\subsubsection{Page Translation Mechanics}
+In a paged virtual memory system, the virtual and physical address spaces are partitioned into fixed-size blocks called \textbf{Pages} and \textbf{Page Frames} (typically $4\,\text{KB}$ in size, with optional $2\,\text{MB}$ and $1\,\text{GB}$ huge pages). 
+
+As shown in Figure \ref{vmm}a, physical memory ($Level_i$, containing $m$ frames) holds an active subset of the pages residing in the much larger virtual address space ($Level_{i+1}$, containing $n$ pages, with $n \gg m$).
+
+\placedrawing[H]{figures/06_04_virtual_memory.lp}{Virtual memory mechanism. {\bf a.} Page correspondence between virtual and physical levels. {\bf b.} Address translation mechanism mediated by the page translator.}{vmm}
+
+The CPU generates a virtual address composed of two fields (Figure \ref{vmm}b):
+\begin{itemize}
+    \item \textbf{Virtual Page Number (VPN)}: The upper address bits specifying the requested virtual page.
+    \item \textbf{Page Offset}: The lower address bits specifying the byte offset within the page. For a page size of $P = 2^p$ bytes, the offset is $p$ bits wide ($p = 12$ for a $4\,\text{KB}$ page). Because the page size is identical in both virtual and physical spaces, the offset passes through translation unperturbed.
+\end{itemize}
+
+The page translation hardware converts the Virtual Page Number into a Physical Page Number (PPN), which concatenates with the page offset to form the physical address for DRAM access.
+
+\subsubsection{Associative Memory (CAM)-Based Translation Lookaside Buffer (TLB)}
+Because page table structures reside in main memory, performing a full memory-based page table walk on every instruction fetch and data operand access would double or quadruple memory access latency. To eliminate this penalty, processors incorporate a specialized high-speed cache of recent address translations called the \textbf{Translation Lookaside Buffer (TLB)}.
+
+Two fundamental circuit strategies exist for implementing the page translation mechanism:
+\begin{enumerate}
+    \item \textbf{RAM-Based Lookup Table}: A direct RAM lookup structure would require an entry for each of the $n$ virtual pages ($n$ words of $\log_2 m$ bits). Because $n \gg m$, the overwhelming majority of entries in such a RAM are empty or invalid at any given moment; in Figure \ref{vmm}a, only $m$ of the $n$ locations are actively populated, yielding a memory utilization efficiency of at most $(m/n)\%$. The silicon area scales as $O(n \times (\log m + \log n))$.
+    
+    \item \textbf{Associative Memory (CAM)-Based TLB}: Rather than dimensioning the table to the vast virtual address space $n$, an \textbf{Associative Memory (AM)} dimensions the structure to match the physical page capacity $m$. The TLB consists of:
+    \begin{itemize}
+        \item A Content-Addressable Memory (CAM) array of $m$ entries holding the active Virtual Page Numbers (tags) of length $\log_2 n$ bits (see Section \ref{assocMemory} and Section \ref{lb:cam}).
+        \item A paired RAM data array of $m$ entries holding the corresponding Physical Page Numbers of length $\log_2 m$ bits.
+    \end{itemize}
+    When the CPU presents a virtual address, the CAM compares the incoming VPN against all $m$ entries in parallel within a fraction of a clock cycle. When a match occurs, the corresponding line enables the PPN from the RAM array.
+\end{enumerate}
+
+The dimensioning and silicon area occupied by the two alternatives scale as:
+\begin{equation}
+S_{\text{TLB}}(\text{RAM}) \in O(n \times (\log m + \log n)) \quad \text{versus} \quad S_{\text{TLB}}(\text{AM}) \in O(m \times (\log m + \log n))
+\end{equation}
+The area reduction factor achieved by the associative CAM approach is:
+\begin{equation}
+\frac{S_{\text{TLB}}(\text{RAM})}{S_{\text{TLB}}(\text{AM})} \in O(n/m)
+\end{equation}
+Even though a CAM bit cell (see Figure \ref{cam_cell}) requires more transistors than a standard SRAM cell due to internal comparison logic, the enormous ratio $n/m$ (often $10^3 \div 10^6$) renders the associative CAM implementation vastly smaller, faster, and more energy-efficient.
+
+\subsubsection{Structural Comparison: Cache versus Virtual Memory}
+Table \ref{tab:cache_vs_vm} contrasts the operational parameters of cache memory and virtual memory systems.
+
+\begin{table}[H]
+  \begin{center}
+    \caption{Structural and Operational Comparison of Cache Memory vs. Virtual Memory.}
+    \label{tab:cache_vs_vm}
+    \small
+    \begin{tabular}{|l|l|l|}
+      \hline
+      \textbf{Parameter} & \textbf{L1 Hardware Cache} & \textbf{Virtual Memory (Paging)} \\ \hline \hline
+      \textbf{Primary Role}        & Speed acceleration        & Space virtualization \& protection \\ \hline
+      \textbf{Transfer Granularity}& Cache line ($32 \div 128\,\text{B}$) & Page ($4\,\text{KB} \div 2\,\text{MB}$) \\ \hline
+      \textbf{Hit Latency}         & $1 \div 4$ clock cycles   & $0.5 \div 1$ clock cycle (TLB hit) \\ \hline
+      \textbf{Miss Penalty}        & $50 \div 200$ clock cycles (DRAM) & $10^5 \div 10^7$ clock cycles (SSD/HDD) \\ \hline
+      \textbf{Typical Miss Rate}   & $1\% \div 5\%$            & $10^{-5}\% \div 10^{-4}\%$ \\ \hline
+      \textbf{Placement Policy}    & 4- to 8-way set-associative & Fully associative \\ \hline
+      \textbf{Replacement Policy}  & Pseudo-LRU / Random       & Approximated LRU (Clock algorithm) \\ \hline
+      \textbf{Management Engine}   & Purely hardware controller& Hardware MMU/TLB + OS page handler \\ \hline
+      \textbf{Write Policy}        & Write-back or write-through & Write-back (mandatory due to disk latency) \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+
 \section{Problems}
 
 \begin{problem}
@@ -1472,6 +1789,92 @@ Assume that 70\% of all executed conditional branches are taken in practice.
     \item The execution speedup of the 2-bit predictor over the static Always Not Taken predictor is:
     \[
     \text{Speedup} = \frac{\text{CPI}_{\text{static}}}{\text{CPI}_{\text{2-bit}}} = \frac{1.420}{1.042} \approx 1.3628 \implies \mathbf{36.3\% \text{ speedup}}
+    \]
+\end{enumerate}
+$\diamond$
+\end{problem}
+
+\begin{problem}
+\textbf{Associative Memory-Based Page Translator Design}:
+Design a page translation system based on an associative memory (see Section \ref{assocMemory} and Section \ref{lb:cam} in this book). The principle is described in Section \ref{lb:vmm}. Consider pages of $1\,\text{KW}$ ($1024$ 32-bit words) in a physical memory space of $1024$ pages ($m = 1024$) and a virtual memory space of $1024^2$ pages ($n = 1024^2 = 1{,}048{,}576$).
+\begin{enumerate}
+    \item Determine the total number of bits in the virtual address, the physical address, and the page offset.
+    \item Calculate the total memory storage capacity in bits required for a conventional flat RAM-based page table versus an associative CAM-based Translation Lookaside Buffer (TLB).
+    \item Derive the memory storage savings factor achieved by the associative implementation.
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item Each page contains $1\,\text{KW} = 1024 = 2^{10}$ words. With byte-addressable 32-bit words (4 bytes/word), a page is $4096\,\text{B} = 2^{12}$ bytes, requiring a $12$-bit page offset ($p = 12$).
+    \begin{itemize}
+        \item Physical space contains $m = 1024 = 2^{10}$ pages. The Physical Page Number (PPN) requires $\log_2(1024) = 10$ bits. The physical address is $10 + 12 = 22$ bits ($4\,\text{MB}$).
+        \item Virtual space contains $n = 1024^2 = 2^{20}$ pages. The Virtual Page Number (VPN) requires $\log_2(2^{20}) = 20$ bits. The virtual address is $20 + 12 = 32$ bits ($4\,\text{GB}$).
+    \end{itemize}
+    \item Memory requirements:
+    \begin{itemize}
+        \item \textbf{RAM-Based Lookup Table}: Must allocate an entry for every virtual page ($n = 2^{20}$). Each entry stores at least the 10-bit PPN plus a valid bit (11 bits total):
+        \[
+        \text{RAM Size} = 2^{20} \times 11\,\text{bits} \approx 11{,}534{,}336\,\text{bits} \approx 1.376\,\text{MB}
+        \]
+        \item \textbf{Associative CAM-Based TLB}: Stores only the active mappings for physical pages ($m = 1024 = 2^{10}$). Each entry consists of a 20-bit CAM tag (VPN) plus a 10-bit RAM data field (PPN) and status bits (valid/dirty $\approx 2$ bits), totaling 32 bits per entry:
+        \[
+        \text{CAM TLB Size} = 1024 \times 32\,\text{bits} = 32{,}768\,\text{bits} = 4\,\text{KB}
+        \]
+    \end{itemize}
+    \item The memory savings ratio achieved by the associative implementation is:
+    \[
+    \text{Savings Ratio} = \frac{11{,}534{,}336\,\text{bits}}{32{,}768\,\text{bits}} \approx 352\times
+    \]
+    The associative CAM reduces the translation storage hardware footprint by over $350\times$, while providing simultaneous single-cycle translation for all resident pages.
+\end{enumerate}
+$\diamond$
+\end{problem}
+
+\begin{problem}
+\textbf{Multi-Level Cache Performance and AMAT Analysis}:
+A processor operates at a clock frequency of $4.0\,\text{GHz}$ ($\tau = 0.25\,\text{ns}$) and executes a benchmark workload where $30\%$ of all instructions are data memory references (loads and stores). The baseline datapath achieves an ideal $\text{CPI}_{\text{base}} = 1.0$ assuming perfect cache hits.
+The memory hierarchy consists of:
+\begin{itemize}
+    \item \textbf{L1 Data Cache}: $64\,\text{KB}$, 4-way set-associative, 64-byte line size, 1-cycle hit latency ($0.25\,\text{ns}$), local miss rate $m_{L1} = 4\%$.
+    \item \textbf{L2 Unified Cache}: $512\,\text{KB}$, 8-way set-associative, 64-byte line size, 12-cycle hit latency ($3.0\,\text{ns}$), local miss rate $m_{\text{local}, L2} = 15\%$.
+    \item \textbf{L3 Unified Cache}: $8\,\text{MB}$, 16-way set-associative, 64-byte line size, 40-cycle hit latency ($10.0\,\text{ns}$), local miss rate $m_{\text{local}, L3} = 25\%$.
+    \item \textbf{Main Memory (DRAM)}: Access latency of $60\,\text{ns}$ ($240$ clock cycles).
+\end{itemize}
+\begin{enumerate}
+    \item For the L1 data cache, determine the bit breakdown (Tag, Index, Block Offset) for a 48-bit physical address space.
+    \item Calculate the global miss rate for the L2 and L3 caches.
+    \item Calculate the Average Memory Access Time (AMAT) in nanoseconds and clock cycles.
+    \item Calculate the effective CPI of the processor accounting for data memory stalls.
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item For the L1 cache:
+    \begin{itemize}
+        \item Block size $B = 64 = 2^6$ bytes $\implies b = 6$ offset bits.
+        \item Cache capacity $C = 64\,\text{KB} = 65{,}536$ bytes, associativity $N = 4$.
+        \item Number of sets $S = \frac{C}{N \times B} = \frac{65{,}536}{4 \times 64} = 256 = 2^8 \implies s = 8$ index bits.
+        \item Tag bits $t = 48 - s - b = 48 - 8 - 6 = 34$ bits.
+    \end{itemize}
+    \item Global miss rates:
+    \begin{align*}
+    m_{\text{global}, L2} &= m_{L1} \times m_{\text{local}, L2} = 0.04 \times 0.15 = 0.006 \quad (0.6\%) \\
+    m_{\text{global}, L3} &= m_{\text{global}, L2} \times m_{\text{local}, L3} = 0.006 \times 0.25 = 0.0015 \quad (0.15\%)
+    \end{align*}
+    \item AMAT calculation (measured in processor clock cycles):
+    \begin{align*}
+    \text{Miss Penalty}_{L2} &= t_{\text{hit}, L3} + m_{\text{local}, L3} \times t_{\text{DRAM}} = 40 + 0.25 \times 240 = 40 + 60 = 100\,\text{cycles} \\
+    \text{Miss Penalty}_{L1} &= t_{\text{hit}, L2} + m_{\text{local}, L2} \times \text{Miss Penalty}_{L2} = 12 + 0.15 \times 100 = 12 + 15 = 27\,\text{cycles} \\
+    \text{AMAT} &= t_{\text{hit}, L1} + m_{L1} \times \text{Miss Penalty}_{L1} = 1 + 0.04 \times 27 = 1 + 1.08 = 2.08\,\text{cycles}
+    \end{align*}
+    In nanoseconds: $\text{AMAT} = 2.08 \times 0.25\,\text{ns} = 0.52\,\text{ns}$.
+    \item Effective CPI:
+    Since memory references account for $30\%$ of instructions, memory stall cycles per instruction are:
+    \[
+    \text{Stall CPI} = 0.30 \times (\text{AMAT} - t_{\text{hit}, L1}) = 0.30 \times 1.08 = 0.324
+    \]
+    \[
+    \text{CPI}_{\text{effective}} = \text{CPI}_{\text{base}} + \text{Stall CPI} = 1.0 + 0.324 = \mathbf{1.324}
     \]
 \end{enumerate}
 $\diamond$

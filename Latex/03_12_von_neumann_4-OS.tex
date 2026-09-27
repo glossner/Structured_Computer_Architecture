@@ -1,4 +1,4 @@
-\chapter{Computers\index{computers:  fourth order digital systems (4-OS) with the fourth loop  closed over a 3-OS}: Four-Loop, Fourth-Order Systems (4-OS)\index{4-OS: fourth order system -- interpreting computer}}\label{lect6}
+\chapter{Computers\index{computers:  fourth order digital systems (4-OS) with the fourth loop  closed over a 3-OS}: Four-Loop, Fourth-Order Systems (4-OS)\index{4-OS: fourth order system -- interpreting computer}}\label{lect6}\label{ch:von_neumann_4-OS}
 \localtoc
 
 
@@ -175,104 +175,109 @@ The memory hierarchy is distributed in the version represented in Figure \ref{co
 
 \placedrawing[H]{figures/06_08_computer_organization.lp}{The organization of a von Neumann version of a computing system.}{compSysN}
 
-\section{Memory Management}
+\section{Storage Systems: Primary and Secondary Memory}\label{sec:storage_systems}
 
-%\subsection{Memory Gap}\label{memGap}
+In the four-organ system (4-OS) abstract model introduced by John von Neumann in the 1945 EDVAC report \cite{vonNeumann1945}, the \textbf{Memory Organ} ($\mathbf{M}$) represents a single, uniform, linear address space that stores both program instructions and numerical operands. In its original theoretical formulation, this storage system was conceived without microarchitectural hierarchy: the central control unit and arithmetic organ interacted directly with a flat, homogeneous array of addressable storage cells. 
 
-The evolution of the performance of the three components of a computer system (see Figure \ref{pmio}) occurred at a very different rate due to strictly technological aspects. The most disturbing difference, with major structural consequences, occurred in the case of processor and memory speed performances. The frequency of the processor clock increased  much faster than the memory access time (see Figure \ref{pmPGap}. Processor clock frequency increased with 60\% per year, while the access time for memories with only 10\% per year.
+Early physical implementations of the 4-OS model (such as the EDVAC using acoustic mercury delay lines or the Princeton IAS machine using Williams-Kilburn cathode-ray tubes and Selectron vacuum tubes) operated with a single level of primary memory. These early machines contained no cache memories, no translation lookaside buffers (TLBs), and no virtual memory paging mechanisms. The processor fetched every instruction opcode and accessed every data word directly from this uniform memory technology.
 
-\placedrawing[H]{figures/06_02_processor_memory_gap.lp}{Processor-Memory Performance Gap  \cite{Patterson97}.}{pmPGap}
-
-Due to this difference, what we now call a memory gap\index{memory wall: increasing disparity between processor clock speed and memory latency}\index{memory gap|see{memory wall}}\index{Patterson, David (1947--): RISC and memory hierarchy pioneer} occurred. The fast processor cannot wait for the slow memory to deliver or receive its data. And the memory gap imposed the memory hierarchy of the computing system based on the locality principle.
-
-\paragraph{Locality principle}\label{locprinc}\index{locality principle: temporal and spatial tendency of program access patterns}\index{locality principle!temporal locality}\index{locality principle!spatial locality} says that if a certain location is accessed in the data or program memory, then the next accesses will be made with a high probability in a reasonably small vicinity.
-
-%\bigskip
-
-Applying the locality principle allowed the definition of the strategies that govern the conception of a hierarchy of effective memories.
+However, fundamental physical and economic constraints dictate that no single memory technology can simultaneously satisfy the competing demands of modern computing. Fast memory requires complex electronic circuitry (such as multiple transistors per bit), making it power-intensive, physically bulky, and expensive per bit. Conversely, dense and low-cost storage mechanisms (such as magnetic domains on rotating platters or charge traps in solid-state flash memory) are non-volatile and provide vast capacities, but require access times that are orders of magnitude slower than semiconductor logic. To reconcile these physical realities, practical computing systems organize storage into a tiered \textbf{memory hierarchy}.
 
 \subsection{Memory Hierarchy\index{memory hierarchy: tiered storage organization from fast registers to slow auxiliary storage}}\label{memhier}
 
-The hierarchy of memory is based on the fact that when we access a location that is in a memory that is too slow in relation to the speed of processing in the processor, a block or a page of bytes that contains the requested bytes will be transferred to a faster intermediate memory. This transfer is done with the hope that the following accesses will be made in the intermediate memory if the updated page or block in it was large enough.
+The memory hierarchy bridges the latency and cost disparities across storage technologies by organizing memory into progressively larger, slower, and less expensive levels as distance from the processor core increases. 
 
-Figure \ref{mhy} shows the current way in which the memory hierarchy is implemented. At the top of the hierarchy there are registers from register files whose content is accessible at the level of the clock signal cycle. Next comes system memory in the form of the closest level as cache memory. The name comes from the French {\em cach\' e} which means hidden. Indeed, this level of memory/memories is transparent to the architecture of the computing system in most cases.
+Figure \ref{mhy} illustrates the structural tiers in a contemporary memory hierarchy:
+\begin{enumerate}
+    \item \textbf{Internal Processor Registers}: Located inside the processor core datapath, compiler-managed, providing single-cycle read and write access times ($< 0.5\,\text{ns}$) with capacities typically under $4\,\text{KB}$ (e.g., 32 32-bit or 64-bit general-purpose registers).
+    \item \textbf{Cache Memory}: High-speed Static RAM (SRAM) positioned between the processor registers and main memory. The term derives from the French \emph{cach\'e} (meaning hidden), because cache operation is typically transparent to software execution. Caches are managed entirely by hardware controllers and range in size from $32\,\text{KB}$ to tens of megabytes, with access times from $\sim 0.5\,\text{ns}$ to $5\,\text{ns}$.
+    \item \textbf{Primary (Main) Memory}: Dynamic RAM (DRAM) connected to the processor via the system bus or memory controller. Primary memory holds the active operating system kernel and executing user programs. Capacities typically range from $8\,\text{GB}$ to $128\,\text{GB}$ (and terabytes in enterprise servers), with access latencies of $50\,\text{ns} \div 100\,\text{ns}$.
+    \item \textbf{Secondary and Auxiliary Storage}: Non-volatile mass storage devices including Solid-State Drives (SSDs), Hard Disk Drives (HDDs), optical media, and magnetic tape. Capacities span hundreds of gigabytes to tens of terabytes, with access latencies ranging from hundreds of microseconds to tens of milliseconds.
+\end{enumerate}
 
-\placedrawing[H]{figures/06_03_memory_hierarchy.lp}{Memory hierarchy from fast and small register files to slow and large auxiliary storage memories such as SSD (solid-state drive), HDD (hard disk drive),  optic disk, magnetic tape.}{mhy}
+\placedrawing[H]{figures/06_03_memory_hierarchy.lp}{Memory hierarchy from fast and small register files to slow and large auxiliary storage memories such as SSD (solid-state drive), HDD (hard disk drive), optical disk, and magnetic tape.}{mhy}
 
-Registers  are managed by compilers, their size is $< 4KB$ (in most of cases $\sim 128B$, i.e., 32 32-bit words), the access time is $< 0.5 ns$.
+\paragraph{Microarchitectural Optimization vs. Fundamental Architecture}
+It is essential to distinguish between fundamental architectural structures and microarchitectural performance optimizations. In the abstract 4-OS model, memory is simply a functional organ providing addressable storage for instructions and data. \textbf{Cache memory and virtual memory paging are not architectural prerequisites of computation}; rather, they are sophisticated microarchitectural performance optimizations introduced to mitigate the immense speed disparity between fast processors and slower storage technologies. The detailed microarchitecture of caches (address decomposition into tag, index, and offset, direct-mapped versus set-associative placement, write policies, 3 C miss classification, and average memory access time) and virtual memory translation using associative Translation Lookaside Buffers (TLBs) are deferred to Section \ref{sec:memory_optimization}. In the remainder of this section, we examine the fundamental physical and operational characteristics of primary and secondary storage systems.
 
-Cache memories are managed by hardware, their size is $< 16MB$, the maximum access time is $\sim 0.5 ns$.
+\subsection{Primary Memory: Semiconductor Storage (SRAM and DRAM)}\label{sec:primary_memory}
+\index{primary memory: byte-addressable volatile semiconductor memory}
+\index{static random-access memory (SRAM)}
+\index{dynamic random-access memory (DRAM)}
 
-The main memory is managed by the operating system, its size is in the range of $1 \div 16 GB$, the access time is $\sim 100 ns$.
+Primary memory provides the CPU with direct, byte-addressable, random-access storage across the system bus. Semiconductor primary memory is implemented using two fundamental circuit technologies:
 
-The disk memory is managed by the operating system or human operator, its size is $> 128GB$, the access time is $\sim 5 ms$.
+\paragraph{Static Random-Access Memory (SRAM)}
+SRAM stores each bit of information using a bistable flip-flop circuit, typically consisting of six CMOS transistors (a 6T cell). Because the cross-coupled inverters continuously maintain their logic state as long as power is supplied, SRAM requires no periodic refreshing. SRAM offers exceptional access speed ($< 0.5\text{--}2\,\text{ns}$) and simple control interfaces, but each cell requires significant silicon area and dissipates higher leakage power. Consequently, SRAM is deployed primarily for on-chip processor register files and multi-level caches.
 
-\subsection{Virtual Memory Mechanism\index{virtual memory: architectural technique abstracting physical memory using page translation}}\label{lb:vmm}
+\paragraph{Dynamic Random-Access Memory (DRAM)}
+DRAM achieves dramatically higher storage density by storing each bit as an electric charge on a microscopic capacitor accessed through a single pass transistor (a 1T-1C cell). Because of its compact cell layout, DRAM provides an order of magnitude higher storage capacity per unit silicon area at vastly lower cost than SRAM, making it the universal choice for computer main memory.
 
-How relate two successive levels in the hierarchy? Let us consider two levels in the memory hierarchy, $Level_i$ containing $m$ pages and $Level_{i+1}$ containing $n$ pages, with $n >> m$. Each page in $Level_i$, called {\em physical level} is a copy of a page from $Level_{i+1}$ called {\em virtual level}. In Figure \ref{vmm}a, pages 0, 2, and $m-2$ from the level $i$ were brought from pages 3, 4, and 0 of level $i+1$. Any change in the physical level must actualized in the associated virtual level. The "user"  accesses the virtual level while the virtual mechanism accesses the physical level. It is the job of the virtual memory mechanism to perform transparently the access and to keep coherent the content of the virtual level with the physical level.
-
-
-
-The addressing mechanism is represented in Figure \ref{vmm}b, where the access to the physical memory is done mediated by a translation mechanism performed by the {\em Page translate} block.  The "user" issues a virtual address having two parts:
+However, the capacitive storage mechanism introduces two fundamental physical constraints:
 \begin{itemize}
-    \item virtual page address
-    \item offset in the page
+    \item \textbf{Dynamic Refreshing}: Charge leaks continuously off the microscopic storage capacitors through sub-threshold leakage currents. To prevent data corruption, every row of memory cells must be periodically read and rewritten (refreshed), typically every $32\,\text{ms}$ or $64\,\text{ms}$.
+    \item \textbf{Destructive Read and Precharge}: Reading a DRAM cell shares the minute stored charge with the parasitic capacitance of the long bitline, which slightly perturbs the bitline voltage. Sensitive analog sense amplifiers detect and amplify this differential signal to restore a full digital logic level. Because the read process drains the capacitor, the sense amplifiers must immediately restore the original charge before the row is closed (the precharge cycle), imposing a fundamental lower bound on DRAM cycle latency.
 \end{itemize}
-When a new page is loaded into physical memory, the content of this translator is updated according to the correspondence shown in the figure \ref{vmm}a.
 
-\placedrawing[H]{figures/06_04_virtual_memory.lp}{Virtual memory mechanism. {\bf a.} Page correspondence. {\bf b.} Translation mechanism.  }{vmm}
+Modern main memory organizes DRAM into synchronous architectures (SDRAM, DDR4, DDR5, and LPDDR), transferring multiple data words per clock edge in high-speed bursts to maximize memory bandwidth.
 
-Page translation mechanism is implemented in various form.
+\subsection{Secondary and Auxiliary Storage}\label{sec:secondary_storage}
+\index{secondary storage: non-volatile block-addressable mass storage}
 
-The simplest one is a RAM memory containing $n$ $log_2 m$-bit words. The RAM memory is in this case almost empty, because only $m$ locations from  $n$ are used, because usually $n>>m$.
+Secondary storage provides persistent, non-volatile mass storage for programs and data when power is removed. Unlike byte-addressable primary memory, secondary storage is organized into blocks (or sectors) and is accessed through device controllers and Direct Memory Access (DMA) channels.
 
-A more efficient solution is to use an associative memory to make the translation.
+\subsubsection{Hard Disk Drives (HDDs)}\index{hard disk drive (HDD): magnetic rotating platter secondary storage}\index{HDD|see{hard disk drive}}
 
-\subsection{Associative Memory-Based Lookaside Page Translator (TLB)}
+Hard disk drives store digital data magnetically on rigid platters coated with ferromagnetic thin films rotating at high speed (typically 5,400 to 15,000 RPM). Electromagnetic read/write heads fly mere nanometers above the spinning platter surfaces on aerodynamic air bearings, as illustrated in Figure \ref{disk}.
 
-The associative memory (see \ref{assocMemory} in this book)  allows us to design a translation lookaside buffer (TLB)\index{translation lookaside buffer (TLB): cache of recent virtual-to-physical address translations}\index{TLB|see{translation lookaside buffer}}\index{associative memory!translation lookaside buffer (TLB)} with a size given by the number of pages in the physical memory, unlike the one based on a RAM type memory which has a size given by the much larger number of pages in the virtual memory.
+\placedrawing[H]{figures/06_11_hard_drive.lp}{Hard Disk Drive Structure [Source: Google-Images].}{disk}
 
-\subsubsection{RAM-Based Translation Lookaside Buffer (TLB)}
+The total access latency of an HDD is determined by three mechanical components:
+\begin{enumerate}
+    \item \textbf{Seek Time}: The physical time required for the actuator arm to position the read/write head assembly over the target concentric track ($2\text{--}8\,\text{ms}$).
+    \item \textbf{Rotational Latency}: The time required for the desired sector to rotate under the head (average rotational delay is half a platter revolution, approximately $2\text{--}5\,\text{ms}$).
+    \item \textbf{Transfer Time}: The time required to read or write the continuous bitstream of the sector once positioned.
+\end{enumerate}
 
-One simple solution for {\em Page translate} block in Figure \ref{vmm}b is to use a RAM with $(log_2 m)$-bit $n$ locations. In each location can be stored the address of a physical page.  Because $n >> m$ almost all locations in this RAM contain in each moment a meaningless information.In the example shown in figure \ref{vmm}a, $RAM(0) = m-2$, $RAM(3) = 0$, $RAM(4) = 2$, $\ldots$, so the RAM usage as TLB is at most $m/n\%$. 
-
-\subsubsection{Associative Memory-Based Translation Lookaside Buffer (TLB)}
-
-A less simple solution than using a RAM is to use an associative memory (AM). The dimensioning of this version requires a solution in which the entire physical structure is usable. The storage array has $m$ locations of $log_2 m$ bits each and the {\em programmable decoder} (the CAM)\index{content-addressable memory (CAM)!TLB implementation} also has $m$ locations of $log-2 n$ bits each. So the entire structure has a dimension in $O(m \times (log \; m + log \; n)$ compared to solutions using RAM which impose a dimension in $O(n \times (log \; m + log \; n))$.
-
-The gain in size, i.e., the area occupied by the two solutions, with RAM or with AM, is:
-$$\frac{S_{TLB}(RAM)}{S_{TLB}(AM)}  \in O(n/m)$$
-Even though a content-addressable memory cell (see Figure \ref{cam_cell}) is more elaborate and larger, because the ratio $n/m$ is sufficiently large, the AM solution, which uses a CAM as a programmable decoder, is preferable.
-
-It should not be neglected that the smaller size of the associative memory allows for an easier achievement of the speed performance of the structure.
-
-\subsubsection{Translation Lookaside Buffer (TLB)}
-
-With a minimal number of differences, the described virtualization mechanism is applied in managing the relationship between all the hierarchical levels in the memory of the computer system.
-
-In what follows, we will consider the simple example in which the hierarchy contains a single cache level, the main memory and the hard disk (see Figure \ref{compSys}). We will compare the main parameters that characterize the  cache-main memory relationship and the main memory-hard disk relationship\footnote{In what follows, the numerical values ​​evolve very dynamically over time. Which is why they must be considered only through the relative aspects they highlight.}.
+Key technical parameters of modern HDDs include:
 \begin{itemize}
-    \item the typical amount of data moved when physical memory is actualized from the virtual memory
-        \begin{itemize}
-            \item block size for cache: 128B
-            \item page size main memory: 4KB
-        \end{itemize}
-    \item the typical access time when the addressing is hit
-        \begin{itemize}
-            \item 1 clock cycle (very rarely 2 or 3) for cache
-            \item $\sim 100$ clock cycles because of board technology and silicon technology for memories (the first is reduced by multi-chip packaging) for main memory
-        \end{itemize}
-    \item the typical miss penalty:
-        \begin{itemize}
-            \item 100 clock cycles for cache memory
-            \item $10^6$ clock cycles for main memory
-        \end{itemize}
-    \item the typical miss rate:
-        \begin{itemize}
-            \item $1\%$ for cache memory
-            \item $10^{-4}\%$ for main memory
-        \end{itemize}
+    \item \textbf{Storage Capacity}: $1\,\text{TB} \div 30\,\text{TB}$ per drive.
+    \item \textbf{Average Access Latency}: $2.5\,\text{ms} \div 10\,\text{ms}$ (dominated by seek and rotational delays).
+    \item \textbf{Sector Formatting}: Traditionally 512 bytes per sector, modern drives use Advanced Format (4,096 bytes per sector).
+    \item \textbf{Mean Time Between Failures (MTBF)}\index{mean time between failures (MTBF): reliability metric of expected operating time}: Typically $10^6 \div 2.5 \times 10^6$ operating hours ($\sim 114 \div 285$ years), reflecting statistical operating lifetimes across large populations.
+    \item \textbf{Shock Sensitivity}: Mechanical heads can crash against platters under physical shocks ($10 \div 70\,g$ operating, $100 \div 300\,g$ non-operating, where $g \approx 9.8\,\text{m/s}^2$).
 \end{itemize}
+
+\subsubsection{Solid-State Drives (SSDs)}\index{solid-state drive (SSD): non-volatile flash-based secondary storage}\index{SSD|see{solid-state drive}}
+
+Solid-State Drives (SSDs) implement non-volatile mass storage entirely through semiconductor flash memory, eliminating all moving mechanical components. Flash memory is an electrically erasable programmable read-only memory (EEPROM)\index{EEPROM: electrically erasable programmable read-only memory} based on floating-gate or charge-trap MOS transistors.
+
+Solid-state flash memory exhibits unique operational characteristics that govern SSD organization:
+\begin{itemize}
+    \item \textbf{Asymmetric Granularity}: Flash memory can be read and programmed (written) in units of \textbf{pages} (typically $4\,\text{KB} \div 16\,\text{KB}$), but erasure can only be performed in much larger units called \textbf{erase blocks} (typically $128 \div 512$ pages, or $2\,\text{MB} \div 8\,\text{MB}$). Once a page is written, it cannot be rewritten in place until the entire enclosing block is erased.
+    \item \textbf{Flash Translation Layer (FTL)}\index{flash translation layer (FTL)}: An internal embedded controller runs firmware that dynamically maps logical block addresses (LBAs) from the host operating system to changing physical flash pages, performing out-of-place writes, background garbage collection, and bad-block management.
+    \item \textbf{Wear Leveling}\index{wear leveling: SSD endurance management}: Flash cells degrade over repeated program/erase (P/E) cycles due to dielectric oxide breakdown (typically $1,000 \div 10,000$ P/E cycles for multi-level cells). The FTL distributes writes evenly across the entire physical media to ensure uniform wear and maximize drive lifespan.
+\end{itemize}
+
+\paragraph{Performance Comparison}
+Reading a $4\,\text{KB}$ page from flash memory requires approximately $25 \div 75\,\mu\text{s}$, compared to $\sim 50\text{--}100\,\text{ns}$ for DDR SDRAM and $5\text{--}10\,\text{ms}$ for an HDD. While flash memory is approximately $500\times$ slower than DRAM, it is roughly $100\text{--}400\times$ faster than rotating magnetic hard disks. In write operations, because programming requires Fowler-Nordheim tunneling or hot-carrier injection, writing a flash page takes $\sim 200 \div 1500\,\mu\text{s}$, while block erasure requires $1 \div 5\,\text{ms}$. Connected via high-speed PCI Express buses using the Non-Volatile Memory Express (NVMe)\index{NVMe: Non-Volatile Memory Express host controller interface} protocol, SSDs deliver throughput exceeding $7\,\text{GB/s}$ and millions of I/O operations per second (IOPS).
+
+\subsubsection{Optical Disks\index{optical disk: reflective optical storage medium (CD/DVD)}}
+
+Optical storage devices use laser beams to read and write digital data encoded as microscopic pits and lands along a continuous spiral track on a polycarbonate disc:
+\begin{itemize}
+    \item \textbf{Compact Disc (CD)}: Introduced in 1982 using infrared laser diodes ($780\,\text{nm}$) with a storage capacity of $650 \div 700\,\text{MB}$.
+    \item \textbf{Digital Versatile Disc (DVD)}: Uses red laser diodes ($650\,\text{nm}$) with narrower track pitch, yielding $4.7\,\text{GB}$ per single-layer side and up to $8.5\,\text{GB}$ for dual-layer discs.
+    \item \textbf{Blu-ray Disc (BD)}: Uses blue-violet lasers ($405\,\text{nm}$) with tighter optical focusing, delivering $25\,\text{GB}$ per layer ($50\,\text{GB}$ dual-layer, $100\,\text{GB}$ triple-layer BDXL).
+\end{itemize}
+Optical media are predominantly write-once (WORM) or read-only distribution mediums with long access latencies ($50 \div 150\,\text{ms}$).
+
+\subsubsection{Magnetic Tapes\index{magnetic tape: sequential magnetic medium used for backup and archive}}
+
+Magnetic tape data storage records digital bitstreams sequentially onto thin, flexible plastic ribbons coated with magnetic particles, packaged into rugged cartridges. 
+
+Although tape is a strictly sequential-access medium (seeking an arbitrary record can require tens of seconds to physically spool the tape), it offers unmatched volumetric density, exceptional shelf life ($> 30$ years without electrical power), and the lowest storage cost per gigabyte of any enterprise medium. Modern Linear Tape-Open (LTO) cartridges provide native uncompressed capacities of $18 \div 45\,\text{TB}$ (exceeding $100\,\text{TB}$ with hardware compression) and streaming data transfer rates exceeding $400\,\text{MB/s}$. Consequently, magnetic tape remains the gold standard for cloud-scale cold storage, disaster recovery, and regulatory compliance archiving.
+
 
 
 
@@ -463,78 +468,20 @@ $\diamond$
 
 
 
-\subsection{I/O Devices}
+\subsection{Peripheral and Functional I/O Devices}
 
-There are two types of I/O devices:
+Beyond mass storage systems, input-output architectures connect the processor and memory to the external world and human operators through peripheral devices. These devices are broadly classified into:
 \begin{itemize}
-    \item Storage devices are mainly represented by hard disks, flash memory, optical disks, tape.
-    \item Functional devices, mainly represented by display systems, network interfaces, ...
+    \item \textbf{Human Interface Devices (HID)}: Keyboards, mice, touchscreens, and audio transducers that capture physical human inputs and translate them into digital events.
+    \item \textbf{Visual Display Subsystems}: Graphics adapters and display controllers that read pixel framebuffers from system memory via high-speed buses to refresh digital display interfaces (e.g., HDMI, DisplayPort).
+    \item \textbf{Network Interfaces}: Network Interface Controllers (NICs) that serialize and deserialize network packet frames over Ethernet, Wi-Fi, and optical fabrics, transferring packet ring buffers to and from main memory primarily via DMA engines.
+    \item \textbf{Serial and Expansion Interfaces}: Standard bus interfaces such as Universal Serial Bus (USB), PCI Express (PCIe), UART, SPI, and I$^2$C that provide plug-and-play peripheral connectivity and embedded sensor interfacing.
 \end{itemize}
-We will briefly present the storage devices that extend the memory hierarchy outside the central processing unit.
-
-\subsubsection{Hard Disk Drives (HDDs)\index{hard disk drive (HDD): magnetic rotating platter secondary storage}\index{HDD|see{hard disk drive}}}
-
-The most common auxiliary memory is the hard disk drive. Its internal structure is represented in Figure \ref{disk}.
-
-Main parameters:
-\begin{itemize}
-    \item storage capacity: 10 $\div$ 30 TB
-    \item average access time: 2.5 $\div$ 10 ms
-    \item MTBF: $\sim$285 years (MTBF\index{mean time between failures (MTBF): reliability metric of expected operating time}\index{MTBF|see{mean time between failures}} stands for mean time between failures; it is the predicted elapsed time between inherent failures of a mechanical or electronic system during normal system operation.)
-
-\placedrawing[H]{figures/06_11_hard_drive.lp}{Hard Disk Drive Structure [Source: Google-Images]}{disk}
-    
-    \item bytes per sector: 512 $\div$ 4096
-    \item shock tolerance
-        \begin{itemize}
-            \item operating: 10 $\div$ 100 g (g stands for gravitational acceleration: $9.8 m/s^2$.)
-            \item nonoperating: 100 $\div$ 100 g
-        \end{itemize}
-\end{itemize}
-
-\subsubsection{Optical Disks\index{optical disk: reflective optical storage medium (CD/DVD)}}
-
-Optical disks are read-only mediums. There are two versions:
-\begin{itemize}
-    \item CD: optical compact disk (0.65 GB)
-    \item DVD: digital video disk (4.7 GB); sometimes written on both sides to double capacity
-\end{itemize}
-
-\subsubsection{Solid State Drives (SSD)\index{solid-state drive (SSD): non-volatile flash-based secondary storage}\index{SSD|see{solid-state drive}}}
-
-
-Flash memory\index{flash memory: electrically erasable programmable non-volatile semiconductor memory} is a type of EEPROM\index{EEPROM: electrically erasable programmable read-only memory} (electronically erasable programmable read only memory), which is normally read only but can be erased. Solid-state devices (SSDs) based on flash memory technology do not have moving parts.
-
-The capacity per flash memory chip increased by about 50\%–60\% per year.
-
-Typical SSDs will have the time taken for a disk drive to locate the area on the disk where the data to be read is stored between 0.08 and 0.16 ms.
-
-Time to {\bf read} 2 KB from flash memory takes about 75 $\mu$S,  while DDR SDRAM takes less than 500 ns. Then,  flash memory is  about 150 times slower. But compared to HDD is $\sim 400$  times faster. We conclude that flash memory cannot replace DRAM for main memory, but it is a good candidate to replace HDD.
-
-Time to {\bf write} for flash memory is about 1500 times slower then SDRAM, and about 8–15 times faster than HDD.
-
-\subsubsection{Tapes\index{magnetic tape: sequential magnetic medium used for backup and archive}}
-
-Magnetic-tape data storage is a system for storing  information on magnetic tape using digital recording.
-
-Typically  9-track tape are used to store bytes with CRC. Magnetic tape  packaged in cartridges and cassettes. The device that performs the writing or reading of data is called a tape drive.
-
-Tape data storages are now used mainly for system backup, data archive or data exchange.
-
-Uncompressed/Native capacity: $\sim$20TB.
-
-Compressed capacity: $\sim$50TB.
 
 \section{Problems}
 
 \begin{problem}
-Design a page translation system based on an associative memory (see \ref{lb:cam} in this book). The principle is describe in section \ref{lb:vmm}. Consider pages of 1KW in a physical space of 1024 pages and a virtual space of $1024^2$ pages.
-
-$\diamond$
-\end{problem}
-
-\begin{problem}
-Let us consider the simple DMA illustrated in Figure \ref{simpleDMA} with the behavior described in Example \ref{minDMA}. Design it in System Verilog and simulate in Vivado environment.
+Let us consider the simple DMA illustrated in Figure \ref{simpleDMA} with the behavior described in Example \ref{minDMA}. Design it in SystemVerilog and simulate in the Vivado environment.
 
 $\diamond$
 \end{problem}
