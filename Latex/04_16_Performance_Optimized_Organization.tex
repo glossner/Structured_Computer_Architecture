@@ -698,6 +698,45 @@ $\diamond$
 \end{exemplu}
 
 
+\subsubsection{The Origins and Evolution of Branch Prediction}\label{sec:branch_prediction_origins}
+\index{branch prediction!historical origins}
+\index{IBM 7030 Stretch}
+\index{Blosk, Richard T.}
+\index{Cocke, John}
+\index{Kolsky, Harwood G.}
+\index{Ballance, Richard S.}
+\index{McWilliams, Thomas M.}
+\index{Widdoes, L. Curtis}
+\index{Smith, James E.}
+\index{S-1 supercomputer}
+\index{speculative execution!historical origins}
+
+In early, strictly sequential computers (such as ENIAC, EDVAC, UNIVAC, and the IBM 704), instructions were fetched and executed one after another. In a purely serial architecture, the processor simply waits for the conditional evaluation of an instruction to complete before fetching the next target; guessing or predicting the branch outcome is neither necessary nor beneficial.
+
+The architectural necessity of branch prediction arose the exact moment computer architects decoupled instruction fetching from arithmetic execution through \textbf{instruction prefetching, pipelining, and lookahead}. When instruction fetching runs several clock cycles ahead of the execution stage, the instruction unit encounters conditional branches whose outcomes depend on arithmetic or logical flags that have not yet been evaluated. The architect is confronted with a fundamental dilemma: stall instruction fetching until the condition resolves (wasting precious pipeline throughput), or make an educated guess and proceed \emph{speculatively} down the anticipated instruction path.
+
+\paragraph{The Earliest Implementation: IBM 7030 Stretch (1956--1961)}
+Hardware branch prediction and speculative execution were first conceived and built in the late 1950s by the design team of the \textbf{IBM 7030 (known as ``Stretch'')} supercomputer project \citep{buchholz1962}, managed by Stephen Dunwell with system architecture directed by Gene Amdahl, John Cocke, and Frederick Brooks. Stretch incorporated a dedicated \textbf{Instruction Unit (I-Unit)} documented by Richard T. Blosk \citep{blosk1960} and a \textbf{Look-Ahead Unit} designed by Richard S. Ballance, John Cocke, and Harwood G. Kolsky \citep{ballance1962lookahead}:
+\begin{itemize}
+    \item \textbf{Index-Dependent and Unconditional Branches:} Unconditional jumps and branches conditioned on index registers were resolved and executed directly within the I-Unit with zero branch penalty.
+    \item \textbf{Static Prediction (Predict Untaken):} For conditional branches depending on pending arithmetic results, the initial Stretch machines implemented the first hardware branch predictor: they statically \textbf{predicted the branch as untaken} and speculatively prefetched instructions along the sequential fall-through path. Subsequent revisions refined this heuristic to predict based on the current state of indicator bits (condition codes).
+    \item \textbf{Hardware Speculative Recovery:} Crucially, the Look-Ahead Unit introduced the world's first hardware mechanism for \textbf{speculative recovery}: if an arithmetic branch was subsequently resolved as taken (a misprediction), the Look-Ahead Unit initiated a ``housecleaning'' recovery sequence that flushed the speculative instructions, restored the register state, and redirected instruction fetch along the taken path.
+\end{itemize}
+
+\paragraph{Static Heuristics (1960s--1970s)}
+Following Stretch, pipelined machines in the 1960s and 1970s relied primarily on static heuristics, most notably the \textbf{BTFNT (Backward Taken, Forward Not Taken)} convention: backward branches typically close iterative loops and are taken with high probability, whereas forward branches often guard exceptional conditions or conditional skips and are predominantly not taken. Compilers also began embedding static branch hints into instruction opcodes.
+
+\paragraph{The Genesis of Dynamic Branch Prediction (Late 1970s)}
+Static heuristics cannot adapt to data-dependent branch behaviors that vary across program phases. The revolutionary transition to \textbf{dynamic branch prediction}---where specialized hardware monitors runtime branch outcomes to dynamically learn and predict future behavior---emerged independently in the late 1970s:
+\begin{itemize}
+    \item \textbf{Tom McWilliams and Curt Widdoes (1977):} Working on the \textbf{S-1 supercomputer} project at Lawrence Livermore National Laboratory (LLNL) \citep{s1project1979}, McWilliams and Widdoes invented the \textbf{2-bit saturating counter branch predictor}. To maintain high throughput in their deeply pipelined processor without stalling on conditional branches, their design used a ``reverse bit'' mechanism that required two consecutive mispredictions before reversing the predicted branch direction.
+    \item \textbf{James E. Smith (1979--1981):} Concurrently, James E. Smith at Control Data Corporation (CDC) and the University of Wisconsin formalized table-based dynamic branch prediction, patenting random-access memory branch predictor tables \citep{smith1983patent} and publishing the seminal academic evaluation of 1-bit and 2-bit saturating counters and Branch Target Buffers (BTBs) \citep{smith1981study}, which was subsequently expanded by Johnny K. F. Lee and Alan Jay Smith \citep{lee1984branch}.
+\end{itemize}
+
+\paragraph{The Evolution to Modern Adaptive Predictors (1990s)}
+While 2-bit bimodal counters served early pipelined microprocessors effectively, deep superscalar pipelines (where a misprediction penalty wastes dozens of in-flight instructions) demanded accuracy well beyond the bimodal ceiling of $\sim 85\text{--}90\%$. As detailed later in Section \ref{sec:yeh_patt}, \textbf{Tse-Yu Yeh and Yale N. Patt} \citep{yeh1991twolevel, yeh1992alternative} revolutionized the field by inventing \textbf{Two-Level Adaptive Branch Prediction}, tracking correlated branch histories to achieve $>97\%$ accuracy, paving the way for Scott McFarling's \textbf{gshare} and \textbf{tournament combining predictors} \citep{mcfarling1993combining}.
+
+
 \subsubsection{Static Branch Prediction\index{branch prediction!static branch prediction}}
 
 Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction\index{branch prediction!static branch prediction}presumes that backward branches will be taken and that forward branches will not.
