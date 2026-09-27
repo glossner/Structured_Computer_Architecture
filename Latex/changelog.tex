@@ -7,6 +7,15 @@
 This section summarizes notable changes to the textbook, code listings, and hardware testbenches since the release of the First Edition PDF (\texttt{Structured\_Computer\_Architecture\_1st\_edition\_2026\_06\_03.pdf}, June 3, 2026).
 
 \begin{itemize}
+    \item \textbf{Chapter 16 Organization Refinements: Structural Hazards, Branch Prediction, Out-of-Order Frontiers, and Table Legibility}:
+    \begin{itemize}
+        \item \textit{Dynamic Cross-Referencing Correction}: Fixed the opening chapter reference in Section 16 introduction to dynamically point to Chapter \ref{chap:perf_opt_logic} (Performance Optimized Digital Logic, Chapter 15) instead of Chapter 11.
+        \item \textit{Hazard and Multithreading De-Duplication}: Removed the redundant Section 16.2 ``Architectural Insight'' on barrel multithreading hazard elimination, consolidating barrel multithreading coverage and label resolution under Section \ref{sec:barrel_multithreading} in Section 16.6.
+        \item \textit{Superscalar Structural Hazards Relocation}: Moved superscalar structural hazards and execution unit replication (formerly Section 16.3.1.2) to become the opening subsection of Section 16.5 (\ref{sec:superscalar_structural_hazards}), immediately introducing functional unit replication and issue constraints in superscalar processors.
+        \item \textit{Branch Prediction Section and Heading Streamlining}: Renamed Section 16.3.3.3 to ``Branch Prediction'', and streamlined historical paragraph titles by removing ``The Genesis of'' before Dynamic Branch Prediction and ``The Evolution to'' before Modern Adaptive Predictors.
+        \item \textit{Authoritative Out-of-Order Machine Citations (Section 16.5.3)}: Added peer-reviewed IEEE Micro, MICRO, and ISSCC citations for landmark and modern machines discussed in Section 16.5: the IBM POWER4 / PowerPC 970 \cite{tendler2002power4}, Intel P6 / Pentium Pro \cite{papworth1996tuning}, Intel Sandy Bridge \cite{rotem2012power}, AMD Zen \cite{singh2017zen, suggs2020zen2}, Berkeley BOOM \cite{celio2018boom}, and XiangShan \cite{xiangshan2022micro}.
+        \item \textit{Table 16.7 Typography and Legibility Redesign}: Completely restructured Table \ref{tab:scoreboard_vs_tomasulo} without scaling (\texttt{\textbackslash resizebox}), utilizing \texttt{tabularx} with wrapped, proportional columns, crisp standard-sized typography (\texttt{\textbackslash footnotesize}), balanced cell spacing, and an anchor citation row to ensure maximum readability and professional presentation.
+    \end{itemize}
     \item \textbf{Chapter Sequence Alignment: Performance Optimized Architecture (Chapter 17) \& ToyRISC Design (Chapter 18)}:
     \begin{itemize}
         \item \textit{Performance Optimized Architecture (Chapter 17)}: Reordered Performance Optimized Architecture to Chapter 17 (\texttt{Latex/04\_17\_Performance\_Optimized\_Architecture.tex}), positioning the complete three-tier optimization sequence (Digital Logic in Chapter 15 $\rightarrow$ Organization in Chapter 16 $\rightarrow$ Architecture in Chapter 17) immediately ahead of concrete processor design chapters.

@@ -1,3 +1,12 @@
+# 09/27/2026 10:15 Chapter 16 Organization Refinements: Structural Hazards, Branch Prediction, Out-of-Order Frontiers, and Table Legibility
+* **Chapter 16 Organization Refinements (`Latex/04_16_Performance_Optimized_Organization.tex`, `Latex/bibliography.bib`)**:
+  * Dynamically linked the opening introductory reference in Section 16 to Chapter 15 (`\label{chap:perf_opt_logic}`) instead of Chapter 11.
+  * Removed Section 16.2 "Architectural Insight" on barrel multithreading hazard elimination to prevent redundancy with Section 16.6 (`\label{sec:barrel_multithreading}`).
+  * Relocated "Superscalar Structural Hazards and Execution Unit Replication" (formerly Section 16.3.1.2) to become the first subsection under Section 16.5 (`\label{sec:superscalar_structural_hazards}`), directly motivating execution unit replication and multi-issue resource contention.
+  * Renamed Section 16.3.3.3 to "Branch Prediction", and streamlined subsection headings by removing "The Genesis of" before "Dynamic Branch Prediction (Late 1970s)" and "The Evolution to" before "Modern Adaptive Predictors (1990s)".
+  * Added authoritative peer-reviewed *IEEE Micro*, *MICRO*, and *ISSCC* citations for out-of-order and superscalar processors referenced in Section 16.5: IBM POWER4 / PowerPC 970 (`tendler2002power4`), Intel P6 / Pentium Pro (`papworth1996tuning`), Intel Sandy Bridge (`rotem2012power`), AMD Zen (`singh2017zen`, `suggs2020zen2`), Berkeley BOOM (`celio2018boom`), and XiangShan (`xiangshan2022micro`).
+  * Redesigned Table 16.7 without `\resizebox` scaling, using `tabularx` with `\footnotesize` wrapped columns, balanced margins, and a dedicated citation row for crisp, high-legibility comparison across four generations of dynamic execution architectures.
+
 # 09/27/2026 09:45 Chapter Sequence Alignment: Performance Optimized Architecture (Chapter 17) & ToyRISC Design (Chapter 18)
 * **Chapter Sequence Alignment (`Latex/04_17_Performance_Optimized_Architecture.tex`, `Latex/04_18_0_ToyRISC.tex`)**:
   * Reordered Performance Optimized Architecture to Chapter 17 (`Latex/04_17_Performance_Optimized_Architecture.tex`), positioning the complete three-tier optimization sequence (Digital Logic in Chapter 15 $\rightarrow$ Organization in Chapter 16 $\rightarrow$ Architecture in Chapter 17) directly ahead of practical processor design implementations.

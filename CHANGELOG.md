@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-27
 
 ### Changed
+- **Chapter 16 Organization Refinements: Structural Hazards, Branch Prediction, Out-of-Order Frontiers, and Table Legibility**:
+  - Dynamically linked the opening introductory reference in Section 16 to Chapter 15 (`\label{chap:perf_opt_logic}`) instead of Chapter 11.
+  - Removed Section 16.2 "Architectural Insight" on barrel multithreading hazard elimination to prevent redundancy with Section 16.6 (`\label{sec:barrel_multithreading}`).
+  - Relocated "Superscalar Structural Hazards and Execution Unit Replication" (formerly Section 16.3.1.2) to become the first subsection under Section 16.5 (`\label{sec:superscalar_structural_hazards}`), directly motivating execution unit replication and multi-issue resource contention.
+  - Renamed Section 16.3.3.3 to "Branch Prediction", and streamlined subsection headings by removing "The Genesis of" before "Dynamic Branch Prediction (Late 1970s)" and "The Evolution to" before "Modern Adaptive Predictors (1990s)".
+  - Added authoritative peer-reviewed *IEEE Micro*, *MICRO*, and *ISSCC* citations for out-of-order and superscalar processors referenced in Section 16.5: IBM POWER4 / PowerPC 970 (`tendler2002power4`), Intel P6 / Pentium Pro (`papworth1996tuning`), Intel Sandy Bridge (`rotem2012power`), AMD Zen (`singh2017zen`, `suggs2020zen2`), Berkeley BOOM (`celio2018boom`), and XiangShan (`xiangshan2022micro`).
+  - Redesigned Table 16.7 without `\resizebox` scaling, using `tabularx` with `\footnotesize` wrapped columns, balanced margins, and a dedicated citation row for crisp, high-legibility comparison across four generations of dynamic execution architectures.
 - **Chapter Sequence Alignment: Performance Optimized Architecture (Chapter 17) & ToyRISC Design (Chapter 18)**:
   - Reordered Performance Optimized Architecture to Chapter 17 (`Latex/04_17_Performance_Optimized_Architecture.tex`), positioning the complete three-tier optimization sequence (Digital Logic in Chapter 15 $\rightarrow$ Organization in Chapter 16 $\rightarrow$ Architecture in Chapter 17) directly ahead of practical processor design implementations.
   - Renamed and reordered the ToyRISC modular processor files to Chapter 18 (`Latex/04_18_0_ToyRISC.tex`, `Latex/04_18_1_ToyRISC_organization.tex`, `Latex/04_18_2_toyRISC_implementation.tex`, `Latex/04_18_3_ToyRISC_pipelined.tex`, `Latex/04_18_4_ToyRISC_forwarding.tex`, and `Latex/04_18_5_ToyRISC_verilog.tex`).
