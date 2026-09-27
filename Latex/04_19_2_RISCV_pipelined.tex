@@ -1297,8 +1297,375 @@ The empirical benchmark data demonstrates the cumulative power of microarchitect
     Both instructions advance through the execution stage at **exactly 1 instruction per cycle with zero stall cycles**. Data forwarding from the MEM/WB stage provides the product to the adder with zero latency overhead. The only stall in the entire loop is the unavoidable single-cycle load-use bubble following memory retrieval of filter coefficients.
 \end{itemize}
 
-This completes our investigation of single-stream processor microarchitecture: by combining **stage delay balancing**, **data bypassing**, and **inter-stage pipelined execution units with intermediate register forwarding**, a single-issue processor achieves near-ideal instruction throughput while running at maximum physical clock frequency.
+This completes our investigation of single-stream processor microarchitecture: by combining \textbf{stage delay balancing}, \textbf{data bypassing}, and \textbf{inter-stage pipelined execution units with intermediate register forwarding}, a single-issue processor achieves near-ideal instruction throughput while running at maximum physical clock frequency.
 
+\section{Control Hazard Elimination: Static BTFN and Dynamic Gshare Branch Prediction}\label{riscvBranchPrediction}
+\index{branch prediction!static BTFN}\index{branch prediction!dynamic gshare}\index{branch target buffer (BTB)}\index{control hazard!elimination}
+
+Having eliminated data hazards through full bypassing and pipelined execution units, we now confront the final remaining bottleneck in single-stream processor performance: \textbf{control hazards}.
+
+\subsection{The Control Hazard Dilemma: Do Branches Complete Without Bubbles?}
+\index{branch penalty!in 4-stage pipeline}\index{pipeline bubbles!taken branches}
+
+To address the fundamental architectural question: \textit{Do branches complete on this 4-stage pipelined design without bubbles?}
+
+The definitive answer is: \textbf{No, taken branches do not complete without bubbles in the baseline pipeline.}
+
+In our 4-stage pipeline (\textsc{IF} $\to$ \textsc{ID} $\to$ \textsc{EX} $\to$ \textsc{MEM/WB}), branch condition evaluation and branch target calculation are performed in the \textsc{EX} stage:
+\begin{align}
+\text{Condition: } & \text{evaluates whether } \text{rs1} \mathrel{\mathbf{op}} \text{rs2} \quad (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}, \texttt{BLTU}, \texttt{BGEU}), \\
+\text{Target Address: } & \text{Target} = \text{PC}_{\textsc{EX}} + \text{Imm}_{\textsc{EX}}.
+\end{align}
+By default, the Instruction Fetch (\textsc{IF}) stage fetches sequentially along the fall-through path ($\text{PC} + 4$). Consequently, the pipeline exhibits an asymmetric branch penalty:
+\begin{enumerate}
+    \item \textbf{Not-Taken Branches (0 Bubbles)}: When a branch condition evaluates false, the sequentially fetched instructions already advancing through \textsc{IF} and \textsc{ID} are correct. Execution proceeds without interruption: \textbf{0 stall cycles and 0 bubbles}.
+    \item \textbf{Taken Branches (2 Bubbles)}: When a branch condition evaluates true in the \textsc{EX} stage, two younger instructions have already entered the pipeline:
+    \begin{itemize}
+        \item Instruction $i+1$ (currently residing in the \textsc{ID} stage, fetched when the branch was in \textsc{IF}),
+        \item Instruction $i+2$ (currently being retrieved in the \textsc{IF} stage).
+    \end{itemize}
+    The \textsc{EX} stage must assert the pipeline flush signal (\texttt{exRedirect}), invalidating both \texttt{if\_id} and \texttt{id\_ex} pipeline registers. The program counter is redirected to $\text{Target}$, and the processor incurs an unavoidable \textbf{2-cycle branch penalty (2 bubbles)}.
+\end{enumerate}
+
+In tight numerical loops (such as FIR filters, matrix multiplication, and vector dot products), backwards loop branches are taken $>95\%$ of the time! Every single loop iteration pays a 2-bubble penalty. As a result, the CPI of a compute loop cannot fall below $1.25\text{--}1.35$ even with perfect ALU bypassing. To achieve true single-stream performance approaching 1 instruction per cycle ($\text{CPI} \to 1.0$), branches must be predicted and redirected in the \textbf{Instruction Fetch (\textsc{IF}) stage}, eliminating bubbles on taken branches.
+
+\subsection{Static BTFN Branch Prediction with Branch Target Buffer}
+\index{static branch prediction!BTFN}\index{BTFN!backward taken forward not taken}
+
+The most widely deployed static branch prediction heuristic is \textbf{BTFN: Backward Taken, Forward Not-Taken}.
+
+\subsubsection{Algorithmic Rationale}
+In imperative software, loops are structured with a conditional branch at the bottom jumping backwards to the loop header:
+\begin{equation}
+\text{Target} < \text{PC} \implies \text{Loop Backwards Branch} \longrightarrow \textbf{Predict TAKEN}.
+\end{equation}
+Conversely, forward conditional branches ($\text{Target} \ge \text{PC}$) typically represent conditional error checks, null pointer validations, or exception handling that execute infrequently:
+\begin{equation}
+\text{Target} \ge \text{PC} \implies \text{Forward Conditional Branch} \longrightarrow \textbf{Predict NOT-TAKEN}.
+\end{equation}
+Unconditional jumps (\texttt{JAL}) are always taken.
+
+\subsubsection{The Need for an IF-Stage Branch Target Buffer (BTB)}
+\index{branch target buffer (BTB)!microarchitecture}
+Static BTFN cannot operate simply by inspecting the branch offset in the instruction word, because instruction decoding does not occur until the \textsc{ID} stage! If the processor waited until \textsc{ID} to identify backward branches, it would still pay a 1-cycle bubble penalty.
+
+To eliminate bubbles entirely (\textbf{0 bubbles}), the prediction and target calculation must occur combinationally in the \textbf{\textsc{IF} stage} using only the current $\text{PC}$. This requires a \textbf{Branch Target Buffer (BTB)}:
+\begin{itemize}
+    \item A cache-like structure of 32 direct-mapped entries in the \textsc{IF} stage, indexed by $\text{PC}[6:2]$.
+    \item Each entry stores a valid bit (\texttt{btbValid}), a tag ($\text{PC}[31:7]$), a predicted target address (\texttt{btbTarget}), and a flag indicating whether the entry is an unconditional jump (\texttt{btbIsJal}).
+    \item When $\text{PC}$ hits in the BTB:
+    \begin{equation}
+    \text{predTaken} = \text{btbHit} \land \bigl((\text{btbTarget} < \text{PC}) \lor \text{btbIsJal}\bigr).
+    \end{equation}
+    If \texttt{predTaken} is asserted, the next program counter is updated immediately to \texttt{btbTarget} for the very next clock cycle.
+    \item The target instruction enters \textsc{IF} on cycle $t+1$, while the branch advances to \textsc{ID}. When the branch resolves in \textsc{EX} on cycle $t+2$, if the prediction was correct, \textbf{no pipeline flush occurs (\texttt{exRedirect = false})}. The target instruction is already in \textsc{EX}: \textbf{0 BUBBLES}!
+\end{itemize}
+
+\subsection{Dynamic Gshare Branch Prediction}
+\index{dynamic branch prediction!gshare}\index{gshare predictor!Scott McFarling}
+
+While static BTFN excels on simple backward loops, it exhibits fundamental limitations:
+\begin{enumerate}
+    \item It cannot adapt to data-dependent branches whose outcome varies dynamically at runtime.
+    \item It always mispredicts the final loop exit, paying a 2-cycle penalty on every loop termination.
+    \item It cannot exploit \textbf{branch correlation}---where the outcome of a branch depends on the outcomes of recently executed prior branches.
+\end{enumerate}
+
+To overcome these limitations, Scott McFarling (1993) introduced the \textbf{Gshare} branch predictor, a two-level adaptive predictor that hashes the branch address with a \textbf{Global History Register (GHR)}.
+
+\subsubsection{Microarchitectural Structure}
+As illustrated in Figure \ref{fig:gshare_arch}, Gshare consists of three tightly coupled structures:
+\begin{enumerate}
+    \item \textbf{Global History Register (GHR)}: An 8-bit shift register recording the actual direction ($1 = \text{Taken}$, $0 = \text{Not-Taken}$) of the last 8 committed branch instructions.
+    \item \textbf{Pattern History Table (PHT)}: A table of $2^8 = 256$ two-bit saturating up/down counters. The states are defined as:
+    \begin{itemize}
+        \item \texttt{00} ($0$): Strongly Not-Taken,
+        \item \texttt{01} ($1$): Weakly Not-Taken,
+        \item \texttt{10} ($2$): Weakly Taken,
+        \item \texttt{11} ($3$): Strongly Taken.
+    \end{itemize}
+    The most significant bit (MSB, bit 1) determines the prediction: $1 \implies \text{Taken}$, $0 \implies \text{Not-Taken}$. Two consecutive mispredictions are required to flip the prediction, preventing transient loop exits from corrupting steady-state behavior.
+    \item \textbf{Gshare Hashing Function}: The index into the PHT is computed by bitwise XORing the branch PC with the global history:
+    \begin{equation}
+    \text{PHT\_Index} = \text{PC}[9:2] \oplus \text{GHR}[7:0].
+    \end{equation}
+    This hashing uniformly disperses branch instances across the 256 counter entries, reducing destructive aliasing between different branches while preserving correlation between consecutive branches.
+    \item \textbf{Branch Target Buffer (BTB)}: As in BTFN, a 32-entry BTB supplies the predicted target address when the PHT counter predicts taken:
+    \begin{equation}
+    \text{predTaken} = \text{btbHit} \land \bigl(\text{PHT}[\text{PHT\_Index}][1] \lor \text{btbIsJal}\bigr).
+    \end{equation}
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={transform shape}]
+    % PC Box
+    \draw[thick, fill=blue!10] (0, 3) rectangle (3.5, 4);
+    \node at (1.75, 3.5) {\textbf{Program Counter (PC)}};
+    \draw[thick, ->] (2.5, 3) -- (2.5, 1.8) node[midway, right] {$\text{PC}[9:2]$};
+    
+    % GHR Box
+    \draw[thick, fill=orange!15] (5, 3) rectangle (8.5, 4);
+    \node at (6.75, 3.5) {\textbf{Global History (GHR [7:0])}};
+    \draw[thick, ->] (6.0, 3) -- (6.0, 1.8) node[midway, right] {$\text{GHR}$};
+    
+    % XOR Gate
+    \draw[thick, fill=gray!20] (4.25, 1.2) circle (0.6);
+    \node at (4.25, 1.2) {\Large $\oplus$};
+    \draw[thick, ->] (2.5, 1.8) -| (3.8, 1.4);
+    \draw[thick, ->] (6.0, 1.8) -| (4.7, 1.4);
+    \draw[thick, ->] (4.25, 0.6) -- (4.25, -0.5) node[midway, right] {Index (8 bits)};
+    
+    % PHT Table
+    \draw[thick, fill=green!10] (2.5, -0.5) rectangle (6.0, -2.5);
+    \node at (4.25, -1.0) {\textbf{Pattern History Table}};
+    \node at (4.25, -1.5) {256 $\times$ 2-bit Saturating Counters};
+    \node at (4.25, -2.1) {\small $[00, 01, 10, 11]$};
+    \draw[thick, ->] (6.0, -1.5) -- (7.5, -1.5) node[midway, above] {MSB};
+    
+    % BTB Table
+    \draw[thick, fill=purple!10] (-2.5, 0.5) rectangle (1.0, -2.5);
+    \node at (-0.75, 0.0) {\textbf{Branch Target Buffer}};
+    \node at (-0.75, -0.5) {32-entry Direct Mapped};
+    \node at (-0.75, -1.2) {\small Tag $+$ Target Address};
+    \draw[thick, ->] (0.8, 3) -- (-0.75, 3) -- (-0.75, 0.5) node[midway, left] {$\text{PC}[6:2]$};
+    \draw[thick, ->] (1.0, -1.5) -- (2.0, -1.5) node[midway, above] {Target};
+    
+    % AND / Decision Logic
+    \draw[thick, fill=yellow!20] (8.0, -1.5) circle (0.5);
+    \node at (8.0, -1.5) {\textbf{AND}};
+    \draw[thick, ->] (8.5, -1.5) -- (10.0, -1.5) node[midway, above] {\textbf{predTaken}};
+    \draw[thick, ->] (0.1, -2.5) |- (8.0, -2.3) -- (8.0, -2.0) node[pos=0.2, below] {btbHit};
+\end{tikzpicture}
+\caption{Microarchitecture of the dynamic Gshare branch predictor combining an 8-bit Global History Register (GHR) XORed with branch PC bits to index a 256-entry Pattern History Table (PHT) of 2-bit saturating counters.}\label{fig:gshare_arch}
+\end{figure}
+
+\subsection{Chisel Microarchitectural Implementation}
+\index{Chisel!branch predictor implementation}\index{RiscvPipelined!branch prediction integration}
+
+The branch predictor is implemented as a standalone, modular hardware module (\texttt{BranchPredictor.scala}) and integrated seamlessly into \texttt{RiscvPipelined.scala}.
+
+Listing \ref{lst:branch_predictor_chisel} displays the core logic for both BTFN and Gshare prediction in Chisel:
+
+\begin{lstlisting}[language=scala, caption={Chisel implementation of the parameterized Branch Predictor supporting Static BTFN and Dynamic Gshare (scabook/riscv/BranchPredictor.scala).}, label={lst:branch_predictor_chisel}]
+class BranchPredictor(
+  val xlen: Int = 32,
+  val predictorType: String = "none",
+  val btbEntries: Int = 32,
+  val historyWidth: Int = 8
+) extends Module {
+  val io = IO(new BranchPredictorIO(xlen, historyWidth))
+
+  val normalizedType = predictorType.trim.toLowerCase
+
+  if (normalizedType == "none") {
+    io.predTaken   := false.B
+    io.predTarget  := io.pc + 4.U
+    io.predHistory := 0.U
+  } else {
+    // 32-entry Branch Target Buffer (BTB) in IF stage
+    val indexBits = log2Ceil(btbEntries)
+    val tagBits   = xlen - indexBits - 2
+
+    val btbValid   = RegInit(VecInit(Seq.fill(btbEntries)(false.B)))
+    val btbTags    = Reg(Vec(btbEntries, UInt(tagBits.W)))
+    val btbTargets = Reg(Vec(btbEntries, UInt(xlen.W)))
+    val btbIsJal   = RegInit(VecInit(Seq.fill(btbEntries)(false.B)))
+
+    // IF stage query
+    val ifIndex = io.pc(indexBits + 1, 2)
+    val ifTag   = io.pc(xlen - 1, indexBits + 2)
+    val btbHit  = btbValid(ifIndex) && (btbTags(ifIndex) === ifTag)
+    val btbTarget = btbTargets(ifIndex)
+
+    // EX stage update
+    val updateIndex = io.updatePC(indexBits + 1, 2)
+    val updateTag   = io.updatePC(xlen - 1, indexBits + 2)
+    when(io.updateValid && io.actualTaken) {
+      btbValid(updateIndex)   := true.B
+      btbTags(updateIndex)    := updateTag
+      btbTargets(updateIndex) := io.actualTarget
+      btbIsJal(updateIndex)   := io.updateIsJal
+    }
+
+    if (normalizedType == "btfn") {
+      // BTFN: Backward branches (target < pc) or JAL predicted TAKEN
+      val isBackward = btbTarget < io.pc
+      val isJal      = btbIsJal(ifIndex)
+      val predTaken  = btbHit && (isBackward || isJal)
+
+      io.predTaken   := predTaken
+      io.predTarget  := Mux(predTaken, btbTarget, io.pc + 4.U)
+      io.predHistory := 0.U
+    } else {
+      // GSHARE: 256-entry PHT indexed by PC XOR GHR
+      val numPhtEntries = 1 << historyWidth
+      val pht = RegInit(VecInit(Seq.fill(numPhtEntries)(2.U(2.W))))
+      val ghr = RegInit(0.U(historyWidth.W))
+
+      val pcHash    = io.pc(historyWidth + 1, 2)
+      val phtIndex  = pcHash ^ ghr
+      val counter   = pht(phtIndex)
+      val dirTaken  = counter(1) // MSB = 1 -> Taken
+      val isJal     = btbIsJal(ifIndex)
+      val predTaken = btbHit && (dirTaken || isJal)
+
+      io.predTaken   := predTaken
+      io.predTarget  := Mux(predTaken, btbTarget, io.pc + 4.U)
+      io.predHistory := ghr
+
+      // PHT and GHR update upon branch commitment in EX
+      val updateHash     = io.updatePC(historyWidth + 1, 2)
+      val updatePhtIndex = updateHash ^ io.prevHistory
+      when(io.updateValid && io.updateIsBr) {
+        val currCnt = pht(updatePhtIndex)
+        when(io.actualTaken) {
+          pht(updatePhtIndex) := Mux(currCnt === 3.U, 3.U, currCnt + 1.U)
+        }.otherwise {
+          pht(updatePhtIndex) := Mux(currCnt === 0.U, 0.U, currCnt - 1.U)
+        }
+        ghr := Cat(ghr(historyWidth - 2, 0), io.actualTaken.asUInt)
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+In the 4-stage pipeline (\texttt{RiscvPipelined.scala}), the Execute stage detects mispredictions by comparing actual branch resolution against the speculative prediction carried down the pipeline registers (\texttt{id\_ex.predTaken}, \texttt{id\_ex.predTarget}):
+\begin{lstlisting}[language=scala, caption={Misprediction detection and recovery logic in the Execute stage (scabook/riscv/RiscvPipelined.scala).}, label={lst:riscv_mispredict_chisel}]
+  // Misprediction detection in EX:
+  // If predicted outcome and target match actual execution: 0 FLUSH (0 BUBBLES)!
+  val isBranch = id_ex.valid && id_ex.branch
+  val branchMispredicted = isBranch && (
+    (branchTaken =/= id_ex.predTaken) ||
+    (branchTaken && (id_ex.predTarget =/= branchTarget))
+  )
+  val branchRecoveryPC = Mux(branchTaken, branchTarget, id_ex.pc + 4.U)
+
+  val isJal = id_ex.valid && id_ex.isJal
+  val jalMispredicted = isJal && (!id_ex.predTaken || (id_ex.predTarget =/= jalTarget))
+  val jalrRedirect = id_ex.valid && id_ex.isJalr
+
+  val exRedirect = branchMispredicted || jalMispredicted || jalrRedirect
+  val exTargetPC = Mux(jalrRedirect, jalrTarget,
+                   Mux(jalMispredicted, jalTarget,
+                       branchRecoveryPC))
+\end{lstlisting}
+
+\subsection{Physical ASIC Synthesis on ASAP7 7\,nm FinFET}
+\index{ASAP7 7nm!branch predictor synthesis}\index{area overhead!branch predictor}
+
+To quantify the physical hardware cost and timing impact of branch prediction, all predictor designs and full processor cores were synthesized targeting the predictive **ASAP7 7\,nm FinFET standard-cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
+
+Table \ref{tab:asap7_standalone_bp_synthesis} summarizes the standalone physical characteristics of the BTFN and Gshare predictors, while Table \ref{tab:asap7_core_bp_comparison} provides the comprehensive physical comparison across all six full-core processor configurations.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Predictor Architecture} & \textbf{Standard Cells} & \textbf{DFF Count} & \textbf{Sequential Area} & \textbf{Total Silicon Area} & \textbf{Critical Path Delay ($f_{\text{max}}$)} \\
+\hline
+\textbf{Static BTFN (32-entry BTB)}    & 11,269 cells & 1,888 DFFs & 550.54\,$\mu$m$^2$ & 1,182.80\,$\mu$m$^2$ & 661.7\,ps (1,511.3\,MHz) \\
+\textbf{Dynamic Gshare (256-entry PHT)}& 15,573 cells & 2,408 DFFs & 702.17\,$\mu$m$^2$ & 1,593.19\,$\mu$m$^2$ & 523.1\,ps (1,911.5\,MHz) \\
+\hline
+\textbf{Hardware Delta ($\Delta$)}     & \textbf{+4,304 cells} & \textbf{+520 DFFs} & \textbf{+151.63\,$\mu$m$^2$} & \textbf{+410.39\,$\mu$m$^2$} & \textbf{$-138.6$\,ps ($+26.5\%$ speed)} \\
+\hline
+\end{tabular}
+\caption{Physical ASIC synthesis comparison of standalone branch predictors in ASAP7 7\,nm FinFET technology.}\label{tab:asap7_standalone_bp_synthesis}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Core Configuration} & \textbf{Cells} & \textbf{DFFs} & \textbf{Silicon Area ($\mu$m$^2$)} & \textbf{Clock Period ($T_{\text{clk}}$)} & \textbf{Clock Frequency ($f_{\text{clk}}$)} \\
+\hline
+\texttt{RV32I} Baseline (Predict Not-Taken) & 12,461 & 1,500 & 1,201.49\,$\mu$m$^2$ & 1.689\,ns & 591.9\,MHz \\
+\texttt{RV32I} with Static BTFN (32 BTB)    & 23,552 & 3,388 & 2,379.38\,$\mu$m$^2$ & 1.736\,ns & 576.2\,MHz \\
+\texttt{RV32I} with Dynamic Gshare (PHT)    & 27,813 & 3,924 & 2,780.70\,$\mu$m$^2$ & 1.727\,ns & 579.1\,MHz \\
+\hline
+\texttt{Zmmul} Pipelined Multiplier (Baseline) & 19,403 & 1,629 & 1,769.62\,$\mu$m$^2$ & 2.442\,ns & 409.6\,MHz \\
+\texttt{Zmmul} Pipelined Mul + Static BTFN     & 30,688 & 3,517 & 2,953.18\,$\mu$m$^2$ & 2.436\,ns & 410.5\,MHz \\
+\texttt{Zmmul} Pipelined Mul + Dynamic Gshare  & 34,843 & 4,053 & 3,349.49\,$\mu$m$^2$ & 2.464\,ns & 405.9\,MHz \\
+\hline
+\end{tabular}
+\caption{Full-core ASAP7 7\,nm FinFET physical synthesis across pure \texttt{RV32I} and \texttt{RV32I\_Zmmul} architectures with baseline, BTFN, and Gshare branch predictors.}\label{tab:asap7_core_bp_comparison}
+\end{table}
+
+Key physical insights from Table \ref{tab:asap7_standalone_bp_synthesis} and Table \ref{tab:asap7_core_bp_comparison} include:
+\begin{enumerate}
+    \item \textbf{High-Speed IF Stage Evaluation}: Standalone critical path delays for BTFN ($661.7\,\text{ps}$) and Gshare ($523.1\,\text{ps}$) operate at $>1.5\,\text{GHz}$. Because the branch predictor lookup occurs in parallel with the instruction memory SRAM access ($T_{\text{fetch}} = 0.550\,\text{ns}$), branch prediction adds minimal critical path delay ($\Delta T < 46\,\text{ps}$), fully preserving the operating frequency of the processor pipeline.
+    \item \textbf{Silicon Area vs. Control Hazard Trade-off}: Integrating a 32-entry BTB adds 1,888 flip-flops ($550.54\,\mu\text{m}^2$) to store tags and target addresses, approximately doubling the core standard cell area ($1,201.49\,\mu\text{m}^2 \to 2,379.38\,\mu\text{m}^2$). Adding Gshare adds an additional 536 flip-flops for the 256 2-bit saturating counters, requiring $2,780.70\,\mu\text{m}^2$. In modern 7\,nm FinFET nodes, $2,780\,\mu\text{m}^2$ is minuscule ($0.0028\,\text{mm}^2$), making branch prediction an exceptional return on investment for high-throughput computing.
+\end{enumerate}
+
+\subsection{Benchmark Performance: Slashing Branch Stalls on DSP, Dhrystone, and CoreMark}
+\index{benchmarks!branch prediction evaluation}\index{CoreMark!branch prediction speedup}\index{Dhrystone!branch prediction speedup}
+
+To quantify the runtime elimination of branch bubbles, all five processor configurations were executed across our standard benchmark workloads: the pure RV32I DSP kernel, the Zmmul pipelined multiplier DSP kernel, Dhrystone 2.1 (20 runs), and EEMBC CoreMark 1.0 (1 iteration).
+
+Table \ref{tab:riscv_bp_benchmark_grand_summary} presents the empirical cycle counts, CPI metrics, stall overheads, and execution times across all benchmarks.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Workload \& Metric} & \textbf{Single-Cycle} & \textbf{Pipe (No Fwd)} & \textbf{Pipe (Bypass)} & \textbf{Pipe (BTFN)} & \textbf{Pipe (Gshare)} \\
+\hline
+\multicolumn{6}{|l|}{\textbf{1. Pure RV32I DSP Kernel (6,511 Instructions)}} \\
+\hline
+Execution Cycles ($C$)          & 6,511 cycles  & 12,575 cycles & 8,774 cycles  & \textbf{6,942 cycles}  & \textbf{6,828 cycles} \\
+Cycles Per Instruction (CPI)    & 1.00          & 1.93          & 1.35          & \textbf{1.07}          & \textbf{1.05} \\
+Pipeline Stall Cycles           & 0             & 6,064 (93.1\%)& 2,263 (34.8\%)& \textbf{431 (6.6\%)}   & \textbf{317 (4.9\%)} \\
+Execution Time ($T_{\text{exec}}$)& 19.88\,$\mu$s & 17.14\,$\mu$s & 11.96\,$\mu$s & \textbf{9.46\,$\mu$s}  & \textbf{9.31\,$\mu$s} \\
+Speedup vs.\ Single-Cycle       & $1.00\times$  & $1.16\times$  & $1.66\times$  & \textbf{2.10$\times$}  & \textbf{2.14$\times$} \\
+Speedup over Bypassing Pipeline & ---           & $0.70\times$  & $1.00\times$  & \textbf{1.26$\times$}  & \textbf{1.29$\times$} \\
+\hline
+\multicolumn{6}{|l|}{\textbf{2. RV32I\_Zmmul Pipelined Multiplier DSP Kernel (804 Instructions)}} \\
+\hline
+Execution Cycles ($C$)          & 804 cycles    & 1,308 cycles  & 999 cycles    & \textbf{871 cycles}    & \textbf{847 cycles} \\
+Cycles Per Instruction (CPI)    & 1.00          & 1.63          & 1.24          & \textbf{1.08}          & \textbf{1.05} \\
+Pipeline Stall Cycles           & 0             & 504 (62.7\%)  & 195 (24.3\%)  & \textbf{67 (8.3\%)}    & \textbf{43 (5.3\%)} \\
+Execution Time ($T_{\text{exec}}$)& 3.34\,$\mu$s  & 1.78\,$\mu$s  & 1.36\,$\mu$s  & \textbf{1.19\,$\mu$s}  & \textbf{1.15\,$\mu$s} \\
+Speedup vs.\ Single-Cycle       & $1.00\times$  & $1.87\times$  & $2.45\times$  & \textbf{2.81$\times$}  & \textbf{2.89$\times$} \\
+Speedup over Bypassing Pipeline & ---           & $0.76\times$  & $1.00\times$  & \textbf{1.15$\times$}  & \textbf{1.18$\times$} \\
+\hline
+\multicolumn{6}{|l|}{\textbf{3. Dhrystone 2.1 Benchmark (20 Runs, 13,826 Instructions)}} \\
+\hline
+Execution Cycles ($C$)          & 13,826 cycles & 24,311 cycles & 19,958 cycles & \textbf{15,878 cycles} & \textbf{15,806 cycles} \\
+Cycles Per Instruction (CPI)    & 1.00          & 1.76          & 1.44          & \textbf{1.15}          & \textbf{1.14} \\
+Pipeline Stall Cycles           & 0             & 10,485 (75.8\%)& 6,132 (44.4\%)& \textbf{2,052 (14.8\%)}& \textbf{1,980 (14.3\%)} \\
+DMIPS at 733.7\,MHz             & 238.4 DMIPS   & 343.4 DMIPS   & 418.5 DMIPS   & \textbf{525.8 DMIPS}   & \textbf{528.2 DMIPS} \\
+Speedup vs.\ Single-Cycle       & $1.00\times$  & $1.27\times$  & $1.55\times$  & \textbf{1.95$\times$}  & \textbf{1.96$\times$} \\
+Speedup over Bypassing Pipeline & ---           & $0.82\times$  & $1.00\times$  & \textbf{1.26$\times$}  & \textbf{1.26$\times$} \\
+\hline
+\multicolumn{6}{|l|}{\textbf{4. EEMBC CoreMark 1.0 Benchmark (1 Iteration, 874,891 Instructions)}} \\
+\hline
+Execution Cycles ($C$)          & 874,891 cycles& 1,643,060 cyc & 1,160,199 cyc & \textbf{981,463 cycles}& \textbf{957,453 cycles} \\
+Cycles Per Instruction (CPI)    & 1.00          & 1.88          & 1.33          & \textbf{1.12}          & \textbf{1.09} \\
+Pipeline Stall Cycles           & 0             & 768,169 (87.8\%)& 285,308 (32.6\%)& \textbf{106,572 (12.2\%)}& \textbf{82,562 (9.4\%)} \\
+CoreMark Score at 733.7\,MHz    & 264.4 CM      & 446.1 CM      & 632.4 CM      & \textbf{747.5 CM}      & \textbf{766.3 CM} \\
+Speedup vs.\ Single-Cycle       & $1.00\times$  & $1.19\times$  & $1.69\times$  & \textbf{2.00$\times$}  & \textbf{2.05$\times$} \\
+Speedup over Bypassing Pipeline & ---           & $0.71\times$  & $1.00\times$  & \textbf{1.18$\times$}  & \textbf{1.21$\times$} \\
+\hline
+\end{tabular}
+\caption{Comprehensive performance comparison across all benchmark workloads demonstrating the elimination of branch stalls via Static BTFN and Dynamic Gshare branch prediction.}\label{tab:riscv_bp_benchmark_grand_summary}
+\end{table}
+
+\subsubsection{Architectural Analysis of Benchmark Results}
+The benchmark results in Table \ref{tab:riscv_bp_benchmark_grand_summary} demonstrate several profound architectural conclusions:
+\begin{enumerate}
+    \item \textbf{Near-Ideal CPI on Compute Loops ($\text{CPI} = 1.05$)}:
+    On the DSP benchmark kernels, Gshare drives CPI down to an astounding \textbf{1.05} ($1.07$ for BTFN), slashing pipeline stall overhead from $34.8\%$ down to \textbf{$4.9\%$}. Back-to-back multiply and accumulate operations execute at 1 instruction per cycle, while loop branch transitions proceed with zero bubbles.
+    
+    \item \textbf{Elimination of $>89\%$ of All Pipeline Stalls}:
+    On EEMBC CoreMark 1.0, the baseline pipeline suffered 768,169 stall cycles ($1.88$ CPI). Data bypassing eliminated 482,861 data stalls ($1.33$ CPI). Integrating Gshare branch prediction eliminates an additional \textbf{202,746 branch stalls}, leaving a residual overhead of only 82,562 stalls ($1.09$ CPI) across 874,891 instructions. Together, \textbf{data bypassing and Gshare branch prediction eliminate 89.3\% of all stalls} that plagued the unforwarded pipeline!
+    
+    \item \textbf{Doubling Application Performance ($2.05\times\text{--}2.89\times$ Speedup)}:
+    Because CPI is held near unity while clock frequency scales from $327.5\,\text{MHz}$ to $733.7\,\text{MHz}$, the pipelined core achieves a true \textbf{$2.05\times$ speedup on CoreMark} (766.3 CoreMarks) and \textbf{$2.89\times$ speedup on hardware DSP multiplication}, realizing the full promise of synchronous pipelining.
+\end{enumerate}
 
 \section{Summary}\label{riscvSummary}
 \index{RISC-V!chapter summary}
@@ -1319,6 +1686,10 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item On standard benchmarks, bypassing eliminated $>60\%$ of all pipeline stalls: CoreMark CPI dropped from 1.88 to 1.33 (yielding $1.69\times$ speedup over single-cycle, +41.8\% CoreMarks/MHz), and Dhrystone CPI dropped from 1.76 to 1.44 (yielding $1.55\times$ speedup, 418.5 DMIPS).
     \item Single-stream processor performance for Multiply-Accumulate (MAC) intensive workloads (FIR filters, convolution, vector dot products) was accelerated by pipelining the hardware multiplier across EX and MEM/WB. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA reduction tree to redundant carry-save vectors ($Sum$, $Carry$), which are captured in the inter-stage pipeline registers (\texttt{ex\_mem}). Stage 2 in MEM/WB performs vector-merging addition and forwards the product directly to EX operands via data bypassing. This microarchitecture eliminates all stalls between back-to-back \texttt{mul} and \texttt{add} instructions, sustaining an issue rate of 1 instruction entering the pipeline per clock cycle while restoring operating frequency to $733.7\,\text{MHz}$ ($1.363\,\text{ns}$).
     \item On the DSP hardware multiply benchmark, the pipelined multiplier core slashed execution time to $1,361.64\,\text{ns}$ ($1.36\,\mu\text{s}$), achieving a $\mathbf{2.45\times}$ speedup over the single-cycle core and a $\mathbf{1.81\times}$ speedup over the unpipelined multiplier pipeline, while surprisingly reducing full core silicon area by $-22.6\%$ ($2,235.55\,\mu\text{m}^2 \to 1,729.57\,\mu\text{m}^2$) due to standard cell drive-strength optimization.
+    \item Control hazards in the 4-stage pipeline were eliminated through Static BTFN (Backward Taken, Forward Not-Taken) and Dynamic Gshare branch prediction. In the baseline pipeline, not-taken branches execute with 0 bubbles, but taken branches incur an unavoidable 2-cycle penalty (2 bubbles) due to EX-stage resolution, imposing an artificial CPI floor of $\sim 1.25\text{--}1.35$ on loop-intensive workloads.
+    \item Static BTFN with a 32-entry Branch Target Buffer (BTB) in the IF stage predicts backward branches ($\text{Target} < \text{PC}$) and unconditional jumps (\texttt{JAL}) taken, eliminating bubbles on tight loops (0 bubbles). Dynamic Gshare combines an 8-bit Global History Register (GHR) XORed with branch PC to index a 256-entry Pattern History Table (PHT) of 2-bit saturating counters, adapting dynamically to correlated branches and loop exits.
+    \item Standalone ASAP7 7\,nm FinFET synthesis demonstrated that both BTFN ($661.7\,\text{ps}$, $1.51\,\text{GHz}$) and Gshare ($523.1\,\text{ps}$, $1.91\,\text{GHz}$) operate with delay well below the $1.363\,\text{ns}$ critical path, adding less than $46\,\text{ps}$ to the full processor clock period while preserving operating frequency ($576\text{--}579\,\text{MHz}$).
+    \item On empirical benchmarks, branch prediction slashed CPI on the DSP kernel from 1.35 to 1.05 ($2.14\times$ speedup over single-cycle), on Dhrystone 2.1 from 1.44 to 1.14 ($1.96\times$ speedup, 528.2 DMIPS), and on EEMBC CoreMark 1.0 from 1.33 to 1.09 ($2.05\times$ speedup, 766.3 CoreMarks). Across CoreMark, the combination of data bypassing and Gshare eliminated 89.3\% of all pipeline stalls.
     \item A taxonomy of computer architecture benchmarks was established: application-class benchmarks such as SPEC CPU2017 require virtual memory (MMU), a full POSIX OS (Linux), and gigabytes of RAM, rendering them physically inapplicable to bare-metal microcontroller-class cores. Microcontroller-class architectures rely on freestanding suites including Dhrystone, EEMBC CoreMark, and Embench-IoT.
 \end{itemize}
 
@@ -1487,6 +1858,44 @@ add a5, t0, a5    // a5 += t0 (accumulate)
     \end{itemize}
     Speedup vs Single-Cycle: $3,338.21 / 1,361.64 = \mathbf{2.45\times}$.
     Speedup vs Unpipelined Multiplier Core: $2,459.54 / 1,361.64 = \mathbf{1.81\times}$.
+\end{enumerate}
+$\diamond$
+\end{problem}
+
+\begin{problem}
+Consider branch prediction in the 4-stage \texttt{RiscvPipelined} processor:
+\begin{enumerate}
+    \item In the baseline processor without branch prediction, explain why not-taken branches execute with 0 bubbles while taken branches incur 2 bubbles.
+    \item A loop executes 1,000 iterations. In each iteration, the backward loop branch is taken 999 times and not-taken 1 time upon exit. Assuming perfect data bypassing with 10 instructions in the loop body before the branch:
+    \begin{enumerate}
+        \item Compute the total execution cycles and loop CPI in the baseline pipeline.
+        \item Compute the total execution cycles and loop CPI with Static BTFN (assuming the BTB is warm after the first iteration).
+        \item Compute the total execution cycles and loop CPI with Dynamic Gshare (assuming 2-bit counter saturated to Strongly Taken).
+    \end{enumerate}
+    \item Explain the state transitions of a 2-bit saturating up/down counter ($00 \leftrightarrow 01 \leftrightarrow 10 \leftrightarrow 11$) when a loop terminates and restarts. Why does Gshare outperform a 1-bit predictor?
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item In the 4-stage pipeline, branch condition evaluation and target address calculation occur in the Execute (EX) stage. For not-taken branches, the sequentially fetched instructions ($PC+4$) already advancing through IF and ID are on the correct execution path, incurring 0 stall cycles and 0 bubbles. For taken branches, two younger speculative instructions have entered the pipeline (one in ID, one in IF). When the branch resolves taken in EX, \texttt{exRedirect} flushes \texttt{if\_id} and \texttt{id\_ex} and redirects the PC, incurring a 2-cycle branch penalty (2 bubbles).
+    \item Loop performance analysis:
+    Each iteration contains 10 body instructions + 1 branch instruction = 11 instructions. Total executed instructions = $1,000 \times 11 = 11,000$ instructions.
+    \begin{enumerate}
+        \item \textbf{Baseline Pipeline}:
+        Each taken branch incurs 2 bubbles. Total taken branches = 999. Not-taken exit branch = 1 (0 bubbles).
+        Base execution cycles (assuming ideal 1 CPI with bypassing) = 11,000 cycles.
+        Branch stall cycles = $999 \times 2 = 1,998$ cycles.
+        Total cycles = $11,000 + 1,998 = 12,998$ cycles.
+        $\text{CPI} = 12,998 / 11,000 = \mathbf{1.182}$.
+        \item \textbf{Static BTFN}:
+        On iteration 1 (cold miss), BTB misses, incurring 2 bubbles. On iterations 2 through 999, BTB hits and predicts backward branch taken ($Target < PC$), incurring 0 bubbles. On iteration 1,000 (loop exit), BTFN predicts taken, but the branch actually falls through (misprediction!), incurring 2 bubbles to redirect to $PC+4$.
+        Total branch stall cycles = $2 \ (\text{cold miss}) + 2 \ (\text{exit mispredict}) = 4$ cycles.
+        Total cycles = $11,000 + 4 = 11,004$ cycles.
+        $\text{CPI} = 11,004 / 11,000 = \mathbf{1.0004} \approx \mathbf{1.00}$.
+        \item \textbf{Dynamic Gshare}:
+        After initial training, the 2-bit saturating counter is in state 11 (Strongly Taken). For the 999 taken branches, prediction is correct (0 bubbles). On exit, Gshare mispredicts taken (2 bubbles) and the counter decrements to 10 (Weakly Taken). Total stall cycles = 4 cycles (or 2 if BTB is pre-warmed). Total cycles $\approx 11,004$ cycles ($\text{CPI} \approx \mathbf{1.00}$).
+    \end{enumerate}
+    \item A 1-bit predictor immediately changes its prediction on any misprediction. On loop exit, a 1-bit predictor flips to Not-Taken. When the loop is re-entered later, the very first iteration will mispredict not-taken (paying another penalty). A 2-bit saturating counter requires \textbf{two consecutive mispredictions} to flip its MSB prediction: state 11 (Strongly Taken) decrements to 10 (Weakly Taken) on loop exit, but still predicts Taken on the next invocation! Thus, Gshare incurs only 1 misprediction per loop execution, whereas a 1-bit predictor incurs 2 mispredictions per loop execution.
 \end{enumerate}
 $\diamond$
 \end{problem}

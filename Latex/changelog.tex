@@ -7,6 +7,21 @@
 This section summarizes notable changes to the textbook, code listings, and hardware testbenches since the release of the First Edition PDF (\texttt{Structured\_Computer\_Architecture\_1st\_edition\_2026\_06\_03.pdf}, June 3, 2026).
 
 \begin{itemize}
+    \item \textbf{Control Hazard Elimination via Static BTFN and Dynamic Gshare Branch Prediction in Chapter 19}:
+    \begin{itemize}
+        \item \textit{Microarchitectural Analysis of Branch Bubbles (Section \ref{riscvBranchPrediction})}: Addressed the fundamental architectural question regarding whether branches complete without bubbles. Demonstrated that in the baseline 4-stage pipeline, taken branches resolve in EX and incur an unavoidable 2-cycle branch penalty (2 bubbles) due to \texttt{if\_id} and \texttt{id\_ex} pipeline flushes, while not-taken branches incur 0 bubbles. In loop-intensive code where backward branches are taken $>95\%$ of the time, this imposes an artificial CPI floor of $\sim 1.25\text{--}1.35$.
+        \item \textit{Static BTFN Predictor with Branch Target Buffer (\texttt{BranchPredictor.scala})}: Designed a 32-entry Branch Target Buffer (BTB) in the IF stage. Combinationally predicts backward branches ($\text{Target} < \text{PC}$) and unconditional jumps (\texttt{JAL}) taken in the IF stage, redirecting the fetch PC immediately on cycle $t+1$. Eliminates pipeline bubbles on taken loop branches (0 bubbles).
+        \item \textit{Dynamic Gshare Predictor (Scott McFarling, 1993)}: Implemented a two-level adaptive branch predictor hashing an 8-bit Global History Register (GHR) with branch $\text{PC}[9:2]$ ($\text{index} = \text{PC} \oplus \text{GHR}$) to index a Pattern History Table (PHT) of 256 2-bit saturating counters paired with the 32-entry BTB. Dynamically tracks correlated branches and avoids repeating mispredictions on loop termination.
+        \item \textit{ASAP7 7\,nm FinFET Physical Logic Synthesis}:
+        Standalone BTFN synthesized to 11,269 cells, 1,888 DFFs, and $1,182.80\,\mu\text{m}^2$ ($661.7\,\text{ps}$, $1.51\,\text{GHz}$).
+        Standalone Gshare synthesized to 15,573 cells, 2,408 DFFs, and $1,593.19\,\mu\text{m}^2$ ($523.1\,\text{ps}$, $1.91\,\text{GHz}$).
+        Full-core synthesis in ASAP7 FinFET showed that branch prediction operates well within the IF stage timing budget, preserving clock frequencies ($576\text{--}579\,\text{MHz}$ for pure RV32I and $406\text{--}410\,\text{MHz}$ for RV32I\_Zmmul).
+        \item \textit{Benchmark Verification and Speedup (Table \ref{tab:riscv_bp_benchmark_grand_summary})}: Verified 100\% signature matching across all official conformance tests.
+        (1) \textbf{EEMBC CoreMark 1.0}: Cycles dropped from 1,160,199 (bypassing) to \textbf{981,463 cycles (BTFN, 1.12 CPI)} and \textbf{957,453 cycles (Gshare, 1.09 CPI)}. CoreMark score reached \textbf{766.3 CoreMarks} ($2.05\times$ speedup over single-cycle). Combined bypassing and Gshare eliminated \textbf{89.3\% of all pipeline stalls} (saving 685,607 stalls).
+        (2) \textbf{Dhrystone 2.1}: Cycles dropped from 19,958 to \textbf{15,806 cycles (1.14 CPI)}, pushing DMIPS to \textbf{528.2 DMIPS} ($1.96\times$ over single-cycle, $+26.2\%$ over bypassing).
+        (3) \textbf{DSP Kernel (Soft Mul)}: CPI dropped from 1.35 to \textbf{1.05}, achieving \textbf{$2.14\times$ speedup} over single-cycle ($1.29\times$ over bypassing pipeline).
+        (4) \textbf{DSP Kernel (Hard Mul with Pipelined Multiplier)}: CPI dropped from 1.24 to \textbf{1.05}, achieving \textbf{$2.89\times$ speedup} over single-cycle ($1.18\times$ over bypassing pipeline).
+    \end{itemize}
     \item \textbf{Single-Stream FIR/MAC Acceleration via Pipelined Multiplier Datapath, Intermediate Registers, and Forwarding in Chapter 19}:
     \begin{itemize}
         \item \textit{2-Stage Pipelined Multiplier Architecture (\texttt{PipelinedMultiplier.scala}, Section \ref{riscvPipelinedMultiplier})}: Designed and implemented a modular 2-stage pipelined multiplier:

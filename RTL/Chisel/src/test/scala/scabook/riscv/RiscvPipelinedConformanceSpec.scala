@@ -91,7 +91,7 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
     }
   }
 
-  def runTest(testName: String, tohostAddr: Long, beginSig: Long, endSig: Long, maxCycles: Int = 150000, enableZmmul: Boolean = true): Int = {
+  def runTest(testName: String, tohostAddr: Long, beginSig: Long, endSig: Long, maxCycles: Int = 150000, enableZmmul: Boolean = true, branchPredictor: String = "none"): Int = {
     val binPath = Paths.get(s"src/test/resources/conformance/${testName}.bin")
     val refPath = Paths.get(s"src/test/resources/conformance/${testName}.reference.sig")
     assert(Files.exists(binPath), s"Test binary $binPath not found")
@@ -106,7 +106,7 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
 
     var cyclesRan = 0
 
-    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul)) { dut =>
+    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul, branchPredictor = branchPredictor)) { dut =>
       dut.reset.poke(true.B)
       dut.clock.step(5)
       dut.reset.poke(false.B)
@@ -190,6 +190,22 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
         totalCycles += c
       }
       println(f"\nAll ${zmmulEntries.length} Zmmul conformance tests passed! Total pipelined cycles: $totalCycles")
+    }
+
+    it should "pass control transfer conformance tests with BTFN branch prediction" in {
+      println(s"\nExecuting branch and jump conformance tests with BTFN predictor:")
+      val branchTests = rv32iEntries.filter(e => e._1.startsWith("b") || e._1.startsWith("jal"))
+      for ((name, tohost, beginSig, endSig) <- branchTests) {
+        runTest(name, tohost, beginSig, endSig, enableZmmul = false, branchPredictor = "btfn")
+      }
+    }
+
+    it should "pass control transfer conformance tests with Gshare branch prediction" in {
+      println(s"\nExecuting branch and jump conformance tests with Gshare predictor:")
+      val branchTests = rv32iEntries.filter(e => e._1.startsWith("b") || e._1.startsWith("jal"))
+      for ((name, tohost, beginSig, endSig) <- branchTests) {
+        runTest(name, tohost, beginSig, endSig, enableZmmul = false, branchPredictor = "gshare")
+      }
     }
   }
 }
