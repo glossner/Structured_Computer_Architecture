@@ -1174,30 +1174,113 @@ With a Reorder Buffer, instruction execution proceeds through four distinct stag
     \end{itemize}
 \end{enumerate}
 
-\subsubsection{Comparative Summary: Scoreboard, Tomasulo, and Reorder Buffer}\label{sec:ooo_comparison}
+\subsubsection{Instruction Compounding and SCISM (Vassiliadis et al.)}\label{sec:scism}
+\index{SCISM: Scalable Compound Instruction Set Machine}
+\index{Vassiliadis, Stamatis (1951-2008)}
+\index{compound instructions!superscalar issue}
+\index{branch folding!zero-cycle branch execution}
 
-Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational trade-offs across the three landmark generations of dynamic instruction scheduling.
+While out-of-order execution, register renaming, and reorder buffers successfully eliminate false dependencies and tolerate variable execution latencies, widening a superscalar datapath to issue multiple instructions per clock cycle introduces a severe microarchitectural bottleneck in the processor front-end: the \textbf{quadratic scaling problem of dependency checking}.
+
+\paragraph{The Quadratic Issue-Width Bottleneck}
+In a conventional $W$-issue superscalar core, the issue logic must concurrently examine all $W$ candidate instructions in each clock cycle to detect intra-cycle data dependencies (RAW, WAR, and WAW hazards), register write conflicts, and execution resource contention. For $W$ candidate instructions, the number of potential pairwise dependency checks scales quadratically as:
+\begin{equation}
+\binom{W}{2} = \frac{W(W-1)}{2} \in O(W^2)
+\end{equation}
+For a 2-issue processor, only 1 pairwise check is required; for a 4-issue processor, 6 checks are needed; for an 8-issue processor, 28 simultaneous pairwise comparisons are required across all source and destination register specifiers. This $O(W^2)$ comparator matrix creates severe wiring congestion, consumes substantial silicon area, dissipates high dynamic switching power, and critically lengthens the combinational path of the issue stage, directly threatening the processor's maximum clock frequency.
+
+\paragraph{The SCISM Architecture}
+To break through this complexity barrier, Stamatis Vassiliadis, Bart Blaner, and Richard J. Eickemeyer invented the \textbf{Scalable Compound Instruction Set Machine (SCISM)} at IBM in 1994 \cite{vassiliadis1994scism}. 
+
+The foundational insight of SCISM is to shift dependency analysis and grouping forward in the pipeline, pre-processing instructions to form \textbf{compound instructions} that can be issued and dispatched concurrently without requiring an $O(W^2)$ interlock check during the time-critical issue cycle:
+\begin{enumerate}
+    \item \textbf{Instruction Compounding}: Instructions from a single sequential program stream are examined (either statically by the compiler, dynamically during instruction cache line reload, or via a lightweight pre-decode stage) and grouped into compound instruction packets. A compound instruction encapsulates multiple independent or chained operations that are structurally guaranteed to execute in parallel without dependency hazards.
+    \item \textbf{Conflict-Free Parallel Execution}: Because inter-instruction dependencies are resolved prior to entering the issue stage, the issue logic treats the compound instruction as a single dispatch entity. The component operations of the compound instruction are routed directly to parallel execution units (such as a Compound Arithmetic Logic Unit \cite{vassiliadis1993calu}) without activating an $O(W^2)$ comparison matrix.
+    \item \textbf{Branch Pre-Processing and Zero-Cycle Branch Folding}: SCISM integrates a specialized branch processing unit that dynamically scans ahead in the instruction stream, extracts conditional and unconditional branches before they reach the main instruction queue, and resolves or predicts their outcomes. By folding branches out of the sequential instruction stream, SCISM delivers uninterrupted, ``branchless'' compound instruction sequences to the execution core.
+\end{enumerate}
+
+Vassiliadis, Blaner, and Eickemeyer demonstrated that a SCISM architecture achieves over $90\%$ of the performance of an idealized dual-issue superscalar machine while preserving the simple, high-frequency clock cycle and minimal control logic of a scalar pipeline \cite{vassiliadis1994scism}.
+
+
+\subsubsection{Modern Frontiers in Superscalar Dispatch and Execution}\label{sec:modern_superscalar_frontiers}
+\index{macro-op fusion!instruction decoding optimization}
+\index{micro-op fusion!reorder buffer optimization}
+\index{zero-cycle move elimination!register renaming optimization}
+\index{physical register file (PRF)!unified register architecture}
+\index{memory disambiguation!speculative store-to-load forwarding}
+
+Vassiliadis' pioneering concept of instruction compounding established the conceptual foundation for modern 21st-century superscalar microarchitectures. Modern high-performance cores (such as Intel Core/Golden Cove, AMD Zen, Apple Silicon, and high-performance RISC-V designs) incorporate four advanced techniques that push superscalar execution far beyond the classic Tomasulo and ROB models:
+
+\paragraph{1. Macro-Op and Micro-Op Fusion}
+First deployed commercially in the Intel Core microarchitecture \cite{gochman2006intel} and now pervasive across x86, ARM, and RISC-V processors, \textbf{instruction fusion} represents the direct modern commercial evolution of SCISM's compounding principle:
+\begin{itemize}
+    \item \textbf{Macro-Op Fusion}: During the instruction decode stage, hardware logic inspects adjacent architectural instructions and merges compatible pairs into a single internal micro-operation ($\mu$op):
+    \begin{itemize}
+        \item \textit{In x86}: A comparison or test instruction (\texttt{CMP} or \texttt{TEST}) followed by a conditional branch (\texttt{Jcc}) is fused into a single compare-and-branch $\mu$op that is renamed, queued, and executed as a single entity, saving decode bandwidth and ROB entries.
+        \item \textit{In RISC-V}: Common two-instruction sequences are fused by the decoder into single micro-ops. For example, \texttt{lui} (Load Upper Immediate) followed by \texttt{addi} is fused into a single 32-bit constant generation $\mu$op; \texttt{auipc} followed by \texttt{jalr} is fused into a single direct function call; and address calculations followed by memory operations are fused into single indexed load/store operations.
+    \end{itemize}
+    \item \textbf{Micro-Op Fusion}: Merges two sub-operations of a single complex instruction (such as a memory load fused with an ALU arithmetic operation, or a store-address fused with store-data) into a single entry within the Reorder Buffer and issue queue. The fused $\mu$op occupies only a single slot in the ROB, expanding effective ROB capacity and issue bandwidth by $20\%\text{--}30\%$, and splits into separate execution components only at the functional unit issue ports.
+\end{itemize}
+
+\paragraph{2. Zero-Cycle Move Elimination (Zero-Latency Register Renaming)}
+In classic superscalar execution, register-to-register copy instructions (such as \texttt{mov r1, r2} in x86, or \texttt{add x1, x2, x0} in RISC-V) allocate a reservation station slot, wait for operand availability, occupy an integer ALU for one clock cycle, and broadcast their result over the Common Data Bus.
+
+To eliminate this waste, modern processors implement \textbf{Zero-Cycle Move Elimination} in the register renaming stage \cite{jourdan1999extended}:
+\begin{itemize}
+    \item When the register renamer encounters a register-to-register move instruction, it simply updates the Register Alias Table (RAT) so that the architectural destination register points to the exact same physical register as the source operand.
+    \item The reference count of the physical register is incremented, and the move instruction is immediately marked as completed.
+    \item \textbf{Hardware Impact}: The move instruction never enters the reservation stations, consumes zero ALU execution cycles, burns zero dynamic switching power on the execution buses, and has an effective latency of \textbf{zero cycles}!
+\end{itemize}
+
+\paragraph{3. Decoupled Physical Register File (PRF) Architecture vs. Data-Carrying ROB}
+A pivotal architectural transition occurred between early out-of-order processors of the 1990s and modern processors:
+\begin{itemize}
+    \item \textbf{Data-Carrying ROB (Classic Intel P6 / Pentium Pro)}: In the classic Tomasulo + ROB scheme, speculative arithmetic results are written over the CDB directly into storage fields inside the Reorder Buffer entries. When instructions commit, the values are copied from the ROB into the separate Architectural Register File (ARF). Because each ROB entry must physically house wide 32-bit or 64-bit data registers and multi-ported forwarding multiplexers, the wiring capacitance and power dissipation scale rapidly, capping practical ROB capacities to $32 \div 40$ entries.
+    \item \textbf{Unified Physical Register File (PRF) (MIPS R10000 \cite{yeager1996mips}, DEC Alpha 21264 \cite{kessler1999alpha}, Intel Sandy Bridge/Golden Cove, AMD Zen, Apple M-Series)}:
+    \begin{itemize}
+        \item The ROB is completely decoupled from data storage: each ROB entry stores \textbf{only instruction status, exception indicators, and physical register specifiers (tags)}. No data values are stored in the ROB!
+        \item All data values (speculative and committed) reside in a centralized \textbf{Unified Physical Register File (PRF)} containing $128 \div 300+$ physical registers for 32 architectural registers.
+        \item Renaming maps architectural registers to physical registers drawn from a Free List. When execution completes, the result is written once into the allocated physical register.
+        \item When the instruction reaches the head of the ROB and commits, the processor merely marks the physical register as committed in the architectural RAT and returns the \emph{previous} physical register assigned to that architectural register back to the Free List.
+    \end{itemize}
+\end{itemize}
+This data-decoupled PRF architecture is what enables modern out-of-order instruction windows to scale to massive dimensions: 512 entries in Intel Golden Cove, 320--448 entries in AMD Zen 4/5, and over 630 entries in Apple Silicon, allowing the processor to look ahead across hundreds of instructions to expose latent ILP and hide long-latency memory cache misses.
+
+\paragraph{4. Dynamic Memory Disambiguation and Speculative Store-to-Load Forwarding}
+Because memory addresses are computed dynamically at runtime by Address Generation Units (AGUs), the processor cannot determine whether a memory load instruction conflicts with an older, pending store instruction at decode time. Modern processors manage memory dependencies through \textbf{Load and Store Queues (LSQ)}:
+\begin{itemize}
+    \item \textbf{Store-to-Load Forwarding}: If a younger load requires data from an older store whose address has already been computed and matches, the data is forwarded directly from the Store Queue entry to the load without waiting for an L1 cache access.
+    \item \textbf{Speculative Memory Disambiguation} \cite{moshovos1997dynamic, chrysos1998memory}: Rather than stalling a ready load until all preceding store addresses have been computed, the processor uses dynamic predictors (such as Store Sets \cite{chrysos1998memory}) to predict whether the load aliases with any active store. If predicted independent, the load issues speculatively to memory immediately. If an address conflict is later detected when the older store address finishes computing (a memory order violation), the speculative load and all subsequent dependent instructions are squashed and replayed, analogous to branch misprediction recovery.
+\end{itemize}
+
+\subsubsection{Comparative Summary: Evolution of Dynamic Execution}\label{sec:ooo_comparison}
+
+Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational trade-offs across four landmark generations of dynamic instruction scheduling and superscalar execution.
 
 \begin{table}[H]
   \begin{center}
-    \caption{Architectural Comparison of Dynamic Scheduling Approaches.}
+    \caption{Architectural Comparison of Dynamic Scheduling and Superscalar Execution Approaches.}
     \label{tab:scoreboard_vs_tomasulo}
+    \resizebox{\linewidth}{!}{
     \small
-    \begin{tabular}{|l|l|l|l|}
+    \begin{tabular}{|l|l|l|l|l|}
       \hline
-      \textbf{Feature} & \textbf{Scoreboard (1964)} & \textbf{Tomasulo (1967)} & \textbf{Tomasulo + ROB (1988)} \\ 
-                       & \cite{thornton1964}       & \cite{tomasulo1967}     & \cite{smith1988precise, smith1991} \\ \hline \hline
-      \textbf{Control Unit}      & Centralized scoreboard      & Distributed RS           & Distributed RS + Circular ROB \\ \hline
-      \textbf{Renaming}          & None (architectural regs)   & Via RS tags \& $Q_i$     & Dynamic via ROB entry tags \\ \hline
-      \textbf{RAW Hazards}       & Stalls \textit{Read Op}     & Waits in RS; snoops CDB  & Waits in RS; snoops CDB/ROB \\ \hline
-      \textbf{WAR Hazards}       & \textbf{Stalls} Writeback   & \textbf{Eliminated}      & \textbf{Eliminated} by renaming \\ \hline
-      \textbf{WAW Hazards}       & \textbf{Stalls} Issue       & \textbf{Eliminated}      & \textbf{Eliminated} by renaming \\ \hline
-      \textbf{Speculative State} & In register file only       & In RS / register file    & Buffered in ROB until commit \\ \hline
-      \textbf{Commit Order}      & Out-of-order                & Out-of-order             & \textbf{Strictly in-order} \\ \hline
-      \textbf{Exceptions}        & \textbf{Imprecise}          & \textbf{Imprecise}       & \textbf{Precise interrupts} \\ \hline
-      \textbf{Branch Recovery}   & Stalls at branch            & Stalls at branch         & \textbf{Instant flush of ROB} \\ \hline
-      \textbf{Hardware Cost}     & Moderate centralized logic  & High (RS + CDB routing)  & Highest (RS + CDB + FIFO ROB) \\ \hline
+      \textbf{Feature} & \textbf{Scoreboard (1964)} & \textbf{Tomasulo (1967)} & \textbf{Tomasulo + ROB (1988)} & \textbf{Modern PRF + Fused OoO} \\ 
+                       & \cite{thornton1964}       & \cite{tomasulo1967}     & \cite{smith1988precise, smith1991} & \cite{vassiliadis1994scism, yeager1996mips, kessler1999alpha, gochman2006intel} \\ \hline \hline
+      \textbf{Control Unit}      & Centralized scoreboard      & Distributed RS           & Distributed RS + Circular ROB & Distributed RS + Decoupled ROB \\ \hline
+      \textbf{Front-End / Issue} & Scalar serial issue         & Scalar serial issue      & Multi-issue superscalar       & \textbf{Macro-op fusion \& move elimination} \\ \hline
+      \textbf{Renaming}          & None (architectural regs)   & Via RS tags \& $Q_i$     & Dynamic via ROB entry tags    & \textbf{Unified PRF with RAT \& Free List} \\ \hline
+      \textbf{RAW Hazards}       & Stalls \textit{Read Op}     & Waits in RS; snoops CDB  & Waits in RS; snoops CDB/ROB   & Waits in RS; snoops CDB/PRF \\ \hline
+      \textbf{WAR Hazards}       & \textbf{Stalls} Writeback   & \textbf{Eliminated}      & \textbf{Eliminated} by renaming & \textbf{Eliminated} by PRF renaming \\ \hline
+      \textbf{WAW Hazards}       & \textbf{Stalls} Issue       & \textbf{Eliminated}      & \textbf{Eliminated} by renaming & \textbf{Eliminated} by PRF renaming \\ \hline
+      \textbf{Speculative State} & In register file only       & In RS / register file    & Buffered in ROB data fields   & \textbf{Stored in PRF (ROB holds tags only)} \\ \hline
+      \textbf{Commit Order}      & Out-of-order                & Out-of-order             & \textbf{Strictly in-order}    & \textbf{Strictly in-order} \\ \hline
+      \textbf{Exceptions}        & \textbf{Imprecise}          & \textbf{Imprecise}       & \textbf{Precise interrupts}   & \textbf{Precise interrupts} \\ \hline
+      \textbf{Branch Recovery}   & Stalls at branch            & Stalls at branch         & Instant flush of ROB          & \textbf{Instant flush of ROB + RAT restore} \\ \hline
+      \textbf{Memory Aliasing}   & Conservative stalls         & Conservative stalls      & In-order memory issue         & \textbf{Speculative memory disambiguation} \\ \hline
+      \textbf{Hardware Window}   & Small ($\sim 4$ units)      & Small ($\sim 8\text{--}12$ RS) & Moderate ($32\text{--}64$ ROB entries) & \textbf{Massive ($320\text{--}640+$ PRF/ROB entries)} \\ \hline
     \end{tabular}
+    }
   \end{center}
 \end{table}
 
