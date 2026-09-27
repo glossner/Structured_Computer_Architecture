@@ -33,7 +33,7 @@ class DmemPort(val addrWidth: Int = 32, val dataWidth: Int = 32) extends Bundle 
   * Executes each instruction in the classic Fetch-Execute cycle as unified
   * logical functions without stall delays using unbuffered memories.
   */
-class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0) extends Module {
+class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul: Boolean = true) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
     val dmem     = new DmemPort(xlen, xlen)
@@ -46,7 +46,7 @@ class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0) extends Modu
   // Subsystem Instantiation (Reusing Prior Library Elements)
   val pc      = Module(new ProgramCounter(width = xlen, initPC = initPC))
   val decoder = Module(new RiscvDecoder)
-  val ralu    = Module(new RALU(width = xlen))
+  val ralu    = Module(new RALU(width = xlen, enableZmmul = enableZmmul))
 
   // ==========================================
   // FUNCTION 1: INSTRUCTION FETCH (IF)
