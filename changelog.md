@@ -1,3 +1,9 @@
+# 09/27/2026 09:45 Chapter Sequence Alignment: Performance Optimized Architecture (Chapter 17) & ToyRISC Design (Chapter 18)
+* **Chapter Sequence Alignment (`Latex/04_17_Performance_Optimized_Architecture.tex`, `Latex/04_18_0_ToyRISC.tex`)**:
+  * Reordered Performance Optimized Architecture to Chapter 17 (`Latex/04_17_Performance_Optimized_Architecture.tex`), positioning the complete three-tier optimization sequence (Digital Logic in Chapter 15 $\rightarrow$ Organization in Chapter 16 $\rightarrow$ Architecture in Chapter 17) directly ahead of practical processor design implementations.
+  * Renamed and reordered the ToyRISC modular processor files to Chapter 18 (`Latex/04_18_0_ToyRISC.tex`, `Latex/04_18_1_ToyRISC_organization.tex`, `Latex/04_18_2_toyRISC_implementation.tex`, `Latex/04_18_3_ToyRISC_pipelined.tex`, `Latex/04_18_4_ToyRISC_forwarding.tex`, and `Latex/04_18_5_ToyRISC_verilog.tex`).
+  * Verified that dynamic cross-references across Chapters 13, 16, 17, and 18 resolve cleanly to Chapter 17 (Performance Optimized Architecture) and Chapter 18 / Section 18.1 / Listing 18.1 / Table 18.1 (ToyRISC Design).
+
 # 09/27/2026 09:15 Front Matter: First Edition Preface Restoration & Second Edition Placeholder
 * **First Edition Preface Restoration (`Latex/00_main.tex`, `README.md`)**:
   * Restored the original First Edition signed and dated entry (June 3rd, 2026) in both `Latex/00_main.tex` and `README.md`, preserving the historical toolchain statement indicating testing with Chisel 6.6.0.
