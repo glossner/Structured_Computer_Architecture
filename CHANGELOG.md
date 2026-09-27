@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - 2026-09-27
+
+### Fixed
+- **Mathematical Range Typography Standardization (Chapters 12 & 16)**:
+  - Replaced 22 non-standard instances across Chapters 12 and 16 where the division symbol (`\div`) was erroneously used for numeric ranges (e.g., $1\,\text{TB} \div 30\,\text{TB}$, ROB sizes, PRF sizes, L2/L3 capacities) with proper LaTeX en-dashes (`\text{--}`), while strictly preserving genuine arithmetic division operators in Chapter 1.
+- **Section 12.4 Cleanup**:
+  - Removed redundant introductory paragraph (`\paragraph{Microarchitectural Optimization vs. Fundamental Architecture}`).
+
+### Added
+- **Early Stored-Program Computing Landmark Citations (Section 12.4)**:
+  - Added authoritative historical citations in Section 12.4 (`Latex/03_12_von_neumann_4-OS.tex`) for early physical 4-OS implementations: Maurice V. Wilkes and William Renwick's Cambridge EDSAC (`wilkes1949edsac`, the first operational stored-program computer in regular service, utilizing mercury delay lines), the Moore School EDVAC (`vonNeumann1945`, `gluck1953edvac`), and the Princeton IAS machine designed by Arthur W. Burks, Herman H. Goldstine, and John von Neumann (`burks1946preliminary`, utilizing Williams-Kilburn cathode-ray tubes).
+  - Explicitly cross-referenced downstream microarchitectural optimizations: cache memory (Section 16.7.3) and virtual memory paging/TLBs (Section 16.7.4).
+- **Cache Architecture Consolidation (Chapters 13 & 16)**:
+  - Removed redundant Section 13.3 ("Cache Memories") from Chapter 13 (`Latex/03_13_harvard_5-OS.tex`), consolidating comprehensive cache microarchitecture into Section 16.7.3 while citing Maurice Wilkes' 1965 slave memories (`wilkes1965slave`) and the IBM System/360 Model 85 (`liptay1968cache`).
+- **ToyRISC Modular Organization (Chapters 13 & 17)**:
+  - Commented out Section 13.5 ("ToyRISC Processor") in Chapter 13 to eliminate duplication with Chapter 17 (ToyRISC Design), preserving all original text and figures in source comments.
+  - Added an introductory reference paragraph under "How an Instruction Set Architecture is Designed" directing readers to Chapter 17 (`\label{toyRiscDesign}`) and Chapter 16 (`\label{lect5}`).
+
 ## [Unreleased] - 2026-09-26
 
 ### Fixed
