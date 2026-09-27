@@ -77,9 +77,9 @@ Minimizing these pipeline stall penalties through performance-optimized organiza
 
 \subsection{Structure}
 
-The operating frequency of the toyRISC processor presented section \ref{toyrisc} can be increased by inserting some pipeline registers on the critical path of the combinatorial propagation. A version, adapted to be accelerated, is shown in Figure \ref{fig46} where the two memories, for data and programs, are also represented. The program memory is a synchronous memory (see \ref{syncMem}) connected in our system  combinationally  through the output multiplexers. The data memory is a synchronous pipelined memory (see \ref{sybcPipeMem}) which responds with one cycle latency to the read command.
+The operating frequency of the toyRISC processor presented in Section \ref{sec:toyrisc_arch} (Chapter \ref{toyRiscDesign}) can be increased by inserting some pipeline registers on the critical path of the combinatorial propagation. A version, adapted to be accelerated, is shown in Figure \ref{fig46} where the two memories, for data and programs, are also represented. The program memory is a synchronous memory (see \ref{syncMem}) connected in our system  combinationally  through the output multiplexers. The data memory is a synchronous pipelined memory (see \ref{sybcPipeMem}) which responds with one cycle latency to the read command.
 
-The micro-architecture is described is the same as the one presented in Listing \ref{lst:toyRISCdefines} from the chapter \ref{lect4}. The same for the Instruction Set Architecture which is in Table \ref{tab:riscISA}.
+The micro-architecture is the same as the one presented in Listing \ref{lst:toyRISCdefines} from Chapter \ref{toyRiscDesign}. The same for the Instruction Set Architecture which is in Table \ref{tab:riscISA}.
 
 \placedrawing[htbp]{figures/05b_02_pipelined_toyRISC.lp}{The pipelined version of toyRISC.}{fig46}
 

@@ -1,3 +1,9 @@
+# 09/27/2026 09:10 ToyRISC Architecture and ISA Migration to Chapter 17 (Chapters 13 & 17)
+* **ToyRISC Architecture, Organization, and ISA Migration (`Latex/04_17_1_ToyRISC_organization.tex`, `Latex/03_13_harvard_5-OS.tex`)**:
+  * Migrated non-redundant ToyRISC architecture, organization, loop-connected automata analysis, ISA specifications, opcode macro definitions (`A11_DEFINES.vh`), 28-instruction opcode Table 17.1, program execution trace Example 17.1, and single-cycle critical-path timing formulations from Section 13.5 into Chapter 17 (Section 17.1, `Latex/04_17_1_ToyRISC_organization.tex`).
+  * Preserved Section 13.5 in `Latex/03_13_harvard_5-OS.tex` strictly commented out in source code, eliminating redundancy while retaining introductory reference paragraphs pointing to Chapters 16 and 17.
+  * Resolved all internal cross-references across Chapters 12, 13, 16, and 17 (`sec:toyrisc_arch`, `tab:riscISA`, `lst:toyRISCdefines`, `exADD`, and `interrupt`) with zero undefined warnings and clean typography.
+
 # 09/27/2026 08:50 Early Stored-Program Citations, Cache Consolidation, and Range Typography (Chapters 12, 13, & 16)
 * **Early Physical 4-OS Landmark Citations (`Latex/03_12_von_neumann_4-OS.tex`)**:
   * Added authoritative historical citations in Section 12.4 for early physical single-level stored-program implementations: Maurice V. Wilkes and William Renwick's Cambridge EDSAC (`wilkes1949edsac`, the first operational stored-program computer in regular service, utilizing mercury delay lines), the Moore School EDVAC (`vonNeumann1945`, `gluck1953edvac`), and the Princeton IAS machine designed by Arthur W. Burks, Herman H. Goldstine, and John von Neumann (`burks1946preliminary`, utilizing Williams-Kilburn cathode-ray tubes).
