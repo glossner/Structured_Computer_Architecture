@@ -1,3 +1,19 @@
+# 09/27/2026 13:55 Balancing the RV32I Pipeline: ASAP7 7nm FinFET Synthesis of High-Performance Adders and Selection
+* **Diagnosis of Ripple-Carry Adder Bottleneck (`Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Highlighted that the baseline ALU's unoptimized 32-bit ripple-carry adder (RCA, $1.045\,\text{ns}$) has approximately $2\times$ the delay of any other pipeline stage in the core ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$).
+  * Showed that this slow adder acts as the primary bottleneck limiting pipelined clock frequency to $733.7\,\text{MHz}$ despite the other stages supporting $>1.6\,\text{GHz}$.
+* **ASAP7 7nm FinFET Synthesis of Chapter 15 Adders (`RTL/Chisel/src/main/scala/scabook/adders/`, `Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Implemented, unit-tested (100% pass rate in `AdderSuiteSpec.scala`), and synthesized five 32-bit adder architectures from Chapter 15 to physical gate-level netlists using the ASAP7 7nm FinFET predictive PDK:
+    * Ripple-Carry Adder (RCA): 106 cells, $13.91\,\mu\text{m}^2$, $1,045.43\,\text{ps}$ ($1.045\,\text{ns}$), $0.96\,\text{GHz}$ (baseline).
+    * Carry Lookahead Adder (CLA): 122 cells, $12.98\,\mu\text{m}^2$, $987.99\,\text{ps}$ ($0.988\,\text{ns}$), $1.01\,\text{GHz}$ ($1.06\times$ speedup).
+    * Brent-Kung Parallel Prefix Adder (BKA): 144 cells, $14.83\,\mu\text{m}^2$, $836.25\,\text{ps}$ ($0.836\,\text{ns}$), $1.20\,\text{GHz}$ ($1.25\times$ speedup).
+    * Kogge-Stone Parallel Prefix Adder (KSA): 190 cells, $17.48\,\mu\text{m}^2$, $712.57\,\text{ps}$ ($0.713\,\text{ns}$), $1.40\,\text{GHz}$ ($1.47\times$ speedup).
+    * Carry Select Adder (CSA): 190 cells, $18.01\,\mu\text{m}^2$, **519.83 ps (0.520 ns)**, **1.92 GHz** (**2.01x speedup**).
+* **Adder Selection, Chisel Integration, and Pipeline Balancing (`Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Selected the Carry Select Adder as the optimal high-speed adder for 32-bit standard cells, reducing adder latency by $50.3\%$.
+  * Inserted Section 19.4 directly after the RV32I pipelined processor, presenting comparative synthesis results, selecting the optimal adder, and providing a clean Chisel code listing illustrating only the adder invocation.
+  * Demonstrated that replacing the RCA balances all four pipeline stages ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{execute}} \approx 0.600\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$), dropping the worst-case clock period to $0.600\,\text{ns}$ and unlocking an operating frequency of **1.67 GHz** ($+127.2\%$ frequency boost, $2.27\times$ over the unoptimized baseline).
+
 # 09/27/2026 13:30 4-Stage Pipelined RV32I: 4-Step Pipeline Delay Model (SRAM Fetch, Decode, Execute, SRAM Write-Back) in ASAP7 7nm FinFET, No Forwarding, and Benchmark Evaluation
 * **ASAP7 7nm FinFET Physical ASIC Synthesis & Microarchitectural Multiplier Case Study (`Latex/04_19_2_RISCV_pipelined.tex`)**:
   * Migrated technology process from SkyWater 130nm to the predictive ASAP7 7nm FinFET PDK (`asap7sc7p5t_28`, 7.5-track standard cells, RVT, $V_{dd} = 0.70\,\text{V}$, $25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$) using Yosys and ABC.

@@ -173,6 +173,8 @@ Brent-Kung Prefix Adder & $O(2 \log_2 N)$ & $O(N)$ & 2 & Low \\ \hline
 \label{tab:adder_comparison}
 \end{table}
 
+While asymptotic big-$O$ complexity provides foundational theoretical intuition, physical silicon implementation depends critically on standard-cell driving strengths, interconnect routing congestion, and cell library delays. In Chapter \ref{riscvPipelined} (Section \ref{riscvAdderBalancing}), we synthesize these 32-bit adder topologies using the predictive ASAP7 7\,nm FinFET standard-cell library to measure empirical silicon area, critical path propagation latency, and maximum clock frequencies, selecting the optimal architecture to balance the execution stage of a 4-stage pipelined RISC-V processor.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Multi-Port Register Files}
