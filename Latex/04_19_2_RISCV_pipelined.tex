@@ -470,10 +470,214 @@ How do production computer architects resolve this dilemma when integrating mult
         \item \textbf{Stage 3}: Final carry-propagate addition (lookahead adder).
     \end{itemize}
     By inserting pipeline registers within the multiplier, each sub-stage delay is reduced to $\approx 3.5\,\text{ns}$, restoring pipeline balance and allowing the entire processor to operate at high frequencies ($>250\,\text{MHz}$) with a multiplier throughput of 1 instruction per cycle and a latency of 3 cycles.
-    
-    \item \textbf{Decoupled Execution and Out-of-Order Issue}:
-    More advanced architectures decouple long-latency arithmetic operations into independent execution pipelines with dedicated issue queues (reservation stations) and scoreboarding, allowing independent subsequent instructions to bypass the multiplier without stalling.
 \end{enumerate}
+
+\subsection{Workload Evaluation: Dhrystone 2.1 and EEMBC CoreMark on RV32I}
+\index{benchmark!Dhrystone 2.1}\index{benchmark!EEMBC CoreMark 1.0}\index{DMIPS/MHz}\index{CoreMark/MHz}
+
+To establish rigorous, industry-standard performance metrics for the baseline \texttt{RV32I} implementations, two universally accepted embedded benchmarks were ported, compiled, and executed on both the single-cycle (\texttt{RiscvFetchExecute}) and 4-stage pipelined (\texttt{RiscvPipelined}) cores:
+\begin{enumerate}
+    \item \textbf{Dhrystone 2.1} \cite{weicker1984dhrystone}: The classic synthetic systems programming benchmark representing integer data structures, pointer manipulations, array index arithmetic, string copying (\texttt{strcpy}), string comparison (\texttt{strcmp}), and control logic. The benchmark was executed across 20 full iterations with complete end-of-run data structure validation.
+    \item \textbf{EEMBC CoreMark 1.0} \cite{galon2012coremark}: The industry-standard embedded processor benchmark developed by the Embedded Microprocessor Benchmark Consortium (EEMBC). CoreMark executes three distinct computational kernels:
+    \begin{itemize}
+        \item \textbf{Matrix Manipulation}: $8 \times 8$ 2D matrix multiplication, constant scaling, and bit-extraction operations.
+        \item \textbf{Linked-List Processing}: Circular doubly-linked list search, node insertion, and pointer reversal.
+        \item \textbf{State Machine}: Finite-state machine text scanning and CRC-16 computation.
+    \end{itemize}
+    CoreMark was executed in static memory allocation mode (\texttt{MEM\_STATIC}, 2\,KB data footprint) with full self-validating CRC checksum verification ($100\%$ pass, matching official EEMBC golden signatures).
+\end{enumerate}
+
+Table \ref{tab:riscv_all_benchmarks} presents the complete execution profiles, cycle counts, effective CPIs, and measured system execution times across the DSP kernel, Dhrystone 2.1, and CoreMark 1.0.
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Workload Metric} & \textbf{DSP Kernel (Soft Mul)} & \textbf{DSP Kernel (Hard Mul)} & \textbf{Dhrystone 2.1 (20 runs)} & \textbf{CoreMark 1.0 (1 iter)} \\
+\hline
+Instruction Set Architecture     & Pure \texttt{RV32I} & \texttt{RV32I\_Zmmul} & Pure \texttt{RV32I} & Pure \texttt{RV32I} \\
+Dynamic Instructions ($I$)       & 6,511               & 804                   & 13,826              & 874,891 \\
+\hline
+Single-Cycle Cycles ($C_1$)      & 6,511               & 804                   & 13,826              & 874,891 \\
+Single-Cycle CPI                 & 1.00                & 1.00                  & 1.00                & 1.00 \\
+\hline
+4-Stage Pipelined Cycles ($C_4$) & 10,645              & 1,090                 & 20,460              & 1,340,964 \\
+4-Stage Pipelined CPI            & \textbf{1.63}       & \textbf{1.36}         & \textbf{1.48}       & \textbf{1.53} \\
+Hazard Stall Overhead            & 4,134 (+63.5\%)     & 286 (+35.6\%)         & 6,634 (+48.0\%)     & 466,073 (+53.3\%) \\
+\hline
+Core Clock Delay ($T_{\text{clk}}$)  & Single=10.57\,ns    & Single=13.64\,ns      & Single=10.57\,ns    & Single=10.57\,ns \\
+(SkyWater 130\,nm ASIC)          & Pipe=7.17\,ns       & Pipe=13.25\,ns        & Pipe=7.17\,ns       & Pipe=7.17\,ns \\
+Core Frequency ($f_{\text{max}}$)& Single=94.60\,MHz   & Single=73.31\,MHz     & Single=94.60\,MHz   & Single=94.60\,MHz \\
+                                 & Pipe=139.47\,MHz    & Pipe=75.47\,MHz       & Pipe=139.47\,MHz    & Pipe=139.47\,MHz \\
+\hline
+Core Execution Time (no memory)  & Single=68,821\,ns   & Single=10,967\,ns     & Single=146,141\,ns  & Single=9,247,598\,ns \\
+                                 & Pipe=76,325\,ns     & Pipe=14,443\,ns       & Pipe=146,698\,ns    & Pipe=9,614,712\,ns \\
+\textbf{Core-Only Speedup}       & \textbf{0.90$\times$} & \textbf{0.76$\times$} & \textbf{0.996$\times$} & \textbf{0.96$\times$} \\
+\hline
+System Delay ($T_{\text{mem}} = 5$\,ns)& Single=20.57\,ns & Single=23.64\,ns    & Single=20.57\,ns    & Single=20.57\,ns \\
+                                 & Pipe=7.17\,ns       & Pipe=13.25\,ns        & Pipe=7.17\,ns       & Pipe=7.17\,ns \\
+System Frequency ($f_{\text{sys}}$) & Single=48.61\,MHz & Single=42.30\,MHz    & Single=48.61\,MHz   & Single=48.61\,MHz \\
+                                 & Pipe=139.47\,MHz    & Pipe=75.47\,MHz       & Pipe=139.47\,MHz    & Pipe=139.47\,MHz \\
+\hline
+System Execution Time            & Single=133,931\,ns  & Single=18,974\,ns     & Single=284,401\,ns  & Single=17,996,508\,ns \\
+                                 & Pipe=76,325\,ns     & Pipe=14,443\,ns       & Pipe=146,698\,ns    & Pipe=9,614,712\,ns \\
+\textbf{Actual System Speedup}   & \textbf{1.75$\times$} & \textbf{1.31$\times$} & \textbf{1.94$\times$} & \textbf{1.87$\times$} \\
+\hline
+\textbf{Standard Metric / MHz}   & ---                 & ---                   & \textbf{0.824} (Single) & \textbf{1.143} (Single) \\
+                                 &                     &                       & \textbf{0.556} (Pipe)   & \textbf{0.746} (Pipe)   \\
+\hline
+\textbf{Aggregate Performance}   & ---                 & ---                   & \textbf{40.05} DMIPS (Single) & \textbf{55.56} CoreMarks (Single) \\
+(at System $f_{\text{sys}}$)     &                     &                       & \textbf{77.55} DMIPS (Pipe)   & \textbf{104.04} CoreMarks (Pipe)  \\
+\hline
+\end{tabular}%
+}
+\caption{Empirical benchmark evaluation of single-cycle vs.\ 4-stage pipelined \texttt{RV32I} cores in SkyWater 130\,nm ASIC technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads.}\label{tab:riscv_all_benchmarks}
+\end{table}
+
+\subsection{Why Ideal Pipeline Speedup is Inaccessible in Practice}
+\index{pipeline speedup!theoretical vs actual}\index{pipeline balancing!physical impediments}\index{stage delay quantization}\index{clock overhead}
+
+A common observation among novice computer architects is that a pipelined processor runs ``only a tiny bit faster'' than a single-cycle core, or in some configurations even slightly slower. In introductory textbooks, pipelining an $N$-stage processor is frequently described as achieving a theoretical speedup of:
+\begin{equation}
+S_{\text{ideal}} = N.
+\end{equation}
+For our 4-stage pipeline ($N = 4$), naive theory predicts a $4.0\times$ speedup. Yet, as demonstrated in Table \ref{tab:riscv_all_benchmarks}, the measured speedup in physical silicon is between $1.75\times$ and $1.94\times$ when overlapping memory latency, and actually \textit{less than 1.0$\times$} ($0.90\times\text{--}0.996\times$) when comparing core execution times alone!
+
+Why is ideal pipeline speedup impossible to achieve in physical silicon? The actual speedup of a pipelined processor over a single-cycle implementation is governed by the classic processor performance equation:
+\begin{equation}
+\text{Speedup} = \frac{\text{Time}_{\text{single}}}{\text{Time}_{\text{pipe}}} = \frac{I \times \text{CPI}_{\text{single}} \times T_{\text{clk, single}}}{I \times \text{CPI}_{\text{pipe}} \times T_{\text{clk, pipe}}} = \left(\frac{\text{CPI}_{\text{single}}}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}}\right).
+\end{equation}
+For an $N$-stage pipeline, achieving $S = N$ requires two simultaneous conditions:
+\begin{enumerate}
+    \item \textbf{Perfect CPI Invariance}: $\text{CPI}_{\text{pipe}} = \text{CPI}_{\text{single}} = 1.00$.
+    \item \textbf{Perfect Frequency Scaling}: $T_{\text{clk, pipe}} = \frac{1}{N} T_{\text{clk, single}}$.
+\end{enumerate}
+In physical hardware, three fundamental physical barriers guarantee that neither condition can ever be met:
+
+\subsubsection{1. Stage Delay Quantization and Imbalance}
+\index{pipeline balancing!delay quantization}\index{Amdahl's Law!for clock periods}
+Combinational logic cannot be sliced arbitrarily like a fluid. Logic circuits are constructed from discrete boolean primitives: multiplexers, adders, decoders, shifters, and comparator trees. In our pure \texttt{RV32I} core:
+\begin{itemize}
+    \item The complete unpipelined combinational critical path from instruction register through decode, 32-bit ALU, and writeback multiplexers is $10.57\,\text{ns}$ in SkyWater 130\,nm.
+    \item When partitioned into four stages, the Execute (EX) stage requires $7.17\,\text{ns}$ (dominated by the 32-bit adder, barrel shifter, branch comparator, and ALU output multiplexers).
+    \item The Instruction Decode (ID) and Memory/Write-Back (MEM/WB) stages require only $\approx 4.2\,\text{ns}$ and $\approx 3.8\,\text{ns}$, respectively.
+\end{itemize}
+Because synchronous sequential pipelines require all stages to operate at a common clock period, the clock period is strictly bounded by the slowest stage:
+\begin{equation}
+T_{\text{clk, pipe}} = \max\left(T_{\text{IF}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{MEM}}\right) + T_{\text{overhead}} = 7.17\,\text{ns}.
+\end{equation}
+Consequently, the frequency improvement is only:
+\begin{equation}
+\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}} = \frac{10.57\,\text{ns}}{7.17\,\text{ns}} = 1.474\times \quad (\text{a } +47.4\% \text{ frequency gain, far below } 4.0\times).
+\end{equation}
+Stage delay imbalance alone annihilates $(4.0 - 1.474) / 4.0 = \mathbf{63.1\%}$ of the theoretical speedup before a single instruction has executed!
+
+\subsubsection{2. Sequential Register Overhead}
+\index{pipeline register overhead}\index{setup time}\index{clock-to-Q delay}
+Every pipeline stage boundary requires sequential state storage (D flip-flops in standard cells):
+\begin{equation}
+T_{\text{stage}} = T_{\text{comb}} + t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}.
+\end{equation}
+In the SkyWater 130\,nm standard cell library (\texttt{sky130\_fd\_sc\_hd}):
+\begin{itemize}
+    \item Flip-flop setup time: $t_{\text{setup}} \approx 0.25\,\text{ns}$.
+    \item Clock-to-Q propagation delay: $t_{\text{cq}} \approx 0.35\,\text{ns}$.
+    \item Clock distribution skew and jitter margin: $t_{\text{skew}} \approx 0.20\,\text{ns}$.
+\end{itemize}
+This introduces an unshrinkable sequential overhead of $T_{\text{reg\_overhead}} \approx 0.80\,\text{ns}$ at \textit{every stage boundary}. Over a 4-stage pipeline, $3.20\,\text{ns}$ of cumulative delay is consumed solely by registers. This overhead represents a dead penalty that performs zero computational work, directly diminishing the achievable clock frequency.
+
+\subsubsection{3. Hazard-Induced CPI Expansion}
+\index{hazard penalties}\index{CPI expansion}
+In a single-cycle processor, data dependencies and branch decisions are resolved combinationally within the same clock period in which the instruction executes:
+\begin{equation}
+\text{CPI}_{\text{single}} \equiv 1.00.
+\end{equation}
+In a pipelined processor, instructions execute concurrently across time. When an instruction in the Decode stage depends on a value being computed in Execute, the Hazard Detection Unit must inject a stall cycle (bubble). Furthermore, when a branch or jump condition is evaluated in the Execute stage, the two instructions fetched speculatively into IF and ID must be discarded, incurring a 2-cycle branch penalty.
+
+Across real embedded workloads, this hazard overhead expands the effective CPI:
+\begin{itemize}
+    \item \textbf{Dhrystone 2.1}: $\text{CPI}_{\text{pipe}} = 1.48$ (+48.0\% cycle penalty).
+    \item \textbf{CoreMark 1.0}: $\text{CPI}_{\text{pipe}} = 1.53$ (+53.3\% cycle penalty).
+    \item \textbf{DSP Kernel (Soft Mul)}: $\text{CPI}_{\text{pipe}} = 1.63$ (+63.5\% cycle penalty).
+\end{itemize}
+
+Now observe what happens when we calculate the net core performance speedup (without memory latency):
+\begin{equation}
+\text{Speedup}_{\text{core}} = \left(\frac{1}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}}\right) = \left(\frac{1}{1.53}\right) \times 1.474 = 0.654 \times 1.474 = \mathbf{0.963\times}.
+\end{equation}
+The core-only speedup is actually less than $1.0\times$! The 47.4\% frequency improvement obtained from pipelining the datapath is completely canceled out by the 53.3\% cycle penalty caused by pipeline stalls and branch flushes.
+
+\subsubsection{The Real Triumph of Pipelining: Overlapping Memory Access Latency}
+\index{memory latency overlapping}\index{Harvard architecture!pipelined overlap}
+Why, then, do computer architects pipeline processors? The answer lies in the system-level memory interface:
+\begin{itemize}
+    \item In a \textbf{single-cycle machine}, the clock cycle must encompass the entire round-trip latency of instruction memory access ($T_{\text{imem}}$), core combinational datapath delay ($T_{\text{core}}$), and data memory access ($T_{\text{dmem}}$) sequentially within a single tick:
+    \begin{equation}
+    T_{\text{clk, single}} = T_{\text{imem}} + T_{\text{core}} + T_{\text{dmem}} = 5.0\,\text{ns} + 10.57\,\text{ns} + 5.0\,\text{ns} = 20.57\,\text{ns} \quad (48.61\,\text{MHz}).
+    \end{equation}
+    \item In a \textbf{pipelined machine}, instruction fetch (IF) and data memory access (MEM) occur in completely separate pipeline stages separated by synchronous registers. Memory latency is overlapped across distinct clock cycles:
+    \begin{equation}
+    T_{\text{clk, pipe}} = \max\left(T_{\text{core}}, T_{\text{mem}}\right) = \max(7.17\,\text{ns}, 5.0\,\text{ns}) = 7.17\,\text{ns} \quad (139.47\,\text{MHz}).
+    \end{equation}
+\end{itemize}
+Overlapping memory latency increases system operating frequency by:
+\begin{equation}
+\frac{T_{\text{clk, single, sys}}}{T_{\text{clk, pipe, sys}}} = \frac{20.57\,\text{ns}}{7.17\,\text{ns}} = \mathbf{2.869\times}.
+\end{equation}
+Multiplying this $2.869\times$ frequency advantage by the CPI factor ($1 / 1.53$) yields the net system speedup:
+\begin{equation}
+\text{Speedup}_{\text{sys}} = 2.869 \times \frac{1}{1.53} = \mathbf{1.87\times} \quad (\text{CoreMark}), \quad \mathbf{1.94\times} \quad (\text{Dhrystone}).
+\end{equation}
+Thus, pipelining delivers a robust $+87\%\text{--}94\%$ application speedup in realistic systems, but the theoretical $4.0\times$ speedup is fundamentally inaccessible due to the physics of stage imbalance, register overhead, and control/data hazards.
+
+\subsection{Benchmark Taxonomy: Dhrystone, CoreMark, Embench, and SPEC CPU}
+\index{benchmark!taxonomy}\index{SPEC CPU}\index{Embench-IoT}
+
+To contextualize the evaluation of computer systems, architects classify benchmarks into distinct tiers based on target platform complexity, operating system requirements, and hardware capability. Table \ref{tab:benchmark_taxonomy} illustrates this taxonomy.
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Benchmark Suite} & \textbf{Target Class} & \textbf{OS / Runtime Requirement} & \textbf{Memory Footprint} & \textbf{Primary Evaluation Metric} \\
+\hline
+\textbf{SPEC CPU2017} \cite{henning2006spec} & Application Processors & POSIX OS (Linux), MMU, glibc & $>1\text{--}2$\,GB RAM & SPECspeed, SPECrate \\
+\textbf{CoreMark 1.0} \cite{galon2012coremark} & Embedded Microcontrollers & Bare-metal (freestanding) & $2\text{--}6$\,KB SRAM & CoreMark/MHz, CoreMarks \\
+\textbf{Dhrystone 2.1} \cite{weicker1984dhrystone} & Embedded Microcontrollers & Bare-metal (freestanding) & $<10$\,KB SRAM & DMIPS/MHz, DMIPS \\
+\textbf{Embench-IoT} \cite{embench2020} & IoT / Microcontrollers & Bare-metal (freestanding) & $<64$\,KB Flash/SRAM & Relative Geometric Mean \\
+\textbf{MLPerf Tiny} & Embedded Edge AI & Bare-metal / RTOS & $<256$\,KB SRAM & Latency, Energy/Inference \\
+\hline
+\end{tabular}%
+}
+\caption{Taxonomy of standard computer architecture benchmarks across application and embedded processor classes.}\label{tab:benchmark_taxonomy}
+\end{table}
+
+\subsubsection{Why SPEC CPU Cannot Run on Bare-Metal Microcontrollers}
+Students frequently inquire why standard desktop/server benchmarks such as \textbf{SPEC CPU} (SPEC CPU2006 or SPEC CPU2017) are not used to evaluate microcontroller cores like the baseline \texttt{RV32I} core developed in this chapter. 
+
+SPEC CPU is designed exclusively for \textbf{application-class processors} (e.g., 64-bit x86-64, ARM Cortex-A, or RISC-V RV64GC) and requires an extensive underlying system software infrastructure:
+\begin{enumerate}
+    \item \textbf{Memory Management Unit (MMU)}: SPEC benchmarks rely heavily on virtual memory address spaces, demand paging, and memory protection provided by hardware page tables (e.g., RISC-V Sv39 or Sv48 MMUs). A bare-metal microcontroller core without an MMU cannot provide virtual memory.
+    \item \textbf{Full Operating System}: SPEC workloads are full Unix/C++ applications requiring POSIX system calls (\texttt{fork}, \texttt{exec}, \texttt{mmap}, file I/O, threads) provided by a full Linux or BSD operating system.
+    \item \textbf{Gigabyte Memory Capacity}: SPEC CPU2017 benchmarks require a minimum of 1 to 2\,GB of physical RAM to load their multi-megabyte reference datasets into memory. Microcontrollers typically operate with tens of kilobytes of SRAM.
+    \item \textbf{Proprietary Licensing}: SPEC benchmarks are commercial software licensed by the Standard Performance Evaluation Corporation for several thousand dollars, preventing public redistribution or open academic inclusion.
+\end{enumerate}
+
+\subsubsection{The Embedded Benchmark Standards: Dhrystone, CoreMark, and Embench}
+For microcontroller-class architectures (such as \texttt{RV32I}, ARM Cortex-M0/M3/M4, and MicroBlaze), the computer architecture community relies on lightweight, freestanding benchmark suites:
+\begin{itemize}
+    \item \textbf{Dhrystone 2.1}: Developed in 1984, Dhrystone is a synthetic integer benchmark that measures CPU throughput in terms of ``Dhrystones per second.'' Results are typically normalized to the VAX 11/780 (which scored 1,757 Dhrystones per second, defining 1 DMIPS):
+    \begin{equation}
+    \text{DMIPS/MHz} = \frac{10^6}{\text{Cycles per Dhrystone Run} \times 1,757}.
+    \end{equation}
+    Our single-cycle \texttt{RV32I} core scores $\mathbf{0.824\,\text{DMIPS/MHz}}$, while the 4-stage pipeline scores $\mathbf{0.556\,\text{DMIPS/MHz}}$ (reflecting its 1.48 CPI). Although historically widespread, Dhrystone has fallen out of modern favor because its tight loops can be disproportionately affected by compiler string inlining and dead-code elimination.
+    
+    \item \textbf{EEMBC CoreMark}: Developed by EEMBC to replace Dhrystone, CoreMark executes realistic algorithms (matrix manipulation, linked lists, state machines) specifically designed to prevent optimizing compilers from eliminating computation. Its self-checking CRC guarantees that every algorithmic step produces valid data. On our 4-stage pipeline, CoreMark delivers $\mathbf{0.746\,\text{CoreMark/MHz}}$ ($\mathbf{104.04\,\text{CoreMarks}}$ at system frequency).
+    
+    \item \textbf{Embench-IoT}: Developed by the Free and Open Source Silicon (FOSSi) Foundation in collaboration with David Patterson, Embench is a modern, open-source suite of 19 real-world embedded programs (e.g., AES encryption, Huffman decoding, Minver, QR-code, Wic) designed specifically to provide a reproducible, open-source alternative to proprietary benchmarks for microcontroller-class RISC-V cores.
+\end{itemize}
 
 
 \section{Summary}\label{riscvSummary}
@@ -488,7 +692,9 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item Branch and jump conditions are evaluated in the EX stage, incurring a 2-cycle control hazard penalty on taken transfers while executing non-taken branches with zero cycle overhead.
     \item Both processor cores were verified against all official RISC-V architectural conformance test suites (38 RV32I suites and 4 Zmmul suites) using Chisel simulation, achieving a 100\% signature match against Spike golden references.
     \item Full physical synthesis targeting the open-source SkyWater 130\,nm standard cell library was conducted for the baseline \texttt{RV32I} cores. The 4-stage pipeline delivered a +47.4\% core clock frequency increase ($94.6\,\text{MHz} \to 139.5\,\text{MHz}$) and a +186.9\% system clock frequency increase when overlapping realistic 5\,ns memory latency ($48.6\,\text{MHz} \to 139.5\,\text{MHz}$), achieving a measured \textbf{1.75$\times$ application speedup} on a real DSP benchmark.
-    \item A dedicated microarchitectural case study evaluated the standard \texttt{Zmmul} hardware multiplication extension. While adding hardware \texttt{MUL} reduced benchmark instruction count by 8.1$\times$, integrating an unpipelined $32 \times 32$ multiplier into the EX stage caused a 14.0$\times$ ALU area explosion ($6,341\,\mu\text{m}^2 \to 88,870\,\mu\text{m}^2$) and an 11.09\,ns critical path bottleneck. This bottleneck caused a \textbf{frequency collapse} (pipelined frequency gain dropped from +47.4\% down to +2.95\%), demonstrating the necessity of pipeline balancing and motivating multi-cycle or internally pipelined execution units.
+    \item Comprehensive physical benchmark evaluation was performed across DSP kernels, Dhrystone 2.1 (20 runs), and EEMBC CoreMark 1.0 (1 iteration, 2K data footprint). The 4-stage pipeline achieved $100\%$ validation matching golden signatures, scoring $0.556\,\text{DMIPS/MHz}$ ($77.55\,\text{DMIPS}$ at system frequency) and $0.746\,\text{CoreMark/MHz}$ ($104.04\,\text{CoreMarks}$ at system frequency).
+    \item Pipelining an $N$-stage processor was shown to be bounded in practice by three physical barriers: (1) stage delay quantization/imbalance (Amdahl's Law for clock frequencies), (2) sequential flip-flop overhead ($t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}$), and (3) hazard-induced CPI expansion ($\text{CPI} \approx 1.48\text{--}1.63$). Without memory latency, the pipelined core is actually slightly slower than single-cycle ($0.96\times$ on CoreMark); real system performance gains ($1.87\times\text{--}1.94\times$) arise fundamentally from overlapping memory access latency across clock cycles.
+    \item A taxonomy of computer architecture benchmarks was established: application-class benchmarks such as SPEC CPU2017 require virtual memory (MMU), a full POSIX OS (Linux), and gigabytes of RAM, rendering them physically inapplicable to bare-metal microcontroller-class cores. Microcontroller-class architectures rely on freestanding suites including Dhrystone, EEMBC CoreMark, and Embench-IoT.
 \end{itemize}
 
 
@@ -592,4 +798,49 @@ Compare the physical synthesis data of the pure \texttt{RV32I} core (Table \ref{
 \end{enumerate}
 $\diamond$
 \end{problem}
+
+\begin{problem}
+Consider the empirical EEMBC CoreMark 1.0 benchmark results from Table \ref{tab:riscv_all_benchmarks} executing on the pure \texttt{RV32I} single-cycle core ($T_{\text{clk}} = 10.57\,\text{ns}$) and 4-stage pipelined core ($T_{\text{clk}} = 7.17\,\text{ns}$):
+\begin{enumerate}
+    \item A student expects a 4-stage pipeline to achieve a $4.0\times$ speedup over the single-cycle core. Compute the actual core-only speedup (without memory latency) using the instruction count $I = 874,891$, single-cycle cycles $C_1 = 874,891$, and pipelined cycles $C_4 = 1,340,964$. Explain why the pipelined core is actually slower than the single-cycle core in isolation.
+    \item In a realistic system, instruction and data memories exhibit an access latency of $T_{\text{mem}} = 5.0\,\text{ns}$. Compute the single-cycle and pipelined system clock periods, system frequencies, and total system execution times. What is the actual system speedup?
+    \item Why cannot desktop/server benchmarks such as SPEC CPU2017 be executed directly on bare-metal \texttt{RV32I} microcontroller cores? What modern open-source benchmark suite was created to evaluate microcontroller-class RISC-V processors?
+\end{enumerate}
+
+\textbf{Solution}:
+\begin{enumerate}
+    \item Core-only execution times:
+    \begin{equation}
+    T_{\text{exec, single}} = C_1 \times T_{\text{clk, single}} = 874,891 \times 10.57\,\text{ns} = 9,247,598\,\text{ns}.
+    \end{equation}
+    \begin{equation}
+    T_{\text{exec, pipe}} = C_4 \times T_{\text{clk, pipe}} = 1,340,964 \times 7.17\,\text{ns} = 9,614,712\,\text{ns}.
+    \end{equation}
+    \begin{equation}
+    \text{Speedup}_{\text{core}} = \frac{9,247,598\,\text{ns}}{9,614,712\,\text{ns}} = \mathbf{0.962\times}.
+    \end{equation}
+    The pipelined core is $3.8\%$ slower because stage delay imbalance limits the frequency scaling factor to $10.57 / 7.17 = 1.474\times$, while RAW data hazard stalls and branch flush bubbles inflate the pipelined CPI to $C_4 / I = 1.533$ ($+53.3\%$ cycle overhead). Because $1.533 > 1.474$, the stall overhead completely negates the frequency advantage.
+    \item With $5.0\,\text{ns}$ memory latency:
+    \begin{equation}
+    T_{\text{sys, single}} = T_{\text{imem}} + T_{\text{core}} + T_{\text{dmem}} = 5.0 + 10.57 + 5.0 = 20.57\,\text{ns} \quad (f_{\text{sys, single}} = 48.61\,\text{MHz}).
+    \end{equation}
+    \begin{equation}
+    T_{\text{sys, pipe}} = \max(T_{\text{core}}, T_{\text{mem}}) = \max(7.17, 5.0) = 7.17\,\text{ns} \quad (f_{\text{sys, pipe}} = 139.47\,\text{MHz}).
+    \end{equation}
+    Total system execution times:
+    \begin{equation}
+    T_{\text{sys-exec, single}} = 874,891 \times 20.57\,\text{ns} = 17,996,508\,\text{ns}.
+    \end{equation}
+    \begin{equation}
+    T_{\text{sys-exec, pipe}} = 1,340,964 \times 7.17\,\text{ns} = 9,614,712\,\text{ns}.
+    \end{equation}
+    \begin{equation}
+    \text{Actual System Speedup} = \frac{17,996,508\,\text{ns}}{9,614,712\,\text{ns}} = \mathbf{1.872\times} \quad (+87.2\% \ \text{performance boost}).
+    \end{equation}
+    Memory overlapping increases the operating frequency ratio to $20.57 / 7.17 = 2.869\times$, converting the core-only deficit into a significant system-level performance gain.
+    \item SPEC CPU2017 cannot run on bare-metal \texttt{RV32I} microcontroller cores because SPEC benchmarks require a Memory Management Unit (MMU) with virtual memory paging, a full POSIX operating system (Linux), multi-gigabyte RAM capacity, glibc with dynamic file I/O, and commercial proprietary licenses. The modern open-source embedded alternative created by David Patterson and the FOSSi consortium is \textbf{Embench-IoT}.
+\end{enumerate}
+$\diamond$
+\end{problem}
+
 

@@ -84,7 +84,8 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
   val maxCycles = 500000
 
   def runBenchmark(binPath: java.nio.file.Path, enableZmmul: Boolean, benchName: String,
-                   tClkSingle: Double, tClkPipe: Double): Unit = {
+                   tClkSingle: Double, tClkPipe: Double,
+                   tohostAddr: Long = 0x80001000L, maxCycles: Int = 500000): Unit = {
     assert(Files.exists(binPath), s"Benchmark binary $binPath not found")
     val binBytes = Files.readAllBytes(binPath)
 
@@ -128,7 +129,7 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
         dut.clock.step(1)
         cyclesSingle += 1
       }
-      assert(completed, s"Single-cycle simulation for $benchName timed out after $cyclesSingle cycles")
+      assert(completed, s"Single-cycle simulation for $benchName timed out after $cyclesSingle cycles (last PC = 0x${dut.io.imem.addr.peek().litValue.toLong.toHexString})")
     }
 
     // 2. Run 4-Stage Pipelined Core (RiscvPipelined)
@@ -221,5 +222,17 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
     val zmmulBin = Paths.get("src/test/resources/benchmark/dsp_bench.bin")
     // SkyWater 130nm RV32I_Zmmul synthesis: Single T_clk = 13.64 ns, Pipe T_clk = 13.25 ns
     runBenchmark(zmmulBin, enableZmmul = true, "RV32I_Zmmul Benchmark (DSP Kernel with Hardware Multiply)", 13.64, 13.25)
+  }
+
+  it should "execute Dhrystone 2.1 benchmark on Single-Cycle and 4-Stage cores" in {
+    val dhryBin = Paths.get("src/test/resources/benchmark/dhrystone.bin")
+    // SkyWater 130nm RV32I synthesis: Single T_clk = 10.57 ns, Pipe T_clk = 7.17 ns
+    runBenchmark(dhryBin, enableZmmul = false, "Dhrystone 2.1 Benchmark (20 runs)", 10.57, 7.17, tohostAddr = 0x80040000L, maxCycles = 500000)
+  }
+
+  it should "execute EEMBC CoreMark benchmark on Single-Cycle and 4-Stage cores" in {
+    val coremarkBin = Paths.get("src/test/resources/benchmark/coremark.bin")
+    // SkyWater 130nm RV32I synthesis: Single T_clk = 10.57 ns, Pipe T_clk = 7.17 ns
+    runBenchmark(coremarkBin, enableZmmul = false, "EEMBC CoreMark 1.0 Benchmark (1 iteration)", 10.57, 7.17, tohostAddr = 0x80040000L, maxCycles = 2000000)
   }
 }

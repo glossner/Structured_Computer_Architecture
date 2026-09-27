@@ -460,4 +460,9 @@ runs/
 *.synth.v
 *.synth.json
 
+# External benchmarks (CoreMark, Dhrystone, SPEC, Embench)
+benchmarks/
+external_benchmarks/
+
+
 
