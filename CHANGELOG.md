@@ -10,13 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-27
 
 ### Changed
+- **Chapter Sequence Alignment: Performance Optimized Architecture (Chapter 17) & ToyRISC Design (Chapter 18)**:
+  - Reordered Performance Optimized Architecture to Chapter 17 (`Latex/04_17_Performance_Optimized_Architecture.tex`), positioning the complete three-tier optimization sequence (Digital Logic in Chapter 15 $\rightarrow$ Organization in Chapter 16 $\rightarrow$ Architecture in Chapter 17) directly ahead of practical processor design implementations.
+  - Renamed and reordered the ToyRISC modular processor files to Chapter 18 (`Latex/04_18_0_ToyRISC.tex`, `Latex/04_18_1_ToyRISC_organization.tex`, `Latex/04_18_2_toyRISC_implementation.tex`, `Latex/04_18_3_ToyRISC_pipelined.tex`, `Latex/04_18_4_ToyRISC_forwarding.tex`, and `Latex/04_18_5_ToyRISC_verilog.tex`).
+  - Verified that dynamic cross-references across Chapters 13, 16, 17, and 18 resolve cleanly to Chapter 17 (Performance Optimized Architecture) and Chapter 18 / Section 18.1 / Listing 18.1 / Table 18.1 (ToyRISC Design).
 - **Front Matter: First Edition Preface Restoration and Second Edition Placeholder**:
   - Restored the original signed and dated First Edition preface (June 3rd, 2026) in both `Latex/00_main.tex` and `README.md`, preserving the historical toolchain note referencing Chisel 6.6.0 testing.
   - Added a placeholder for the Preface to the Second Edition in both `Latex/00_main.tex` and `README.md`, documenting the upgrade to Chisel 7.15.0 and Scala 2.13.18 (supported by CIRCT firtool 1.158.0 and `EphemeralSimulator`) along with explicit references to the BreadBoard Computer Zoo repository ([https://github.com/glossner/BBzoo](https://github.com/glossner/BBzoo)) and the KryptoNyte RISC-V processor family repository ([https://github.com/Ypologist/KryptoNyte](https://github.com/Ypologist/KryptoNyte)).
-- **ToyRISC Architecture, Organization, and ISA Migration (Chapters 13 & 17)**:
-  - Migrated non-redundant ToyRISC architecture, organization, loop-connected automata analysis, ISA specifications, opcode macro definitions (`A11_DEFINES.vh`), 28-instruction opcode Table 17.1, program execution trace Example 17.1, and single-cycle critical-path timing formulations from Section 13.5 into Chapter 17 (Section 17.1, `Latex/04_17_1_ToyRISC_organization.tex`).
+- **ToyRISC Architecture, Organization, and ISA Migration (Chapters 13 & 18)**:
+  - Migrated non-redundant ToyRISC architecture, organization, loop-connected automata analysis, ISA specifications, opcode macro definitions (`A11_DEFINES.vh`), 28-instruction opcode Table 18.1, program execution trace Example 18.1, and single-cycle critical-path timing formulations from Section 13.5 into Chapter 18 (Section 18.1, `Latex/04_18_1_ToyRISC_organization.tex`).
   - Maintained Section 13.5 in `Latex/03_13_harvard_5-OS.tex` fully commented out in source, eliminating redundancy while preserving historical text.
-  - Resolved all internal cross-references across Chapters 12, 13, 16, and 17 (`sec:toyrisc_arch`, `tab:riscISA`, `lst:toyRISCdefines`, `exADD`, and `interrupt`) with zero undefined references.
+  - Resolved all internal cross-references across Chapters 12, 13, 16, 17, and 18 (`sec:toyrisc_arch`, `tab:riscISA`, `lst:toyRISCdefines`, `exADD`, and `interrupt`) with zero undefined references.
 
 ### Fixed
 - **Mathematical Range Typography Standardization (Chapters 12 & 16)**:
