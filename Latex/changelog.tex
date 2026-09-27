@@ -7,6 +7,11 @@
 This section summarizes notable changes to the textbook, code listings, and hardware testbenches since the release of the First Edition PDF (\texttt{Structured\_Computer\_Architecture\_1st\_edition\_2026\_06\_03.pdf}, June 3, 2026).
 
 \begin{itemize}
+    \item \textbf{Front Matter: First Edition Preface Restoration and Second Edition Placeholder}:
+    \begin{itemize}
+        \item \textit{First Edition Preface Restoration}: Restored the original First Edition signed and dated entry (June 3rd, 2026) in both \texttt{Latex/00\_main.tex} and \texttt{README.md}, preserving the historical toolchain statement reflecting Chisel 6.6.0 testing.
+        \item \textit{Second Edition Preface Placeholder}: Added a dedicated placeholder for the Preface to the Second Edition, detailing the environment upgrade to Chisel 7.15.0 and Scala 2.13.18 (with CIRCT firtool 1.158.0 and \texttt{EphemeralSimulator}) and incorporating explicit architectural references to the BreadBoard Computer Zoo repository (\url{https://github.com/glossner/BBzoo}) and the KryptoNyte RISC-V processor family repository (\url{https://github.com/Ypologist/KryptoNyte}).
+    \end{itemize}
     \item \textbf{ToyRISC Architecture, Organization, and ISA Migration (Chapters 13 \& 17)}:
     \begin{itemize}
         \item \textit{Section 17.1 (ToyRISC Architecture and Organization)}: Integrated the complete non-redundant architectural specifications of the ToyRISC processor into Chapter \ref{toyRiscDesign} (\texttt{Latex/04\_17\_1\_ToyRISC\_organization.tex}). Included the 5-OS block diagram (Figure \ref{fig43}), loop-connected automata analysis (PC, RALU, and DCD interrupt automaton with \texttt{\textbackslash label\{interrupt\}}), ISA definition and register-register/immediate formats, opcode macro listing (\texttt{A11\_DEFINES.vh}, Listing \ref{lst:toyRISCdefines}), 28-instruction opcode and mnemonics table (Table \ref{tab:riscISA}), program execution trace (Example \ref{exADD}), and single-cycle critical-path timing formulations.
