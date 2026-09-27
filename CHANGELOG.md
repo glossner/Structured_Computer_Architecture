@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-09-26
 
 ### Fixed
+- **Bibliographic Citation Standardization (Chapters 15, 16, & 18)**:
+  - Standardized citations across Chapters 15, 16, and 18 to appear as parenthetical references at the end of sentences using `\cite{...}` (leveraging the document's `\let\cite\citep` macro definition), rendering consistent `(Author, Year)` parenthetical citations throughout the text.
 - **Chisel Listing Splitting & Layout (Chapters 9 & 10)**:
   - Eliminated listing splitting across page turns for all Chisel listings in Chapters 9 and 10 (`SRAM.scala`, `PipelinedSRAM.scala`, `RegFile2R1WVec.scala`, `RegFile2R1WSRAM.scala`, `RiscvRegFile.scala`, `LanguageRecognizer.scala`, `GCD.scala`, `ProgramCounter.scala`, and `RALU.scala`), ensuring unbroken, contiguous single-page presentation.
   - Corrected Listing 9.6 to properly include `PipelinedSRAM.scala` (with `RegNext`) instead of replicating `SRAM.scala`.

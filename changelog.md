@@ -1,3 +1,8 @@
+# 09/27/2026 07:30 Bibliographic Citation Standardization (Chapters 15, 16, & 18)
+* **Citation Standardization (`Latex/04_15_...`, `Latex/04_16_...`, `Latex/04_18_...`)**:
+  * Standardized citations across Chapters 15, 16, and 18 to appear as parenthetical references at the end of sentences using `\cite{...}` (leveraging the document's `\let\cite\citep` macro definition), rendering consistent `(Author, Year)` parenthetical citations throughout the text.
+  * Replaced markdown bold tags with LaTeX `\textbf{}` formatting in Chapter 18.
+
 # 09/27/2026 07:15 Performance Optimized Architecture (Chapter 18) & Hardware Multithreading
 
 * **Performance Optimized Architecture (Chapter 18 - `Latex/04_18_Performance_Optimized_Architecture.tex`)**:

@@ -716,7 +716,7 @@ In early, strictly sequential computers (such as ENIAC, EDVAC, UNIVAC, and the I
 The architectural necessity of branch prediction arose the exact moment computer architects decoupled instruction fetching from arithmetic execution through \textbf{instruction prefetching, pipelining, and lookahead}. When instruction fetching runs several clock cycles ahead of the execution stage, the instruction unit encounters conditional branches whose outcomes depend on arithmetic or logical flags that have not yet been evaluated. The architect is confronted with a fundamental dilemma: stall instruction fetching until the condition resolves (wasting precious pipeline throughput), or make an educated guess and proceed \emph{speculatively} down the anticipated instruction path.
 
 \paragraph{The Earliest Implementation: IBM 7030 Stretch (1956--1961)}
-Hardware branch prediction and speculative execution were first conceived and built in the late 1950s by the design team of the \textbf{IBM 7030 (known as ``Stretch'')} supercomputer project \citep{buchholz1962}, managed by Stephen Dunwell with system architecture directed by Gene Amdahl, John Cocke, and Frederick Brooks. Stretch incorporated a dedicated \textbf{Instruction Unit (I-Unit)} documented by Richard T. Blosk \citep{blosk1960} and a \textbf{Look-Ahead Unit} designed by Richard S. Ballance, John Cocke, and Harwood G. Kolsky \citep{ballance1962lookahead}:
+Hardware branch prediction and speculative execution were first conceived and implemented in the late 1950s for the \textbf{IBM 7030 (known as ``Stretch'')} supercomputer project \cite{buchholz1962}. Stretch was managed by Stephen Dunwell, with system architecture developed by Gene Amdahl, John Cocke, and Frederick Brooks. Stretch decoupled instruction processing across specialized hardware units, integrating an advanced \textbf{Instruction Unit (I-Unit)} and a speculative \textbf{Look-Ahead Unit} \cite{blosk1960, ballance1962lookahead}:
 \begin{itemize}
     \item \textbf{Index-Dependent and Unconditional Branches:} Unconditional jumps and branches conditioned on index registers were resolved and executed directly within the I-Unit with zero branch penalty.
     \item \textbf{Static Prediction (Predict Untaken):} For conditional branches depending on pending arithmetic results, the initial Stretch machines implemented the first hardware branch predictor: they statically \textbf{predicted the branch as untaken} and speculatively prefetched instructions along the sequential fall-through path. Subsequent revisions refined this heuristic to predict based on the current state of indicator bits (condition codes).
@@ -729,12 +729,12 @@ Following Stretch, pipelined machines in the 1960s and 1970s relied primarily on
 \paragraph{The Genesis of Dynamic Branch Prediction (Late 1970s)}
 Static heuristics cannot adapt to data-dependent branch behaviors that vary across program phases. The revolutionary transition to \textbf{dynamic branch prediction}---where specialized hardware monitors runtime branch outcomes to dynamically learn and predict future behavior---emerged independently in the late 1970s:
 \begin{itemize}
-    \item \textbf{Tom McWilliams and Curt Widdoes (1977):} Working on the \textbf{S-1 supercomputer} project at Lawrence Livermore National Laboratory (LLNL) \citep{s1project1979}, McWilliams and Widdoes invented the \textbf{2-bit saturating counter branch predictor}. To maintain high throughput in their deeply pipelined processor without stalling on conditional branches, their design used a ``reverse bit'' mechanism that required two consecutive mispredictions before reversing the predicted branch direction.
-    \item \textbf{James E. Smith (1979--1981):} Concurrently, James E. Smith at Control Data Corporation (CDC) and the University of Wisconsin formalized table-based dynamic branch prediction, patenting random-access memory branch predictor tables \citep{smith1983patent} and publishing the seminal academic evaluation of 1-bit and 2-bit saturating counters and Branch Target Buffers (BTBs) \citep{smith1981study}, which was subsequently expanded by Johnny K. F. Lee and Alan Jay Smith \citep{lee1984branch}.
+    \item \textbf{Tom McWilliams and Curt Widdoes (1977):} Working on the \textbf{S-1 supercomputer} project at Lawrence Livermore National Laboratory (LLNL), McWilliams and Widdoes invented the \textbf{2-bit saturating counter branch predictor}. To maintain high throughput in their deeply pipelined processor without stalling on conditional branches, their design used a ``reverse bit'' mechanism that required two consecutive mispredictions before reversing the predicted branch direction \cite{s1project1979}.
+    \item \textbf{James E. Smith (1979--1981):} Concurrently, James E. Smith at Control Data Corporation (CDC) and the University of Wisconsin formalized table-based dynamic branch prediction, patenting random-access memory branch predictor tables and evaluating 1-bit and 2-bit saturating counters and Branch Target Buffers (BTBs) \cite{smith1981study, smith1983patent}. This empirical analysis was subsequently expanded into a comprehensive evaluation of branch target cache designs by Johnny K. F. Lee and Alan Jay Smith \cite{lee1984branch}.
 \end{itemize}
 
 \paragraph{The Evolution to Modern Adaptive Predictors (1990s)}
-While 2-bit bimodal counters served early pipelined microprocessors effectively, deep superscalar pipelines (where a misprediction penalty wastes dozens of in-flight instructions) demanded accuracy well beyond the bimodal ceiling of $\sim 85\text{--}90\%$. As detailed later in Section \ref{sec:yeh_patt}, \textbf{Tse-Yu Yeh and Yale N. Patt} \citep{yeh1991twolevel, yeh1992alternative} revolutionized the field by inventing \textbf{Two-Level Adaptive Branch Prediction}, tracking correlated branch histories to achieve $>97\%$ accuracy, paving the way for Scott McFarling's \textbf{gshare} and \textbf{tournament combining predictors} \citep{mcfarling1993combining}.
+While 2-bit bimodal counters served early pipelined microprocessors effectively, deep superscalar pipelines (where a misprediction penalty wastes dozens of in-flight instructions) demanded accuracy well beyond the bimodal ceiling of $\sim 85\text{--}90\%$. As detailed later in Section \ref{sec:yeh_patt}, Tse-Yu Yeh and Yale N. Patt revolutionized the field by inventing \textbf{Two-Level Adaptive Branch Prediction}, tracking correlated branch histories to achieve over $97\%$ accuracy \cite{yeh1991twolevel, yeh1992alternative}. This breakthrough established the foundation for subsequent innovations, including Scott McFarling's \textbf{gshare} and \textbf{tournament combining predictors} \cite{mcfarling1993combining}.
 
 
 \subsubsection{Static Branch Prediction\index{branch prediction!static branch prediction}}
@@ -783,7 +783,7 @@ In static prediction, all decisions are made at compile time, before the executi
 
 \subsubsection{Dynamic Branch Prediction}
 
-Dynamic branch prediction\index{branch prediction!dynamic branch prediction} predicts branch directions and targets based on execution history collected at run-time using dedicated hardware structures. Foundational studies on dynamic branch prediction, saturating up/down counters, and Branch Target Buffers (BTBs)\index{branch target buffer (BTB)} were introduced by J.~E.~Smith \citep{smith1981study} and Lee and A.~J.~Smith \citep{lee1984branch}. We first examine the two classic bimodal counter mechanisms before discussing modern two-level adaptive predictors.
+Dynamic branch prediction\index{branch prediction!dynamic branch prediction} predicts branch directions and targets based on execution history collected at run-time using dedicated hardware structures. Foundational studies established the empirical framework for runtime branch history tracking, saturating up/down counters, and Branch Target Buffers (BTBs)\index{branch target buffer (BTB)} \cite{smith1981study, lee1984branch}. We first examine the two classic bimodal counter mechanisms before discussing modern two-level adaptive predictors.
 
 \paragraph{Last-time, one-bit predictor}
 is the simplest solution  which uses a two state automaton whose behavior is described in Figure \ref{bp1}. We will code the state {\tt prediction not taken} with 0, and the state {\tt prediction taken} with 1. The automaton is a {\em saturated} 1-bit counter. If is incremented from 0 goes to 1, if is decremented from 1 goes to 0. But if it is incremented from 1, stays in 1, while decremented from 0 stays in 0. This 2-state automaton says whether the branch was recently taken or not. Based on this, the processor fetches the next instruction from the target address or sequential address. If the prediction is wrong, flushes the pipeline and also flips prediction. So, every time a wrong prediction is made, the prediction bit is flipped.
@@ -866,7 +866,7 @@ While 1-bit and 2-bit bimodal counters track the history of individual branches 
 \end{verbatim}
 If both preceding conditions are true, the third branch is guaranteed not to be taken. An isolated 2-bit counter indexed solely by the branch address cannot capture this inter-branch correlation because it does not record which path led to the branch.
 
-In landmark research, Tse-Yu Yeh and Yale N.~Patt \citep{yeh1991twolevel, yeh1992alternative} solved this limitation by introducing \textbf{Two-Level Adaptive Branch Prediction}. Yale Patt's research group had previously demonstrated with the High Performance Substrate (HPS) architecture \citep{patt1985hps} that aggressive out-of-order execution and wide superscalar dispatch cannot succeed without near-perfect branch prediction, because branch misprediction penalties flush large instruction windows.
+In landmark research, Tse-Yu Yeh and Yale N.~Patt solved this limitation by introducing \textbf{Two-Level Adaptive Branch Prediction} \cite{yeh1991twolevel, yeh1992alternative}. Aggressive out-of-order execution and wide superscalar dispatch cannot succeed without near-perfect branch prediction, because branch misprediction penalties flush large instruction windows, as demonstrated in Yale Patt's High Performance Substrate (HPS) architecture \cite{patt1985hps}.
 
 The key insight of Yeh and Patt was to decouple dynamic branch prediction into two distinct levels of history:
 \begin{enumerate}
@@ -874,9 +874,9 @@ The key insight of Yeh and Patt was to decouple dynamic branch prediction into t
     \item \textbf{Second Level: Pattern History Table (PHT)}: An array of $2^k$ 2-bit saturating counters. Instead of indexing counters directly by the branch address, the predictor uses the $k$-bit branch history pattern as an index (or combines the branch address with the history pattern) to select a dedicated 2-bit saturating counter.
 \end{enumerate}
 
-Yeh and Patt classified two-level adaptive predictors into nine variations based on whether the history register is Global ($G$), Per-branch ($P$), or Set-associative ($S$), and whether the pattern table is Global ($g$), Per-branch ($p$), or Set-associative ($s$)---yielding configurations such as \emph{GAg}, \emph{GAp}, \emph{PAg}, and \emph{PAp} \citep{yeh1992alternative}. By maintaining separate saturating counters for each specific sequence of recent branch outcomes (e.g., distinguishing the behavior after pattern \texttt{1010} from pattern \texttt{1111}), Yeh and Patt demonstrated that two-level adaptive predictors shattered the accuracy ceiling of isolated 2-bit counters, elevating prediction accuracy from $\sim 85\text{--}90\%$ to over $97\%$.
+Yeh and Patt classified two-level adaptive predictors into nine variations based on whether the history register is Global ($G$), Per-branch ($P$), or Set-associative ($S$), and whether the pattern table is Global ($g$), Per-branch ($p$), or Set-associative ($s$)---yielding configurations such as \emph{GAg}, \emph{GAp}, \emph{PAg}, and \emph{PAp} \cite{yeh1992alternative}. By maintaining separate saturating counters for each specific sequence of recent branch outcomes (e.g., distinguishing the behavior after pattern \texttt{1010} from pattern \texttt{1111}), Yeh and Patt demonstrated that two-level adaptive predictors shattered the accuracy ceiling of isolated 2-bit counters, elevating prediction accuracy from $\sim 85\text{--}90\%$ to over $97\%$.
 
-Building upon Yeh and Patt's two-level framework, Scott McFarling \citep{mcfarling1993combining} introduced the \textbf{gshare predictor}, which computes a bitwise XOR of the global branch history register with the branch instruction address (PC) to index the PHT, significantly reducing aliasing (conflict interference) between different branches. McFarling also pioneered \textbf{combining (tournament) predictors}, which use a secondary array of 2-bit counters to dynamically select between two different prediction strategies (such as a local bimodal predictor and a global two-level predictor) based on which predictor has historically demonstrated greater accuracy for that specific branch. Yeh and Patt's two-level adaptive techniques and their derivatives (including gshare, tournament predictors, and modern neural perceptron predictors) formed the core branch prediction engine in virtually all high-performance microprocessors, including the Intel Pentium Pro/II/III/4/Core, AMD K6/Athlon/Zen, and DEC Alpha 21264.
+Building upon Yeh and Patt's two-level framework, Scott McFarling introduced the \textbf{gshare predictor}, which computes a bitwise XOR of the global branch history register with the branch instruction address (PC) to index the PHT, significantly reducing aliasing (conflict interference) between different branches \cite{mcfarling1993combining}. McFarling also pioneered \textbf{combining (tournament) predictors}, which use a secondary array of 2-bit counters to dynamically select between two different prediction strategies (such as a local bimodal predictor and a global two-level predictor) based on which predictor has historically demonstrated greater accuracy for that specific branch. Yeh and Patt's two-level adaptive techniques and their derivatives (including gshare, tournament predictors, and modern neural perceptron predictors) formed the core branch prediction engine in virtually all high-performance microprocessors, including the Intel Pentium Pro/II/III/4/Core, AMD K6/Athlon/Zen, and DEC Alpha 21264.
 
 
 \section{Programming Pipelined Processors}
@@ -1032,7 +1032,7 @@ in a superscalar processor the out-of-order execution is requested. It consists 
 The benefit of out-of-order execution processing grows as the instruction pipeline deepens and the speed difference between main memory or cache memory and the processor widens. On modern machines, the processor runs few times faster than the cache memory and many times faster then system memory, so during the time an in-order processor  waits for data, a large number of instructions could be executed.
 
 \begin{exemplu}\label{warwaw}
-In the following sequence of instructions (see \citep{Patterson05}, p. 185):
+Consider the following sequence of instructions \cite[p.~185]{Patterson05}:
 \begin{verbatim}
     DIV(0,2,4)  ;
     ADD(6,0,8)  ;
@@ -1085,7 +1085,7 @@ For the purpose we are pursuing, it is enough to understand that the operation w
 
 \subsubsection{Dynamic Scheduling with the Scoreboard (CDC 6600)}\label{sec:scoreboard}\index{Scoreboard!CDC 6600 dynamic scheduling}\index{Cray, Seymour (1925-1996)}\index{Thornton, James E. (1925-2005)}
 
-The earliest dynamic scheduling technique for out-of-order execution was the \emph{Scoreboard}, developed by Seymour Cray and James E. Thornton for the Control Data Corporation (CDC) 6600 supercomputer in 1964 \citep{thornton1964, thornton1970}. The CDC 6600 incorporated multiple independent functional units (floating-point adders, multipliers, a divider, shift units, and integer ALUs) operating in parallel. 
+The earliest dynamic scheduling technique for out-of-order execution was the \emph{Scoreboard}, developed by Seymour Cray and James E. Thornton for the Control Data Corporation (CDC) 6600 supercomputer in 1964 \cite{thornton1964, thornton1970}. The CDC 6600 incorporated multiple independent functional units (floating-point adders, multipliers, a divider, shift units, and integer ALUs) operating in parallel. 
 
 The scoreboard is a centralized hardware control unit that maintains the status of all active instructions, functional units, and registers. It dynamically steers instruction progress through four execution stages:
 \begin{enumerate}
@@ -1103,7 +1103,7 @@ Although the scoreboard achieved unprecedented performance for its time by enabl
 
 \subsubsection{Tomasulo's Algorithm and Dynamic Register Renaming (IBM 360/91)}\label{sec:tomasulo}\index{Tomasulo's algorithm: dynamic scheduling in out-of-order execution}\index{Tomasulo, Robert (1934-2008)}
 
-To overcome the performance bottlenecks of scoreboarding, Robert M. Tomasulo invented an algorithm for dynamic instruction scheduling with register renaming at IBM in 1967 for the System/360 Model 91 floating-point unit \citep{tomasulo1967}. Tomasulo's algorithm introduces three revolutionary microarchitectural concepts:
+To overcome the performance bottlenecks of scoreboarding, Robert M. Tomasulo invented an algorithm for dynamic instruction scheduling with register renaming at IBM in 1967 for the System/360 Model 91 floating-point unit \cite{tomasulo1967}. Tomasulo's algorithm introduces three revolutionary microarchitectural concepts:
 \begin{enumerate}
     \item \textbf{Distributed Reservation Stations}: Instead of a centralized control structure, small storage buffers called \emph{Reservation Stations} (RS) are placed directly at the input of each functional unit. Instructions are dispatched immediately into an available reservation station, freeing the instruction issue logic to fetch and decode subsequent instructions.
     \item \textbf{Dynamic Register Renaming}: Register specifiers are replaced by \emph{tags} identifying the reservation station that will produce the result. If a source operand is not yet available at issue time, the reservation station stores the tag of the producing unit rather than the operand value. Because operands are buffered and referenced by tags rather than architectural register names, \textbf{WAR and WAW hazards are completely eliminated without stalling}.
@@ -1117,7 +1117,7 @@ Tomasulo's algorithm coordinates execution through three distinct phases:
     \item \textbf{Write Result}: Upon completion, the functional unit broadcasts its result and tag over the CDB. Any reservation station waiting on that tag copies the value into its $V$ field and clears its $Q$ field. If the register status table indicates that this reservation station is still the latest producer for the destination register ($Q_i == \text{this RS}$), the register file is updated. Finally, the reservation station is marked free ($Busy = 0$).
 \end{enumerate}
 
-Each entry in a Reservation Station maintains the following status fields \citep{Patterson19}:
+Each entry in a Reservation Station maintains the following status fields \cite{Patterson19}:
 \begin{itemize}
     \item \textbf{Op}: The operation to perform on source operands $S_1$ and $S_2$.
     \item \textbf{Qj, Qk}: The reservation station tags that will produce the corresponding source operands; a value of zero indicates that the source operand is already available in $V_j$ or $V_k$, or is unnecessary.
@@ -1138,7 +1138,7 @@ While Tomasulo's algorithm dynamically eliminates false dependencies (WAR and WA
 
 If an instruction triggers a hardware exception (such as an arithmetic overflow, divide by zero, or virtual memory page fault), or if a conditional branch is speculatively mispredicted, subsequent instructions that executed out of order may have already permanently overwritten architectural registers. Consequently, the processor cannot reconstruct the exact state of the program at the point of the fault, making software debugging, page-fault handling, and speculative branch recovery impossible.
 
-To resolve this critical flaw, James E. Smith and Andrew R. Pleszkun introduced the \textbf{Reorder Buffer (ROB)} in 1988 \citep{smith1988precise}. Gurindar S. Sohi extended this approach with the Register Update Unit (RUU) \citep{sohi1990instruction}, and Smith and Sohi synthesized the foundational framework for modern speculative superscalar microarchitectures \citep{smith1991}.
+To resolve this critical flaw, James E. Smith and Andrew R. Pleszkun introduced the \textbf{Reorder Buffer (ROB)} to support precise interrupts and speculative branch recovery \cite{smith1988precise}. Gurindar S. Sohi extended this approach with the Register Update Unit (RUU) \cite{sohi1990instruction}. Together, Smith and Sohi synthesized the foundational framework for modern speculative superscalar microarchitectures \cite{smith1991}.
 
 The core insight of the Reorder Buffer is to \textbf{decouple execution completion from architectural state update}:
 \begin{itemize}
@@ -1186,7 +1186,7 @@ Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational 
     \begin{tabular}{|l|l|l|l|}
       \hline
       \textbf{Feature} & \textbf{Scoreboard (1964)} & \textbf{Tomasulo (1967)} & \textbf{Tomasulo + ROB (1988)} \\ 
-                       & \citep{thornton1964}       & \citep{tomasulo1967}     & \citep{smith1988precise, smith1991} \\ \hline \hline
+                       & \cite{thornton1964}       & \cite{tomasulo1967}     & \cite{smith1988precise, smith1991} \\ \hline \hline
       \textbf{Control Unit}      & Centralized scoreboard      & Distributed RS           & Distributed RS + Circular ROB \\ \hline
       \textbf{Renaming}          & None (architectural regs)   & Via RS tags \& $Q_i$     & Dynamic via ROB entry tags \\ \hline
       \textbf{RAW Hazards}       & Stalls \textit{Read Op}     & Waits in RS; snoops CDB  & Waits in RS; snoops CDB/ROB \\ \hline
@@ -1267,7 +1267,7 @@ Hardware multithreading is classified into three foundational microarchitectural
 In fine-grained multithreading, the instruction fetch and issue logic switches between active threads on \textbf{every consecutive clock cycle} in a deterministic, round-robin sequence. 
 \begin{itemize}
     \item \textbf{Hazard Elimination}: As established in Section \ref{sec:barrel_multithreading}, if a processor pipeline has $k$ stages and the hardware interleaves $N \ge k$ independent threads, no two instructions from the same thread can simultaneously occupy the pipeline. Consequently, \textbf{data hazards, control hazards, and pipeline stalls are completely eliminated by structural design}, requiring zero forwarding multiplexers and zero interlock logic!
-    \item \textbf{Historical Implementations}: Pioneered in the peripheral processors of the CDC 6600 \citep{thornton1964}, the Denelcor HEP (Heterogeneous Element Processor) \citep{smith1978hep}, and the Tera MTA (Multi-Threaded Architecture), which maintained up to 128 hardware thread contexts per processor.
+    \item \textbf{Historical Implementations}: Fine-grained multithreading was pioneered in the peripheral processors of the CDC 6600, the Denelcor HEP (Heterogeneous Element Processor), and the Tera MTA (Multi-Threaded Architecture), which maintained up to 128 hardware thread contexts per processor \cite{thornton1964, smith1978hep}.
     \item \textbf{Trade-offs}: Fine-grained multithreading maximizes overall processor throughput and tolerates short execution latencies effortlessly. However, it slows down the individual execution time (latency) of a single thread, because an individual thread only executes one instruction every $N$ cycles even if all other threads are idle.
 \end{itemize}
 
@@ -1280,7 +1280,7 @@ Coarse-grained multithreading executes instructions from a single primary thread
 \end{itemize}
 
 \subsubsection{Simultaneous Multithreading (SMT)}
-The crowning synthesis of superscalar microarchitecture and thread-level parallelism is \textbf{Simultaneous Multithreading (SMT)}, introduced in landmark research by Dean M. Tullsen, Susan J. Eggers, and Henry M. Levy \citep{tullsen1995simultaneous}.
+The crowning synthesis of superscalar microarchitecture and thread-level parallelism is \textbf{Simultaneous Multithreading (SMT)}, introduced in landmark research by Dean M. Tullsen, Susan J. Eggers, and Henry M. Levy \cite{tullsen1995simultaneous}.
 
 In SMT, the processor does not restrict instruction issue to a single thread in any given cycle. Instead, SMT dynamically issues instructions from \textbf{multiple independent threads within the very same clock cycle} to the shared pool of out-of-order execution units:
 \begin{itemize}
@@ -1327,7 +1327,7 @@ Although hardware multithreading is implemented primarily within the microarchit
     \item \textbf{Atomic Synchronization Primitives}:
     When multiple hardware threads execute concurrently and share a common address space, software must coordinate access to shared memory variables without race conditions. The processor must provide atomic read-modify-write instructions:
     \begin{itemize}
-        \item In RISC-V, this is provided by the \textbf{Standard `A' Extension (Atomic Instructions)} \citep{riscv-spec}, which includes:
+        \item In RISC-V, concurrent memory synchronization is formalized by the \textbf{Standard `A' Extension (Atomic Instructions)} \cite{riscv-spec}:
         \begin{itemize}
             \item \textbf{Load-Reserved / Store-Conditional (\texttt{lr.w} / \texttt{sc.w})}: Enables lock-free optimistic synchronization primitives.
             \item \textbf{Atomic Memory Operations (AMOs)}: Monolithic read-modify-write instructions executed directly at memory/cache controllers, including \texttt{amoadd.w}, \texttt{amoswap.w}, \texttt{amoand.w}, and \texttt{amomax.w}.
