@@ -1667,6 +1667,300 @@ The benchmark results in Table \ref{tab:riscv_bp_benchmark_grand_summary} demons
     Because CPI is held near unity while clock frequency scales from $327.5\,\text{MHz}$ to $733.7\,\text{MHz}$, the pipelined core achieves a true \textbf{$2.05\times$ speedup on CoreMark} (766.3 CoreMarks) and \textbf{$2.89\times$ speedup on hardware DSP multiplication}, realizing the full promise of synchronous pipelining.
 \end{enumerate}
 
+
+\section{The Role of the Compiler in Processor Efficiency: Optimization Levels, Hazards, and Dynamic Execution}\label{riscvCompilerStudy}
+\index{compiler!optimization levels and processor efficiency}
+\index{microarchitecture!compiler interaction}
+
+Having developed the architectural techniques for a single scalar instruction stream---pipelining the datapath, balancing adder and multiplier stages, implementing data forwarding, and deploying dynamic branch prediction---we have driven the cycles per instruction (CPI) of the 4-stage RV32I core down to near-unity ($\text{CPI} \approx 1.09$). However, processor performance is not determined by hardware microarchitecture alone. It is governed by the classic Iron Law of Processor Performance:
+\begin{equation}
+T_{\text{exec}} = \text{Instruction Count } (I) \times \text{Cycles Per Instruction } (\text{CPI}) \times \text{Clock Period } (T_{\text{clk}}).
+\end{equation}
+While physical pipelining minimizes the clock period $T_{\text{clk}}$ and microarchitectural bypassing and branch prediction minimize $\text{CPI}$, the compiler toolchain exerts sovereign control over the dynamic instruction count $I$ and the instruction mix. 
+
+Before transitioning from a scalar pipeline to a superscalar multi-issue architecture, this section investigates the interplay between compiler optimization flags, static code generation, pipeline hazard dynamics, and dynamic execution efficiency across all five processor configurations developed in this chapter.
+
+\subsection{Compiler Toolchain Discovery: The Baseline Configuration}
+Inspection of the bare-metal benchmark build harness (\texttt{core\_portme.h} and the \texttt{.comment} metadata of compiled ELF binaries) reveals that the existing baseline Dhrystone and CoreMark binaries were compiled using the modern LLVM/Clang toolchain:
+\begin{itemize}
+    \item \textbf{Compiler}: \texttt{Ubuntu clang version 21.1.8 (6ubuntu1)} with \texttt{LLVM LLD 21.1.8}.
+    \item \textbf{Target Architecture}: \texttt{riscv32-unknown-elf}, \texttt{march=rv32i}, \texttt{mabi=ilp32}.
+    \item \textbf{Baseline Flags}: \texttt{-O1 -march=rv32i -mabi=ilp32 -ffreestanding -fno-builtin -nostdlib -fuse-ld=lld -T benchmarks/bench.ld}.
+\end{itemize}
+The baseline was explicitly set to \texttt{-O1}, representing basic linear optimization. To evaluate the full spectrum of compiler influence, we generated freestanding standalone binaries across ten optimization configurations: \texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, \texttt{-O4}, \texttt{-O5}, \texttt{-Os}, \texttt{-Oz}, \texttt{-Ofast}, and an extreme \texttt{ridiculous} optimization suite.
+
+\subsection{Taxonomy of Compiler Optimization Levels in Modern Clang/LLVM}
+The compilation options impact the generated code structure as follows:
+\begin{enumerate}
+    \item \textbf{\texttt{-O0} (Unoptimized Baseline)}:
+    Register allocation for local variables is disabled. Every local variable and intermediate expression is allocated to a dedicated stack frame slot in memory. Consequently, every arithmetic operation is preceded by stack loads (\texttt{lw}) and followed by stack stores (\texttt{sw}), flooding the pipeline with memory traffic.
+    
+    \item \textbf{\texttt{-O1} (Basic Optimization)}:
+    Enables global register allocation, basic block merging, constant folding, and dead-code elimination. Variables reside in the 32 general-purpose registers rather than on the stack, dramatically reducing load/store instructions.
+    
+    \item \textbf{\texttt{-O2} (Production Optimization)}:
+    Enables global common subexpression elimination (CSE), loop-invariant code motion (LICM), peephole optimization, and static instruction scheduling designed to interleave independent instructions.
+    
+    \item \textbf{\texttt{-O3} (Aggressive Optimization)}:
+    Enables aggressive function inlining, predictive loop unrolling, and vectorization analysis. Loop bounds and bodies are transformed to maximize execution throughput at the expense of moderate code size growth.
+    
+    \item \textbf{\texttt{-O4} and \texttt{-O5} (Clang Aliases)}:
+    In modern Clang/LLVM, levels above \texttt{-O3} do not exist as distinct optimization passes. Invoking \texttt{-O4} triggers a compiler warning (\texttt{warning: -O4 is equivalent to -O3 [-Wdeprecated]}), while \texttt{-O5} emits \texttt{warning: optimization level '-O5' is not supported; using '-O3' instead}. Exact MD5 cryptographic checksum analysis confirms that the binaries generated under \texttt{-O3}, \texttt{-O4}, and \texttt{-O5} are \textbf{100.000\% bit-for-bit identical} (MD5 checksum: \texttt{7b4e53a5511b5e49...} on CoreMark).
+    
+    \item \textbf{\texttt{-Ofast} (Fast Math)}:
+    Enables all \texttt{-O3} optimizations along with non-standard, fast floating-point arithmetic (\texttt{-ffast-math}). Because both CoreMark and Dhrystone are pure integer/pointer benchmarks without floating-point operations, \texttt{-Ofast} produces \textbf{identical machine code to \texttt{-O3}}.
+    
+    \item \textbf{\texttt{-Os} and \texttt{-Oz} (Code Size Minimization)}:
+    \texttt{-Os} optimizes for minimum code size while maintaining execution speed. \texttt{-Oz} pushes code density to the absolute extreme: inlining is disabled, common tail sequences are merged into shared helper subroutines, and loop bodies are strictly preserved rather than unrolled.
+    
+    \item \textbf{\texttt{ridiculous} (Extreme Inlining and Loop Unrolling)}:
+    To test the absolute limits of compiler aggression on RISC-V, we evaluated a specialized high-performance flag combination:
+    \begin{lstlisting}[language=bash]
+clang -O3 -flto -funroll-loops -fomit-frame-pointer \
+      -mllvm -inline-threshold=2000 -mllvm -unroll-threshold=2000 ...
+    \end{lstlisting}
+    This forces Link-Time Optimization (LTO) across all compilation units, aggressively inlines nested call graphs, and fully unrolls major loop kernels.
+\end{enumerate}
+
+\subsection{Static Code Analysis: Instruction Mix and Code Density}
+Table \ref{tab:compiler_static_coremark} and Table \ref{tab:compiler_static_dhrystone} report the static binary footprint and instruction classification across all optimization levels for CoreMark and Dhrystone, respectively.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Optimization} & \textbf{Text Size} & \textbf{Data} & \textbf{BSS} & \textbf{Static Insts} & \textbf{ALU (\%)} & \textbf{Loads (\%)} & \textbf{Stores (\%)} & \textbf{Branches (\%)} & \textbf{Jumps (\%)} \\
+\hline
+\texttt{-O0}         & 15,742\,B & 0\,B  & 2,012\,B & 3,623 & 30.7\% & 30.5\% & 20.2\% & 2.3\% & 16.3\% \\
+\texttt{-O1} (Base)  & 11,976\,B & 24\,B & 2,017\,B & 2,655 & 59.2\% & 16.2\% & 12.5\% & 4.4\% & 7.6\% \\
+\texttt{-O2}         & 12,292\,B & 8\,B  & 2,012\,B & 2,734 & 61.0\% & 15.4\% & 12.1\% & 3.7\% & 7.8\% \\
+\texttt{-O3 / O4 / O5}& 12,792\,B& 8\,B  & 2,012\,B & 2,859 & 60.6\% & 16.0\% & 12.2\% & 3.7\% & 7.4\% \\
+\texttt{-Os}         & 9,672\,B  & 8\,B  & 2,012\,B & 2,079 & 57.3\% & 16.9\% & 14.2\% & 4.2\% & 7.4\% \\
+\texttt{-Oz} (Min)   & \textbf{8,812\,B}  & 8\,B  & 2,012\,B & \textbf{1,864} & 57.0\% & 15.1\% & 13.3\% & 3.8\% & 10.9\% \\
+\texttt{-Ofast}      & 12,792\,B & 8\,B  & 2,012\,B & 2,859 & 60.6\% & 16.0\% & 12.2\% & 3.7\% & 7.4\% \\
+\texttt{ridiculous}  & 61,116\,B & 8\,B  & 2,012\,B & 15,199 & 64.9\% & 16.1\% & 3.3\%  & 1.4\% & 14.3\% \\
+\hline
+\end{tabular}
+\caption{Static code size and instruction breakdown for EEMBC CoreMark 1.0 across compiler optimization levels.}\label{tab:compiler_static_coremark}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Optimization} & \textbf{Text Size} & \textbf{Data} & \textbf{BSS} & \textbf{Static Insts} & \textbf{ALU (\%)} & \textbf{Loads (\%)} & \textbf{Stores (\%)} & \textbf{Branches (\%)} & \textbf{Jumps (\%)} \\
+\hline
+\texttt{-O0}         & 4,840\,B  & 0\,B & 100\,B & 1,174 & 34.0\% & 27.9\% & 20.0\% & 2.8\% & 15.3\% \\
+\texttt{-O1} (Base)  & 2,993\,B  & 0\,B & 100\,B & 720   & 64.9\% & 15.6\% & 11.8\% & 4.9\% & 2.9\% \\
+\texttt{-O2}         & 3,065\,B  & 0\,B & 100\,B & 738   & 60.8\% & 12.9\% & 20.5\% & 3.7\% & 2.2\% \\
+\texttt{-O3 / O4 / O5}& 3,085\,B & 0\,B & 100\,B & 743   & 60.8\% & 13.1\% & 20.3\% & 3.8\% & 2.0\% \\
+\texttt{-Os}         & 2,784\,B  & 0\,B & 100\,B & 665   & 63.8\% & 16.4\% & 11.9\% & 5.0\% & 3.0\% \\
+\texttt{-Oz} (Min)   & \textbf{2,336\,B}  & 0\,B & 100\,B & \textbf{553}   & 61.5\% & 15.6\% & 13.4\% & 2.2\% & 7.4\% \\
+\texttt{-Ofast}      & 3,085\,B  & 0\,B & 100\,B & 743   & 60.8\% & 13.1\% & 20.3\% & 3.8\% & 2.0\% \\
+\texttt{ridiculous}  & 14,028\,B & 0\,B & 100\,B & 3,478 & 68.1\% & 5.1\%  & 24.2\% & 0.8\% & 1.8\% \\
+\hline
+\end{tabular}
+\caption{Static code size and instruction breakdown for Dhrystone 2.1 across compiler optimization levels.}\label{tab:compiler_static_dhrystone}
+\end{table}
+
+The static metrics reveal several profound compiler characteristics:
+\begin{enumerate}
+    \item \textbf{Memory Access Proliferation at \texttt{-O0}}:
+    At \texttt{-O0}, memory instructions (Loads + Stores) account for \textbf{50.7\%} of the entire CoreMark binary and \textbf{47.9\%} of Dhrystone. Because registers are not allocated to hold intermediate values, the compiler generates back-to-back \texttt{sw} and \texttt{lw} operations around every single arithmetic instruction. When optimization is enabled (\texttt{-O1} to \texttt{-O3}), register allocation slashes memory instructions down to $\sim 28\%$, allowing register-to-register ALU instructions to dominate ($59\text{--}65\%$).
+    
+    \item \textbf{The Code-Density Paradox of \texttt{-Oz}}:
+    \texttt{-Oz} achieves the absolute smallest static footprint: CoreMark text shrinks by \textbf{31.1\%} ($12,792\,\text{B} \to 8,812\,\text{B}$) and Dhrystone shrinks by \textbf{24.3\%} ($3,085\,\text{B} \to 2,336\,\text{B}$). However, to achieve this compactness, the compiler aggressively outlines repeated code into small functions, causing jump instructions (\texttt{jal}/\texttt{jalr}) to jump from $7.4\%$ up to $10.9\%$ in CoreMark. As shown below, this static density comes at severe dynamic runtime cost!
+    
+    \item \textbf{Binary Explosion under \texttt{ridiculous} Optimization}:
+    Forcing loop unrolling and function inlining expands CoreMark text by \textbf{$5.1\times$} ($11,976\,\text{B} \to 61,116\,\text{B}$, with static instructions expanding from $2,655$ to $15,199$) and Dhrystone text by \textbf{$4.7\times$} ($2,993\,\text{B} \to 14,028\,\text{B}$). Loop branches are replaced with straight-line replicated ALU instructions, lowering branch instructions from $4.4\%$ down to $1.4\%$.
+\end{enumerate}
+
+\subsection{Dynamic Execution Profiling Across Processor Architectures}
+To quantify the interaction between compiler code generation and pipeline hazards, each compiled binary was evaluated across all five processor microarchitectures:
+\begin{enumerate}
+    \item \textbf{Single-Cycle (FE)}: Single-cycle Fetch-Execute ($T_{\text{clk}} = 3.053\,\text{ns}$, $327.5\,\text{MHz}$, ideal $\text{CPI} = 1.00$).
+    \item \textbf{4-Stage NoFwd}: 4-stage pipeline without forwarding ($T_{\text{clk}} = 1.363\,\text{ns}$, $733.7\,\text{MHz}$; stalls on distance-1 and distance-2 RAW hazards).
+    \item \textbf{4-Stage Bypassed}: 4-stage pipeline with full data bypassing ($T_{\text{clk}} = 1.363\,\text{ns}$; stalls only on load-use hazards; predict not-taken).
+    \item \textbf{4-Stage BTFN}: Bypassed pipeline with Static BTFN branch prediction ($T_{\text{clk}} = 1.363\,\text{ns}$).
+    \item \textbf{4-Stage Gshare}: Bypassed pipeline with 256-entry dynamic Gshare branch prediction ($T_{\text{clk}} = 1.363\,\text{ns}$).
+\end{enumerate}
+
+Table \ref{tab:compiler_dynamic_coremark} and Table \ref{tab:compiler_dynamic_dhrystone} present the complete cycle-by-cycle profiling results for CoreMark 1.0 and Dhrystone 2.1, respectively.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|c|c|c|}
+\hline
+\textbf{Opt} & \textbf{Microarchitecture} & \textbf{Dynamic Insts} & \textbf{Cycles} & \textbf{CPI} & \textbf{Stalls / Mispreds} & \textbf{ASAP7 Time} \\
+\hline
+\multirow{5}{*}{\texttt{-O0}} 
+ & Single-Cycle (FE)   & 4,204,574 & 4,204,574 & 1.00 & 0 / 0             & 12,836.6\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 4,204,574 & 9,638,795 & 2.29 & 3,833,010 / 116,438 & 13,137.7\,$\mu$s ($0.98\times$) \\
+ & 4-Stage Bypassed     & 4,204,574 & 6,865,221 & 1.63 & 1,020,410 / 116,438 & 9,357.3\,$\mu$s ($1.37\times$) \\
+ & 4-Stage BTFN         & 4,204,574 & 5,638,169 & 1.34 & 1,020,410 / 116,438 & 7,684.8\,$\mu$s ($1.67\times$) \\
+ & \textbf{4-Stage Gshare} & 4,204,574 & \textbf{5,536,055} & \textbf{1.32} & 1,020,410 / \textbf{65,381} & \textbf{7,545.6\,$\mu$s} (\textbf{1.70$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O1}} 
+ & Single-Cycle (FE)   & 874,891   & 874,891   & 1.00 & 0 / 0             & 2,671.0\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 874,891   & 1,643,060 & 1.88 & 517,244 / 97,308   & 2,239.5\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 874,891   & 1,160,199 & 1.33 & 27,915 / 97,308    & 1,581.4\,$\mu$s ($1.69\times$) \\
+ & 4-Stage BTFN         & 874,891   & 981,463   & 1.12 & 27,915 / 22,764    & 1,337.7\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 874,891   & \textbf{957,453} & \textbf{1.09} & 27,915 / \textbf{10,759} & \textbf{1,305.0\,$\mu$s} (\textbf{2.05$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O2}} 
+ & Single-Cycle (FE)   & 864,007   & 864,007   & 1.00 & 0 / 0             & 2,637.8\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 864,007   & 1,628,246 & 1.88 & 523,748 / 90,951   & 2,219.3\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 864,007   & 1,138,075 & 1.32 & 27,083 / 90,951    & 1,551.2\,$\mu$s ($1.70\times$) \\
+ & 4-Stage BTFN         & 864,007   & 967,243   & 1.12 & 27,083 / 21,031    & 1,318.4\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 864,007   & \textbf{948,745} & \textbf{1.10} & 27,083 / \textbf{11,782} & \textbf{1,293.1\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O3}} 
+ & Single-Cycle (FE)   & 859,290   & 859,290   & 1.00 & 0 / 0             & 2,623.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 859,290   & 1,621,310 & 1.89 & 523,586 / 90,888   & 2,209.8\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 859,290   & 1,131,060 & 1.32 & 27,083 / 90,888    & 1,541.6\,$\mu$s ($1.70\times$) \\
+ & 4-Stage BTFN         & 859,290   & 961,680   & 1.12 & 27,083 / 20,946    & 1,310.8\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 859,290   & \textbf{944,768} & \textbf{1.10} & 27,083 / \textbf{12,490} & \textbf{1,287.7\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Os}} 
+ & Single-Cycle (FE)   & 879,498   & 879,498   & 1.00 & 0 / 0             & 2,685.1\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 879,498   & 1,649,347 & 1.88 & 515,769 / 96,239   & 2,248.1\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 879,498   & 1,171,146 & 1.33 & 30,417 / 96,239    & 1,596.3\,$\mu$s ($1.68\times$) \\
+ & 4-Stage BTFN         & 879,498   & 986,700   & 1.12 & 30,417 / 19,375    & 1,344.9\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 879,498   & \textbf{968,158} & \textbf{1.10} & 30,417 / \textbf{10,104} & \textbf{1,319.6\,$\mu$s} (\textbf{2.03$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Oz}} 
+ & Single-Cycle (FE)   & 955,942   & 955,942   & 1.00 & 0 / 0             & 2,918.5\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 955,942   & 1,921,349 & 2.01 & 683,541 / 91,550   & 2,618.8\,$\mu$s ($1.11\times$) \\
+ & 4-Stage Bypassed     & 955,942   & 1,275,451 & 1.33 & 29,722 / 91,550    & 1,738.4\,$\mu$s ($1.68\times$) \\
+ & 4-Stage BTFN         & 955,942   & 1,071,561 & 1.12 & 29,722 / 22,074    & 1,460.5\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 955,942   & \textbf{1,048,425} & \textbf{1.10} & 29,722 / \textbf{10,506} & \textbf{1,429.0\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{ridic.}} 
+ & Single-Cycle (FE)   & \textbf{829,488} & \textbf{829,488} & 1.00 & 0 / 0             & 2,532.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 829,488   & 1,572,147 & 1.90 & 506,588 / 94,582   & 2,142.8\,$\mu$s ($1.18\times$) \\
+ & 4-Stage Bypassed     & 829,488   & 1,096,163 & 1.32 & 24,006 / 94,582    & 1,494.1\,$\mu$s ($1.69\times$) \\
+ & 4-Stage BTFN         & 829,488   & 938,343   & 1.13 & 24,006 / 27,251    & 1,279.0\,$\mu$s ($1.98\times$) \\
+ & \textbf{4-Stage Gshare} & \textbf{829,488} & \textbf{911,217} & \textbf{1.10} & \textbf{24,006} / \textbf{13,688} & \textbf{1,242.0\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\end{tabular}
+\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for EEMBC CoreMark 1.0 across compiler optimization levels and processor microarchitectures.}\label{tab:compiler_dynamic_coremark}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|c|c|c|}
+\hline
+\textbf{Opt} & \textbf{Microarchitecture} & \textbf{Dynamic Insts} & \textbf{Cycles} & \textbf{CPI} & \textbf{Stalls / Mispreds} & \textbf{ASAP7 Time} \\
+\hline
+\multirow{5}{*}{\texttt{-O0}} 
+ & Single-Cycle (FE)   & 64,810    & 64,810    & 1.00 & 0 / 0             & 197.9\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 64,810    & 143,649   & 2.22 & 56,780 / 1,031    & 195.8\,$\mu$s ($1.01\times$) \\
+ & 4-Stage Bypassed     & 64,810    & 102,318   & 1.58 & 15,001 / 1,031    & 139.5\,$\mu$s ($1.42\times$) \\
+ & 4-Stage BTFN         & 64,810    & 85,884    & 1.33 & 15,001 / 1,031    & 117.1\,$\mu$s ($1.69\times$) \\
+ & \textbf{4-Stage Gshare} & 64,810    & \textbf{84,706} & \textbf{1.31} & 15,001 / \textbf{442} & \textbf{115.5\,$\mu$s} (\textbf{1.71$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O1}} 
+ & Single-Cycle (FE)   & 13,826    & 13,826    & 1.00 & 0 / 0             & 42.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 13,826    & 24,311    & 1.76 & 6,038 / 2,157     & 33.1\,$\mu$s ($1.27\times$) \\
+ & 4-Stage Bypassed     & 13,826    & 19,958    & 1.44 & 1,685 / 2,157     & 27.2\,$\mu$s ($1.55\times$) \\
+ & 4-Stage BTFN         & 13,826    & 15,878    & 1.15 & 1,685 / 155       & 21.6\,$\mu$s ($1.95\times$) \\
+ & \textbf{4-Stage Gshare} & 13,826    & \textbf{15,806} & \textbf{1.14} & 1,685 / \textbf{119} & \textbf{21.5\,$\mu$s} (\textbf{1.96$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O2}} 
+ & Single-Cycle (FE)   & 10,233    & 10,233    & 1.00 & 0 / 0             & 31.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 10,233    & 18,775    & 1.83 & 5,497 / 1,457     & 25.6\,$\mu$s ($1.22\times$) \\
+ & 4-Stage Bypassed     & 10,233    & 14,901    & 1.46 & 1,623 / 1,457     & 20.3\,$\mu$s ($1.54\times$) \\
+ & 4-Stage BTFN         & 10,233    & 12,013    & 1.17 & 1,623 / 51        & 16.4\,$\mu$s ($1.91\times$) \\
+ & \textbf{4-Stage Gshare} & 10,233    & \textbf{12,017} & \textbf{1.17} & 1,623 / \textbf{53} & \textbf{16.4\,$\mu$s} (\textbf{1.91$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O3}} 
+ & Single-Cycle (FE)   & 10,212    & 10,212    & 1.00 & 0 / 0             & 31.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 10,212    & 18,750    & 1.84 & 5,497 / 1,476     & 25.6\,$\mu$s ($1.22\times$) \\
+ & 4-Stage Bypassed     & 10,212    & 14,876    & 1.46 & 1,623 / 1,476     & 20.3\,$\mu$s ($1.54\times$) \\
+ & 4-Stage BTFN         & 10,212    & 12,026    & 1.18 & 1,623 / 70        & 16.4\,$\mu$s ($1.90\times$) \\
+ & \textbf{4-Stage Gshare} & 10,212    & \textbf{12,032} & \textbf{1.18} & 1,623 / \textbf{73} & \textbf{16.4\,$\mu$s} (\textbf{1.90$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Os}} 
+ & Single-Cycle (FE)   & 15,537    & 15,537    & 1.00 & 0 / 0             & 47.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 15,537    & 27,090    & 1.74 & 6,446 / 2,386     & 36.9\,$\mu$s ($1.28\times$) \\
+ & 4-Stage Bypassed     & 15,537    & 22,221    & 1.43 & 1,577 / 2,386     & 30.3\,$\mu$s ($1.57\times$) \\
+ & 4-Stage BTFN         & 15,537    & 17,971    & 1.16 & 1,577 / 337       & 24.5\,$\mu$s ($1.94\times$) \\
+ & \textbf{4-Stage Gshare} & 15,537    & \textbf{17,647} & \textbf{1.14} & 1,577 / \textbf{175} & \textbf{24.1\,$\mu$s} (\textbf{1.97$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Oz}} 
+ & Single-Cycle (FE)   & 30,605    & 30,605    & 1.00 & 0 / 0             & 93.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 30,605    & 53,762    & 1.76 & 15,002 / 2,965    & 73.3\,$\mu$s ($1.28\times$) \\
+ & 4-Stage Bypassed     & 30,605    & 38,952    & 1.27 & 146 / 2,965       & 53.1\,$\mu$s ($1.76\times$) \\
+ & 4-Stage BTFN         & 30,605    & 32,656    & 1.07 & 146 / 469         & 44.5\,$\mu$s ($2.10\times$) \\
+ & \textbf{4-Stage Gshare} & 30,605    & \textbf{32,470} & \textbf{1.06} & 146 / \textbf{376} & \textbf{44.3\,$\mu$s} (\textbf{2.11$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{ridic.}} 
+ & Single-Cycle (FE)   & \textbf{7,603}     & \textbf{7,603}     & 1.00 & 0 / 0             & 23.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 7,603     & 13,699    & 1.80 & 3,815 / 1,098     & 18.7\,$\mu$s ($1.24\times$) \\
+ & 4-Stage Bypassed     & 7,603     & 11,027    & 1.45 & 1,141 / 1,098     & 15.0\,$\mu$s ($1.54\times$) \\
+ & 4-Stage BTFN         & 7,603     & 8,939     & 1.18 & 1,141 / 54        & 12.2\,$\mu$s ($1.91\times$) \\
+ & \textbf{4-Stage Gshare} & \textbf{7,603}     & \textbf{8,981}     & \textbf{1.18} & \textbf{1,141} / \textbf{75}  & \textbf{12.2\,$\mu$s} (\textbf{1.90$\times$}) \\
+\hline
+\end{tabular}
+\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for Dhrystone 2.1 across compiler optimization levels and processor microarchitectures.}\label{tab:compiler_dynamic_dhrystone}
+\end{table}
+
+\subsection{Microarchitectural Analysis: Why the Compiler Cannot Fix an Unforwarded Pipeline}
+The empirical results in Tables \ref{tab:compiler_dynamic_coremark} and \ref{tab:compiler_dynamic_dhrystone} reveal four fundamental lessons in computer engineering:
+
+\begin{enumerate}
+    \item \textbf{The Software Isolation of Pipeline Stalls}:
+    A common misconception is that a sufficiently sophisticated compiler can eliminate pipeline stalls via instruction scheduling. The data decisively refutes this: on the \texttt{4-Stage NoFwd} core, the CPI remains stubbornly anchored at $\mathbf{1.88\text{--}1.90}$ across \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, and \texttt{ridiculous}! Because basic blocks in integer C programs typically contain only 4 to 6 instructions with dense register dependencies, the compiler runs out of independent instructions to schedule into the 2-cycle hazard delay slots. The unforwarded core suffers \textbf{over 506,000 RAW stalls} regardless of compiler aggression. Pipeline stalls are a hardware defect that software cannot schedule away.
+    
+    \item \textbf{Data Bypassing as the Great Equalizer}:
+    Hardware data bypassing slashes CoreMark data stalls by \textbf{94.6\%} (from 517,244 down to 27,915 stalls at \texttt{-O1}), leaving only irreducible Load-Use stalls. This drops the CPI from $1.88$ to $1.32\text{--}1.33$ across all optimization levels.
+    
+    \item \textbf{Branch Prediction Accuracy Across Optimization Levels}:
+    Static BTFN branch prediction reduces CoreMark branch mispredictions by $76.6\%$ (from 97,308 down to 22,764). Dynamic Gshare prediction cuts mispredictions by \textbf{88.9\%} (down to 10,759 mispredictions out of 147,627 dynamic branches, an overall prediction accuracy of \textbf{92.7\%}). This eliminates over 173,000 branch flush bubbles, bringing CoreMark CPI down to \textbf{1.09}.
+    
+    \item \textbf{The Runtime Cost of Extreme Code Size Optimization (\texttt{-Oz})}:
+    While \texttt{-Oz} successfully minimizes code size to 8.8\,KB, it causes dynamic instruction count to expand by \textbf{+11.2\%} on CoreMark ($859,290 \to 955,942$) and by \textbf{+199.7\%} on Dhrystone ($10,212 \to 30,605$). Total execution time on the Gshare core increases from $1,287.7\,\mu\text{s}$ (\texttt{-O3}) to $1,429.0\,\mu\text{s}$ (\texttt{-Oz}), demonstrating the universal trade-off between memory footprint and execution latency.
+\end{enumerate}
+
+\subsection{The Scalar Asymptote: Reaching the Asymptotic Scalar Limit}
+Notice the effective CPI achieved on the \texttt{4-Stage Gshare} core across all optimized variants:
+\begin{equation}
+\text{CPI}_{\text{CoreMark, O1}} = 1.09, \quad \text{CPI}_{\text{CoreMark, O2}} = 1.10, \quad \text{CPI}_{\text{CoreMark, O3}} = 1.10, \quad \text{CPI}_{\text{CoreMark, ridic}} = 1.10.
+\end{equation}
+In a single-issue scalar processor, the theoretical maximum instruction throughput is strictly bounded by:
+\begin{equation}
+\text{IPC}_{\text{max}} = 1.00 \quad \iff \quad \text{CPI}_{\text{min}} = 1.00.
+\end{equation}
+An achieved CPI of $1.094$ corresponds to an issue throughput of $\text{IPC} = 0.914$ instructions per cycle. In other words, \textbf{the 4-stage RV32I core with bypassing and Gshare branch prediction is operating at 91.4\% of theoretical maximum scalar throughput}!
+
+The residual $8.6\%$ overhead consists of physical constraints inherent to scalar execution:
+\begin{itemize}
+    \item True load-use data stalls (1 cycle when an instruction immediately consumes data loaded from memory).
+    \item Indirect jump redirects (\texttt{JALR} targets must be computed in EX, incurring 2 bubbles).
+    \item The remaining $7.3\%$ branch mispredictions.
+\end{itemize}
+We have reached the physical and algorithmic performance ceiling of a single instruction stream.
+
+\subsection{The Next Architectural Frontier: Dual-Issue Superscalar Execution}
+To break through the fundamental $\text{CPI} = 1.00$ ($\text{IPC} = 1.00$) barrier, processor architecture must abandon the scalar single-issue paradigm and transition to \textbf{superscalar execution}.
+
+In the next chapter, we will design and implement a \textbf{2-Way In-Order Dual-Issue Superscalar RV32I Processor Core} (\texttt{RiscvSuperscalar2Way}):
+\begin{enumerate}
+    \item \textbf{Dual Instruction Fetch}: The IF stage fetches 64 bits (two 32-bit instructions, $I_0$ and $I_1$) per clock cycle from instruction memory.
+    \item \textbf{Parallel Dual Decode and Intra-Issue Dependency Checking}: The ID stage decodes $I_0$ and $I_1$ simultaneously and evaluates:
+    \begin{itemize}
+        \item Structural hazards: e.g., if only one data memory port exists, two simultaneous load/store instructions cannot co-issue.
+        \item Intra-group RAW hazards: if $I_1$ reads the register written by $I_0$ ($I_1.rs1 == I_0.rd$ or $I_1.rs2 == I_0.rd$), $I_1$ cannot issue in parallel with $I_0$.
+    \end{itemize}
+    \item \textbf{Dual Execution and Multi-Ported Register Files}: When $I_0$ and $I_1$ are independent, both issue concurrently into parallel execution units (ALU0 and ALU1), writing back up to two results per cycle into a 4-read/2-write port register file.
+\end{enumerate}
+By issuing up to 2 instructions per cycle, a dual-issue superscalar core elevates peak throughput to $\mathbf{\text{IPC} = 2.00}$ ($\text{CPI} = 0.50$), unlocking a new dimension of performance on the exact same silicon technology.
+
+
 \section{Summary}\label{riscvSummary}
 \index{RISC-V!chapter summary}
 
@@ -1691,6 +1985,10 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item Standalone ASAP7 7\,nm FinFET synthesis demonstrated that both BTFN ($661.7\,\text{ps}$, $1.51\,\text{GHz}$) and Gshare ($523.1\,\text{ps}$, $1.91\,\text{GHz}$) operate with delay well below the $1.363\,\text{ns}$ critical path, adding less than $46\,\text{ps}$ to the full processor clock period while preserving operating frequency ($576\text{--}579\,\text{MHz}$).
     \item On empirical benchmarks, branch prediction slashed CPI on the DSP kernel from 1.35 to 1.05 ($2.14\times$ speedup over single-cycle), on Dhrystone 2.1 from 1.44 to 1.14 ($1.96\times$ speedup, 528.2 DMIPS), and on EEMBC CoreMark 1.0 from 1.33 to 1.09 ($2.05\times$ speedup, 766.3 CoreMarks). Across CoreMark, the combination of data bypassing and Gshare eliminated 89.3\% of all pipeline stalls.
     \item A taxonomy of computer architecture benchmarks was established: application-class benchmarks such as SPEC CPU2017 require virtual memory (MMU), a full POSIX OS (Linux), and gigabytes of RAM, rendering them physically inapplicable to bare-metal microcontroller-class cores. Microcontroller-class architectures rely on freestanding suites including Dhrystone, EEMBC CoreMark, and Embench-IoT.
+    \item The interaction between compiler optimization levels and processor microarchitecture was systematically quantified across ten optimization configurations (\texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, \texttt{-O4}, \texttt{-O5}, \texttt{-Os}, \texttt{-Oz}, \texttt{-Ofast}, and \texttt{ridiculous} LTO/unrolling). In modern Clang 21, \texttt{-O4} and \texttt{-O5} are deprecated aliases for \texttt{-O3} (producing 100\% bit-for-bit identical binaries), while \texttt{-Ofast} on integer code is equivalent to \texttt{-O3}.
+    \item Moving from unoptimized \texttt{-O0} to basic \texttt{-O1} slashes dynamic instruction count by $4.8\times$ on CoreMark ($4,204,574 \to 874,891$) by replacing stack spills with register allocation. However, compilers cannot schedule away RAW pipeline hazards: the unforwarded pipeline exhibits a persistently poor $\text{CPI} \approx 1.88\text{--}2.29$ across all compiler optimization levels.
+    \item The code-size paradox of \texttt{-Oz} was demonstrated: while achieving the smallest static text footprint (8.8\,KB, a $-31\%$ reduction), \texttt{-Oz} increases dynamic instruction count by $+11.2\%$ on CoreMark and $+199.7\%$ on Dhrystone by converting inlined loops into outlined helper calls, increasing runtime latency. Conversely, extreme loop unrolling (\texttt{ridiculous}) expands text size by $5.1\times$ to 61.1\,KB, but retires the fewest dynamic instructions (829,488 on CoreMark).
+    \item On the 4-stage pipeline with data bypassing and dynamic Gshare branch prediction, CoreMark achieves $\text{CPI} = 1.09\text{--}1.10$ ($\text{IPC} \approx 0.914$) across all optimized compiler variants, operating at \textbf{91.4\% of theoretical maximum scalar throughput}. Because a single-issue scalar core cannot exceed $\text{IPC} = 1.00$, this empirical limit establishes the imperative for \textbf{superscalar dual-issue execution} ($\text{IPC} \le 2.00$) explored in subsequent chapters.
 \end{itemize}
 
 
@@ -1900,5 +2198,22 @@ Consider branch prediction in the 4-stage \texttt{RiscvPipelined} processor:
 $\diamond$
 \end{problem}
 
+\begin{problem}
+Consider the interaction between compiler optimization flags and processor microarchitecture evaluated in Section \ref{riscvCompilerStudy}:
+\begin{enumerate}
+    \item In Table \ref{tab:compiler_static_coremark}, memory instructions (Loads + Stores) account for $50.7\%$ of all static instructions at \texttt{-O0}, but drop to $28.7\%$ at \texttt{-O1}. Explain why disabling optimization causes memory instructions to proliferate so dramatically.
+    \item In Table \ref{tab:compiler_dynamic_coremark}, why does the \texttt{4-Stage NoFwd} pipeline suffer an almost identical $\text{CPI} \approx 1.88\text{--}1.90$ across \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, and \texttt{ridiculous}, despite vast differences in compiler optimization aggression?
+    \item The \texttt{-Oz} flag minimizes static code size, while the \texttt{ridiculous} flag maximizes loop unrolling. Compare their static footprints and dynamic instruction counts on CoreMark. What fundamental architectural trade-off does this comparison illustrate?
+    \item On the \texttt{4-Stage Gshare} core, CoreMark executes at $\text{CPI} = 1.09$. Explain why it is physically impossible for any software compiler technique to reduce the CPI of this processor below $1.00$. What microarchitectural modification is required to break through this limit?
+\end{enumerate}
 
+\textbf{Solution}:
+\begin{enumerate}
+    \item At \texttt{-O0}, the compiler disables the register allocator for local variables, mapping every local variable and compiler temporary to an offset on the activation stack frame. Consequently, every expression requires loading operands from memory into temporary registers via \texttt{lw} and immediately writing the result back to memory with \texttt{sw}. At \texttt{-O1}, the compiler constructs live ranges and allocates local variables to the 32 general-purpose registers, allowing values to persist across instructions without touching memory.
+    \item In integer C code (such as CoreMark), basic blocks average only 4 to 6 instructions, and computations are tightly serialized by data dependencies. The compiler's static instruction scheduler cannot find independent instructions to separate dependent ALU operations by 2 delay slots (for distance-1 RAW hazards). Therefore, regardless of optimization level, the unforwarded pipeline continually stalls on RAW dependencies, resulting in a fixed $\text{CPI} \approx 1.88\text{--}1.90$. Hardware data bypassing is mandatory to resolve these hazards.
+    \item On CoreMark, \texttt{-Oz} achieves a text footprint of only $8,812\,\text{B}$ ($1,864$ static instructions), but executes $955,942$ dynamic instructions. The \texttt{ridiculous} configuration expands text to $61,116\,\text{B}$ ($15,199$ static instructions, a $5.1\times$ expansion!), but executes only $829,488$ dynamic instructions (a $-13.2\%$ reduction compared to \texttt{-Oz}). This illustrates the classic Space-Time Trade-off in computer systems: loop unrolling eliminates loop branch overhead and enables cross-iteration scheduling at the cost of instruction cache/ROM footprint.
+    \item In a synchronous single-issue processor, the datapath can fetch, decode, execute, and retire at most \textbf{one instruction per clock cycle}. Therefore, $\text{IPC} \le 1.00$, which dictates that $\text{CPI} = 1 / \text{IPC} \ge 1.00$. Even with zero stalls and zero branch mispredictions, the CPI cannot drop below $1.00$. To achieve $\text{CPI} < 1.00$ ($\text{IPC} > 1.00$), the processor microarchitecture must be redesigned as a \textbf{superscalar processor} that fetches, decodes, and executes multiple instructions concurrently in parallel execution units each clock cycle.
+\end{enumerate}
+$\diamond$
+\end{problem}
 
