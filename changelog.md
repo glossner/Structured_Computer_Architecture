@@ -1,3 +1,21 @@
+# 09/27/2026 15:15 Hardware Data Bypassing, ASAP7 7nm FinFET Synthesis, and CoreMark/Dhrystone Rerun in Chapter 19
+* **Hardware Implementation of Bypassing (`RTL/Chisel/src/main/scala/scabook/riscv/RiscvPipelined.scala`, Section 19.7)**:
+  * Implemented distance-1 forwarding (MEM/WB to EX) for ALU inputs, branch comparison, `jalr` target calculation, and store data (`rs2Data`).
+  * Implemented distance-2 write-through bypassing (WB to ID) directly at the register file read ports.
+  * Revised Hazard Detection Unit: eliminated all RAW stalls for ALU operations (0 stalls); retained only the single irreducible Load-Use hazard (1 stall cycle).
+* **Architectural Conformance Verification (`RiscvPipelinedConformanceSpec.scala`)**:
+  * 100% PASS across all 38 RV32I tests (103,268 cycles, -38.8%) and 4 Zmmul tests (14,714 cycles, -55.3%) matching Spike golden reference signatures.
+* **ASAP7 7nm FinFET Physical ASIC Synthesis (`Latex/04_19_2_RISCV_pipelined.tex`, Table 19.13)**:
+  * Total cells: 11,974 (+390 cells, +3.4%).
+  * Sequential DFFs: 1,434 (0 overhead).
+  * Total Silicon Area: **$1,158.95\,\mu\text{m}^2$** vs. $1,128.16\,\mu\text{m}^2$ (**merely +2.7% area overhead!**).
+  * Standalone Critical Path: $1.589\,\text{ns}$ ($629.2\,\text{MHz}$) vs. $1.362\,\text{ns}$ ($734.0\,\text{MHz}$).
+* **Benchmark Rerun & Stall Elimination (Table 19.12)**:
+  * **EEMBC CoreMark 1.0**: 1,160,199 cycles (CPI = 1.33 vs. 1.88), **482,861 stalls eliminated (-62.9%)**, execution time 1.58 ms ($1.42\times$ over unforwarded, **$1.69\times$ over single-cycle**), score = **632.4 CoreMarks** (+41.8%).
+  * **Dhrystone 2.1**: 19,958 cycles (CPI = 1.44 vs. 1.76), **4,353 stalls eliminated (-41.5%)**, execution time 27.20 $\mu$s ($1.22\times$ over unforwarded, **$1.55\times$ over single-cycle**), score = **418.5 DMIPS** (+21.9%).
+  * **DSP Kernel (Soft Mul)**: 8,774 cycles (CPI = 1.35), **3,801 stalls eliminated (-62.7%)**, speedup = **$1.43\times$** over unforwarded ($1.66\times$ over single-cycle).
+  * **DSP Kernel (Hard Mul)**: 999 cycles (CPI = 1.24), **309 stalls eliminated (-61.3%)**, speedup = **$1.31\times$** over unforwarded ($1.36\times$ over single-cycle).
+
 # 09/27/2026 14:45 Physical Synthesis Realities: EDA Baseline Multipliers vs. Explicit Architectures in Chapter 15
 * **EDA Baseline Multiplier Mechanics (`Latex/04_15_Performance_Optimized_Digital_Logic.tex`, Section 15.3.6)**:
   * Documented the internal EDA transformation of HDL multiplication expressions (`*` / `$mul`) in Yosys and Berkeley ABC. Proved that Yosys does not synthesize naive shift-and-add logic; the `alumacc` pass transforms operations into multiply-accumulate macro-cells (`$macc`), and `maccmap` decomposes `$macc` into a bit-slice carry-save compressor tree with a Brent-Kung parallel prefix vector-merging adder (`$lcu_brent_kung`), followed by ABC AIG cut-based delay rewriting.

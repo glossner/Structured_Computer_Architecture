@@ -67,7 +67,7 @@ class ExMemBundle(val xlen: Int = 32) extends Bundle {
   *      and jump target calculation with pipeline flush on control transfer.
   *   4. MEM/WB (Memory & Writeback): Data memory read/write and register file writeback.
   */
-class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul: Boolean = true) extends Module {
+class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul: Boolean = true, val enableForwarding: Boolean = true) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
     val dmem     = new DmemPort(xlen, xlen)
@@ -112,10 +112,25 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   regFile.io.rd_data := wbData
 
   // ==========================================
-  // STAGE 3: EXECUTE (EX)
+  // STAGE 3: EXECUTE (EX) & FORWARDING UNIT
   // ==========================================
-  alu.io.opA   := id_ex.rs1Data
-  alu.io.opB   := Mux(id_ex.aluSrc, id_ex.imm, id_ex.rs2Data)
+  // Forwarding Unit (MEM/WB -> EX) for Distance-1 RAW Hazards:
+  // Forward from ex_mem to EX stage if ex_mem writes to rd and rd matches rs1/rs2.
+  val exMemWillWrite = ex_mem.valid && ex_mem.regWrite && (ex_mem.rd =/= 0.U)
+  val exMemFwdData = MuxCase(ex_mem.aluResult, Seq(
+    (ex_mem.isJal || ex_mem.isJalr) -> (ex_mem.pc + 4.U),
+    ex_mem.isLui                    -> ex_mem.imm,
+    ex_mem.isAuipc                  -> (ex_mem.pc + ex_mem.imm)
+  ))
+
+  val forwardRs1 = enableForwarding.B && exMemWillWrite && (ex_mem.rd === id_ex.rs1) && (id_ex.rs1 =/= 0.U)
+  val forwardRs2 = enableForwarding.B && exMemWillWrite && (ex_mem.rd === id_ex.rs2) && (id_ex.rs2 =/= 0.U)
+
+  val exRs1 = Mux(forwardRs1, exMemFwdData, id_ex.rs1Data)
+  val exRs2 = Mux(forwardRs2, exMemFwdData, id_ex.rs2Data)
+
+  alu.io.opA   := exRs1
+  alu.io.opB   := Mux(id_ex.aluSrc, id_ex.imm, exRs2)
   alu.io.aluOp := id_ex.aluOp
 
   val branchCond = MuxCase(false.B, Seq(
@@ -134,7 +149,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
 
   val branchTarget = id_ex.pc + id_ex.imm
   val jalTarget    = id_ex.pc + id_ex.imm
-  val jalrTarget   = Cat((id_ex.rs1Data + id_ex.imm)(xlen - 1, 1), 0.U(1.W))
+  val jalrTarget   = Cat((exRs1 + id_ex.imm)(xlen - 1, 1), 0.U(1.W))
   val exTargetPC   = Mux(jalrTaken, jalrTarget, branchTarget)
 
   // EX -> MEM/WB Register update
@@ -144,7 +159,7 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   ex_mem.rd        := id_ex.rd
   ex_mem.funct3    := id_ex.funct3
   ex_mem.aluResult := alu.io.result
-  ex_mem.rs2Data   := id_ex.rs2Data
+  ex_mem.rs2Data   := exRs2
   ex_mem.imm       := id_ex.imm
   ex_mem.regWrite  := id_ex.regWrite
   ex_mem.memRead   := id_ex.memRead
@@ -166,9 +181,12 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   regFile.io.rs1 := d.rs1
   regFile.io.rs2 := d.rs2
 
-  // No forwarding: operands read directly from architectural register file
-  val rs1Val = regFile.io.rs1_data
-  val rs2Val = regFile.io.rs2_data
+  // Internal Register File / WB-to-ID Write-Through Bypass for Distance-2 Hazards:
+  // If the instruction in MEM/WB writes to rs1/rs2, bypass wbData directly to ID operands.
+  val wbBypassRs1 = enableForwarding.B && wbWen && (wbRd === d.rs1) && (d.rs1 =/= 0.U)
+  val wbBypassRs2 = enableForwarding.B && wbWen && (wbRd === d.rs2) && (d.rs2 =/= 0.U)
+  val rs1Val = Mux(wbBypassRs1, wbData, regFile.io.rs1_data)
+  val rs2Val = Mux(wbBypassRs2, wbData, regFile.io.rs2_data)
 
   // Instruction operand read usage
   val readsRs1 = (f.opcode === RiscvOpcodes.OP     ||
@@ -182,15 +200,24 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
                   f.opcode === RiscvOpcodes.STORE  ||
                   f.opcode === RiscvOpcodes.BRANCH) && (d.rs2 =/= 0.U)
 
-  // Hazard Detection Unit: stall on RAW hazards with EX stage (distance 1) and MEM/WB stage (distance 2)
+  // Hazard Detection Unit:
+  // With forwarding enabled:
+  //   Only Load-Use Hazards (instruction in EX is a LOAD and instruction in ID reads its rd) must stall for 1 cycle.
+  //   All other RAW hazards (ALU distance 1 and distance 2) are resolved by forwarding without stalls.
+  // Without forwarding:
+  //   Stall on RAW hazards with EX stage (distance 1) and MEM/WB stage (distance 2).
   val exWillWrite  = id_ex.valid && id_ex.regWrite && (id_ex.rd =/= 0.U)
   val memWillWrite = ex_mem.valid && ex_mem.regWrite && (ex_mem.rd =/= 0.U)
+
+  val isLoadUseHazard = id_ex.valid && id_ex.memRead && (id_ex.rd =/= 0.U) &&
+                        ((readsRs1 && (id_ex.rd === d.rs1)) || (readsRs2 && (id_ex.rd === d.rs2)))
 
   val rawHazardRs1 = (exWillWrite && readsRs1 && (id_ex.rd === d.rs1)) ||
                      (memWillWrite && readsRs1 && (ex_mem.rd === d.rs1))
   val rawHazardRs2 = (exWillWrite && readsRs2 && (id_ex.rd === d.rs2)) ||
                      (memWillWrite && readsRs2 && (ex_mem.rd === d.rs2))
-  val stall        = if_id.valid && (rawHazardRs1 || rawHazardRs2)
+
+  val stall = if_id.valid && Mux(enableForwarding.B, isLoadUseHazard, rawHazardRs1 || rawHazardRs2)
 
   // ID -> EX Pipeline Register update
   when(exRedirect) {

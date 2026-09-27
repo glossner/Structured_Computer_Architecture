@@ -132,79 +132,93 @@ class RiscvBenchmarkSpec extends AnyFlatSpec {
       assert(completed, s"Single-cycle simulation for $benchName timed out after $cyclesSingle cycles (last PC = 0x${dut.io.imem.addr.peek().litValue.toLong.toHexString})")
     }
 
-    // 2. Run 4-Stage Pipelined Core (RiscvPipelined)
-    val memPipe = new SimMemory(baseAddr)
-    memPipe.loadBinary(binBytes)
-    var cyclesPipe = 0
-    var resultPipe = 0L
+    // Helper to run pipelined core with or without forwarding
+    def runPipe(enableFwd: Boolean): (Int, Long) = {
+      val memPipe = new SimMemory(baseAddr)
+      memPipe.loadBinary(binBytes)
+      var cycles = 0
+      var result = 0L
 
-    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul)) { dut =>
-      dut.reset.poke(true.B)
-      dut.clock.step(5)
-      dut.reset.poke(false.B)
+      simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul, enableForwarding = enableFwd)) { dut =>
+        dut.reset.poke(true.B)
+        dut.clock.step(5)
+        dut.reset.poke(false.B)
 
-      var completed = false
-      while (cyclesPipe < maxCycles && !completed) {
-        val pc = dut.io.imem.addr.peek().litValue.toLong
-        val inst = memPipe.read32(pc)
-        dut.io.imem.inst.poke(inst.U(32.W))
+        var completed = false
+        while (cycles < maxCycles && !completed) {
+          val pc = dut.io.imem.addr.peek().litValue.toLong
+          val inst = memPipe.read32(pc)
+          dut.io.imem.inst.poke(inst.U(32.W))
 
-        val dmemAddr   = dut.io.dmem.addr.peek().litValue.toLong
-        val dmemFunct3 = dut.io.dmem.funct3.peek().litValue.toInt
-        val memRead    = dut.io.dmem.memRead.peek().litToBoolean
-        val memWrite   = dut.io.dmem.memWrite.peek().litToBoolean
-        val writeData  = dut.io.dmem.writeData.peek().litValue.toLong
+          val dmemAddr   = dut.io.dmem.addr.peek().litValue.toLong
+          val dmemFunct3 = dut.io.dmem.funct3.peek().litValue.toInt
+          val memRead    = dut.io.dmem.memRead.peek().litToBoolean
+          val memWrite   = dut.io.dmem.memWrite.peek().litToBoolean
+          val writeData  = dut.io.dmem.writeData.peek().litValue.toLong
 
-        if (memRead) {
-          dut.io.dmem.readData.poke(memPipe.readFormatted(dmemAddr, dmemFunct3).U(32.W))
-        } else {
-          dut.io.dmem.readData.poke(0.U(32.W))
-        }
-
-        if (memWrite) {
-          memPipe.writeFormatted(dmemAddr, writeData, dmemFunct3)
-          if (dmemAddr == tohostAddr && writeData != 0) {
-            resultPipe = writeData
-            completed = true
+          if (memRead) {
+            dut.io.dmem.readData.poke(memPipe.readFormatted(dmemAddr, dmemFunct3).U(32.W))
+          } else {
+            dut.io.dmem.readData.poke(0.U(32.W))
           }
-        }
 
-        dut.clock.step(1)
-        cyclesPipe += 1
+          if (memWrite) {
+            memPipe.writeFormatted(dmemAddr, writeData, dmemFunct3)
+            if (dmemAddr == tohostAddr && writeData != 0) {
+              result = writeData
+              completed = true
+            }
+          }
+
+          dut.clock.step(1)
+          cycles += 1
+        }
+        assert(completed, s"Pipelined (fwd=$enableFwd) simulation for $benchName timed out after $cycles cycles")
       }
-      assert(completed, s"Pipelined simulation for $benchName timed out after $cyclesPipe cycles")
+      (cycles, result)
     }
 
+    // 2. Run 4-Stage Pipelined Core without Forwarding
+    val (cyclesPipeNoFwd, resultPipeNoFwd) = runPipe(false)
+
+    // 3. Run 4-Stage Pipelined Core with Forwarding (Bypassing)
+    val (cyclesPipeFwd, resultPipeFwd) = runPipe(true)
+
     // Verification
-    assert(resultSingle == resultPipe, s"Result mismatch in $benchName! Single=$resultSingle, Pipe=$resultPipe")
+    assert(resultSingle == resultPipeNoFwd, s"Result mismatch in $benchName (NoFwd)! Single=$resultSingle, Pipe=$resultPipeNoFwd")
+    assert(resultSingle == resultPipeFwd, s"Result mismatch in $benchName (Fwd)! Single=$resultSingle, Pipe=$resultPipeFwd")
 
     // Performance Metrics
-    val instCount = cyclesSingle
-    val cpiSingle = 1.0
-    val cpiPipe   = cyclesPipe.toDouble / instCount.toDouble
+    val instCount     = cyclesSingle
+    val cpiSingle     = 1.0
+    val cpiPipeNoFwd  = cyclesPipeNoFwd.toDouble / instCount.toDouble
+    val cpiPipeFwd    = cyclesPipeFwd.toDouble / instCount.toDouble
 
-    // In the single-cycle Fetch-Execute (FE) processor, the clock period must encompass all 4 steps:
-    // T_clk_FE = T_sram_fetch + T_decode + T_execute + T_sram_wb
-    // In the 4-stage pipelined processor, T_clk is the maximum delay among the 4 steps:
-    // T_clk_pipe = max(T_sram_fetch, T_decode, T_execute, T_sram_wb)
-    val execTimeSingle = cyclesSingle * tClkSingle // ns
-    val execTimePipe   = cyclesPipe * tClkPipe     // ns
-    val speedupActual  = execTimeSingle / execTimePipe
+    val execTimeSingle    = cyclesSingle * tClkSingle
+    val execTimePipeNoFwd = cyclesPipeNoFwd * tClkPipe
+    val execTimePipeFwd   = cyclesPipeFwd * tClkPipe
+    val speedupNoFwd      = execTimeSingle / execTimePipeNoFwd
+    val speedupFwd        = execTimeSingle / execTimePipeFwd
+    val speedupFwdVsNoFwd = execTimePipeNoFwd / execTimePipeFwd
 
     println("=======================================================================")
     println(f"        BENCHMARK RESULTS: $benchName%-40s")
     println("=======================================================================")
-    println(f"  Instructions Executed:      $instCount%6d")
-    println(f"  Benchmark Result (tohost):   0x$resultSingle%08x ($resultSingle%d)")
+    println(f"  Instructions Executed:          $instCount%8d")
+    println(f"  Benchmark Result (tohost):       0x$resultSingle%08x ($resultSingle%d)")
     println("-----------------------------------------------------------------------")
-    println(f"  Single-Cycle Cycles:        $cyclesSingle%6d   (CPI = $cpiSingle%.2f)")
-    println(f"  4-Stage Pipelined Cycles:   $cyclesPipe%6d   (CPI = $cpiPipe%.2f)")
-    println(f"  Pipeline Stall Overhead:    ${cyclesPipe - cyclesSingle}%6d cycles (${(cpiPipe - 1.0)*100}%.1f%% penalty, no forwarding)")
+    println(f"  Single-Cycle Cycles:            $cyclesSingle%8d   (CPI = $cpiSingle%.2f)")
+    println(f"  4-Stage Pipe (No Forwarding):   $cyclesPipeNoFwd%8d   (CPI = $cpiPipeNoFwd%.2f)")
+    println(f"  4-Stage Pipe (With Bypassing):  $cyclesPipeFwd%8d   (CPI = $cpiPipeFwd%.2f)")
     println("-----------------------------------------------------------------------")
-    println(f"  ASAP7 7nm Clock Period:     Single (FE)=$tClkSingle%.3f ns (${1000.0/tClkSingle}%.1f MHz), Pipe=$tClkPipe%.3f ns (${1000.0/tClkPipe}%.1f MHz)")
-    println(f"  Clock Period Delta:         ${tClkSingle - tClkPipe}%.3f ns (FE = sum of 4 steps, Pipe = max of 4 steps)")
-    println(f"  Execution Time:             Single (FE)=$execTimeSingle%.2f ns, Pipe=$execTimePipe%.2f ns")
-    println(f"  Actual System Speedup:      $speedupActual%.2fx")
+    println(f"  Stalls (No Forwarding):         ${cyclesPipeNoFwd - cyclesSingle}%8d cycles (${(cpiPipeNoFwd - 1.0)*100}%.1f%% overhead)")
+    println(f"  Stalls (With Bypassing):        ${cyclesPipeFwd - cyclesSingle}%8d cycles (${(cpiPipeFwd - 1.0)*100}%.1f%% overhead)")
+    println(f"  Stall Elimination:              ${cyclesPipeNoFwd - cyclesPipeFwd}%8d stalls saved (${(cyclesPipeNoFwd - cyclesPipeFwd).toDouble / (cyclesPipeNoFwd - cyclesSingle).toDouble * 100}%.1f%% of all stalls eliminated)")
+    println("-----------------------------------------------------------------------")
+    println(f"  ASAP7 7nm Clock Period:         Single (FE)=$tClkSingle%.3f ns (${1000.0/tClkSingle}%.1f MHz), Pipe=$tClkPipe%.3f ns (${1000.0/tClkPipe}%.1f MHz)")
+    println(f"  Execution Time:                 Single=$execTimeSingle%.2f ns, NoFwd=$execTimePipeNoFwd%.2f ns, Fwd=$execTimePipeFwd%.2f ns")
+    println(f"  Speedup vs Single-Cycle:        No Forwarding = $speedupNoFwd%.2fx, With Bypassing = $speedupFwd%.2fx")
+    println(f"  Speedup from Bypassing:         $speedupFwdVsNoFwd%.2fx over unforwarded pipeline")
     println("=======================================================================\n")
   }
 
