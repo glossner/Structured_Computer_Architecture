@@ -1,3 +1,15 @@
+# 09/27/2026 08:00 Instruction Compounding (SCISM) & Modern Superscalar Dispatch Frontiers (Chapter 16)
+* **Instruction Compounding & SCISM (Section 16.5.6 - `Latex/04_16_Performance_Optimized_Organization.tex`)**:
+  * Documented the quadratic $O(W^2)$ dependency checking bottleneck in wide superscalar issue logic and credited Stamatis Vassiliadis, Bart Blaner, and Richard J. Eickemeyer for inventing the Scalable Compound Instruction Set Machine (SCISM, IBM 1994) and Compound ALU (CALU, 1993).
+  * Analyzed how SCISM pre-groups compatible instructions into compound units without runtime interlocks and folds branches out of the instruction queue, achieving $>90\%$ of dual-issue performance with scalar clock simplicity.
+* **Modern Frontiers in Superscalar Dispatch & Execution (Section 16.5.7)**:
+  * *Macro-Op and Micro-Op Fusion*: Detailed the commercial evolution of compounding across Intel Core (Gochman et al., 2006), AMD Zen, Apple Silicon, ARM, and RISC-V (`lui`+`addi`, `auipc`+`jalr`, and indexed load/stores), merging adjacent instructions in decode to save ROB entries and issue bandwidth.
+  * *Zero-Cycle Move Elimination*: Analyzed register renaming optimizations (Jourdan et al., 1999) that handle register-to-register moves entirely within the Register Alias Table (RAT) without allocating ALU execution cycles or reservation stations (0 issue slots, 0 ALU latency).
+  * *Unified Physical Register File (PRF) Architecture vs. Data-Carrying ROB*: Contrasted classic P6 data-carrying ROBs (limited to 32--40 entries by data wiring and multiplexer overhead) with decoupled Unified PRF architectures (MIPS R10000, DEC Alpha 21264, Intel Sandy Bridge/Golden Cove, AMD Zen, Apple M-Series) where the ROB holds only tags and status while data lives in a 128--640+ entry centralized PRF.
+  * *Speculative Memory Disambiguation & Store Sets*: Covered Load/Store Queues (LSQ), store-to-load forwarding, and speculative memory dependence prediction (Moshovos et al., 1997; Chrysos & Emer, 1998) with order violation replay recovery.
+* **Evolution of Dynamic Execution Comparison (Table 16.7)**:
+  * Expanded the comparative summary table to contrast Scoreboard (1964), Tomasulo (1967), Tomasulo + Circular ROB (1988), and Modern PRF + Fused OoO across 12 microarchitectural dimensions.
+
 # 09/27/2026 07:45 Storage Systems Restructuring & Memory Hierarchy Optimization (Chapters 12 & 16)
 * **Storage Systems Restructuring (Chapter 12 - `Latex/03_12_von_neumann_4-OS.tex`)**:
   * Refactored Section 12.4 from "Memory Management" to "Storage Systems: Primary and Secondary Memory". Framed memory within the fundamental 4-OS abstract model (a single, uniform address space for instructions and data), highlighting that early implementations (EDVAC, Princeton IAS) functioned without caches, TLBs, or virtual memory paging.
