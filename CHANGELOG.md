@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-09-27
 
+### Changed
+- **ToyRISC Architecture, Organization, and ISA Migration (Chapters 13 & 17)**:
+  - Migrated non-redundant ToyRISC architecture, organization, loop-connected automata analysis, ISA specifications, opcode macro definitions (`A11_DEFINES.vh`), 28-instruction opcode Table 17.1, program execution trace Example 17.1, and single-cycle critical-path timing formulations from Section 13.5 into Chapter 17 (Section 17.1, `Latex/04_17_1_ToyRISC_organization.tex`).
+  - Maintained Section 13.5 in `Latex/03_13_harvard_5-OS.tex` fully commented out in source, eliminating redundancy while preserving historical text.
+  - Resolved all internal cross-references across Chapters 12, 13, 16, and 17 (`sec:toyrisc_arch`, `tab:riscISA`, `lst:toyRISCdefines`, `exADD`, and `interrupt`) with zero undefined references.
+
 ### Fixed
 - **Mathematical Range Typography Standardization (Chapters 12 & 16)**:
   - Replaced 22 non-standard instances across Chapters 12 and 16 where the division symbol (`\div`) was erroneously used for numeric ranges (e.g., $1\,\text{TB} \div 30\,\text{TB}$, ROB sizes, PRF sizes, L2/L3 capacities) with proper LaTeX en-dashes (`\text{--}`), while strictly preserving genuine arithmetic division operators in Chapter 1.

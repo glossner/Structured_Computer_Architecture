@@ -1,565 +1,214 @@
+\section{ToyRISC Architecture and Organization}\label{sec:toyrisc_arch}
 
-The organization of the simple executive processor {\bf {\em toyRISC}} (described in {\tt toyRISC.v} module of the design listed in Figure \ref{cod2}) is given in Figure \ref{fig43}, where two simple automata, the {\bf RALU} ({\bf R}egisters with {\bf A}rithmetic-{\bf L}ogic {\bf U}nit) subsystem  and  the {\bf Control} subsystem  are loop connected thus closing the 3rd loop which allow the emergence of the processing function. The only complex subsystems are two small modules: the decode circuit (described in {\tt Decode.v} and the interrupt automaton, {\tt intSect.v}.
+The executing processor is fundamentally simpler than an interpreting processor.
+The computational complexity shifts from the physical silicon structure of the processor into the software programs executed by the machine. This class of computing engine, known as a Reduced Instruction Set Computer (RISC), features a clean microarchitectural organization composed primarily of simple, recursively defined digital circuits (see Figure \ref{fig43}).
 
-\section{Code}
+\placedrawing[htbp]{figures/05_06_toy_risc.lp}{The organization of the {\bf {\em toyRISC}}-based computer as a 5-OS. (To maintain visual clarity, individual control and command signals are abstracted.)}{fig43}
 
-The design has a multi-level organization
+\subsection{Microarchitectural Organization}\label{sec:toyrisc_org}
 
-\subsection{First Level}
+The Harvard abstract model of an executive RISC machine determines the internal structure of the processor: hardware mechanisms must allow the core to simultaneously address both program memory and data memory in every clock cycle. Consequently, the Register Arithmetic Logic Unit (RALU) functional automaton, directly interfaced with the data memory, is loop-connected with a control automaton designed to fetch a new instruction from the program memory in each clock cycle. The control automaton does not ``know'' the function to be performed; it ``knows'' only how to fetch the next instruction from external program storage.
 
-The top level
+As illustrated in Figure \ref{fig43}, the organization of the \textbf{\textit{toyRISC}} processor comprises two simple loop-connected automata—the Program Counter (PC) and the Register Arithmetic Logic Unit (RALU)—serially connected with a compact combinational decoder and interrupt controller (DCD).
 
-\placedrawing[H]{figures/C1.lp}{{\tt 01\_theSystem}}{cod1}
+\subsubsection{Program Counter (PC): A Control Automaton}
+The Control subsystem is a simple functional automaton whose state, stored in the 16-bit Program Counter register (\texttt{pc}), is used to address the instruction memory in each clock cycle. The next instruction address is computed in one of two modes:
+\begin{enumerate}
+    \item \textbf{Sequential / Relative Mode}: Incrementing the current program counter value ($pc + 1$ for normal sequential execution, or $pc + \text{offset}$ for relative branches and jumps).
+    \item \textbf{Direct / Register Mode}: Independently loading the PC from an internal register (e.g., returning from a subroutine via \texttt{RET}) or jumping to an absolute target address.
+\end{enumerate}
+Furthermore, the current return address ($pc + 1$) can be preserved in an internal register when the instruction stream executes a subroutine call or handles a hardware interrupt. For all of these operations, the combinational circuit \textbf{nextPC} closes the feedback loop over the Program Counter register.
 
-\subsection{Second Level}
+\subsubsection{RALU: A Functional Automaton}
+The RALU subsystem is a simple functional automaton whose architectural state is structured as an array of variables stored in a 32-entry Register File (a multi-ported memory with two combinational read ports and one synchronous write port). In each clock cycle, two 32-bit operand values are fetched from the register file and fed into the Arithmetic Logic Unit (ALU). The resulting value is written back to the destination register selected by the instruction. The RALU datapath accepts data originating from data memory (via load instructions), immediate fields embedded within the instruction word, or the PC automaton (return addresses), closing the third fundamental loop of the processor.
 
-\placedrawing[H]{figures/C2.lp}{{\tt 02\_toyRISC}}{cod2}
+\subsubsection{DCD: Interrupt Automaton and Instruction Decoder}\label{interrupt}
+The DCD subsystem contains the combinational instruction decoder and a dedicated finite automaton for managing hardware interrupt requests.
 
-\placedrawing[H]{figures/C3.lp}{{\tt 02\_memories}}{cod3}
+In computer systems, an interrupt\index{interrupt: asynchronous signal suspending execution to service an event}\index{interrupt!hardware interrupt}\index{interrupt!software interrupt} is a hardware signal requesting the processor to temporarily suspend its current execution flow to service an external event. If the interrupt is accepted, the processor saves its execution context and vectors to an interrupt service routine (ISR). Once the ISR completes, the saved state is restored, allowing the interrupted software program to resume execution seamlessly.
 
-\subsection{Third Level}
+Interrupts are broadly classified into two categories:
+\begin{itemize}
+    \item \textbf{Hardware Interrupts}: Initiated by external peripheral devices (such as keyboards, timers, or DMA controllers). Hardware interrupts are further subdivided into:
+    \begin{itemize}
+        \item \textit{Maskable Interrupts}\index{interrupt!maskable}: Interrupt requests that can be postponed or masked by the processor during time-critical program sections.
+        \item \textit{Non-Maskable Interrupts (NMI)}\index{interrupt!non-maskable (NMI)}: High-priority requests (such as power failure or uncorrectable hardware parity errors) that cannot be ignored and must be serviced immediately.
+    \end{itemize}
+    \item \textbf{Software Interrupts / Exceptions}: Synchronous events generated internally by executing instructions:
+    \begin{itemize}
+        \item \textit{Traps / System Calls}: Intentional software-invoked exceptions used to request operating system kernel services.
+        \item \textit{Exceptions / Faults}\index{interrupt!exception}: Unplanned operational errors encountered during instruction execution (such as arithmetic overflow, division by zero, or illegal memory access).
+    \end{itemize}
+\end{itemize}
 
-\placedrawing[H]{figures/C5.lp}{{\tt }}{cod5}
+In our educational processor, a maskable hardware interrupt mechanism is implemented. The interrupt subsystem (\texttt{intSect}) comprises a 2-state finite automaton with states \texttt{enableInterrupt} and \texttt{disableInterrupt}, controlled by dedicated software instructions: Enable Interrupt (\texttt{EINT}) and Disable Interrupt (\texttt{DINT}). Upon system reset, the automaton initializes into the \texttt{disableInterrupt} state. 
 
-\placedrawing[H]{figures/C6.lp}{{\tt }}{cod6}
+When the automaton is in the \texttt{enableInterrupt} state and the external \texttt{int} signal is asserted, the processor issues an interrupt acknowledge signal (\texttt{inta}), saves the return address ($pc + 1$) into register 30 of the register file, and branches to the interrupt service routine whose base address is pre-loaded into register 31. The interrupt handler terminates with an unconditional return instruction (\texttt{RET}), restoring program execution from the return address preserved in \texttt{rf[30]}.
 
-\placedrawing[H]{figures/C4.lp}{{\tt }}{cod4}
+\bigskip
+The organization presented here emphasizes the \textit{competence} and conceptual clarity of the circuit structures rather than maximal clock frequency. Pipelining techniques used to maximize clock frequency and throughput are developed in Section \ref{sec:pipelined_toyrisc} and analyzed comprehensively in Chapter \ref{lect5} \cite{Hennessy19, Patterson19}.
 
-\placedrawing[H]{figures/C7.lp}{{\tt }}{cod7}
+\subsection{Instruction Set Architecture}\label{sec:toyrisc_isa}
 
-\placedrawing[H]{figures/C8.lp}{{\tt }}{cod8}
-
-\subsection{Fourth Level}
-
-\placedrawing[H]{figures/C12.lp}{{\tt }}{cod12}
-
-\placedrawing[H]{figures/C9.lp}{{\tt }}{cod9}
-
-\placedrawing[H]{figures/C10.lp}{{\tt }}{cod10}
-
-\placedrawing[H]{figures/C11.lp}{{\tt }}{cod11}
-
-\section{Assembly}\label{assembly}
-
-{\footnotesize
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog]
-/************************************************************************
-File name: 00_toyRISCcodeGenerator.v
-Description:
-************************************************************************/
-    reg [5:0]   RISCopCode          ;
-    reg [4:0]   RISCdest            ;
-    reg [4:0]   RISCleft            ;
-    reg [4:0]   RISCright           ;
-    reg [10:0]  RISCvalue           ;
-    reg [6:0]   RISCaddrCounter     ;
-    reg [6:0]   RISClabelTab[0:128] ;
-
-    `include "0_ISAdefine.vh"
-
-    task hendLine;
-        begin
-            dut.MEMORIES.PROG_MEM.progMem[RISCaddrCounter] =
-                {   RISCopCode  ,
-                    RISCdest    ,
-                    RISCleft    ,
-                    RISCright   ,
-                    RISCvalue   }                   ;
-            RISCaddrCounter = RISCaddrCounter + 1   ;
-        end
-    endtask
-
-    // sets RISClabelTab in the first pass associating
-    // 'RISCaddrCounter' with 'labelIndex'
-    task LB ;
-        input [4:0] labelIndex;
-
-        RISClabelTab[labelIndex] = RISCaddrCounter;
-    endtask
-    // uses the content of RISClabelTab in the second pass for rjump
-    task ULB;
-        input [4:0] labelIndex;
-
-        {RISCright, RISCvalue}  =
-            RISClabelTab[labelIndex] - RISCaddrCounter;
-    endtask
-    // uses the content of RISClabelTab in the second pass for call
-    task CLB;
-        input [4:0] labelIndex;
-
-        {RISCright, RISCvalue}  =
-            RISClabelTab[labelIndex];
-    endtask
-
-    task HALT;
-        begin   RISCopCode  = `rjmp;
-                RISCdest    = 0     ;
-                RISCleft    = 0     ;
-                RISCright   = 0     ;
-                RISCvalue   = 0     ;
-                hendLine            ;
-        end
-    endtask
-
-    task NOP;
-        begin   RISCopCode  = `nop  ;
-                RISCdest    = 0     ;
-                RISCleft    = 0     ;
-                RISCright   = 0     ;
-                RISCvalue   = 0     ;
-                hendLine            ;
-        end
-    endtask
-
-    task RJMP;
-        input [5:0] label   ;
-
-        begin   RISCopCode  = `rjmp;
-                RISCdest    = 0     ;
-                RISCleft    = 0     ;
-                ULB(label)          ;
-                hendLine            ;
-        end
-    endtask
-
-    task ZJMP;
-        input [4:0] leftAddr;
-        input [5:0] label   ;
-
-        begin   RISCopCode  = `zjmp     ;
-                RISCdest    = 0         ;
-                RISCleft    = leftAddr  ;
-                ULB(label)              ;
-                hendLine                ;
-        end
-    endtask
-
-    task NZJMP;
-        input [4:0] leftAddr;
-        input [5:0] label   ;
-
-        begin   RISCopCode  = `nzjmp    ;
-                RISCdest    = 0         ;
-                RISCleft    = leftAddr  ;
-                ULB(label)              ;
-                hendLine                ;
-        end
-    endtask
-
-    task RET;
-        input [4:0] leftAddr;
-
-        begin   RISCopCode  = `ret      ;
-                RISCdest    = 0         ;
-                RISCleft    = 5'b11111  ;
-                RISCright   = 0         ;
-                RISCvalue   = 0         ;
-                hendLine                ;
-        end
-    endtask
-
-    task AJMP;
-        input [10:0] value  ;
-
-        begin   RISCopCode              = `ajmp;
-                RISCdest                = 0     ;
-                RISCleft                = 0     ;
-                {RISCright, RISCvalue}  = value ;
-                hendLine                        ;
-        end
-    endtask
-
-    task CALL;
-        input [5:0] label   ;
-
-        begin   RISCopCode  = `call;
-                RISCdest    = 0     ;
-                RISCleft    = 0     ;
-                CLB(label)          ;
-                hendLine            ;
-        end
-    endtask
-
-    task BIGV;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `bigv     ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task ADD;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `add      ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task SUB;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `sub      ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task CRADD;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `addcr    ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task CRSUB;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `subcr    ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task LEFTSH; // logic left shift
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-
-        begin   RISCopCode  = `lsh      ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = 5'b0      ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task ARITHSH; // arithmetic shift
-        input [4:0] destAddr;
-        input [4:0] leftAddr;
-
-        begin   RISCopCode  = `ash      ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = 0         ;
-                RISCvalue   = 0         ;
-                hendLine                ;
-        end
-    endtask
-
-    task MOVE;
-        input [4:0] destAddr;
-        input [4:0] leftAddr;
-
-        begin   RISCopCode  = `move ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = 0         ;
-                RISCvalue   = 0         ;
-                hendLine                ;
-        end
-    endtask
-
-    task MULT;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `mult ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 0         ;
-                hendLine                ;
-        end
-    endtask
-
-    task AND;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `bwand    ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 0         ;
-                hendLine                ;
-        end
-    endtask
-
-    task OR;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `bwor ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 0         ;
-                hendLine                ;
-        end
-    endtask
-
-    task XOR;
-        input [4:0] destAddr    ;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `bwxor    ;
-                RISCdest    = destAddr  ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task READ;
-        input [4:0] destAddr;
-        input [4:0] rightAddr;
-
-        begin   RISCopCode  = `read ;
-                RISCdest    = destAddr  ;
-                RISCleft    = 5'b0      ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task STORE;
-        input [4:0] leftAddr    ;
-        input [4:0] rightAddr   ;
-
-        begin   RISCopCode  = `store    ;
-                RISCdest    = 5'b0      ;
-                RISCleft    = leftAddr  ;
-                RISCright   = rightAddr ;
-                RISCvalue   = 11'b0     ;
-                hendLine                ;
-        end
-    endtask
-
-    task VAL;
-        input [4:0]     destAddr;
-        input [15:0]    value   ;
-
-        begin   RISCopCode  = `val              ;
-                RISCdest    = destAddr          ;
-                RISCleft    = 5'b0              ;
-                {RISCright, RISCvalue} = value  ;
-                hendLine                        ;
-        end
-    endtask
-
-    task EINT; // enable interrupt
-        begin   RISCopCode  = `ei   ;
-                RISCdest    = 0     ;
-                RISCleft    = 0     ;
-                RISCright   = 0     ;
-                RISCvalue   = 0     ;
-                hendLine            ;
-        end
-    endtask
-
-    task DINT; // disable interrupt
-        begin   RISCopCode  = `di   ;
-                RISCdest    = 0     ;
-                RISCleft    = 0     ;
-                RISCright   = 0     ;
-                RISCvalue   = 0     ;
-                hendLine            ;
-        end
-    endtask
-
-    // RUNNING
-    initial begin   RISCaddrCounter = 0;
-                    `include "00_toyRISCprogram.v" // first pass
-                    RISCaddrCounter = 0;
-                    `include "00_toyRISCprogram.v" // second pass
-            end
- \end{lstlisting}
-\end{shaded*}
-}
-
-
-\section{Simulation}
-
-%\pagebreak
-
-{\footnotesize
-\begin{shaded*}
-\begin{lstlisting}[language=Verilog]
-/************************************************************************
-File name: 00_toyRiscSimulator.v
-Description:
-************************************************************************/
-//`include "DEFINES.vh"
-module toyRiscSimulator;
-    reg         reset, interrupt, clk   ;
-    reg [15:0]  intAddr                 ;
-    wire        inta                    ;
-
-    integer i;
-
-    initial begin               clk = 0     ;
-                    forever #1  clk = ~clk  ;
-            end
-
-    `include "00_toyRISCcodeGenerator.v"
-
-    initial for (i=0; i<32; i=i+1)
-        $display("programMemory[%0d] \t = %b",
-                    i, dut.MEMORIES.PROG_MEM.progMem[i]);
-
-    initial
-        begin       reset       = 1         ;
-                    intAddr     = 16'b1111  ;
-                    interrupt   = 0         ;
-            #4      reset       = 0         ;
-            #20     interrupt   = 1         ;
-            #150    begin
-                    // DISPLAY THE CONTENT OF THE REGISTER FILE
-                        for (i=0; i<8; i=i+1)
-                            $display("RF[%0d] \t = %b",
-                            i, dut.PROCESSOR.RALU.regFile.registers[i]);
-                    // DISPLAY THE DATA MEMORY OF HOST
-                        for (i=0; i<8; i=i+1)
-                            $display("dataMemory[%0d] \t = %b",
-                            i, dut.MEMORIES.DATA_MEM.mem[i]);
-                    end
-            #2      $stop   ;
-        end
-
-    theSystem dut(reset, interrupt, intAddr, inta, clk);
-
-    initial begin
-        $monitor
-        ("t=%0d \t pc=%0d \t inta=%0d \t
-        RF[0]=%0d \t RF[1]=%0d\t RF[2]=%0d \t RF[3]=%0d  ...
-        \t RF[31]=%0d",
-         $time,
-         dut.PROCESSOR.Control.pc,
-         dut.PROCESSOR.Control.address,
-         dut.PROCESSOR.inta,
-         dut.PROCESSOR.RALU.regFileIn,
-         dut.PROCESSOR.RALU.regFile.registers[0],
-         dut.PROCESSOR.RALU.regFile.registers[1],
-         dut.PROCESSOR.RALU.regFile.registers[2],
-         dut.PROCESSOR.RALU.regFile.registers[3],
-         dut.PROCESSOR.RALU.regFile.registers[31]);
-    end
-endmodule
-\end{lstlisting}
-\end{shaded*}
-}
-
-\placedrawing[H]{figures/C13.lp}{{\tt }}{cod13}
-
-{\footnotesize
+The programmer-visible architectural storage resources of the \textbf{\textit{toyRISC}} processor are:
 \begin{verbatim}
-***************************************************************************************
-    The binary form of program provided by 00_toyRISCcodeGenerator.v
-***************************************************************************************
-programMemory[0]     = 01011100000000000000000000001011
-programMemory[1]     = 01011100001000000000000000000001
-programMemory[2]     = 01010100000000000000000000000000
-programMemory[3]     = 11001100000000000000100000000000
-programMemory[4]     = 00001100000000001111111111111111
-programMemory[5]     = 00011100000000000000000000001010
-programMemory[6]     = 00000000000000000000000000000000
-programMemory[7]     = 00000000000000000000000000000000
-programMemory[8]     = 01011100010000000000000000100001
-programMemory[9]     = 00000100000000000000000000000000
-programMemory[10]    = 01011100000000000000000001000010
-programMemory[11]    = 00010100000111110000000000000000
-programMemory[12]    = 00000000000000000000000000000000
-programMemory[13]    = 00000000000000000000000000000000
-programMemory[14]    = 00000000000000000000000000000000
-programMemory[15]    = 00000000000000000000000000000000
-programMemory[16]    = 01011100011000000000000000001101
-programMemory[17]    = 00000000000000000000000000000000
-programMemory[18]    = 00010100000111110000000000000000
+ reg    [31:0]  programMemory[0:65535] ; // 64Kx32 program memory
+ reg    [31:0]  dataMemory[0:1023]     ; // 1Kx32 data memory
+ reg    [15:0]  pc                     ; // 16-bit program counter
+ reg    [31:0]  registers[0:31]        ; // 32x32 register file
+ reg            intEnable              ; // 1-bit interrupt enable FF
+\end{verbatim}
 
-***************************************************************************************
-    The result of simulation provided by the monitor run by 00_toyRiscSimulator.v
-***************************************************************************************
-t=0     pc=x     inta=0   RF[0]=x    RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=1     pc=65535 inta=0   RF[0]=x    RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=5     pc=0     inta=0   RF[0]=11   RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=7     pc=1     inta=0   RF[0]=11   RF[1]=x   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=9     pc=2     inta=0   RF[0]=11   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=11    pc=3     inta=0   RF[0]=11   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=13    pc=4     inta=0   RF[0]=10   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=15    pc=3     inta=0   RF[0]=10   RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=17    pc=4     inta=0   RF[0]=9    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=19    pc=3     inta=0   RF[0]=9    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=21    pc=4     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=23    pc=3     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=24    pc=3     inta=1   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=x
-t=25    pc=15    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=4
-t=27    pc=16    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=x  ...   RF[31]=4
-t=29    pc=17    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=31    pc=18    inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=33    pc=4     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=35    pc=3     inta=0   RF[0]=8    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=37    pc=4     inta=0   RF[0]=7    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=39    pc=3     inta=0   RF[0]=7    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=41    pc=4     inta=0   RF[0]=6    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=43    pc=3     inta=0   RF[0]=6    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=45    pc=4     inta=0   RF[0]=5    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=47    pc=3     inta=0   RF[0]=5    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=49    pc=4     inta=0   RF[0]=4    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=51    pc=3     inta=0   RF[0]=4    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=53    pc=4     inta=0   RF[0]=3    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=55    pc=3     inta=0   RF[0]=3    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=57    pc=4     inta=0   RF[0]=2    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=59    pc=3     inta=0   RF[0]=2    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=61    pc=4     inta=0   RF[0]=1    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=63    pc=3     inta=0   RF[0]=1    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=65    pc=4     inta=0   RF[0]=0    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=67    pc=5     inta=0   RF[0]=0    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=4
-t=69    pc=10    inta=0   RF[0]=0    RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
-t=71    pc=11    inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
-t=73    pc=6     inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
-t=75    pc=7     inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
-t=77    pc=8     inta=0   RF[0]=66   RF[1]=1   RF[2]=x   RF[3]=13  ...  RF[31]=6
-t=79    pc=9     inta=0   RF[0]=66   RF[1]=1   RF[2]=33  RF[3]=13  ...  RF[31]=6
+Instructions are 32 bits wide and follow two primary encoding formats:
+\begin{verbatim}
+Format 1 (Register-Register):
+ instruction[31:0] = {opCode[5:0],     // 6-bit operation code
+                      dest[4:0],       // 5-bit destination register (d)
+                      left[4:0],       // 5-bit left operand register (l)
+                      right[4:0],      // 5-bit right operand register (r)
+                      noUse[10:0]}     // 11 unused bits
+
+Format 2 (Register-Immediate):
+ instruction[31:0] = {opCode[5:0],     // 6-bit operation code
+                      dest[4:0],       // 5-bit destination register (d)
+                      left[4:0],       // 5-bit left operand register (l)
+                      immediate[15:0]} // 16-bit immediate value (v)
+\end{verbatim}
+
+The instruction set encompasses four functional categories:
+\begin{enumerate}
+    \item \textbf{Control Instructions}: Branch and jump instructions managing program control flow (\texttt{NOP}, \texttt{RJMP}, \texttt{BRZ}, \texttt{BRNZ}, \texttt{RET}, \texttt{HALT}).
+    \item \textbf{Arithmetic and Logic Instructions}: Core computational operations (\texttt{ADD}, \texttt{SUB}, \texttt{MULT}, \texttt{ADDC}, \texttt{SUBC}, \texttt{LSH}, \texttt{ASH}, \texttt{MOVE}, \texttt{SWAP}, \texttt{NOT}, \texttt{AND}, \texttt{OR}, \texttt{XOR}) and immediate computational variants (\texttt{ADDV}, \texttt{MULTV}, \texttt{ADDVC}, \texttt{VAL}).
+    \item \textbf{Memory Access Instructions}: Primary data memory load and store operations (\texttt{READ}, \texttt{LOAD}, \texttt{STORE}).
+    \item \textbf{Interrupt Control Instructions}: Enabling and disabling interrupt servicing (\texttt{EINT}, \texttt{DINT}).
+\end{enumerate}
+
+The SystemVerilog macro definitions for all opcodes are specified in Listing \ref{lst:toyRISCdefines}.
+
+\includeverilogcode[caption={toyRISC ISA definitions. File: A11\_DEFINES.vh (SystemVerilog)}, 
+                    label={lst:toyRISCdefines}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=35]
+                    {\verilogSourceDir/A11_DEFINES.vh}
+
+\subsection{Assembly Language and Instruction Encoding}\label{sec:toyrisc_asm}
+
+To translate symbolic assembly programs into executable binary machine code, an assembler evaluates assembly mnemonics, computes label offsets, and generates the corresponding 32-bit instruction words. Table \ref{tab:riscISA} details the complete toyRISC instruction set, summarizing each mnemonic syntax, the register-transfer behavior, and the bitfield encoding. In the binary encoding column:
+\begin{itemize}
+    \item \texttt{ddddd}: 5-bit binary address of the destination register in the register file.
+    \item \texttt{lllll}: 5-bit binary address of the left source operand register.
+    \item \texttt{rrrrr}: 5-bit binary address of the right source operand register.
+    \item \texttt{vvvvvvvvvvvvvvvv}: 16-bit binary immediate value or signed branch displacement.
+\end{itemize}
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{longtable}{|l|p{4.6cm}|>{\scriptsize\ttfamily}l|}
+\caption{Assembly language mnemonics, architectural actions, and binary encodings for toyRISC.}\label{tab:riscISA} \\
+\hline
+\textbf{Mnemonic} & \textbf{Architectural Action} & \multicolumn{1}{c|}{\textbf{32-Bit Binary Encoding}} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Mnemonic} & \textbf{Architectural Action} & \multicolumn{1}{c|}{\textbf{32-Bit Binary Encoding}} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+      {\tt NOP}                     & {\tt rf[0] <= rf[0] + 0}                      & 110010\_00000\_00000\_00000\_00000000000 \\ \hline
+      {\tt RJMP(label)}             & {\tt pc <= pc + value}                        & 000001\_00000\_00000\_vvvvvvvvvvvvvvv    \\ \hline
+      {\tt BRZ(left,label)}         & {\tt pc <= (rf[l]==0) ? pc+val : pc+1}        & 000010\_00000\_lllll\_vvvvvvvvvvvvvvv    \\ \hline
+      {\tt BRNZ(left,label)}        & {\tt pc <= (rf[l]==0) ? pc+1 : pc+val}        & 000011\_00000\_lllll\_vvvvvvvvvvvvvvv    \\ \hline
+      {\tt RET}                     & {\tt pc <= rf[left][15:0]}                    & 000101\_00000\_lllll\_00000\_00000000000 \\ \hline
+      {\tt HALT}                    & {\tt pc <= pc}                                & 000110\_00000\_00000\_00000\_00000000000 \\ \hline
+      {\tt EINT}                    & {\tt intEnable <= 1}                          & 001000\_00000\_00000\_00000\_00000000000 \\ \hline
+      {\tt DINT}                    & {\tt intEnable <= 0}                          & 001001\_00000\_00000\_00000\_00000000000 \\ \hline
+      {\tt ADD(dest,left,right)}    & {\tt rf[dest] <= rf[left] + rf[right]}        & 110000\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt SUB(dest,left,right)}    & {\tt rf[dest] <= rf[left] - rf[right]}        & 110001\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt ADDV(dest,left,val)}     & {\tt rf[dest] <= rf[left] + val}              & 110010\_ddddd\_lllll\_vvvvvvvvvvvvvvv    \\ \hline
+      {\tt MULT(dest,left,right)}   & {\tt rf[dest] <= rf[left] * rf[right]}        & 110011\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt MULTV(dest,left,val)}    & {\tt rf[dest] <= rf[left] * val}              & 110100\_ddddd\_lllll\_vvvvvvvvvvvvvvv    \\ \hline
+      {\tt ADDC(dest,left,right)}   & {\tt rf[dest] <= (rf[left]+rf[right])[32]}    & 110101\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt SUBC(dest,left,right)}   & {\tt rf[dest] <= (rf[left]-rf[right])[32]}    & 110110\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt ADDVC(dest,left,val)}    & {\tt rf[dest] <= (rf[left]+val)[32]}          & 110111\_ddddd\_lllll\_vvvvvvvvvvvvvvv    \\ \hline
+      {\tt LSH(dest,left)}          & {\tt rf[dest] <= \{0, rf[left][31:1]\}}       & 111000\_ddddd\_lllll\_00000\_00000000000 \\ \hline
+      {\tt ASH(dest,left)}          & {\tt rf[dest] <= \{rf[left][31], rf[l][31:1]\}} & 111001\_ddddd\_lllll\_00000\_00000000000 \\ \hline
+      {\tt MOVE(dest,left)}         & {\tt rf[dest] <= rf[left]}                    & 111010\_ddddd\_lllll\_00000\_00000000000 \\ \hline
+      {\tt SWAP(dest,left)}         & {\tt rf[dest] <= \{rf[l][15:0], rf[l][31:16]\}} & 111011\_ddddd\_lllll\_00000\_00000000000 \\ \hline
+      {\tt NOT(dest,left)}          & {\tt rf[dest] <= \textasciitilde rf[left]}    & 111100\_ddddd\_lllll\_00000\_00000000000 \\ \hline
+      {\tt AND(dest,left,right)}    & {\tt rf[dest] <= rf[left] \& rf[right]}       & 111101\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt OR(dest,left,right)}     & {\tt rf[dest] <= rf[left] | rf[right]}        & 111110\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt XOR(dest,left,right)}    & {\tt rf[dest] <= rf[left] \^{} rf[right]}     & 111111\_ddddd\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt READ(left)}              & {\tt read from dataMemory[rf[left]]}          & 100000\_00000\_lllll\_00000\_00000000000 \\ \hline
+      {\tt LOAD(dest)}              & {\tt rf[dest] <= dataOut}                     & 100111\_ddddd\_00000\_00000\_00000000000 \\ \hline
+      {\tt STORE(left,right)}       & {\tt dataMemory[rf[left]] <= rf[right]}       & 101000\_00000\_lllll\_rrrrr\_00000000000 \\ \hline
+      {\tt VAL(dest,val)}           & {\tt rf[dest] <= \{\{16\{val[15]\}\}, val\}}  & 010111\_ddddd\_00000\_vvvvvvvvvvvvvvv    \\ \hline
+\end{longtable}
+\end{center}
+
+\subsection{Program Execution Example}\label{sec:toyrisc_programs}
+
+\begin{exemplu}\label{exADD}
+To illustrate the instruction execution sequence and data flow within the single-cycle toyRISC architecture, consider a simple program that initializes the first five registers and computes their sum into register 0:
+
+\includeverilogcode[caption={toyRISC program: initializes the first 5 registers and adds them in register 0. File: A11\_RISCprogram1.sv (SystemVerilog)}, 
+                    label={lst:A11_RISCprogram1.sv}, 
+                    firstline=1, 
+                    firstnumber=1, 
+                    lastline=30]
+                    {\verilogSourceDir/A11_RISCprogram1.sv}
+
+The code generator compiles the assembly program into the following 32-bit machine code loaded into program memory:
+{\small
+\begin{verbatim}
+progMemory[0] = 01011100000000000000000000000001
+progMemory[1] = 01011100001000000000000000000010
+progMemory[2] = 01011100010000000000000000000011
+progMemory[3] = 01011100011000000000000000000100
+progMemory[4] = 01011100100000000000000000000101
+progMemory[5] = 11000000000000000000100000000000
+progMemory[6] = 11000000000000000001000000000000
+progMemory[7] = 11000000000000000001100000000000
+progMemory[8] = 11000000000000000010000000000000
 \end{verbatim}
 }
 
-%\placedrawing[H]{C14.lp}{{\tt }}{cod14}
+During simulation, with a clock period of 2 time units, execution begins at time $t = 5$ following reset. The cycle-by-cycle evolution of the program counter and register file contents is:
+{\small
+\begin{verbatim}
+pc= 0 RF=[1, x, x, x]  ei=0 inta=0
+pc= 1 RF=[1, x, x, x]  ei=0 inta=0
+pc= 2 RF=[1, 2, x, x]  ei=0 inta=0
+pc= 3 RF=[1, 2, 3, x]  ei=0 inta=0
+pc= 4 RF=[1, 2, 3, 4]  ei=0 inta=0
+pc= 5 RF=[1, 2, 3, 4]  ei=0 inta=0
+pc= 6 RF=[3, 2, 3, 4]  ei=0 inta=0
+pc= 7 RF=[6, 2, 3, 4]  ei=0 inta=0
+pc= 8 RF=[10, 2, 3, 4] ei=0 inta=0
+pc= 9 RF=[15, 2, 3, 4] ei=0 inta=0
+\end{verbatim}
+}
+$\diamond$
+\end{exemplu}
 
-%\placedrawing[H]{C15.lp}{{\tt }}{cod15} 
+\subsection{Single-Cycle Timing and Critical Path Performance}\label{sec:toyrisc_timing}
+
+The longest combinational data path in the single-cycle ToyRISC datapath dictates the minimum clock period:
+\begin{equation}
+T_{clock} = t_{clock\_to\_instruction} + t_{leftAddr\_to\_leftOp} + t_{throughALU} + t_{throughMUX} + t_{fileRegSU}
+\end{equation}
+Because the single-cycle execution path is unbuffered by intermediate pipeline registers, the clock period is constrained by the cumulative delay across multiple cascaded functional components:
+\begin{itemize}
+    \item $t_{clock\_to\_instruction}$: Program memory access time to output the instruction word following the active clock edge.
+    \item $t_{leftAddr\_to\_leftOp}$: Register file read access time to output operands following register address decoding.
+    \item $t_{throughALU}$: Maximum propagation delay through the ALU (dominated by the 32-bit adder carry propagation chain).
+    \item $t_{throughMUX}$: Propagation delay through the write-back multiplexer selecting the destination value.
+    \item $t_{fileRegSU}$: Setup time required at the register file write data and address inputs before the next rising clock edge.
+\end{itemize}
+
+The path from register file outputs through the \textbf{nextPC} logic is shorter because it requires only a 16-bit PC adder compared to the 32-bit ALU operation. To break this long critical path and achieve substantially higher operating frequencies, processor microarchitecture applies pipelining—partitioning the single-cycle path into balanced execution stages separated by pipeline registers, as presented in Section \ref{sec:pipelined_toyrisc} and analyzed in Chapter \ref{lect5}.
