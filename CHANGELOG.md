@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Resolved all internal cross-references across Chapters 12, 13, 16, 17, and 18 (`sec:toyrisc_arch`, `tab:riscISA`, `lst:toyRISCdefines`, `exADD`, and `interrupt`) with zero undefined references.
 
 ### Fixed
+- **Overleaf Git Import Compatibility**:
+  - Removed git symbolic links from the repository (replacing the symlink with standard regular file `Latex/latexcad/latexcad.sty`) to ensure 100% compatibility with Overleaf's git import engine.
 - **Mathematical Range Typography Standardization (Chapters 12 & 16)**:
   - Replaced 22 non-standard instances across Chapters 12 and 16 where the division symbol (`\div`) was erroneously used for numeric ranges (e.g., $1\,\text{TB} \div 30\,\text{TB}$, ROB sizes, PRF sizes, L2/L3 capacities) with proper LaTeX en-dashes (`\text{--}`), while strictly preserving genuine arithmetic division operators in Chapter 1.
 - **Section 12.4 Cleanup**:
