@@ -3,7 +3,7 @@
 
 In previous chapters, we introduced the fundamental principles of zero-order combinational circuits (Chapter \ref{lect1}), first-order memory components, and second-order automata (Chapter \ref{lect3}). While those foundational chapters focused primarily on behavioral and structural correctness, real-world processor architectures demand circuits optimized for high clock frequencies, minimal propagation latency, efficient silicon area, and low power dissipation.
 
-This chapter explores architectural techniques for performance optimization in digital logic. We begin by examining how multiplexing and conditional constructs in hardware description languages synthesize into multiplexer trees versus priority encoders. Next, we analyze high-performance adder topologies that break the sequential carry-propagation bottleneck of simple ripple-carry adders. We then examine the microarchitecture of multi-port and multithreaded register files, evaluating the trade-offs between flip-flop arrays, banked SRAMs, and replication. Finally, we analyze sequential timing closure, contrasting Mealy and Moore state machine architectures in high-speed digital pipelines.
+This chapter explores architectural techniques for performance optimization in digital logic. We begin by examining how multiplexing and conditional constructs in hardware description languages synthesize into multiplexer trees versus priority encoders. Next, we analyze high-performance adder topologies that break the sequential carry-propagation bottleneck of simple ripple-carry adders. We then investigate high-performance multiplier architectures---including array multipliers, Radix-4 Modified Booth recoding, Wallace and Dadda carry-save reduction trees, and Redundant Binary Multipliers---that eliminate multiplication latency in compute-intensive execution units. We subsequently examine the microarchitecture of multi-port and multithreaded register files, evaluating the trade-offs between flip-flop arrays, banked SRAMs, and replication. Finally, we analyze sequential timing closure, contrasting Mealy and Moore state machine architectures in high-speed digital pipelines.
 
 \section{Multiplexing and Conditional Logic Optimization in Chisel} \label{sec:muxcase}
 \index{multiplexer!optimization}
@@ -174,6 +174,216 @@ Brent-Kung Prefix Adder & $O(2 \log_2 N)$ & $O(N)$ & 2 & Low \\ \hline
 \end{table}
 
 While asymptotic big-$O$ complexity provides foundational theoretical intuition, physical silicon implementation depends critically on standard-cell driving strengths, interconnect routing congestion, and cell library delays. In Chapter \ref{riscvPipelined} (Section \ref{riscvAdderBalancing}), we synthesize these 32-bit adder topologies using the predictive ASAP7 7\,nm FinFET standard-cell library to measure empirical silicon area, critical path propagation latency, and maximum clock frequencies, selecting the optimal architecture to balance the execution stage of a 4-stage pipelined RISC-V processor.
+
+
+%*****************************************************************************
+\section{High-Performance Multipliers} \label{sec:high_performance_multipliers}
+%*****************************************************************************
+\index{multiplier!high-performance}
+\index{array multiplier}
+\index{Booth multiplier!Radix-4}
+\index{Wallace tree multiplier}
+\index{Dadda tree multiplier}
+\index{redundant binary multiplier (RBM)}
+\index{redundant binary signed-digit (RBSD)}
+\index{DSP!multiplier microarchitecture}
+
+In modern microprocessor and digital signal processor (DSP) execution units, multiplication is one of the most performance-critical and hardware-intensive operations. While an $N$-bit addition requires combining two operands, an $N \times N$-bit multiplication fundamentally computes the sum of $N$ shifted partial products, yielding a $2N$-bit product.
+
+Hardware multiplication decomposes into three distinct microarchitectural phases:
+\begin{enumerate}
+    \item \textbf{Partial Product Generation (PPG)}: Generating the individual partial product vectors $P_i = A \cdot B_i \cdot 2^i$ from multiplicand $A$ and multiplier bits $B_i$.
+    \item \textbf{Partial Product Reduction (PPR)}: Compressing the $N$ partial product vectors into two equivalent vectors (typically sum and carry vectors) using parallel carry-save arithmetic.
+    \item \textbf{Final Carry-Propagate Addition (CPA)}: Adding the final sum and carry vectors using a high-speed adder (such as a Carry Select or parallel prefix adder) to produce the standard binary product.
+\end{enumerate}
+
+The critical path and silicon area of a multiplier are overwhelmingly dominated by Phase 2 (the reduction network). Consequently, computer architects have devised specialized reduction topologies to accelerate multiplication.
+
+\subsection{Array Multipliers}
+\index{array multiplier!carry-save array}
+
+The \textbf{Array Multiplier} implements a direct two-dimensional spatial mapping of pencil-and-paper multiplication. For an $N \times N$ multiplier, an $N \times N$ matrix of AND gates generates the elementary bit-products $a_j \cdot b_i$. 
+
+In a linear carry-save array, each row of full adders accumulates one partial product row into the running accumulated sum and carry vectors. The carries generated in row $i$ do not ripple horizontally; instead, they are passed diagonally downward to row $i+1$, while the sums are passed vertically downward. Carry propagation occurs only in the final row via a vector-merging adder.
+
+\textbf{Complexity and Trade-offs}:
+\begin{itemize}
+    \item \textbf{Delay}: The critical path traverses $N$ adder cells vertically through the array, plus the final $N$-bit ripple carry propagation:
+    \begin{equation}
+    t_{\text{Array}} = (N - 1) t_{\text{carry}} + t_{\text{CPA}} = O(N).
+    \end{equation}
+    \item \textbf{Area}: The array requires $N^2$ AND gates and approximately $N(N - 1)$ full adders:
+    \begin{equation}
+    A_{\text{Array}} = O(N^2).
+    \end{equation}
+    \item \textbf{Physical Layout}: The primary advantage of the array multiplier is its \textbf{strictly planar, regular 2D systolic topology}. Cells are interconnected exclusively via short, nearest-neighbor routing channels, ensuring uniform interconnect wire delays and minimal parasitic capacitance. However, for word widths $N \ge 32$, its $O(N)$ propagation latency creates a severe clock frequency bottleneck.
+\end{itemize}
+
+\subsection{Radix-4 Modified Booth Recoding}
+\index{Booth multiplier!Radix-4 recoding}
+\index{Booth recoding!modified}
+
+Rather than generating $N$ separate partial products, \textbf{Radix-4 Modified Booth Recoding} inspects three consecutive multiplier bits with a 1-bit overlap $(b_{2i+1}, b_{2i}, b_{2i-1})$ to recode the multiplier into a signed-digit base-4 representation with digit set $d_i \in \{-2, -1, 0, +1, +2\}$:
+\begin{equation}
+d_i = -2 b_{2i+1} + b_{2i} + b_{2i-1}.
+\end{equation}
+Table \ref{tab:booth_radix4} summarizes the Radix-4 recoding rules.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|ccc|c|c|l|}
+\hline
+$b_{2i+1}$ & $b_{2i}$ & $b_{2i-1}$ & Recoded Digit ($d_i$) & Partial Product ($PP_i$) & Hardware Operation \\
+\hline
+0 & 0 & 0 &  $0$ &  $0$          & String of zeros \\
+0 & 0 & 1 & $+1$ & $+A$          & Multiplicand $A$ \\
+0 & 1 & 0 & $+1$ & $+A$          & Multiplicand $A$ \\
+0 & 1 & 1 & $+2$ & $+2A$         & 1-bit arithmetic left shift ($A \ll 1$) \\
+1 & 0 & 0 & $-2$ & $-2A$         & Bitwise inversion of $2A$, carry-in $+1$ \\
+1 & 0 & 1 & $-1$ & $-A$          & Bitwise inversion of $A$, carry-in $+1$ \\
+1 & 1 & 0 & $-1$ & $-A$          & Bitwise inversion of $A$, carry-in $+1$ \\
+1 & 1 & 1 &  $0$ &  $0$          & String of zeros \\
+\hline
+\end{tabular}
+\caption{Radix-4 Modified Booth Recoding Truth Table.}
+\label{tab:booth_radix4}
+\end{table}
+
+\textbf{Architectural Impact}:
+\begin{enumerate}
+    \item \textbf{50\% Reduction in Partial Products}: By grouping multiplier bits in pairs, the number of partial product rows is halved from $N$ to $\lceil (N + 1) / 2 \rceil$. For a 32-bit multiplier, only 17 partial products are generated instead of 32.
+    \item \textbf{Trivial Multiple Generation}: The multiple $\pm 2A$ requires only a simple 1-bit hardwired left shift, avoiding any carry-propagate precomputations (unlike Radix-8 Booth recoding, which requires generating $3A = 2A + A$).
+    \item \textbf{Signed and Unsigned Support}: Both signed and unsigned operations are seamlessly handled by extending the sign bit or zero-padding the upper bit positions.
+\end{enumerate}
+By halving the number of operands entering the reduction tree, Radix-4 Booth recoding eliminates almost half of the reduction logic, reducing both silicon area and reduction tree depth.
+
+\subsection{Carry-Save Reduction Trees: Wallace and Dadda Trees}
+\index{Wallace tree multiplier}
+\index{Dadda tree multiplier}
+\index{carry-save adder (CSA)!tree reduction}
+
+Once partial products are generated, they must be compressed into two equivalent vectors. In an unpipelined linear array, partial products are accumulated serially. \textbf{Tree multipliers} compress partial products in parallel across both dimensions using Carry-Save Adders (CSAs). A 3:2 full adder compresses three binary inputs into two outputs (sum and carry) in $O(1)$ gate delays, while a 2:2 half adder compresses two inputs into two outputs.
+
+\subsubsection{Wallace Trees}
+In a \textbf{Wallace Tree}, full adders and half adders are deployed greedily at every level of the reduction hierarchy. In each reduction stage:
+\begin{itemize}
+    \item Every available group of three bits at column $j$ is routed to a 3:2 counter.
+    \item Every remaining pair of two bits is routed to a 2:2 counter.
+    \item Any solitary single bit is passed directly to the next stage.
+\end{itemize}
+Because each stage reduces the number of rows by a factor of approximately $3/2 = 1.5$, the height of the partial product matrix decreases exponentially:
+\begin{equation}
+h_{k+1} = 2 \lfloor h_k / 3 \rfloor + (h_k \bmod 3).
+\end{equation}
+The number of reduction levels required to compress $N$ partial products down to 2 rows is logarithmic:
+\begin{equation}
+L_{\text{Wallace}} = \lceil \log_{1.5} (N / 2) \rceil = O(\log N).
+\end{equation}
+For $N = 32$ rows, a Wallace tree requires only 8 reduction levels; combined with Radix-4 Booth recoding (17 rows), the tree depth collapses to just 6 levels!
+
+\subsubsection{Dadda Trees}
+A \textbf{Dadda Tree} optimizes the Wallace construction by deferring compression. Rather than reducing as aggressively as possible in early stages, Luigi Dadda showed that the number of reduction stages is identical if compression is delayed to match the maximum capacity of each subsequent stage (the sequence $d_1 = 2, d_2 = 3, d_3 = 4, d_4 = 6, d_6 = 9, d_7 = 13, d_8 = 19, \dots$, where $d_{j+1} = \lfloor 1.5 d_j \rfloor$).
+
+By placing full and half adders only when the number of bits in a column exceeds the target threshold $d_j$, Dadda multipliers use fewer counters in early stages than Wallace trees. However, this leaves more uncompressed bits at the boundary, requiring a slightly wider final Carry-Propagate Adder.
+
+\subsubsection{Physical Design Challenge: Interconnect Congestion}
+Despite their asymptotic speed ($O(\log N)$ delay), Wallace and Dadda trees present significant physical design hurdles in modern deep-submicron and FinFET ASIC processes:
+\begin{itemize}
+    \item \textbf{Irregular Wiring Topology}: Connections between compression stages do not follow regular nearest-neighbor grids. Signals in high-order columns must be routed across large distances to distant full adders.
+    \item \textbf{Interconnect Congestion}: The complex tree topology creates dense routing congestion in standard-cell place-and-route tools, consuming multiple metal layers and increasing parasitic coupling capacitance.
+    \item \textbf{Non-uniform Wire Delays}: Because wire lengths vary drastically across the tree, interconnect RC delays can degrade or even negate the theoretical gate-level latency advantage over regular structures.
+\end{itemize}
+
+\subsection{Redundant Binary Multiplier (RBM)}
+\index{redundant binary multiplier (RBM)}
+\index{redundant binary adder (RBA)}
+\index{redundant binary signed-digit (RBSD)}
+\index{carry-free addition}
+
+To overcome the irregular routing congestion of Wallace trees while maintaining logarithmic delay, computer architects developed the \textbf{Redundant Binary Multiplier (RBM)}. The RBM is grounded in the Redundant Binary Signed-Digit (RBSD) arithmetic originally formulated by Avizienis and adapted for VLSI by Takagi, Yasuura, and Yajima.
+
+\subsubsection{Redundant Binary Representation}
+In a radix-2 redundant binary system, each digit $x_i$ takes values from the signed-digit set:
+\begin{equation}
+x_i \in \{-1, 0, 1\} \quad (\text{denoted } \{\bar{1}, 0, 1\}).
+\end{equation}
+In hardware, each redundant binary digit is encoded using two binary bits $(x_i^+, x_i^-)$ such that its numerical value is:
+\begin{equation}
+x_i = x_i^+ - x_i^-.
+\end{equation}
+A digit $x_i = 1$ is encoded as $(1, 0)$, $x_i = -1$ as $(0, 1)$, and $x_i = 0$ as $(0, 0)$ (or $(1, 1)$).
+
+\subsubsection{Constant-Time Carry-Free Addition}
+The defining advantage of the redundant binary number system is that \textbf{two redundant binary numbers can be added in strictly $O(1)$ constant time without any carry propagation}, regardless of word length!
+
+In a standard binary adder, the carry at position $i$ can propagate across all higher bit positions because a carry generate at position 0 can ripple through an unbroken chain of propagate conditions ($P_i = 1$). In contrast, an $N$-bit \textbf{Redundant Binary Adder (RBA)} eliminates this chain entirely by exploiting redundancy: when an intermediate carry must be generated, the cell speculatively selects its intermediate sum and carry such that no incoming carry from the adjacent lower position can cause a secondary carry overflow.
+
+Specifically, at digit position $i$, an RBA cell receives $x_i, y_i \in \{-1, 0, 1\}$. Their sum $T_i = x_i + y_i \in \{-2, -1, 0, 1, 2\}$ is decomposed into an intermediate carry $c_{i+1} \in \{-1, 0, 1\}$ and intermediate sum $s_i \in \{-1, 0, 1\}$:
+\begin{equation}
+2 c_{i+1} + s_i = x_i + y_i.
+\end{equation}
+To ensure that the final digit $z_i = s_i + c_i \in \{-1, 0, 1\}$ never exceeds $+1$ or $-1$, the RBA cell inspects the polarity of the adjacent lower operand digits $p_{i-1} = (x_{i-1} + y_{i-1} > 0)$:
+\begin{itemize}
+    \item When $T_i = 1$: If $p_{i-1}$ indicates that incoming carry $c_i$ could be positive ($c_i \ge 0$), the cell chooses $c_{i+1} = 1$ and $s_i = -1$. Because $s_i = -1$, the arrival of $c_i = 1$ produces $z_i = -1 + 1 = 0 \le 1$. If $p_{i-1}$ indicates $c_i \le 0$, the cell chooses $c_{i+1} = 0$ and $s_i = 1$.
+    \item When $T_i = -1$: If $p_{i-1}$ indicates $c_i \ge 0$, the cell chooses $c_{i+1} = 0$ and $s_i = -1$. If $c_i \le 0$, it chooses $c_{i+1} = -1$ and $s_i = 1$.
+    \item When $T_i = \pm 2$: $c_{i+1} = \pm 1$ and $s_i = 0$.
+    \item When $T_i = 0$: $c_{i+1} = 0$ and $s_i = 0$.
+\end{itemize}
+Because intermediate carry $c_{i+1}$ depends \textit{only} on the local operands $(x_i, y_i)$ and the adjacent lower operands $(x_{i-1}, y_{i-1})$, carry propagation terminates after exactly \textbf{one bit position}. The delay of an RBA cell is strictly constant:
+\begin{equation}
+t_{\text{RBA}} = O(1).
+\end{equation}
+
+\subsubsection{Balanced Binary Reduction Tree}
+Because each RBA cell adds two redundant binary vectors into a single redundant binary vector ($2 \to 1$ reduction), an RBM arranges its partial product reduction as a \textbf{strictly balanced binary tree} rather than the irregular $3:2$ grouping of Wallace trees:
+\begin{itemize}
+    \item \textbf{Tree Structure}: In a 32-bit multiplier, 32 partial products are initially grouped into 16 redundant binary pairs.
+    \item \textbf{Binary Tree Depth}: At each tree level $k$, the number of vectors is exactly halved: $16 \to 8 \to 4 \to 2 \to 1$. The tree depth is strictly:
+    \begin{equation}
+    D_{\text{RBM}} = \lceil \log_2 N \rceil.
+    \end{equation}
+    For $N = 32$, exactly $\log_2(32) = 5$ RBA levels reduce all 32 partial products down to a single redundant binary result $(P^+, P^-)$.
+    \item \textbf{Final RB-to-Binary Conversion}: At the root of the tree, the single redundant binary number is converted to standard two's complement binary via a high-speed subtractor:
+    \begin{equation}
+    P = P^+ - P^-.
+    \end{equation}
+    This final conversion is computed in parallel using a Carry Select or parallel prefix adder.
+\end{itemize}
+
+\subsubsection{Why Redundant Binary Multipliers in High-Performance DSP Designs?}
+\index{DSP!redundant binary multiplier}\index{Sandblaster DSP}\index{layout regularity!RBM}
+
+The Redundant Binary Multiplier occupies a distinguished place in high-performance digital signal processor (DSP) design. In audio, video, telecommunications, and radar processing, multiplication and multiply-accumulate (MAC) operations dominate the instruction mix:
+\begin{enumerate}
+    \item \textbf{Perfect Layout Regularity}: Unlike the tangled wiring interconnects of Wallace and Dadda trees, the RBM's binary tree reduction is \textbf{strictly modular and structurally regular}. Every node in the tree is an identical 2-to-1 RBA block with uniform, localized bit-slice wiring. In custom and semi-custom DSP datapath layout, bit-slices can be tiled linearly with identical pitch-matching across all 32 or 64 bit positions.
+    \item \textbf{Predictable Interconnect and Scalability}: Because interconnect lengths double predictably between tree levels (forming an H-tree or binary layout), wire lengths and parasitics are deterministic. In high-frequency gigahertz DSP engines (such as the multithreaded Sandblaster DSP architecture), predictable wiring prevents the unroutable wire congestion, timing variance, and crosstalk spikes that frequently afflict Wallace tree layouts.
+    \item \textbf{Direct Accumulation in Redundant Form}: In DSP vector MAC units ($A \cdot B + C$), the accumulation operand $C$ can be fed directly into an extra RBA node in redundant binary format without requiring intermediate two's complement conversion, enabling chained high-speed multiply-accumulate operations at maximum clock rates.
+\end{enumerate}
+
+\subsection{Architectural Comparison of High-Performance Multipliers}
+
+Table \ref{tab:multiplier_comparison} summarizes the structural, asymptotic, and physical layout characteristics of the major multiplier architectures.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|l|}
+\hline
+\textbf{Architecture} & \textbf{Delay Complexity} & \textbf{Area Complexity} & \textbf{Reduction Structure} & \textbf{Routing Regularity} & \textbf{Optimal Application Domain} \\
+\hline
+Array Multiplier       & $O(N)$           & $O(N^2)$      & Linear 1D cascade       & Excellent (Planar 2D) & Low-frequency, small bit-widths ($N \le 16$) \\
+Radix-4 Booth          & $O(N)$ or $O(\log N)$ & $O(N^2)$ / $O(N \log N)$ & Halved rows (17 for 32b) & High (Booth recoder) & Area-constrained cores, ASIC standard cells \\
+Wallace Tree Multiplier& $O(\log_{1.5} N)$& $O(N^2)$      & Irregular 3:2 CSA tree   & Poor (Wiring congestion)& Standalone high-speed arithmetic units \\
+Dadda Tree Multiplier  & $O(\log_{1.5} N)$& $O(N^2)$      & Deferral 3:2 CSA tree    & Poor (Wiring congestion)& Minimum counter count in standard cells \\
+Redundant Binary (RBM) & $O(\log_2 N)$    & $O(N^2)$      & Balanced 2:1 binary tree & \textbf{Superior (Modular)} & \textbf{High-Performance DSP datapaths, custom VLSI} \\
+\hline
+\end{tabular}
+\caption{Architectural Comparison of High-Performance Multiplier Topologies.}
+\label{tab:multiplier_comparison}
+\end{table}
+
+While big-$O$ asymptotic analysis provides valuable theoretical insight, real-world processor performance is determined by standard-cell library characteristics, FinFET gate drive strengths, and physical wiring parasitics. In Chapter \ref{riscvPipelined} (Section \ref{riscvZmmulCaseStudy}), we synthesize these 32-bit multiplier architectures using the ASAP7 7\,nm FinFET technology library to measure physical cell counts, silicon area ($\mu\text{m}^2$), critical path propagation delays, and maximum operating frequencies, choosing the optimal multiplier to accelerate hardware multiplication in our pipelined RISC-V processor.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

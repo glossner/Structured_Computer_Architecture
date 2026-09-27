@@ -571,30 +571,96 @@ Notice the critical distinction:
     \item Although the application runs $5.32\times$ faster in absolute wall-clock time with hardware multiplication ($3,220\,\text{ns}$ vs.\ $17,140\,\text{ns}$), this speedup is almost entirely \textit{algorithmic} (8.1$\times$ fewer instructions). The \textit{microarchitectural efficiency} of pipelining was severely compromised by the unpipelined multiplier bottleneck.
 \end{itemize}
 
+\subsection{ASAP7 7\,nm FinFET Physical Synthesis of High-Performance Multipliers}\label{riscvMultiplierSynthesis}
+\index{multiplier!ASAP7 synthesis}\index{synthesis!multipliers}\index{ASAP7!multiplier evaluation}
+
+To determine whether specialized multiplier architectures from Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:high_performance_multipliers}) can resolve the execution stage bottleneck, we implemented each 32-bit multiplier topology in Chisel, verified 100\% functional correctness against comprehensive signed and unsigned arithmetic test vectors, generated clean gate-level SystemVerilog netlists via CIRCT \texttt{firtool}, and performed physical logic synthesis using Yosys and ABC targeting the predictive **ASAP7 7\,nm FinFET standard-cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, output capacitive load $C_{\text{load}} = 2.0\,\text{fF}$).
+
+Table \ref{tab:asap7_multipliers_comparison} summarizes the empirical synthesis results across all five multiplier architectures: the baseline unconstrained synthesizer multiplier, the linear Array Multiplier, the Radix-4 Modified Booth Multiplier, the Wallace Tree Multiplier, and the Redundant Binary Multiplier (RBM).
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Multiplier Architecture} & \textbf{Cell Count} & \textbf{Area ($\mu$m$^2$)} & \textbf{Delay ($t_{\text{pd}}$)} & \textbf{Standalone $f_{\max}$} & \textbf{Area vs. Base} & \textbf{Speedup} \\
+\hline
+Behavioral Multiplier (Baseline) & 10,240 & 1,083.36 & 2,148.00\,ps (2.148\,ns) & 0.466\,GHz & Baseline & $1.00\times$ \\
+Array Multiplier                 & 5,405  & 527.04   & \textbf{1,967.86\,ps (1.968\,ns)} & \textbf{0.508\,GHz} & $-51.4\%$ & $\mathbf{1.09\times}$ \\
+Radix-4 Modified Booth           & 5,590  & \textbf{464.45} & 2,159.88\,ps (2.160\,ns) & 0.463\,GHz & $\mathbf{-57.1\%}$ & $0.99\times$ \\
+Wallace Tree Multiplier          & 7,293  & 627.77   & 2,088.55\,ps (2.089\,ns) & 0.479\,GHz & $-42.0\%$ & $1.03\times$ \\
+Redundant Binary Multiplier (RBM)& 14,920 & 1,072.65 & 2,245.91\,ps (2.246\,ns) & 0.445\,GHz & $-1.0\%$  & $0.96\times$ \\
+\hline
+\end{tabular}
+\caption{Empirical synthesis and timing evaluation of 32-bit high-performance multiplier architectures from Chapter \ref{chap:perf_opt_logic} mapped to ASAP7 7\,nm FinFET predictive technology.}\label{tab:asap7_multipliers_comparison}
+\end{table}
+
+The physical synthesis results provide crucial insights into microarchitectural trade-offs:
+\begin{enumerate}
+    \item \textbf{Area Efficiency of Radix-4 Booth Recoding}: The \textbf{Radix-4 Modified Booth Multiplier} achieves the absolute lowest silicon area among all architectures: \textbf{464.45\,$\mu$m$^2$}, delivering a \textbf{57.1\% area reduction} over the unconstrained baseline. By recoding multiplier bits into overlapping triplets, Booth recoding slashes the number of partial product rows from 32 to 17, eliminating nearly half of the partial product generation gates and carry-save reduction logic up front.
+    
+    \item \textbf{Wiring Effects in Standard Cells}: In unpipelined combinational form, the \textbf{Array Multiplier} achieves the lowest propagation delay (\textbf{1,967.86\,ps}, 1.968\,ns, delivering a $1.09\times$ speedup). In standard-cell automated place-and-route, the nearest-neighbor, planar 2D grid of an array multiplier minimizes interconnect wire lengths. Conversely, while Wallace trees achieve $O(\log N)$ logic depth theoretically, their irregular 3:2 interconnect topology introduces significant multi-layer routing congestion and parasitic wiring capacitances that increase physical delay ($2,088.55\,\text{ps}$).
+    
+    \item \textbf{Redundant Binary Multiplier (RBM) and DSP Architecture}: The \textbf{Redundant Binary Multiplier} achieves a delay of \textbf{2,245.91\,ps (2.246\,ns)} and an area of $1,072.65\,\mu\text{m}^2$. Although automated standard-cell synthesis incurs logic overhead for dual-rail $(x^+, x^-)$ sign-magnitude encoding and initial RB partial product mapping, the RBM possesses unique architectural strengths:
+    \begin{itemize}
+        \item \textbf{Strictly Constant-Time Carry-Free Addition}: Each Redundant Binary Adder (RBA) cell adds two digits in $O(1)$ constant time by inspecting the lower adjacent position condition ($p_{i-1} = (x_{i-1} + y_{i-1} > 0)$), completely preventing carry propagation across bit positions.
+        \item \textbf{Perfect Binary Reduction Regularity}: The RBM arranges reduction as a strictly balanced binary tree ($2 \to 1$ at every node) of depth $\lceil \log_2 N \rceil = 5$ levels.
+        \item \textbf{DSP Datapath Superiority}: In custom and semi-custom digital signal processor (DSP) design (such as the high-performance multithreaded Sandblaster DSP architecture), wire layout regularity is paramount. Unlike Wallace trees with unpredictable wiring lengths, the RBM's binary tree reduction maps directly onto modular, uniform bit-slices with pitch-matched cell abutment. This eliminates wiring hot-spots and crosstalk, making RBM architectures highly attractive for multi-GHz DSP engines where multiply-accumulate (MAC) throughput dictates overall performance.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Choosing and Integrating the High-Performance Multiplier in Chisel}
+\index{Chisel!multiplier instantiation}\index{Booth multiplier!Chisel integration}
+
+For our standard-cell RISC-V processor implementation, we select the **Radix-4 Modified Booth Multiplier** as the primary hardware multiplier because it minimizes silicon area ($464.45\,\mu\text{m}^2$, $-57.1\%$) and dynamic power consumption while maintaining competitive latency. (In a high-throughput DSP coprocessor where custom pitch-matched layout is available, the Redundant Binary Multiplier would be selected for its layout regularity and modularity).
+
+Listing \ref{lst:chisel_multiplier_call} illustrates the revised execution stage design, showing only the high-performance multiplier invocation within the Chisel ALU.
+
+\begin{chiselcode}[caption={Calling the high-performance Booth Multiplier within the revised RISC-V ALU.},label={lst:chisel_multiplier_call}]
+// Instantiating the 32-bit Radix-4 Booth Multiplier within the revised ALU
+val multiplier = Module(new BoothMultiplier(width = 32))
+multiplier.io.a        := io.opA
+multiplier.io.b        := io.opB
+multiplier.io.isSigned := (io.aluOp === AluOp.MULH) || (io.aluOp === AluOp.MULHSU)
+val mulResultLow       = multiplier.io.result(31, 0)
+val mulResultHigh      = multiplier.io.result(63, 32)
+\end{chiselcode}
+
+By isolating the multiplication inside the dedicated Booth Multiplier module, the execution unit avoids generic synthesis macros and provides deterministic, area-optimized partial product reduction.
+
 \subsection{Architectural Solutions: Restoring Pipeline Balance}
 \index{pipeline balancing!architectural solutions}\index{multi-cycle multiplier}\index{pipelined multiplier}
 
-The case study illustrates \textbf{Amdahl's Law applied to pipeline cycle time}:
+The synthesis evaluation in Table \ref{tab:asap7_multipliers_comparison} reveals a fundamental physical reality: **no single-cycle 32-bit multiplier can achieve a propagation delay under $\approx 1.96\text{--}2.25\,\text{ns}$ in standard cells**. 
+
+Recall from Section \ref{riscvAdderBalancing} that integrating the Carry Select Adder balanced all four pipeline stages to $\approx 0.54\text{--}0.60\,\text{ns}$ ($1.67\,\text{GHz}$):
+\begin{equation}
+T_{\text{fetch}} = 0.550\,\text{ns}, \quad T_{\text{decode}} = 0.540\,\text{ns}, \quad T_{\text{execute (CSA)}} = 0.600\,\text{ns}, \quad T_{\text{sram\_wb}} = 0.600\,\text{ns}.
+\end{equation}
+If any single-cycle combinational multiplier ($t_{\text{mul}} \approx 1.97\text{--}2.16\,\text{ns}$) is placed directly into the EX stage, the EX stage delay expands to $t_{\text{mul}} + t_{\text{mux}} + t_{\text{setup}} \approx 2.46\,\text{ns}$, causing the operating frequency to collapse from $1.67\,\text{GHz}$ down to $406.2\,\text{MHz}$ (a massive $75.7\%$ frequency penalty for all instructions!).
+
+This case study illustrates \textbf{Amdahl's Law applied to pipeline cycle time}:
 \begin{equation}
 T_{\text{clk}} = \max\left(T_{\text{IF}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{MEM}}\right) + T_{\text{overhead}}.
 \end{equation}
-When one stage is significantly slower than the rest, improving or subdividing the other stages yields diminishing returns.
+When one stage is $4\times$ slower than the rest, improving or subdividing the other stages yields diminishing returns.
 
-How do production computer architects resolve this dilemma when integrating multiplication and other complex functional units?
+How do production computer architects resolve this dilemma to retain the high operating frequency of pure \texttt{RV32I} while providing hardware multiplication?
 \begin{enumerate}
     \item \textbf{Multi-Cycle Execution Unit}:
-    Rather than forcing the entire processor to run at a slow 13.25\,ns clock period to accommodate the multiplier, the multiplier is designed as a multi-cycle iterative unit (e.g., taking 2 to 4 cycles). 
+    Rather than forcing the entire processor to run at a sluggish $2.462\,\text{ns}$ clock period to accommodate the multiplier, the execution unit operates the multiplier as a multi-cycle iterative unit taking 3 to 4 cycles. 
     
-    When a non-multiplying instruction enters EX, it completes in a single fast clock cycle (e.g., 7.17\,ns). When a \texttt{MUL} instruction enters EX, the Hazard Detection Unit asserts a temporary stall for 2--3 cycles while the multiplier computes. Because multiplications typically represent only 5--15\% of instructions in real workloads, running 90\% of instructions at 139.47\,MHz with occasional 3-cycle stalls yields vastly superior overall performance compared to running 100\% of instructions at 75.47\,MHz.
+    When a non-multiplying ALU instruction enters EX, it completes in a single fast clock cycle ($0.600\,\text{ns}$, $1.67\,\text{GHz}$). When a \texttt{MUL} instruction enters EX, the Hazard Detection Unit asserts a temporary pipeline stall for 3 cycles while the multiplier computes. Because multiplications typically represent only 5--10\% of instructions in general-purpose workloads, running 90\% of instructions at 1.67\,GHz with occasional 3-cycle stalls yields vastly superior overall execution time compared to throttling the entire core at 406.2\,MHz.
     
     \item \textbf{Internally Pipelined Multiplier}:
-    In high-performance processors, the multiplier logic array is itself divided into multiple synchronous pipeline stages separated by internal pipeline registers:
+    In high-performance processors, the multiplier logic array itself is partitioned into multiple synchronous pipeline stages separated by internal pipeline registers:
     \begin{itemize}
-        \item \textbf{Stage 1}: Booth recoding and partial product generation.
-        \item \textbf{Stage 2}: Carry-save reduction tree (Wallace tree or Dadda tree compression).
-        \item \textbf{Stage 3}: Final carry-propagate addition (lookahead adder).
+        \item \textbf{Stage 1}: Radix-4 Booth recoding and partial product generation ($\approx 0.50\,\text{ns}$).
+        \item \textbf{Stage 2}: Upper carry-save or redundant binary reduction levels ($\approx 0.52\,\text{ns}$).
+        \item \textbf{Stage 3}: Lower reduction levels down to 2 vectors ($\approx 0.52\,\text{ns}$).
+        \item \textbf{Stage 4}: Final Carry-Propagate Addition using a Carry Select Adder ($\approx 0.52\,\text{ns}$).
     \end{itemize}
-    By inserting pipeline registers within the multiplier, each sub-stage delay is reduced to $\approx 3.5\,\text{ns}$, restoring pipeline balance and allowing the entire processor to operate at high frequencies ($>250\,\text{MHz}$) with a multiplier throughput of 1 instruction per cycle and a latency of 3 cycles.
+    By inserting pipeline registers within the multiplier, each sub-stage delay is bounded to $\le 0.55\,\text{ns}$, perfectly matching the $0.600\,\text{ns}$ clock period of the balanced core! The processor operates at the full **1.67 GHz** clock frequency ($2.27\times$ faster than the unoptimized baseline), sustaining a multiplier throughput of 1 instruction per cycle with a latency of 4 cycles.
 \end{enumerate}
 
 \subsection{Workload Evaluation: Dhrystone 2.1 and EEMBC CoreMark on RV32I}

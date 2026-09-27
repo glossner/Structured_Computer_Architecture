@@ -1,3 +1,26 @@
+# 09/27/2026 14:30 High-Performance Multipliers in Chapter 15 and ASAP7 7nm FinFET Synthesis for Zmmul Acceleration in Chapter 19
+* **High-Performance Multipliers in Chapter 15 (`Latex/04_15_Performance_Optimized_Digital_Logic.tex`)**:
+  * Added Section 15.3 on high-performance multipliers covering:
+    * 3-phase hardware multiplication: partial product generation, partial product reduction, and final carry-propagate addition.
+    * Array Multiplier: linear carry-save accumulation in planar 2D systolic grid ($O(N)$ delay, $O(N^2)$ area).
+    * Radix-4 Modified Booth Recoding: 3-bit window recoding with digit set $\{-2, -1, 0, +1, +2\}$, halving partial product rows from 32 to 17.
+    * Wallace and Dadda Carry-Save Reduction Trees: 3:2 and 2:2 counters reducing rows in $O(\log N)$ logic depth, contrasting eager vs. deferred compression and analyzing standard-cell interconnect routing congestion.
+    * Redundant Binary Multiplier (RBM): Redundant Binary Signed-Digit (RBSD) representation $\{-1, 0, 1\}$ encoded as $(x^+, x^-)$, constant-time $O(1)$ carry-free Redundant Binary Adder (RBA) cells with adjacent condition testing ($p_{i-1} = (x_{i-1} + y_{i-1} > 0)$), balanced binary reduction tree ($2 \to 1$ at every node) of depth $\lceil \log_2 N \rceil = 5$, and final RB-to-two's-complement conversion. Highlighted its historical and practical prominence in high-performance digital signal processor (DSP) design (such as the Sandblaster DSP architecture), where strict layout modularity, predictable interconnect lengths, and uniform bit-slice pitch matching avoid the wiring chaos of Wallace trees.
+* **Chisel Implementations and Verification (`RTL/Chisel/src/main/scala/scabook/multipliers/`)**:
+  * Implemented `ArrayMultiplier`, `BoothMultiplier`, `WallaceTreeMultiplier`, and `RedundantBinaryMultiplier` supporting 32-bit signed and unsigned operations.
+  * Created `MultiplierSuiteSpec.scala` testing zero, identity, edge cases, signed/unsigned modes, and randomized vectors with 100% pass rate.
+  * Created `GenerateMultipliers.scala` and generated clean SystemVerilog netlists via CIRCT `firtool`.
+* **ASAP7 7nm FinFET Physical ASIC Synthesis of Multipliers (`Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Synthesized all 5 multiplier architectures to gate-level netlists using Yosys and ABC targeting the predictive ASAP7 7nm FinFET standard cell library (`asap7sc7p5t_28`, RVT, $0.70\,\text{V}$, $25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$):
+    * Behavioral Multiplier (Baseline): 10,240 cells, $1,083.36\,\mu\text{m}^2$, $2,148.00\,\text{ps}$ ($2.148\,\text{ns}$), $0.466\,\text{GHz}$ (baseline).
+    * Array Multiplier: 5,405 cells, $527.04\,\mu\text{m}^2$, **1,967.86 ps (1.968 ns)**, **0.508 GHz** ($-51.4\%$ area, **1.09x speedup**).
+    * Radix-4 Modified Booth Multiplier: 5,590 cells, **464.45 $\mu$m$^2$ (Lowest Area!)**, $2,159.88\,\text{ps}$ ($2.160\,\text{ns}$), $0.463\,\text{GHz}$ (**-57.1% area**, $0.99\times$).
+    * Wallace Tree Multiplier: 7,293 cells, $627.77\,\mu\text{m}^2$, $2,088.55\,\text{ps}$ ($2.089\,\text{ns}$), $0.479\,\text{GHz}$ ($-42.0\%$ area, $1.03\times$).
+    * Redundant Binary Multiplier (RBM): 14,920 cells, $1,072.65\,\mu\text{m}^2$, $2,245.91\,\text{ps}$ ($2.246\,\text{ns}$), $0.445\,\text{GHz}$ ($-1.0\%$ area, $0.96\times$).
+* **Multiplier Selection, Chisel Integration, and Pipeline Balancing (`Latex/04_19_2_RISCV_pipelined.tex`)**:
+  * Selected the Radix-4 Booth Multiplier as the primary area-optimized multiplier for standard-cell cores (while noting RBM for regular DSP datapaths). Provided concise Chisel code showing only the multiplier invocation.
+  * Demonstrated how internally pipelining the multiplier into 4 balanced stages of $\approx 0.50\text{--}0.54\,\text{ns}$ resolves the Zmmul frequency collapse, enabling the processor to operate at the full **1.67 GHz** clock frequency ($2.27\times$ over the unoptimized baseline) while delivering single-cycle multiplier throughput.
+
 # 09/27/2026 13:55 Balancing the RV32I Pipeline: ASAP7 7nm FinFET Synthesis of High-Performance Adders and Selection
 * **Diagnosis of Ripple-Carry Adder Bottleneck (`Latex/04_19_2_RISCV_pipelined.tex`)**:
   * Highlighted that the baseline ALU's unoptimized 32-bit ripple-carry adder (RCA, $1.045\,\text{ns}$) has approximately $2\times$ the delay of any other pipeline stage in the core ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$).
