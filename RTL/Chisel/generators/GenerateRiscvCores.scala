@@ -19,10 +19,17 @@ object GenerateRiscvCores extends App {
     firtoolOpts = firtoolFlags
   )
 
-  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I)...")
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I with Bypassing/Forwarding)...")
   ChiselStage.emitSystemVerilogFile(
-    new RiscvPipelined(xlen = 32, enableZmmul = false),
+    new RiscvPipelined(xlen = 32, enableZmmul = false, enableForwarding = true),
     args = Array("--target-dir", "synth/rv32i_pipelined"),
+    firtoolOpts = firtoolFlags
+  )
+
+  println("Generating SystemVerilog for RiscvPipelined (4-Stage RV32I No Forwarding)...")
+  ChiselStage.emitSystemVerilogFile(
+    new RiscvPipelined(xlen = 32, enableZmmul = false, enableForwarding = false),
+    args = Array("--target-dir", "synth/rv32i_pipelined_nofwd"),
     firtoolOpts = firtoolFlags
   )
 
