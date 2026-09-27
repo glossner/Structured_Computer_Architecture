@@ -18,6 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Refactored `RALU.scala` ALU multiplexing from `switch` to `MuxCase`, conforming with textbook architectural guidelines.
 
 ### Added
+- **Performance Optimized Architecture: Domain-Specific Architectures and Accelerators (Chapter 18)**:
+  - Authored a comprehensive new chapter (`Latex/04_18_Performance_Optimized_Architecture.tex`) exploring architectural paradigm shifts beyond the ILP wall, structured around Domain-Specific Architectures (DSAs) and modular RISC-V extensions.
+  - Section 18.1 (*The Post-ILP Era and the Rise of DSAs*): Analyzed physical limits (breakdown of Dennard scaling, Power Wall, ILP Wall, and Memory Wall), dark silicon, the 80--90% von Neumann control overhead of out-of-order superscalar cores, Amdahl's Law for accelerators, and the modular RISC-V extension framework (`F`, `D`, `V`, `P`, `Zfh`, and `RV-M`).
+  - Section 18.2 (*High-Performance Computing and Floating-Point Architecture*): Examined IEEE 754 arithmetic compliance, dynamic rounding modes, accrued exception flags, the RISC-V floating-point register file (`f0`--`f31`) with full writable `f0` and NaN-boxing, `fcsr` status register, FMA units, and pipelined floating-point datapaths.
+  - Section 18.3 (*Vector Processing and Data-Level Parallelism*): Contrasted packed SIMD with Cray-style scalable vectors, detailed the RISC-V Vector (RVV) extension architecture (`VLEN`, `ELEN`, `SEW`, `LMUL`), dynamic configuration via `vsetvli`, vector stripmining assembly loops, multi-lane execution datapaths, and memory access modes (unit-stride, strided, indexed gather/scatter).
+  - Section 18.4 (*Graphics Processing Units (GPUs) and Massively Parallel SIMT*): Analyzed Single Instruction, Multiple Threads (SIMT) vs SIMD, warp/wavefront execution, zero-overhead multithreaded warp schedulers for latency hiding, branch divergence management via active masks and divergence stacks, and open-source RISC-V SIMT GPGPU architectures (Vortex).
+  - Section 18.5 (*Digital Signal Processors (DSPs) and Embedded Compute*): Explored FIR/FFT computational kernels, fixed-point $Q$-format arithmetic with saturation and guard bits, dual-memory Harvard architectures (X/Y memories), dedicated Address Generation Units (AGUs) for circular modulo and bit-reversed addressing, and the RISC-V packed-SIMD `P` extension.
+  - Section 18.6 (*Tensor and Matrix Processors for Artificial Intelligence*): Analyzed GEMM computational kernels, arithmetic intensity and the roofline model, 2D systolic array architectures with weight-stationary dataflows (Google TPU), sub-word low-precision numerics (INT8, FP8, BF16), and the emerging RISC-V Matrix (`RV-M`) extension.
+  - Section 18.7 (*Comparative Synthesis of DSAs*): Cross-cutting comparative synthesis (Table 18.3) contrasting CPUs, Vectors, GPUs, DSPs, and TPUs across instruction bandwidth, control overhead, memory organization, and peak energy efficiency.
+- **Hardware Multithreading: Exploiting Thread-Level Parallelism (Chapter 16)**:
+  - Expanded Chapter 16 (`Latex/04_16_Performance_Optimized_Organization.tex`) with Section 16.6 on hardware multithreading.
+  - Contrasted single-threaded horizontal and vertical issue slot waste with multithreaded slot utilization (Figure 16.12).
+  - Detailed taxonomy of fine-grained/interleaved (barrel) multithreading (citing Burton Smith on the Denelcor HEP, 1978), coarse-grained (blocked) multithreading, and Simultaneous Multithreading (SMT) (citing Dean Tullsen, Susan Eggers, and Henry Levy, ISCA 1995).
+  - Analyzed microarchitectural resource sharing trade-offs between statically partitioned and dynamically shared hardware structures.
+  - Examined architectural touchpoints: hardware thread IDs (`mhartid`), atomic memory operations (`LR`/`SC`, AMOs in RISC-V `A` extension), memory fences (`FENCE`, `FENCE.I`), and memory consistency models (RVWMO vs TSO).
+- **Textbook Chapter Structure & Downstream Renumbering**:
+  - Renamed `Latex/04_18_1_RISCV.tex` to `Latex/04_19_1_RISCV.tex` (Chapter 19: The RISC-V Processor).
+  - Renamed `Latex/04_18_2_RISCV_pipelined.tex` to `Latex/04_19_2_RISCV_pipelined.tex`.
+  - Updated `Latex/00_main.tex` inclusion order, aligning Chapter 20 naturally with `04_20_pRISC_heterogeneous.tex`.
 - **Performance Optimized Organization: Pipelining and ILP (Chapter 16)**:
   - Renamed `Latex/04_16_ILP.tex` to `Latex/04_16_Performance_Optimized_Organization.tex` and updated master inclusion in `Latex/00_main.tex`.
   - Added introductory pedagogical bridge connecting gate-level logic optimizations (Chapter 15) to microarchitectural system organization (Chapter 16).
