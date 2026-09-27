@@ -166,9 +166,9 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
   regFile.io.rs1 := d.rs1
   regFile.io.rs2 := d.rs2
 
-  // Register file write-through (internal bypass from MEM/WB stage to ID stage)
-  val rs1Val = Mux(wbWen && (wbRd === d.rs1) && (d.rs1 =/= 0.U), wbData, regFile.io.rs1_data)
-  val rs2Val = Mux(wbWen && (wbRd === d.rs2) && (d.rs2 =/= 0.U), wbData, regFile.io.rs2_data)
+  // No forwarding: operands read directly from architectural register file
+  val rs1Val = regFile.io.rs1_data
+  val rs2Val = regFile.io.rs2_data
 
   // Instruction operand read usage
   val readsRs1 = (f.opcode === RiscvOpcodes.OP     ||
@@ -182,10 +182,14 @@ class RiscvPipelined(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul
                   f.opcode === RiscvOpcodes.STORE  ||
                   f.opcode === RiscvOpcodes.BRANCH) && (d.rs2 =/= 0.U)
 
-  // Hazard Detection Unit: stall on RAW hazards with EX stage
+  // Hazard Detection Unit: stall on RAW hazards with EX stage (distance 1) and MEM/WB stage (distance 2)
   val exWillWrite  = id_ex.valid && id_ex.regWrite && (id_ex.rd =/= 0.U)
-  val rawHazardRs1 = exWillWrite && readsRs1 && (id_ex.rd === d.rs1)
-  val rawHazardRs2 = exWillWrite && readsRs2 && (id_ex.rd === d.rs2)
+  val memWillWrite = ex_mem.valid && ex_mem.regWrite && (ex_mem.rd =/= 0.U)
+
+  val rawHazardRs1 = (exWillWrite && readsRs1 && (id_ex.rd === d.rs1)) ||
+                     (memWillWrite && readsRs1 && (ex_mem.rd === d.rs1))
+  val rawHazardRs2 = (exWillWrite && readsRs2 && (id_ex.rd === d.rs2)) ||
+                     (memWillWrite && readsRs2 && (ex_mem.rd === d.rs2))
   val stall        = if_id.valid && (rawHazardRs1 || rawHazardRs2)
 
   // ID -> EX Pipeline Register update
