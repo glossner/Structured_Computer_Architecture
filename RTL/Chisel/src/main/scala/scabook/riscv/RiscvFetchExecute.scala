@@ -33,7 +33,7 @@ class DmemPort(val addrWidth: Int = 32, val dataWidth: Int = 32) extends Bundle 
   * Executes each instruction in the classic Fetch-Execute cycle as unified
   * logical functions without stall delays using unbuffered memories.
   */
-class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0, val enableZmmul: Boolean = true) extends Module {
+class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0x80000000L, val enableZmmul: Boolean = true) extends Module {
   val io = IO(new Bundle {
     val imem     = new ImemPort(xlen, xlen)
     val dmem     = new DmemPort(xlen, xlen)
@@ -41,6 +41,13 @@ class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0, val enableZm
     val inst     = Output(UInt(xlen.W))
     val aluOut   = Output(UInt(xlen.W))
     val regWrite = Output(Bool())
+
+    // Architectural Profiling Signals
+    val instRetired   = Output(Bool())
+    val isBranch      = Output(Bool())
+    val isBranchTaken = Output(Bool())
+    val isJal         = Output(Bool())
+    val isJalr        = Output(Bool())
   })
 
   // Subsystem Instantiation (Reusing Prior Library Elements)
@@ -118,10 +125,15 @@ class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0, val enableZm
   )
 
   // Observability
-  io.pc       := pc.io.pc
-  io.inst     := inst
-  io.aluOut   := ralu.io.aluResult
-  io.regWrite := ralu.io.regWrite
+  io.pc            := pc.io.pc
+  io.inst          := inst
+  io.aluOut        := ralu.io.aluResult
+  io.regWrite      := ralu.io.regWrite
+  io.instRetired   := true.B
+  io.isBranch      := c.branch
+  io.isBranchTaken := branchTaken
+  io.isJal         := isJal
+  io.isJalr        := isJalr
 }
 
 /** Complete Harvard 5-OS Computing System Harness.

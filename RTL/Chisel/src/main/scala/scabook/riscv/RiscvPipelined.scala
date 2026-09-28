@@ -82,7 +82,7 @@ class ExMemBundle(val xlen: Int = 32) extends Bundle {
   */
 class RiscvPipelined(
   val xlen: Int = 32,
-  val initPC: BigInt = 0,
+  val initPC: BigInt = 0x80000000L,
   val enableZmmul: Boolean = true,
   val enableForwarding: Boolean = true,
   val enablePipelinedMul: Boolean = true,
@@ -95,6 +95,18 @@ class RiscvPipelined(
     val inst     = Output(UInt(xlen.W))
     val aluOut   = Output(UInt(xlen.W))
     val regWrite = Output(Bool())
+
+    // Architectural Profiling Signals
+    val instRetired     = Output(Bool())
+    val isStall         = Output(Bool())
+    val isLoadUseStall  = Output(Bool())
+    val isRawStall      = Output(Bool())
+    val isBranch        = Output(Bool())
+    val isBranchTaken   = Output(Bool())
+    val isBranchMispred = Output(Bool())
+    val isJal           = Output(Bool())
+    val isJalr          = Output(Bool())
+    val isFlush         = Output(Bool())
   })
 
   // Hardware Subsystems
@@ -382,8 +394,18 @@ class RiscvPipelined(
   }
 
   // Observability Ports
-  io.pc       := ex_mem.pc
-  io.inst     := ex_mem.inst
-  io.aluOut   := Mux(ex_mem.isMul, mulStage2Result, ex_mem.aluResult)
-  io.regWrite := wbWen
+  io.pc              := ex_mem.pc
+  io.inst            := ex_mem.inst
+  io.aluOut          := Mux(ex_mem.isMul, mulStage2Result, ex_mem.aluResult)
+  io.regWrite        := wbWen
+  io.instRetired     := ex_mem.valid
+  io.isStall         := stall
+  io.isLoadUseStall  := if_id.valid && enableForwarding.B && isLoadUseHazard
+  io.isRawStall      := if_id.valid && !enableForwarding.B && (rawHazardRs1 || rawHazardRs2)
+  io.isBranch        := isBranch
+  io.isBranchTaken   := branchTaken
+  io.isBranchMispred := branchMispredicted
+  io.isJal           := isJal
+  io.isJalr          := isJalr
+  io.isFlush         := exRedirect
 }

@@ -4,11 +4,18 @@
 \section{Hardware Implementation of the Pipelined Processor}\label{riscvPipelined}
 \index{RISC-V!pipelined implementation}\index{pipelining!4-stage hazard detection and stall}\index{hazard detection unit}\index{pipeline stall}
 
-While the single-cycle processor developed in Section \ref{riscvArch} executes each instruction in a single clock cycle ($\text{CPI} = 1.0$), its operating clock frequency is fundamentally constrained by the cumulative propagation delay across all combinational subsystems within a single clock period:
+While the single-cycle processor developed in Section \ref{riscvArch} executes each instruction in a single clock cycle ($\text{CPI} = 1.0$), its operating clock frequency is fundamentally constrained by the cumulative propagation delay across all sequential and combinational subsystems traversed within a single clock period. Grouping these delays by their four physical pipeline steps yields:
 \begin{equation}
-T_{\text{clock, single}} \ge T_{\text{fetch}} + T_{\text{decode}} + T_{\text{ALU}} + T_{\text{dmem}} + T_{\text{wb}} + T_{\text{setup}}.
+T_{\text{clock, single}} \ge T_{\text{fetch}} + T_{\text{decode}} + T_{\text{execute}} + T_{\text{sram\_wb}},
 \end{equation}
-In advanced physical processes, this monolithic combinational path limits clock frequencies. To improve computational throughput, this section develops a 4-stage pipelined implementation of the base \texttt{RV32I} processor, designated \texttt{RiscvPipelined} (and explores its extension to \texttt{RV32I\_Zmmul}). Reusing the core pipeline concepts of \textbf{PipeNyte}, the datapath divides execution into four sequential synchronous stages separated by explicit pipeline registers, incorporating an active \textbf{Hazard Detection Unit} that stalls instruction issue upon detecting data dependencies and flushes speculative instructions upon branch resolution. Per system design requirements, the core operates directly against unbuffered memory buses without cache hierarchies.
+where $T_{\text{fetch}}$ represents instruction SRAM address driving and retrieval ($T_{\text{IF}}$), $T_{\text{decode}}$ represents instruction decoding and dual-port register file read ($T_{\text{ID}}$), $T_{\text{execute}}$ represents ALU arithmetic, shifting, and branch comparison ($T_{\text{EX}}$), and $T_{\text{sram\_wb}}$ represents data SRAM access and write-back register commit ($T_{\text{MEM/WB}}$).
+
+In advanced physical processes, this monolithic combinational path limits clock frequencies. To improve computational throughput, this section develops a 4-stage pipelined implementation of the base \texttt{RV32I} processor, designated \texttt{RiscvPipelined} (and explores its extension to \texttt{RV32I\_Zmmul}). Reusing the core pipeline concepts of \textbf{PipeNyte}, the datapath divides execution into four sequential synchronous stages separated by explicit pipeline registers. In this pipelined processor, each stage executes concurrently in its own clock cycle, so the minimum clock period is constrained not by the sum of delays, but by the maximum delay among the individual pipeline stages:
+\begin{equation}
+T_{\text{clock, pipe}} \ge \max\left(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}\right) + T_{\text{reg\_overhead}},
+\end{equation}
+where $T_{\text{reg\_overhead}} = t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}$ denotes the sequential register setup, clock-to-Q, and clock skew overhead introduced at every pipeline stage boundary. Incorporating an active \textbf{Hazard Detection Unit}, the core stalls instruction issue upon detecting data dependencies and flushes speculative instructions upon branch resolution. Per system design requirements, the core operates directly against unbuffered memory buses without cache hierarchies.
+
 
 \subsection{Microarchitectural Organization of the 4-Stage Pipeline}
 \index{pipelining!microarchitectural stages}\index{PipeNyte!4-stage architecture}
@@ -188,59 +195,12 @@ Control redirection unconditionally overrides hazard stalls: if an instruction i
 \section{Performance Evaluation and ASIC Physical Design of the RV32I Pipeline}\label{riscvPerformance}
 \index{performance evaluation!pure RV32I}\index{ASIC synthesis!ASAP7 7nm}\index{ASAP7!7nm predictive PDK standard cell synthesis}
 
-To establish a rigorous baseline for pipelined processor design, the unpipelined (\texttt{RiscvFetchExecute}) and 4-stage pipelined (\texttt{RiscvPipelined}) processors were first configured in the pure, baseline \texttt{RV32I} architecture (with hardware multiplication disabled, \texttt{enableZmmul = false}) and without data forwarding. Both designs were subjected to three evaluation workflows:
-\begin{enumerate}
-    \item Architectural conformance verification against the official RISC-V \texttt{RV32I} test suite.
-    \item Cycle-accurate execution of a real Digital Signal Processing (DSP) benchmark application.
-    \item Full standard-cell ASIC synthesis targeting the advanced \textbf{ASAP7 7\,nm FinFET Predictive PDK} (\texttt{asap7sc7p5t\_28}).
-\end{enumerate}
-
-\subsection{Architectural Conformance Verification of the RV32I Core}
-\index{conformance testing!RV32I verification}
-
-The \texttt{RiscvPipelined} processor was verified against all 38 official RISC-V \texttt{RV32I} architectural test suites using Chisel's \texttt{EphemeralSimulator}. The simulation harness drives instructions into memory, monitors write accesses to the designated \texttt{tohost} signature address, and performs automated word-by-word comparison against golden Spike reference signatures.
-
-As shown in Table \ref{tab:rv32i_pipelined_conformance_results}, the 4-stage pipelined \texttt{RV32I} processor achieved a \textbf{100\% pass rate} across all 38 test suites, validating architectural compliance with the unprivileged specification.
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Test Category} & \textbf{Suites Tested} & \textbf{Single-Cycle Cycles} & \textbf{4-Stage Pipelined Cycles (No Fwd)} \\
-\hline
-Arithmetic (R-type)     & 10 & 30,680  & 65,361 \\
-Immediate (I-type)      & 9  & 20,412  & 41,202 \\
-Upper Immediates        & 2  & 730     & 1,414  \\
-Jumps (\texttt{JAL}, \texttt{JALR}) & 2  & 2,224   & 3,747  \\
-Branches (B-type)       & 6  & 18,240  & 47,885 \\
-Loads (\texttt{LB}, \texttt{LH}, \texttt{LW}, etc.) & 5 & 2,860 & 4,831 \\
-Stores (\texttt{SB}, \texttt{SH}, \texttt{SW})      & 3 & 1,980 & 3,960 \\
-Synchronization (\texttt{FENCE})                    & 1 & 148   & 238   \\
-\hline
-\textbf{Total / Summary} & \textbf{38 Suites} & \textbf{77,274 Cycles} & \textbf{168,638 Cycles} \\
-\hline
-\end{tabular}
-\caption{Official RISC-V \texttt{RV32I} architectural conformance results and cycle counts for single-cycle vs.\ 4-stage pipelined cores without forwarding (100\% signature match across all 38 test suites).}\label{tab:rv32i_pipelined_conformance_results}
-\end{table}
-
-Across the 38 test suites, cumulative execution cycles increased from 77,274 cycles on the single-cycle core to 168,638 cycles on the pipelined core, yielding an average CPI of 2.18 across the verification suite. This overhead reflects the 2-cycle stalls on distance-1 RAW dependencies, 1-cycle stalls on distance-2 RAW dependencies, and 2-cycle flushes incurred whenever conditional branches or unconditional jumps are taken.
+To establish a rigorous baseline for pipelined processor design, the unpipelined (\texttt{RiscvFetchExecute}) and 4-stage pipelined (\texttt{RiscvPipelined}) processors were first evaluated in the pure \texttt{RV32I} architecture (with hardware multiplication disabled, \texttt{enableZmmul = false}) and without data forwarding. Having validated 100\% architectural compliance in Section \ref{riscvConformance}, we evaluate both baseline designs through cycle-accurate benchmark execution and deep-submicron physical ASIC synthesis.
 
 \subsection{Benchmark Program Performance: Pure RV32I Software Multiply Workload}
 \index{benchmark!pure RV32I DSP workload}\index{CPI!pure RV32I benchmark}
 
-To evaluate processor performance under realistic algorithmic execution, a real DSP benchmark application was executed on both cores. The workload consists of two core signal processing kernels:
-\begin{enumerate}
-    \item A \textbf{16-point 4-tap Finite Impulse Response (FIR) filter}:
-    \begin{equation}
-    y[i] = \sum_{k=0}^{3} x[i-k] \cdot h[k], \quad i \in [3, 15].
-    \end{equation}
-    \item A \textbf{$4 \times 4$ Matrix-Vector multiplication}:
-    \begin{equation}
-    \mathbf{res}[i] = \sum_{j=0}^{3} \mathbf{A}[i][j] \cdot \mathbf{v}[j], \quad i \in [0, 3].
-    \end{equation}
-\end{enumerate}
-In the pure \texttt{RV32I} implementation, hardware multiplication instructions are unavailable. Consequently, all integer multiplications are resolved by the compiler via software subroutines using the standard shift-and-add algorithm (\texttt{\_\_mulsi3}). The benchmark program executes 6,511 machine instructions.
+Both baseline cores were evaluated against the freestanding Digital Signal Processing (DSP) workload described in Section \ref{riscvBenchmarks} (consisting of the 16-point 4-tap FIR filter and vector dot product kernels). In this pure \texttt{RV32I} configuration, hardware multiplication instructions are absent, requiring the compiler to emit software shift-and-add routines (\texttt{\_\_mulsi3}). The workload executes 6,511 dynamic machine instructions.
 
 Table \ref{tab:rv32i_benchmark_comparison} presents the cycle-accurate execution metrics for both processors on the pure \texttt{RV32I} DSP workload without forwarding.
 
@@ -263,12 +223,19 @@ Calculated Benchmark Result (\texttt{tohost}) & 0x00000711 (1809) & 0x00000711 (
 
 The 4-stage pipelined processor completes the 6,511-instruction workload in 12,575 clock cycles, yielding an effective CPI of \textbf{1.93}. In the absence of forwarding, the tight software shift-and-add multiplication loops incur frequent 2-cycle stalls on back-to-back register updates. Both cores produce the identical golden signature result (\texttt{tohost = 0x00000711}, decimal 1809).
 
-\subsection{Physical ASIC Synthesis of the Pure RV32I Core on ASAP7 7\,nm Technology}
-\index{synthesis!ASAP7 7nm RV32I}\index{critical path!RV32I pipeline}
+\subsection{Physical ASIC Design Methodology and Synthesis on ASAP7 7\,nm Technology}
+\index{ASAP7!methodology}\index{synthesis!ASAP7 7nm RV32I}\index{critical path!RV32I pipeline}
 
-Both the single-cycle and 4-stage pipelined \texttt{RV32I} cores were synthesized to gate-level netlists using \textbf{Yosys} and mapped to the \textbf{ASAP7 7\,nm FinFET Predictive PDK} (\texttt{asap7sc7p5t\_28}, 7.5-track standard cells, Regular $V_t$) at the typical process corner ($V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$). Critical path static timing analysis was performed under standard load capacitance constraints ($C_{\text{load}} = 2.0\,\text{fF}$).
+To obtain realistic silicon metrics independent of speculative FPGA lookup-table estimates, all physical implementations in this chapter target the \textbf{ASAP7 7\,nm FinFET Predictive Process Design Kit (PDK)} developed by Arizona State University in collaboration with ARM \cite{clark2016asap7}. ASAP7 models an advanced sub-10\,nm FinFET technology node with realistic lithographic design rules and physical parasitics:
+\begin{itemize}
+    \item \textbf{Standard-Cell Architecture}: We utilize the 7.5-track standard-cell library (\texttt{asap7sc7p5t\_28}) at the Regular $V_t$ (RVT) process corner, operating at nominal supply voltage $V_{dd} = 0.70\,\text{V}$ and junction temperature $T = 25^\circ\text{C}$ (Typical-Typical corner).
+    \item \textbf{Timing Constraints and Driving Capacitance}: Static timing analysis is performed with an output capacitive load constraint of $C_{\text{load}} = 2.0\,\text{fF}$ applied across all primary outputs, reflecting typical local on-chip interconnect loading.
+    \item \textbf{SRAM Memory Array Modeling}: In high-performance embedded SoCs, instruction and data memories are implemented as compiled SRAM macros rather than flip-flop arrays. For our timing closure, memory access latency is modeled with an unbuffered high-density FinFET SRAM access time of $T_{\text{sram}} = 0.500\,\text{ns}$ (500\,ps).
+    \item \textbf{Sequential Register Overhead}: At every synchronous pipeline boundary, physical D flip-flops impose setup time ($t_{\text{setup}} \approx 15\,\text{ps}$), clock-to-Q propagation delay ($t_{\text{cq}} \approx 25\,\text{ps}$), and clock distribution skew margin ($t_{\text{skew}} \approx 15\,\text{ps}$), yielding a constant sequential overhead of $T_{\text{reg\_overhead}} \approx 55\,\text{ps}$.
+\end{itemize}
 
-Table \ref{tab:asap7_rv32i_synthesis} summarizes the physical design metrics, pipeline stage delay decomposition, and benchmark performance comparison for the pure \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology.
+Both the single-cycle and 4-stage pipelined \texttt{RV32I} cores were synthesized to gate-level netlists using \textbf{Yosys} and mapped to ASAP7 standard cells via \textbf{Berkeley ABC}. Table \ref{tab:asap7_rv32i_synthesis} summarizes the physical design metrics, pipeline stage delay decomposition, and benchmark performance comparison for the pure \texttt{RV32I} baseline cores.
+
 
 \begin{table}[htbp]
 \centering
@@ -339,57 +306,12 @@ The synthesis and performance results of the pure \texttt{RV32I} baseline in ASA
 \end{enumerate}
 
 
-\section{Balancing the Pipeline: Synthesis and Selection of High-Performance Adders}\label{riscvAdderBalancing}
-\index{pipeline balancing!adder optimization}\index{adders!ASAP7 7nm synthesis}\index{carry select adder!pipeline integration}\index{parallel prefix adders}
+\section{Balancing the Pipeline: Selection and Integration of High-Performance Adders}\label{riscvAdderBalancing}
+\index{pipeline balancing!adder optimization}\index{carry select adder!pipeline integration}
 
-As established in Section \ref{riscvPerformance}, the critical path of the 4-stage \texttt{RV32I} pipeline is overwhelmingly dominated by the Execute (EX) stage ($T_{\text{execute}} = 1.363\,\text{ns}$). More strikingly, the unoptimized 32-bit ripple-carry adder (RCA) embedded inside the baseline ALU accounts for $1.045\,\text{ns}$ of that latency—nearly \textbf{$2\times$ the delay of any other stage} in the entire processor ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, and $T_{\text{sram\_wb}} = 0.600\,\text{ns}$). Because a synchronous pipeline can run no faster than its slowest stage, the slow ripple-carry adder acts as an anchor holding the clock frequency to $733.7\,\text{MHz}$, even though the remaining three-quarters of the machine are physically capable of clocking at $1.67\,\text{GHz}$ ($1 / 0.600\,\text{ns}$).
+As established in Section \ref{riscvPerformance}, the critical path of the baseline 4-stage \texttt{RV32I} pipeline is overwhelmingly dominated by the Execute (EX) stage ($T_{\text{execute}} = 1.363\,\text{ns}$). More strikingly, the unoptimized 32-bit ripple-carry adder (RCA) embedded inside the baseline ALU accounts for $1.045\,\text{ns}$ of that latency---nearly \textbf{$2\times$ the delay of any other stage} in the entire processor ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, and $T_{\text{sram\_wb}} = 0.600\,\text{ns}$). Because a synchronous pipeline can run no faster than its slowest stage, the slow ripple-carry adder acts as an anchor holding the clock frequency to $733.7\,\text{MHz}$, even though the remaining three-quarters of the machine are physically capable of clocking at $1.67\,\text{GHz}$ ($1 / 0.600\,\text{ns}$).
 
-To eliminate this structural bottleneck, we turn to the high-performance adder topologies analyzed in Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:high_performance_adders}). In this section, we synthesize the major 32-bit adder architectures to physical gate-level netlists using the identical \textbf{ASAP7 7\,nm FinFET Predictive PDK} library, evaluate their delay-area trade-offs, select the optimal design to balance the pipeline, and integrate it into the Chisel execution unit.
-
-\subsection{Physical ASIC Synthesis of Chapter \ref{chap:perf_opt_logic} Adders on ASAP7 7\,nm FinFET}
-
-Five 32-bit adder topologies described in Chapter \ref{chap:perf_opt_logic} were implemented in parameterized Chisel RTL, verified with complete functional test suites covering corner cases, maximum carry propagations, and random vectors, and generated into SystemVerilog netlists:
-\begin{enumerate}
-    \item \textbf{Ripple-Carry Adder (RCA)}: Baseline $O(N)$ linear carry-propagation chain composed of 32 cascaded full adders (Section \ref{lect1}).
-    \item \textbf{Carry Lookahead Adder (CLA)}: Hierarchical two-level block lookahead adder grouping bits into 4-bit lookahead blocks with lookahead carry generators (Section \ref{sec:high_performance_adders}).
-    \item \textbf{Brent-Kung Parallel Prefix Adder (BKA)}: A 9-level parallel prefix tree designed to minimize total cell count and routing density with a maximum fan-out of 2 \cite{brent1982regular}.
-    \item \textbf{Kogge-Stone Parallel Prefix Adder (KSA)}: A 5-level ($\lceil \log_2 32 \rceil$) parallel prefix tree designed for minimum logic depth with uniform fan-out of 2 \cite{kogge1973parallel} (Section \ref{sec:kogge-stone-adder}).
-    \item \textbf{Carry Select Adder (CSA)}: Speculative block adder partitioning 32 bits into 4-bit blocks where dual ripple chains compute speculative sums for $C_{\text{in}} = 0$ and $C_{\text{in}} = 1$ in parallel, multiplexed by incoming block carries (Section \ref{sec:high_performance_adders}).
-\end{enumerate}
-
-Each design was synthesized using \textbf{Yosys} and mapped with \textbf{ABC} to the \textbf{ASAP7 7\,nm FinFET} standard-cell library (\texttt{asap7sc7p5t\_28}, RVT, $0.70\,\text{V}$, $25^\circ\text{C}$, $C_{\text{load}} = 2.0\,\text{fF}$). Table \ref{tab:asap7_adders_comparison} summarizes the resulting gate counts, standard-cell silicon area, critical path propagation latency, speedup relative to the ripple-carry baseline, and maximum standalone operating clock frequency ($f_{\text{max}} = 1 / t_{\text{pd}}$).
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|c|c|c|c|c|c|}
-\hline
-\textbf{Adder Architecture} & \textbf{Theoretical} & \textbf{Standard} & \textbf{Total Area} & \textbf{Delay ($t_{\text{pd}}$)} & \textbf{Speedup vs.} & \textbf{Max Frequency} \\
-& \textbf{Delay} & \textbf{Cells} & \textbf{($\mu$m$^2$)} & \textbf{(ps / ns)} & \textbf{RCA Baseline} & \textbf{($f_{\text{max}}$, GHz)} \\
-\hline
-Ripple-Carry Adder (RCA)       & $O(N)$         & 106 & 13.91 & 1,045.43\,ps (1.045\,ns) & $1.00\times$ (Base) & 0.96\,GHz \\
-Carry Lookahead Adder (CLA)    & $O(\log N)$    & 122 & 12.98 & 987.99\,ps (0.988\,ns)   & $1.06\times$        & 1.01\,GHz \\
-Brent-Kung Prefix Adder (BKA)  & $O(2\log_2 N)$ & 144 & 14.83 & 836.25\,ps (0.836\,ns)   & $1.25\times$        & 1.20\,GHz \\
-Kogge-Stone Prefix Adder (KSA) & $O(\log_2 N)$  & 190 & 17.48 & 712.57\,ps (0.713\,ns)   & $1.47\times$        & 1.40\,GHz \\
-\textbf{Carry Select Adder (CSA)} & \textbf{$O(\sqrt{N})$} & \textbf{190} & \textbf{18.01} & \textbf{519.83\,ps (0.520\,ns)} & \textbf{2.01$\times$} & \textbf{1.92\,GHz} \\
-\hline
-\end{tabular}
-\caption{Empirical synthesis and timing evaluation of 32-bit high-performance adder architectures from Chapter \ref{chap:perf_opt_logic} mapped to ASAP7 7\,nm FinFET technology.}\label{tab:asap7_adders_comparison}
-\end{table}
-
-\subsection{Architectural Analysis and Selecting the Optimal Adder}
-
-The empirical synthesis results reveal several critical insights into deep-submicron arithmetic design:
-\begin{enumerate}
-    \item \textbf{The Ripple-Carry Bottleneck Confirmed}: The ripple-carry adder achieves a propagation delay of $1,045.43\,\text{ps}$ ($1.045\,\text{ns}$). The critical path consists of 31 cascaded majority and inverter stages (\texttt{MAJx2\_ASAP7\_75t\_R}), confirming that the $O(N)$ carry chain is directly responsible for the $1.363\,\text{ns}$ Execute stage bottleneck in the core.
-    \item \textbf{Hierarchical CLA Limitations}: While the 4-bit block CLA reduces delay to $987.99\,\text{ps}$, it offers only a modest $6\%$ speedup. In static CMOS standard cells, the complex multi-input AND-OR trees required for lookahead logic suffer from fan-in stacking and internal node capacitance, diluting the theoretical logarithmic advantage.
-    \item \textbf{Parallel Prefix Trade-offs}: The parallel prefix trees yield substantial latency reductions: Brent-Kung reaches $836.25\,\text{ps}$ ($1.25\times$ faster) while maintaining a compact $14.83\,\mu\text{m}^2$ footprint. Kogge-Stone further cuts latency to $712.57\,\text{ps}$ ($1.47\times$ faster, $1.40\,\text{GHz}$) by maintaining minimum logic depth ($5$ prefix stages), albeit with higher cell count (190 cells) and dense inter-stage routing.
-    \item \textbf{Superiority of Carry Select in 32-bit Standard Cells}: The \textbf{Carry Select Adder (CSA)} achieves the absolute lowest propagation delay of all architectures evaluated: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}.
-    
-    In 32-bit standard cells, partitioning the adder into 4-bit blocks allows the speculative carry chains to settle in parallel in under $120\,\text{ps}$. The arriving carries then ripple through a linear chain of transmission-gate and static multiplexers (\texttt{NAND2}, \texttt{MAJI}), each introducing an average gate delay of only $\approx 35\text{--}40\,\text{ps}$. Because 2:1 multiplexers are among the fastest and most highly optimized primitives in modern FinFET standard-cell libraries, the carry-select topology decisively outperforms tree structures at the 32-bit operand width.
-\end{enumerate}
-
-Consequently, we select the \textbf{Carry Select Adder} as the optimal high-speed replacement for the slow ripple-carry adder in our RISC-V execution unit.
+To eliminate this structural bottleneck, we select the optimal high-performance adder from the comprehensive empirical evaluation conducted in Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:asap7_adders_synthesis}, Table \ref{tab:asap7_adders_comparison}). Among all 32-bit topologies evaluated in ASAP7 7\,nm FinFET technology (Ripple-Carry, Carry Lookahead, Brent-Kung, Kogge-Stone, and Carry Select), the \textbf{Carry Select Adder (CSA)} achieves the absolute lowest propagation delay: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}. In deep-submicron FinFET standard cells, partitioning the 32-bit adder into 4-bit blocks allows speculative dual-carry chains ($C_{\text{in}} = 0$ and $C_{\text{in}} = 1$) to evaluate concurrently in under $120\,\text{ps}$. The block carry selection then ripples through an ultra-fast chain of transmission-gate multiplexers with an average delay of only $35\text{--}40\,\text{ps}$ per block, outperforming parallel prefix tree structures at the 32-bit width. We therefore choose the Carry Select Adder to replace the ripple-carry adder in our processor's execution unit.
 
 \subsection{Integrating the High-Performance Adder in Chisel}
 \index{Chisel!adder instantiation}
@@ -443,448 +365,56 @@ As shown in Table \ref{tab:balanced_pipeline_delays}, replacing the slow ripple-
 \begin{equation}
 T_{\text{fetch}} \approx 0.550\,\text{ns}, \quad T_{\text{decode}} \approx 0.540\,\text{ns}, \quad T_{\text{execute}} \approx 0.600\,\text{ns}, \quad T_{\text{sram\_wb}} \approx 0.600\,\text{ns}.
 \end{equation}
-Every stage now requires between $0.540\,\text{ns}$ and $0.600\,\text{ns}$. The worst-case pipeline stage delay drops from $1.363\,\text{ns}$ to $0.600\,\text{ns}$, unlocking an operating frequency of \textbf{1.67\,GHz}—a \textbf{$2.27\times$ frequency increase} over the unoptimized pipeline, and a \textbf{$5.09\times$ frequency increase} over the single-cycle FE core ($327.5\,\text{MHz}$).
+Every stage now requires between $0.540\,\text{ns}$ and $0.600\,\text{ns}$. The worst-case pipeline stage delay drops from $1.363\,\text{ns}$ to $0.600\,\text{ns}$, unlocking an operating frequency of \textbf{1.67\,GHz}---a \textbf{$2.27\times$ frequency increase} over the unoptimized pipeline, and a \textbf{$5.09\times$ frequency increase} over the single-cycle FE core ($327.5\,\text{MHz}$).
 
 This case study proves a fundamental axiom of processor microarchitecture: \textbf{optimizing a single critical arithmetic component in the bottleneck stage restores stage equilibrium and doubles the performance of the entire processor}.
 
+\subsection{Advanced Pipeline Partitioning: Superpipelining and Logic Retiming}
+\index{superpipelining}\index{pipeline retiming}\index{logic migration across stage boundaries}
 
-\section{Microarchitectural Case Study: Hardware Multiplication (Zmmul) and the Pipeline Balancing Dilemma}\label{riscvZmmulCaseStudy}
-\index{Zmmul extension!microarchitectural case study}\index{pipeline balancing!multiplier bottleneck}\index{Amdahl's law!clock period unbalancing}
-
-Having established the baseline performance of the 4-stage \texttt{RV32I} pipeline, we now examine what happens when hardware multiplication is added. In scientific computing, machine learning, and digital signal processing, multiplication is ubiquitous. Implementing multiplication in software via shift-and-add requires roughly 35 instructions per multiply, bloating code size and consuming significant execution cycles. 
-
-To accelerate multiplication, the RISC-V standard defines the \texttt{Zmmul} extension, introducing four 32-bit multiplication instructions: \texttt{MUL} (lower 32 bits), \texttt{MULH} (upper 32 bits, signed $\times$ signed), \texttt{MULHSU} (upper 32 bits, signed $\times$ unsigned), and \texttt{MULHU} (upper 32 bits, unsigned $\times$ unsigned).
-
-A naive microarchitectural approach is to simply integrate a $32 \times 32$ combinational multiplier directly into the execution stage ALU (\texttt{RiscvALU}). However, this case study reveals how an unpipelined complex execution unit catastrophically destroys pipeline stage balancing.
-
-\subsection{Physical Area and Critical Path of Standalone ALUs}
-\index{ALU!multiplier area explosion}\index{ASAP7 7nm!ALU synthesis}
-
-To isolate the physical impact of the multiplier, the standalone \texttt{RiscvALU} was synthesized targeting the ASAP7 7\,nm FinFET standard cell library in two configurations:
+Having balanced the four primary pipeline stages to $\approx 0.55\text{--}0.60\,\text{ns}$, further frequency scaling requires deeper microarchitectural transformations:
 \begin{enumerate}
-    \item \textbf{Pure RV32I ALU (\texttt{enableZmmul = false})}: Supporting integer addition, subtraction, set-less-than, logical operations (\texttt{AND}, \texttt{OR}, \texttt{XOR}), and shifts (\texttt{SLL}, \texttt{SRL}, \texttt{SRA}).
-    \item \textbf{RV32I\_Zmmul ALU (\texttt{enableZmmul = true})}: The base ALU augmented with the complete $32 \times 32$ multiplier logic array.
-\end{enumerate}
-
-Table \ref{tab:alu_synthesis_comparison} contrasts the physical synthesis results of the two execution units.
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{ALU Synthesis Metric} & \textbf{Pure RV32I ALU} & \textbf{RV32I\_Zmmul ALU} & \textbf{Impact of Multiplier} \\
-\hline
-Standard Cell Count          & 1,470 cells            & 12,092 cells             & \textbf{8.2$\times$ cell count} \\
-Total Silicon Area           & \textbf{103.31\,$\mu$m$^2$} & \textbf{1,186.67\,$\mu$m$^2$} & \textbf{11.5$\times$ area explosion} \\
-Critical Path Delay          & \textbf{1.047\,ns}      & \textbf{2.148\,ns}       & \textbf{+105.3\% delay penalty} \\
-Maximum Operating Frequency  & 955.6\,MHz             & 465.5\,MHz               & $-51.3\%$ frequency \\
-\hline
-\end{tabular}
-\caption{ASAP7 7\,nm FinFET ASIC synthesis comparison between standalone pure \texttt{RV32I} ALU and \texttt{RV32I\_Zmmul} ALU.}\label{tab:alu_synthesis_comparison}
-\end{table}
-
-The physical design data exposes a dramatic disparity:
-\begin{itemize}
-    \item Adding a single-cycle $32 \times 32$ multiplier increases ALU silicon area by \textbf{11.5$\times$} (from $103.31\,\mu\text{m}^2$ to $1,186.67\,\mu\text{m}^2$).
-    \item Remarkably, the $32 \times 32$ multiplier logic array alone ($>1,080\,\mu\text{m}^2$) is \textbf{larger than the entire pure \texttt{RV32I} single-cycle processor core} ($904.24\,\mu\text{m}^2$)!
-    \item The intrinsic propagation delay through the multiplier logic array is \textbf{2.148\,ns}, increasing the ALU critical path by +105.3\% over the pure integer ALU (1.047\,ns).
-\end{itemize}
-
-\subsection{Impact on Full Core Synthesis: The Frequency Collapse}
-\index{pipeline unbalancing!frequency collapse}\index{critical path!multiplier bottleneck}
-
-When this monolithic combinational multiplier is integrated into the processor cores, it exerts a profound effect on core timing and area. Table \ref{tab:riscv_grand_comparison} compares the physical synthesis and benchmark metrics across all four processor configurations in ASAP7 7\,nm FinFET technology.
-
-\begin{table}[htbp]
-\centering
-\scriptsize
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{Metric} & \textbf{RV32I Single-Cycle (FE)} & \textbf{RV32I 4-Stage Pipe} & \textbf{Zmmul Single-Cycle (FE)} & \textbf{Zmmul 4-Stage Pipe} \\
-\hline
-Process Technology              & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET \\
-Total Standard Cells            & 9,730            & 11,584           & 21,336           & 22,709 \\
-Sequential Elements (DFFs)      & 1,023            & 1,434            & 1,023            & 1,434 \\
-Total Silicon Area ($\mu$m$^2$) & \textbf{904.24}  & \textbf{1,128.16} & \textbf{2,031.49} & \textbf{2,235.55} \\
-ALU Silicon Area ($\mu$m$^2$)   & 103.31           & 103.31           & 1,186.67         & 1,186.67 \\
-\hline
-Step 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns          & 0.550\,ns         & 0.550\,ns          & 0.550\,ns \\
-Step 2: Decode \& Reg Read ($T_{\text{decode}}$) & 0.540\,ns         & 0.540\,ns         & 0.540\,ns          & 0.540\,ns \\
-Step 3: Execute ($T_{\text{execute}}$)          & 1.363\,ns          & 1.363\,ns         & 2.462\,ns          & 2.462\,ns \\
-Step 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,ns         & 0.600\,ns          & 0.600\,ns \\
-\hline
-Operating Clock Period ($T_{\text{clk}}$)       & \textbf{3.053\,ns} (Sum) & \textbf{1.363\,ns} (Max) & \textbf{4.152\,ns} (Sum) & \textbf{2.462\,ns} (Max) \\
-Operating Clock Frequency ($f_{\text{clk}}$)    & 327.5\,MHz         & 733.7\,MHz        & 240.8\,MHz         & 406.2\,MHz \\
-\textbf{Pipelining Frequency Boost}             & ---                & \textbf{+124.0\% ($2.24\times$)} & --- & \textbf{+68.7\% ($1.69\times$)} \\
-\hline
-Benchmark Multiplier Type       & Software (\texttt{\_\_mulsi3}) & Software (\texttt{\_\_mulsi3}) & Hardware (\texttt{MUL}) & Hardware (\texttt{MUL}) \\
-Benchmark Instructions ($I$)    & 6,511            & 6,511            & 804              & 804 \\
-Benchmark Execution Cycles ($C$)& 6,511            & 12,575           & 804              & 1,308 \\
-Effective Workload CPI          & 1.00             & 1.93             & 1.00             & 1.63 \\
-RAW Stalls + Branch Flushes     & 0                & 6,064            & 0                & 504 \\
-\hline
-Execution Time ($T_{\text{exec}}$) & 19,878\,ns ($19.88\,\mu$s) & 17,140\,ns ($17.14\,\mu$s) & 3,338\,ns ($3.34\,\mu$s) & 3,220\,ns ($3.22\,\mu$s) \\
-\textbf{Pipelined Application Speedup}      & ---         & \textbf{1.16$\times$} & ---         & \textbf{1.04$\times$} \\
-\hline
-\end{tabular}
-\caption{Comprehensive ASAP7 7\,nm FinFET ASIC synthesis, 4-step pipeline delay decomposition, and benchmark comparison across pure \texttt{RV32I} and \texttt{RV32I\_Zmmul} architectures in single-cycle (FE) and 4-stage pipelined configurations (no forwarding).}\label{tab:riscv_grand_comparison}
-\end{table}
-
-The comparative synthesis data reveals the \textbf{frequency collapse} caused by pipeline unbalancing:
-\begin{enumerate}
-    \item \textbf{Destruction of the Pipelining Advantage}:
-    In the baseline \texttt{RV32I} core, dividing the datapath into four stages lowered the clock period from 3.053\,ns (the sum of all four pipeline steps) to 1.363\,ns (the maximum step delay, EX), yielding a \textbf{+124.0\% clock frequency increase} ($2.240\times$).
-    
-    However, when the unpipelined multiplier is incorporated into the execution stage, the EX stage delay expands to 2.462\,ns (dominated by the 2.148\,ns multiplier logic array plus multiplexer routing and register setup times). Because the execute stage cannot run any faster, the 4-stage pipelined clock frequency collapses from $733.7\,\text{MHz}$ down to $406.2\,\text{MHz}$.
-    
-    Comparing the pipelined core to the single-cycle core with \texttt{Zmmul} ($240.8\,\text{MHz} \to 406.2\,\text{MHz}$), pipelining achieves only a \textbf{+68.7\% frequency gain} ($1.687\times$). The frequency advantage of pipelining has been severely attenuated by the oversized combinational multiplier stage.
-    
-    \item \textbf{Massive Area Overhead}:
-    Incorporating the single-cycle multiplier inflates the single-cycle core area by +125\% ($904.24\,\mu\text{m}^2 \to 2,031.49\,\mu\text{m}^2$) and the 4-stage pipelined core area by +98\% ($1,128.16\,\mu\text{m}^2 \to 2,235.55\,\mu\text{m}^2$).
-\end{enumerate}
-
-\subsection{Benchmark Performance: Algorithmic Gain vs.\ Pipeline Inefficiency}
-\index{benchmark!hardware multiply}\index{algorithmic speedup vs microarchitectural speedup}
-
-To evaluate the algorithmic benefit of hardware multiplication, the DSP benchmark application was recompiled targeting \texttt{rv32i\_zmmul} with optimization flag \texttt{-O1}:
-\begin{itemize}
-    \item \textbf{Instruction Count Reduction}:
-    Replacing software shift-and-add subroutines with single hardware \texttt{MUL} instructions slashes dynamic instruction count from 6,511 to 804 instructions---an \textbf{8.1$\times$ reduction in instructions executed}!
-    
-    \item \textbf{Pipelined Cycle Performance}:
-    On the 4-stage pipeline, the 804 instructions execute in 1,308 clock cycles ($\text{CPI} = 1.63$). Hazard stalls and branch flushes account for 504 cycles.
-    
-    \item \textbf{Execution Time Comparison}:
-    Under the 4-step pipeline delay model:
+    \item \textbf{Sub-Stage Partitioning (Superpipelining)}:
+    Advanced processors split each of the four physical stages in half, transforming the 4-stage pipeline into an 8-stage superpipelined machine where each sub-stage has a target latency of only $\approx 0.28\text{--}0.30\,\text{ns}$:
     \begin{itemize}
-        \item Single-Cycle \texttt{RV32I\_Zmmul}: $804 \times 4.152\,\text{ns} = 3,338\,\text{ns}$ ($3.34\,\mu\text{s}$).
-        \item 4-Stage Pipelined \texttt{RV32I\_Zmmul}: $1,308 \times 2.462\,\text{ns} = 3,220\,\text{ns}$ ($3.22\,\mu\text{s}$).
-        \item Pipelined Speedup: $3,338\,\text{ns} / 3,220\,\text{ns} = \mathbf{1.04\times}$.
+        \item \textbf{Stage 1: Fetch (IF)} is partitioned into:
+        \begin{itemize}
+            \item \textbf{IF1 (Next-PC Generation and Branch Prediction)}: Evaluates branch target buffer (BTB) lookups, branch prediction tables, and next sequential address computation ($0.25\,\text{ns}$).
+            \item \textbf{IF2 (Instruction SRAM Access)}: Synchronous memory access into high-density SRAM arrays and instruction latching ($0.30\,\text{ns}$).
+        \end{itemize}
+        \item \textbf{Stage 2: Decode (ID)} is partitioned into:
+        \begin{itemize}
+            \item \textbf{ID1 (Instruction Decode and Hazard Detection)}: Instruction opcode decoding, immediate extraction/sign-extension, and dependency detection ($0.26\,\text{ns}$).
+            \item \textbf{ID2 (Register File Operand Read)}: Multi-port SRAM register file read and operand steering ($0.28\,\text{ns}$).
+        \end{itemize}
+        \item \textbf{Stage 3: Execute (EX)} is partitioned into:
+        \begin{itemize}
+            \item \textbf{EX1 (Operand Pre-Processing and Early Arithmetic)}: Bypass operand selection multiplexing and preliminary speculative carry/sum tree generation ($0.28\,\text{ns}$).
+            \item \textbf{EX2 (Final Addition and Branch Resolution)}: Final carry-propagate addition, barrel shifter completion, and zero/sign condition comparison ($0.30\,\text{ns}$).
+        \end{itemize}
+        \item \textbf{Stage 4: Memory Access and Write-Back (MEM/WB)} is partitioned into:
+        \begin{itemize}
+            \item \textbf{MEM (Data Memory Access)}: Synchronous read/write access to the data SRAM array ($0.30\,\text{ns}$).
+            \item \textbf{WB (Write-Back Commit)}: Write-back multiplexing and synchronous commit into the architectural register file ($0.25\,\text{ns}$).
+        \end{itemize}
     \end{itemize}
-\end{itemize}
-
-Notice the critical distinction:
-\begin{itemize}
-    \item In pure \texttt{RV32I}, the pipeline stages are relatively well balanced, enabling the system speedup to reach \textbf{1.16$\times$} despite lacking data forwarding.
-    \item In \texttt{RV32I\_Zmmul}, the unpipelined multiplier unbalances the pipeline, reducing pipelined speedup to \textbf{1.04$\times$}.
-    \item Although the application runs $5.32\times$ faster in absolute wall-clock time with hardware multiplication ($3,220\,\text{ns}$ vs.\ $17,140\,\text{ns}$), this speedup is almost entirely \textit{algorithmic} (8.1$\times$ fewer instructions). The \textit{microarchitectural efficiency} of pipelining was severely compromised by the unpipelined multiplier bottleneck.
-\end{itemize}
-
-\subsection{ASAP7 7\,nm FinFET Physical Synthesis of High-Performance Multipliers}\label{riscvMultiplierSynthesis}
-\index{multiplier!ASAP7 synthesis}\index{synthesis!multipliers}\index{ASAP7!multiplier evaluation}
-
-To determine whether specialized multiplier architectures from Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:high_performance_multipliers}) can resolve the execution stage bottleneck, we implemented each 32-bit multiplier topology in Chisel, verified 100\% functional correctness against comprehensive signed and unsigned arithmetic test vectors, generated clean gate-level SystemVerilog netlists via CIRCT \texttt{firtool}, and performed physical logic synthesis using Yosys and ABC targeting the predictive **ASAP7 7\,nm FinFET standard-cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, output capacitive load $C_{\text{load}} = 2.0\,\text{fF}$).
-
-Table \ref{tab:asap7_multipliers_comparison} summarizes the empirical synthesis results across all five multiplier architectures: the baseline unconstrained synthesizer multiplier, the linear Array Multiplier, the Radix-4 Modified Booth Multiplier, the Wallace Tree Multiplier, and the Redundant Binary Multiplier (RBM).
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|c|c|c|c|c|c|}
-\hline
-\textbf{Multiplier Architecture} & \textbf{Cell Count} & \textbf{Area ($\mu$m$^2$)} & \textbf{Delay ($t_{\text{pd}}$)} & \textbf{Standalone $f_{\max}$} & \textbf{Area vs. Base} & \textbf{Speedup} \\
-\hline
-Behavioral Multiplier (Baseline) & 10,240 & 1,083.36 & 2,148.00\,ps (2.148\,ns) & 0.466\,GHz & Baseline & $1.00\times$ \\
-Array Multiplier                 & 5,405  & 527.04   & \textbf{1,967.86\,ps (1.968\,ns)} & \textbf{0.508\,GHz} & $-51.4\%$ & $\mathbf{1.09\times}$ \\
-Radix-4 Modified Booth           & 5,590  & \textbf{464.45} & 2,159.88\,ps (2.160\,ns) & 0.463\,GHz & $\mathbf{-57.1\%}$ & $0.99\times$ \\
-Wallace Tree Multiplier          & 7,293  & 627.77   & 2,088.55\,ps (2.089\,ns) & 0.479\,GHz & $-42.0\%$ & $1.03\times$ \\
-Redundant Binary Multiplier (RBM)& 14,920 & 1,072.65 & 2,245.91\,ps (2.246\,ns) & 0.445\,GHz & $-1.0\%$  & $0.96\times$ \\
-\hline
-\end{tabular}
-\caption{Empirical synthesis and timing evaluation of 32-bit high-performance multiplier architectures from Chapter \ref{chap:perf_opt_logic} mapped to ASAP7 7\,nm FinFET predictive technology.}\label{tab:asap7_multipliers_comparison}
-\end{table}
-
-The physical synthesis results provide crucial insights into microarchitectural trade-offs:
-\begin{enumerate}
-    \item \textbf{Area Efficiency of Radix-4 Booth Recoding}: The \textbf{Radix-4 Modified Booth Multiplier} achieves the absolute lowest silicon area among all architectures: \textbf{464.45\,$\mu$m$^2$}, delivering a \textbf{57.1\% area reduction} over the unconstrained baseline. By recoding multiplier bits into overlapping triplets, Booth recoding slashes the number of partial product rows from 32 to 17, eliminating nearly half of the partial product generation gates and carry-save reduction logic up front.
+    In ASAP7 7\,nm FinFET technology, this 8-stage superpipelined organization achieves an operating clock period of under $0.30\,\text{ns}$, unlocking operating clock frequencies exceeding \textbf{3.3\,GHz}.
     
-    \item \textbf{Wiring Effects in Standard Cells}: In unpipelined combinational form, the \textbf{Array Multiplier} achieves the lowest propagation delay (\textbf{1,967.86\,ps}, 1.968\,ns, delivering a $1.09\times$ speedup). In standard-cell automated place-and-route, the nearest-neighbor, planar 2D grid of an array multiplier minimizes interconnect wire lengths. Conversely, while Wallace trees achieve $O(\log N)$ logic depth theoretically, their irregular 3:2 interconnect topology introduces significant multi-layer routing congestion and parasitic wiring capacitances that increase physical delay ($2,088.55\,\text{ps}$).
-    
-    \item \textbf{Redundant Binary Multiplier (RBM) and DSP Architecture}: The \textbf{Redundant Binary Multiplier} achieves a delay of \textbf{2,245.91\,ps (2.246\,ns)} and an area of $1,072.65\,\mu\text{m}^2$. Although automated standard-cell synthesis incurs logic overhead for dual-rail $(x^+, x^-)$ sign-magnitude encoding and initial RB partial product mapping, the RBM possesses unique architectural strengths:
+    \item \textbf{Pipeline Balancing via Logic Migration and Register Retiming}:
+    In addition to sub-stage splitting, microarchitects balance uneven pipelines by \textbf{moving combinational logic across pipeline register boundaries} (a technique known as \textit{register retiming} or \textit{logic migration}):
     \begin{itemize}
-        \item \textbf{Strictly Constant-Time Carry-Free Addition}: Each Redundant Binary Adder (RBA) cell adds two digits in $O(1)$ constant time by inspecting the lower adjacent position condition ($p_{i-1} = (x_{i-1} + y_{i-1} > 0)$), completely preventing carry propagation across bit positions.
-        \item \textbf{Perfect Binary Reduction Regularity}: The RBM arranges reduction as a strictly balanced binary tree ($2 \to 1$ at every node) of depth $\lceil \log_2 N \rceil = 5$ levels.
-        \item \textbf{DSP Datapath Superiority}: In custom and semi-custom digital signal processor (DSP) design (such as the high-performance multithreaded Sandblaster DSP architecture), wire layout regularity is paramount. Unlike Wallace trees with unpredictable wiring lengths, the RBM's binary tree reduction maps directly onto modular, uniform bit-slices with pitch-matched cell abutment. This eliminates wiring hot-spots and crosstalk, making RBM architectures highly attractive for multi-GHz DSP engines where multiply-accumulate (MAC) throughput dictates overall performance.
+        \item \textbf{Moving Effective Address Calculation to ID}: In architectures with base+displacement addressing (\texttt{lw rd, imm(rs1)}), moving the address generation addition into the Decode stage (forming a dedicated Address Generation Unit, AGU) allows the Memory stage to initiate SRAM access immediately at the start of the next cycle.
+        \item \textbf{Moving Branch Comparison to WB}: Alternatively, deferring branch condition evaluation to a later stage or moving branch target address calculation forward into the IF buffer balances the computational load between stages.
+        \item \textbf{Pre-decoding in the Fetch Buffer}: Placing lightweight pre-decode logic inside the instruction fetch buffer can pre-extract register specifiers ($rs1, rs2, rd$) and immediate formats before instructions enter the formal Decode stage, shifting delay backwards into available timing slack.
     \end{itemize}
 \end{enumerate}
 
-\subsection{Choosing and Integrating the High-Performance Multiplier in Chisel}
-\index{Chisel!multiplier instantiation}\index{Booth multiplier!Chisel integration}
-
-For our standard-cell RISC-V processor implementation, we select the **Radix-4 Modified Booth Multiplier** as the primary hardware multiplier because it minimizes silicon area ($464.45\,\mu\text{m}^2$, $-57.1\%$) and dynamic power consumption while maintaining competitive latency. (In a high-throughput DSP coprocessor where custom pitch-matched layout is available, the Redundant Binary Multiplier would be selected for its layout regularity and modularity).
-
-Listing \ref{lst:chisel_multiplier_call} illustrates the revised execution stage design, showing only the high-performance multiplier invocation within the Chisel ALU.
-
-\begin{chiselcode}[caption={Calling the high-performance Booth Multiplier within the revised RISC-V ALU.},label={lst:chisel_multiplier_call}]
-// Instantiating the 32-bit Radix-4 Booth Multiplier within the revised ALU
-val multiplier = Module(new BoothMultiplier(width = 32))
-multiplier.io.a        := io.opA
-multiplier.io.b        := io.opB
-multiplier.io.isSigned := (io.aluOp === AluOp.MULH) || (io.aluOp === AluOp.MULHSU)
-val mulResultLow       = multiplier.io.result(31, 0)
-val mulResultHigh      = multiplier.io.result(63, 32)
-\end{chiselcode}
-
-By isolating the multiplication inside the dedicated Booth Multiplier module, the execution unit avoids generic synthesis macros and provides deterministic, area-optimized partial product reduction.
-
-\subsection{Architectural Solutions: Restoring Pipeline Balance}
-\index{pipeline balancing!architectural solutions}\index{multi-cycle multiplier}\index{pipelined multiplier}
-
-The synthesis evaluation in Table \ref{tab:asap7_multipliers_comparison} reveals a fundamental physical reality: **no single-cycle 32-bit multiplier can achieve a propagation delay under $\approx 1.96\text{--}2.25\,\text{ns}$ in standard cells**. 
-
-Recall from Section \ref{riscvAdderBalancing} that integrating the Carry Select Adder balanced all four pipeline stages to $\approx 0.54\text{--}0.60\,\text{ns}$ ($1.67\,\text{GHz}$):
-\begin{equation}
-T_{\text{fetch}} = 0.550\,\text{ns}, \quad T_{\text{decode}} = 0.540\,\text{ns}, \quad T_{\text{execute (CSA)}} = 0.600\,\text{ns}, \quad T_{\text{sram\_wb}} = 0.600\,\text{ns}.
-\end{equation}
-If any single-cycle combinational multiplier ($t_{\text{mul}} \approx 1.97\text{--}2.16\,\text{ns}$) is placed directly into the EX stage, the EX stage delay expands to $t_{\text{mul}} + t_{\text{mux}} + t_{\text{setup}} \approx 2.46\,\text{ns}$, causing the operating frequency to collapse from $1.67\,\text{GHz}$ down to $406.2\,\text{MHz}$ (a massive $75.7\%$ frequency penalty for all instructions!).
-
-This case study illustrates \textbf{Amdahl's Law applied to pipeline cycle time}:
-\begin{equation}
-T_{\text{clk}} = \max\left(T_{\text{IF}}, T_{\text{ID}}, T_{\text{EX}}, T_{\text{MEM}}\right) + T_{\text{overhead}}.
-\end{equation}
-When one stage is $4\times$ slower than the rest, improving or subdividing the other stages yields diminishing returns.
-
-How do production computer architects resolve this dilemma to retain the high operating frequency of pure \texttt{RV32I} while providing hardware multiplication?
-\begin{enumerate}
-    \item \textbf{Multi-Cycle Execution Unit}:
-    Rather than forcing the entire processor to run at a sluggish $2.462\,\text{ns}$ clock period to accommodate the multiplier, the execution unit operates the multiplier as a multi-cycle iterative unit taking 3 to 4 cycles. 
-    
-    When a non-multiplying ALU instruction enters EX, it completes in a single fast clock cycle ($0.600\,\text{ns}$, $1.67\,\text{GHz}$). When a \texttt{MUL} instruction enters EX, the Hazard Detection Unit asserts a temporary pipeline stall for 3 cycles while the multiplier computes. Because multiplications typically represent only 5--10\% of instructions in general-purpose workloads, running 90\% of instructions at 1.67\,GHz with occasional 3-cycle stalls yields vastly superior overall execution time compared to throttling the entire core at 406.2\,MHz.
-    
-    \item \textbf{Internally Pipelined Multiplier}:
-    In high-performance processors, the multiplier logic array itself is partitioned into multiple synchronous pipeline stages separated by internal pipeline registers:
-    \begin{itemize}
-        \item \textbf{Stage 1}: Radix-4 Booth recoding and partial product generation ($\approx 0.50\,\text{ns}$).
-        \item \textbf{Stage 2}: Upper carry-save or redundant binary reduction levels ($\approx 0.52\,\text{ns}$).
-        \item \textbf{Stage 3}: Lower reduction levels down to 2 vectors ($\approx 0.52\,\text{ns}$).
-        \item \textbf{Stage 4}: Final Carry-Propagate Addition using a Carry Select Adder ($\approx 0.52\,\text{ns}$).
-    \end{itemize}
-    By inserting pipeline registers within the multiplier, each sub-stage delay is bounded to $\le 0.55\,\text{ns}$, perfectly matching the $0.600\,\text{ns}$ clock period of the balanced core! The processor operates at the full **1.67 GHz** clock frequency ($2.27\times$ faster than the unoptimized baseline), sustaining a multiplier throughput of 1 instruction per cycle with a latency of 4 cycles.
-\end{enumerate}
-
-\subsection{Workload Evaluation: Dhrystone 2.1 and EEMBC CoreMark on RV32I}
-\index{benchmark!Dhrystone 2.1}\index{benchmark!EEMBC CoreMark 1.0}\index{DMIPS/MHz}\index{CoreMark/MHz}
-
-To establish rigorous, industry-standard performance metrics for the baseline \texttt{RV32I} implementations, two universally accepted embedded benchmarks were ported, compiled, and executed on both the single-cycle (\texttt{RiscvFetchExecute}) and 4-stage pipelined (\texttt{RiscvPipelined}) cores:
-\begin{enumerate}
-    \item \textbf{Dhrystone 2.1} \cite{weicker1984dhrystone}: The classic synthetic systems programming benchmark representing integer data structures, pointer manipulations, array index arithmetic, string copying (\texttt{strcpy}), string comparison (\texttt{strcmp}), and control logic. The benchmark was executed across 20 full iterations with complete end-of-run data structure validation.
-    \item \textbf{EEMBC CoreMark 1.0} \cite{galon2012coremark}: The industry-standard embedded processor benchmark developed by the Embedded Microprocessor Benchmark Consortium (EEMBC). CoreMark executes three distinct computational kernels:
-    \begin{itemize}
-        \item \textbf{Matrix Manipulation}: $8 \times 8$ 2D matrix multiplication, constant scaling, and bit-extraction operations.
-        \item \textbf{Linked-List Processing}: Circular doubly-linked list search, node insertion, and pointer reversal.
-        \item \textbf{State Machine}: Finite-state machine text scanning and CRC-16 computation.
-    \end{itemize}
-    CoreMark was executed in static memory allocation mode (\texttt{MEM\_STATIC}, 2\,KB data footprint) with full self-validating CRC checksum verification ($100\%$ pass, matching official EEMBC golden signatures).
-\end{enumerate}
-
-Table \ref{tab:riscv_all_benchmarks} presents the complete execution profiles, cycle counts, effective CPIs, and measured system execution times across the DSP kernel, Dhrystone 2.1, and CoreMark 1.0 in ASAP7 7\,nm FinFET technology for the single-cycle core, the unforwarded 4-stage pipeline, and the high-performance forwarded 4-stage pipeline with data bypassing.
-
-\begin{table}[htbp]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{Workload Metric} & \textbf{DSP Kernel (Soft Mul)} & \textbf{DSP Kernel (Hard Mul)} & \textbf{Dhrystone 2.1 (20 runs)} & \textbf{CoreMark 1.0 (1 iter)} \\
-\hline
-Instruction Set Architecture     & Pure \texttt{RV32I} & \texttt{RV32I\_Zmmul} & Pure \texttt{RV32I} & Pure \texttt{RV32I} \\
-Dynamic Instructions ($I$)       & 6,511               & 804                   & 13,826              & 874,891 \\
-\hline
-Single-Cycle Cycles ($C_1$)      & 6,511               & 804                   & 13,826              & 874,891 \\
-Single-Cycle CPI                 & 1.00                & 1.00                  & 1.00                & 1.00 \\
-\hline
-4-Stage Pipe Cycles (No Fwd)     & 12,575              & 1,308                 & 24,311              & 1,643,060 \\
-4-Stage Pipe CPI (No Fwd)        & 1.93                & 1.63                  & 1.76                & 1.88 \\
-Hazard Stalls (No Forwarding)    & 6,064 (+93.1\%)     & 504 (+62.7\%)         & 10,485 (+75.8\%)    & 768,169 (+87.8\%) \\
-\hline
-\textbf{4-Stage Pipe Cycles (With Bypassing)} & \textbf{8,774} & \textbf{999} & \textbf{19,958}    & \textbf{1,160,199} \\
-\textbf{4-Stage Pipe CPI (With Bypassing)}    & \textbf{1.35}  & \textbf{1.24}& \textbf{1.44}       & \textbf{1.33} \\
-Hazard Stalls Remaining (Load-Use only)       & 2,263 (+34.8\%)& 195 (+24.3\%)& 6,132 (+44.3\%)     & 285,308 (+32.6\%) \\
-\textbf{RAW Stalls Eliminated by Bypassing}   & \textbf{3,801 ($-62.7\%$)} & \textbf{309 ($-61.3\%$)} & \textbf{4,353 ($-41.5\%$)} & \textbf{482,861 ($-62.9\%$)} \\
-\hline
-Operating Clock Delay ($T_{\text{clk}}$)  & Single=3.053\,ns (Sum) & Single=4.152\,ns (Sum) & Single=3.053\,ns (Sum) & Single=3.053\,ns (Sum) \\
-(ASAP7 7\,nm FinFET ASIC)        & Pipe=1.363\,ns (Max)   & Pipe=2.462\,ns (Max)   & Pipe=1.363\,ns (Max)   & Pipe=1.363\,ns (Max) \\
-Clock Period Delta ($\Delta T$)  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns} \\
-Operating Frequency ($f_{\text{clk}}$)& Single=327.5\,MHz & Single=240.8\,MHz     & Single=327.5\,MHz   & Single=327.5\,MHz \\
-                                 & Pipe=733.7\,MHz ($2.24\times$) & Pipe=406.2\,MHz ($1.69\times$) & Pipe=733.7\,MHz ($2.24\times$) & Pipe=733.7\,MHz ($2.24\times$) \\
-\hline
-Total Execution Time ($T_{\text{exec}}$) & Single=19,878\,ns ($19.88\,\mu$s) & Single=3,338\,ns ($3.34\,\mu$s) & Single=42,211\,ns ($42.21\,\mu$s) & Single=2,671,042\,ns ($2.67\,\text{ms}$) \\
-                                 & NoFwd=17,140\,ns ($17.14\,\mu$s)  & NoFwd=3,220\,ns ($3.22\,\mu$s)  & NoFwd=33,136\,ns ($33.14\,\mu$s)  & NoFwd=2,239,491\,ns ($2.24\,\text{ms}$) \\
-                                 & \textbf{Bypass=11,959\,ns ($11.96\,\mu$s)} & \textbf{Bypass=2,460\,ns ($2.46\,\mu$s)} & \textbf{Bypass=27,203\,ns ($27.20\,\mu$s)} & \textbf{Bypass=1,581,351\,ns ($1.58\,\text{ms}$)} \\
-\hline
-\textbf{Speedup vs.\ Single-Cycle Core} & NoFwd = 1.16$\times$ & NoFwd = 1.04$\times$ & NoFwd = 1.27$\times$ & NoFwd = 1.19$\times$ \\
-                                        & \textbf{Bypass = 1.66$\times$} & \textbf{Bypass = 1.36$\times$}$^*$ & \textbf{Bypass = 1.55$\times$} & \textbf{Bypass = 1.69$\times$} \\
-\textbf{Speedup Over Unforwarded Pipe}  & \textbf{1.43$\times$} & \textbf{1.31$\times$} & \textbf{1.22$\times$} & \textbf{1.42$\times$} \\
-\hline
-\textbf{Pipelined Multiplier + Bypass}$^*$ & --- & \textbf{1,362\,ns (2.45$\times$ Speedup)} & --- & --- \\
-\hline
-\textbf{Standard Metric / MHz}   & ---                 & ---                   & 0.824 (Single)          & 1.143 (Single) \\
-                                 &                     &                       & 0.468 (Pipe NoFwd)      & 0.608 (Pipe NoFwd)   \\
-                                 &                     &                       & \textbf{0.570 (Pipe Bypass)} & \textbf{0.862 (Pipe Bypass)} \\
-\hline
-\textbf{Aggregate Performance}   & ---                 & ---                   & 269.9 DMIPS (Single)    & 374.3 CoreMarks (Single) \\
-(at Operating $f_{\text{clk}}$)  &                     &                       & 343.4 DMIPS (Pipe NoFwd)& 446.1 CoreMarks (Pipe NoFwd) \\
-                                 &                     &                       & \textbf{418.5 DMIPS (Bypass)} & \textbf{632.4 CoreMarks (Bypass)} \\
-\hline
-\end{tabular}%
-}
-\caption{Empirical benchmark evaluation of single-cycle (FE) vs.\ 4-stage pipelined \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads, comparing unforwarded vs.\ forwarded (bypassing) implementations. $^*$When augmented with the 2-stage pipelined multiplier datapath (Section \ref{riscvPipelinedMultiplier}), the operating clock period is restored to $1.363\,\text{ns}$ ($733.7\,\text{MHz}$), cutting DSP hardware multiply execution time to $1,362\,\text{ns}$ ($1.36\,\mu\text{s}$), achieving a $\mathbf{2.45\times}$ speedup over single-cycle and $\mathbf{1.81\times}$ over the unpipelined multiplier pipeline.}\label{tab:riscv_all_benchmarks}
-\end{table}
-
-\subsection{Why Ideal Pipeline Speedup is Inaccessible in Practice}
-\index{pipeline speedup!theoretical vs actual}\index{pipeline balancing!physical impediments}\index{stage delay quantization}\index{clock overhead}
-
-A common observation among novice computer architects is that a pipelined processor runs ``only a tiny bit faster'' than a single-cycle core (e.g., $1.16\times\text{--}1.27\times$), far below the ideal theoretical $N$-fold speedup. In introductory textbooks, pipelining an $N$-stage processor is frequently described as achieving a theoretical speedup of:
-\begin{equation}
-S_{\text{ideal}} = N.
-\end{equation}
-For our 4-stage pipeline ($N = 4$), naive theory predicts a $4.0\times$ speedup. Yet, as demonstrated in Table \ref{tab:riscv_all_benchmarks}, the measured speedup in physical 7\,nm silicon is between $1.04\times$ and $1.27\times$.
-
-Why is ideal pipeline speedup impossible to achieve in physical silicon? The actual speedup of a pipelined processor over a single-cycle implementation is governed by the classic processor performance equation:
-\begin{equation}
-\text{Speedup} = \frac{\text{Time}_{\text{single}}}{\text{Time}_{\text{pipe}}} = \frac{I \times \text{CPI}_{\text{single}} \times T_{\text{clk, single}}}{I \times \text{CPI}_{\text{pipe}} \times T_{\text{clk, pipe}}} = \left(\frac{\text{CPI}_{\text{single}}}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}}\right).
-\end{equation}
-For an $N$-stage pipeline, achieving $S = N$ requires two simultaneous conditions:
-\begin{enumerate}
-    \item \textbf{Perfect CPI Invariance}: $\text{CPI}_{\text{pipe}} = \text{CPI}_{\text{single}} = 1.00$.
-    \item \textbf{Perfect Frequency Scaling}: $T_{\text{clk, pipe}} = \frac{1}{N} T_{\text{clk, single}}$.
-\end{enumerate}
-In physical hardware, three fundamental physical barriers guarantee that neither condition can ever be met:
-
-\subsubsection{1. Stage Delay Quantization and Imbalance}
-\index{pipeline balancing!delay quantization}\index{Amdahl's Law!for clock periods}
-Combinational logic cannot be sliced arbitrarily like a fluid. Logic circuits are constructed from discrete boolean primitives: multiplexers, adders, decoders, shifters, and comparator trees. In our pure \texttt{RV32I} core:
-\begin{itemize}
-    \item The four physical pipeline steps have differing atomic delays in ASAP7 7\,nm FinFET:
-    \begin{itemize}
-        \item Step 1: SRAM Fetch ($T_{\text{fetch}} = 0.550\,\text{ns}$).
-        \item Step 2: Decode and Register Read ($T_{\text{decode}} = 0.540\,\text{ns}$).
-        \item Step 3: Execute ($T_{\text{execute}} = 1.363\,\text{ns}$, dominated by the 32-bit ALU, adder, barrel shifter, and branch comparator).
-        \item Step 4: SRAM Data Memory and Write-Back ($T_{\text{sram\_wb}} = 0.600\,\text{ns}$).
-    \end{itemize}
-    \item In the single-cycle Fetch-Execute (FE) core, the clock period must encompass the sum of all four steps:
-    \begin{equation}
-    T_{\text{clk, FE}} = 0.550 + 0.540 + 1.363 + 0.600 = \mathbf{3.053\,\text{ns}} \quad (327.5\,\text{MHz}).
-    \end{equation}
-    \item In the 4-stage pipelined core, synchronous registers decouple the four steps into independent pipeline stages, so the clock period is constrained by the maximum step delay:
-    \begin{equation}
-    T_{\text{clk, pipe}} = \max(0.550, 0.540, 1.363, 0.600) = \mathbf{1.363\,\text{ns}} \quad (733.7\,\text{MHz}).
-    \end{equation}
-    \item The frequency improvement achieved by pipelining is:
-    \begin{equation}
-    \frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}} = \frac{3.053\,\text{ns}}{1.363\,\text{ns}} = \mathbf{2.240\times} \quad (\text{a } +124.0\% \text{ frequency gain}).
-    \end{equation}
-\end{itemize}
-While $2.240\times$ is a substantial frequency improvement, it is significantly below the theoretical $4.0\times$ limit!
-
-As noted by experienced computer designers, \textbf{it is exceedingly difficult to perfectly balance pipeline stages in practice}. The atomic nature of major arithmetic blocks (such as the 32-bit ALU in the EX stage) creates an irreducible bottleneck ($1.363\,\text{ns}$), whereas the fetch, decode, and writeback steps each require only $\approx 0.54\text{--}0.60\,\text{ns}$. In particular, the unoptimized baseline ALU synthesizes with an isolated 32-bit ripple-carry adder requiring $1.045\,\text{ns}$. It is clear that \textbf{the ripple-carry adder alone has approximately $2\times$ the delay of any other complete pipeline stage} ($0.54\text{--}0.60\,\text{ns}$), serving as the primary anchor that prevents higher clock frequencies. Stage delay imbalance alone annihilates $(4.0 - 2.24) / 4.0 = \mathbf{44.0\%}$ of the theoretical 4-fold speedup before a single instruction has executed!
-
-\subsubsection{2. Sequential Register Overhead}
-\index{pipeline register overhead}\index{setup time}\index{clock-to-Q delay}
-Every pipeline stage boundary requires sequential state storage (D flip-flops in standard cells):
-\begin{equation}
-T_{\text{stage}} = T_{\text{comb}} + t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}.
-\end{equation}
-In the ASAP7 7\,nm FinFET standard cell library:
-\begin{itemize}
-    \item Flip-flop setup time: $t_{\text{setup}} \approx 15\,\text{ps}$.
-    \item Clock-to-Q propagation delay: $t_{\text{cq}} \approx 25\,\text{ps}$.
-    \item Clock distribution skew and jitter margin: $t_{\text{skew}} \approx 15\,\text{ps}$.
-\end{itemize}
-This introduces an unshrinkable sequential overhead of $T_{\text{reg\_overhead}} \approx 55\,\text{ps}$ at \textit{every stage boundary}. Over a 4-stage pipeline, over $200\,\text{ps}$ of cumulative delay is consumed solely by registers. This overhead represents a dead penalty that performs zero computational work, directly diminishing the achievable clock frequency.
-
-\subsubsection{3. Hazard-Induced CPI Expansion (in the Absence of Forwarding)}
-\index{hazard penalties}\index{CPI expansion}\index{forwarding!necessity}
-In a single-cycle processor, data dependencies and branch decisions are resolved combinationally within the same clock period in which the instruction executes:
-\begin{equation}
-\text{CPI}_{\text{single}} \equiv 1.00.
-\end{equation}
-In a pipelined processor without forwarding, instructions execute concurrently across time. When an instruction in the Decode stage depends on a value being computed in Execute or Memory/Write-Back, the Hazard Detection Unit must inject 2 stall cycles (for distance-1 dependencies) or 1 stall cycle (for distance-2 dependencies). Furthermore, when a branch or jump condition is evaluated in the Execute stage, the two instructions fetched speculatively into IF and ID must be discarded, incurring a 2-cycle branch penalty.
-
-Across real embedded workloads, this hazard overhead severely expands the effective CPI:
-\begin{itemize}
-    \item \textbf{Dhrystone 2.1}: $\text{CPI}_{\text{pipe}} = 1.76$ (+75.8\% cycle penalty).
-    \item \textbf{CoreMark 1.0}: $\text{CPI}_{\text{pipe}} = 1.88$ (+87.8\% cycle penalty).
-    \item \textbf{DSP Kernel (Soft Mul)}: $\text{CPI}_{\text{pipe}} = 1.93$ (+93.1\% cycle penalty).
-\end{itemize}
-
-Now observe what happens when we calculate the net application speedup:
-\begin{equation}
-\text{Speedup} = \left(\frac{1}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}}\right)
-\end{equation}
-\begin{itemize}
-    \item \textbf{CoreMark 1.0}:
-    \begin{equation}
-    \text{Speedup}_{\text{CoreMark}} = \left(\frac{1}{1.878}\right) \times 2.240 = 0.532 \times 2.240 = \mathbf{1.19\times} \quad (+19.3\%).
-    \end{equation}
-    \item \textbf{Dhrystone 2.1}:
-    \begin{equation}
-    \text{Speedup}_{\text{Dhrystone}} = \left(\frac{1}{1.758}\right) \times 2.240 = 0.569 \times 2.240 = \mathbf{1.27\times} \quad (+27.4\%).
-    \end{equation}
-    \item \textbf{DSP Kernel (Soft Mul)}:
-    \begin{equation}
-    \text{Speedup}_{\text{DSP}} = \left(\frac{1}{1.931}\right) \times 2.240 = 0.518 \times 2.240 = \mathbf{1.16\times} \quad (+16.0\%).
-    \end{equation}
-\end{itemize}
-
-This explains precisely why the pipelined processor runs ``only a tiny bit faster'' ($1.16\times\text{--}1.27\times$):
-The $2.24\times$ frequency multiplier earned by overlapping the four pipeline steps is almost entirely eaten away by the $1.76\times\text{--}1.93\times$ CPI expansion caused by RAW hazard stalls and branch flushes!
-
-This profound result provides the pedagogical foundation for the subsequent study of \textbf{data forwarding}: by adding bypass paths from EX and MEM/WB back to the ALU, the CPI penalty can be dramatically suppressed (driving CPI back toward 1.00), unlocking the full $2.24\times$ speedup made possible by pipelining.
-
-\subsection{Benchmark Taxonomy: Dhrystone, CoreMark, Embench, and SPEC CPU}
-\index{benchmark!taxonomy}\index{SPEC CPU}\index{Embench-IoT}
-
-To contextualize the evaluation of computer systems, architects classify benchmarks into distinct tiers based on target platform complexity, operating system requirements, and hardware capability. Table \ref{tab:benchmark_taxonomy} illustrates this taxonomy.
-
-\begin{table}[htbp]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|l|l|l|}
-\hline
-\textbf{Benchmark Suite} & \textbf{Target Class} & \textbf{OS / Runtime Requirement} & \textbf{Memory Footprint} & \textbf{Primary Evaluation Metric} \\
-\hline
-\textbf{SPEC CPU2017} \cite{henning2006spec} & Application Processors & POSIX OS (Linux), MMU, glibc & $>1\text{--}2$\,GB RAM & SPECspeed, SPECrate \\
-\textbf{CoreMark 1.0} \cite{galon2012coremark} & Embedded Microcontrollers & Bare-metal (freestanding) & $2\text{--}6$\,KB SRAM & CoreMark/MHz, CoreMarks \\
-\textbf{Dhrystone 2.1} \cite{weicker1984dhrystone} & Embedded Microcontrollers & Bare-metal (freestanding) & $<10$\,KB SRAM & DMIPS/MHz, DMIPS \\
-\textbf{Embench-IoT} \cite{embench2020} & IoT / Microcontrollers & Bare-metal (freestanding) & $<64$\,KB Flash/SRAM & Relative Geometric Mean \\
-\textbf{MLPerf Tiny} & Embedded Edge AI & Bare-metal / RTOS & $<256$\,KB SRAM & Latency, Energy/Inference \\
-\hline
-\end{tabular}%
-}
-\caption{Taxonomy of standard computer architecture benchmarks across application and embedded processor classes.}\label{tab:benchmark_taxonomy}
-\end{table}
-
-\subsubsection{Why SPEC CPU Cannot Run on Bare-Metal Microcontrollers}
-Students frequently inquire why standard desktop/server benchmarks such as \textbf{SPEC CPU} (SPEC CPU2006 or SPEC CPU2017) are not used to evaluate microcontroller cores like the baseline \texttt{RV32I} core developed in this chapter. 
-
-SPEC CPU is designed exclusively for \textbf{application-class processors} (e.g., 64-bit x86-64, ARM Cortex-A, or RISC-V RV64GC) and requires an extensive underlying system software infrastructure:
-\begin{enumerate}
-    \item \textbf{Memory Management Unit (MMU)}: SPEC benchmarks rely heavily on virtual memory address spaces, demand paging, and memory protection provided by hardware page tables (e.g., RISC-V Sv39 or Sv48 MMUs). A bare-metal microcontroller core without an MMU cannot provide virtual memory.
-    \item \textbf{Full Operating System}: SPEC workloads are full Unix/C++ applications requiring POSIX system calls (\texttt{fork}, \texttt{exec}, \texttt{mmap}, file I/O, threads) provided by a full Linux or BSD operating system.
-    \item \textbf{Gigabyte Memory Capacity}: SPEC CPU2017 benchmarks require a minimum of 1 to 2\,GB of physical RAM to load their multi-megabyte reference datasets into memory. Microcontrollers typically operate with tens of kilobytes of SRAM.
-    \item \textbf{Proprietary Licensing}: SPEC benchmarks are commercial software licensed by the Standard Performance Evaluation Corporation for several thousand dollars, preventing public redistribution or open academic inclusion.
-\end{enumerate}
-
-\subsubsection{The Embedded Benchmark Standards: Dhrystone, CoreMark, and Embench}
-For microcontroller-class architectures (such as \texttt{RV32I}, ARM Cortex-M0/M3/M4, and MicroBlaze), the computer architecture community relies on lightweight, freestanding benchmark suites:
-\begin{itemize}
-    \item \textbf{Dhrystone 2.1}: Developed in 1984, Dhrystone is a synthetic integer benchmark that measures CPU throughput in terms of ``Dhrystones per second.'' Results are typically normalized to the VAX 11/780 (which scored 1,757 Dhrystones per second, defining 1 DMIPS):
-    \begin{equation}
-    \text{DMIPS/MHz} = \frac{10^6}{\text{Cycles per Dhrystone Run} \times 1,757}.
-    \end{equation}
-    Our single-cycle \texttt{RV32I} core scores $\mathbf{0.824\,\text{DMIPS/MHz}}$ ($\mathbf{269.9\,\text{DMIPS}}$ at operating frequency), while the 4-stage pipeline without forwarding scores $\mathbf{0.468\,\text{DMIPS/MHz}}$ ($\mathbf{343.4\,\text{DMIPS}}$ at operating frequency, reflecting its 1.76 CPI). Although historically widespread, Dhrystone has fallen out of modern favor because its tight loops can be disproportionately affected by compiler string inlining and dead-code elimination.
-    
-    \item \textbf{EEMBC CoreMark}: Developed by EEMBC to replace Dhrystone, CoreMark executes realistic algorithms (matrix manipulation, linked lists, state machines) specifically designed to prevent optimizing compilers from eliminating computation. Its self-checking CRC guarantees that every algorithmic step produces valid data. On our single-cycle \texttt{RV32I} core, CoreMark delivers $\mathbf{1.143\,\text{CoreMark/MHz}}$ ($\mathbf{374.3\,\text{CoreMarks}}$ at operating frequency), while the 4-stage pipeline delivers $\mathbf{0.608\,\text{CoreMark/MHz}}$ ($\mathbf{446.1\,\text{CoreMarks}}$ at operating frequency, reflecting its 1.88 CPI).
-    
-    \item \textbf{Embench-IoT}: Developed by the Free and Open Source Silicon (FOSSi) Foundation in collaboration with David Patterson, Embench is a modern, open-source suite of 19 real-world embedded programs (e.g., AES encryption, Huffman decoding, Minver, QR-code, Wic) designed specifically to provide a reproducible, open-source alternative to proprietary benchmarks for microcontroller-class RISC-V cores.
-\end{itemize}
 
 
 \section{Hardware Implementation and Benchmark Evaluation of Data Bypassing}\label{riscvBypassing}
 \index{data bypassing}\index{forwarding unit}\index{hazard resolution!forwarding}\index{load-use hazard}
 
-As demonstrated in Section \ref{riscvWorkloads}, the unforwarded 4-stage pipeline suffers severe CPI inflation ($\text{CPI} = 1.63\text{--}1.93$) due to Read-After-Write (RAW) data dependencies. Because producing instructions do not commit their results to the architectural register file until the Memory/Write-Back (MEM/WB) stage, any consuming instruction in the Decode (ID) stage must stall for 2 clock cycles (for distance-1 dependencies) or 1 clock cycle (for distance-2 dependencies). Across real embedded workloads like Dhrystone and CoreMark, these stall cycles annihilate most of the $2.24\times$ frequency multiplier earned by pipelining, leaving an actual application speedup of only $1.16\times\text{--}1.27\times$.
+As demonstrated in Section \ref{riscvBenchmarks}, the unforwarded 4-stage pipeline suffers severe CPI inflation ($\text{CPI} = 1.63\text{--}1.93$) due to Read-After-Write (RAW) data dependencies. Because producing instructions do not commit their results to the architectural register file until the Memory/Write-Back (MEM/WB) stage, any consuming instruction in the Decode (ID) stage must stall for 2 clock cycles (for distance-1 dependencies) or 1 clock cycle (for distance-2 dependencies). Across real embedded workloads like Dhrystone and CoreMark, these stall cycles annihilate most of the frequency multiplier earned by pipelining, leaving an actual application speedup of only $1.16\times\text{--}1.27\times$.
 
 To overcome this bottleneck, high-performance processors employ \textbf{data bypassing} (also known as \textbf{data forwarding}) \cite{patterson2017computer}. By capturing results as soon as they are computed and routing them directly to consuming stages over dedicated bypass multiplexers, dependencies can be satisfied immediately without waiting for register file writeback.
 
@@ -979,7 +509,7 @@ val stall = if_id.valid && Mux(enableForwarding.B, isLoadUseHazard, rawHazardRs1
 \subsection{Physical ASIC Synthesis: The Silicon Cost of Bypassing}
 \index{ASAP7!bypassing overhead}\index{synthesis!forwarding multiplexers}
 
-To determine the physical silicon cost of the forwarding multiplexers, comparator nets, and revised hazard detection logic, both the unforwarded and forwarded cores were synthesized targeting the predictive **ASAP7 7\,nm FinFET standard cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
+To determine the physical silicon cost of the forwarding multiplexers, comparator nets, and revised hazard detection logic, both the unforwarded and forwarded cores were synthesized targeting the predictive ASAP7 7\,nm FinFET standard cell library (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
 
 Table \ref{tab:asap7_forwarding_synthesis} contrasts the physical gate-level metrics.
 
@@ -1007,50 +537,298 @@ Operating Frequency (4-Step Model) & 733.7\,MHz                           & 733.
 
 The physical synthesis results reveal a remarkably favorable trade-off:
 \begin{enumerate}
-    \item \textbf{Negligible Silicon Area Overhead}: Adding complete distance-1 and distance-2 bypassing networks increases the total silicon area by only \textbf{30.79\,$\mu$m$^2$}, an overhead of **merely +2.7\%** (+390 standard cells). Bypassing requires zero additional flip-flops; it consists entirely of 32-bit 2:1 multiplexers and 5-bit address comparator gates.
+    \item \textbf{Negligible Silicon Area Overhead}: Adding complete distance-1 and distance-2 bypassing networks increases the total silicon area by only \textbf{30.79\,$\mu$m$^2$}, an overhead of \textbf{merely +2.7\%} (+390 standard cells). Bypassing requires zero additional flip-flops; it consists entirely of 32-bit 2:1 multiplexers and 5-bit address comparator gates.
     \item \textbf{Critical Path Impact}: The standalone critical path of the core increases from $1.362\,\text{ns}$ to $1.589\,\text{ns}$ ($+226\,\text{ps}$) because the bypass multiplexers insert a small combinational delay directly into the input operands of the ALU and branch comparators. In an integrated SoC where the clock period is set by balanced 4-step pipeline partitioning ($1.363\,\text{ns}$, $733.7\,\text{MHz}$), this delay can be hidden within timing slack or accommodated by optimizing the adder topology.
 \end{enumerate}
 
-\subsection{Benchmark Evaluation: Dramatic Stall Elimination and Throughput Gain}
-\index{CoreMark!forwarding performance}\index{Dhrystone!forwarding performance}\index{CPI reduction!forwarding}
+\subsection{Workload Evaluation: Dhrystone 2.1, EEMBC CoreMark, and DSP Kernels}
+\index{benchmark!Dhrystone 2.1}\index{benchmark!EEMBC CoreMark 1.0}\index{DMIPS/MHz}\index{CoreMark/MHz}
 
-When the forwarded core was evaluated across our benchmark suite (as reported in Table \ref{tab:riscv_all_benchmarks}), data bypassing delivered dramatic performance leaps:
+Having introduced the standard embedded benchmarks in Section \ref{riscvBenchmarks}, Table \ref{tab:riscv_all_benchmarks} presents the complete execution profiles, cycle counts, effective CPIs, and measured system execution times across the DSP kernel, Dhrystone 2.1, and CoreMark 1.0 in ASAP7 7\,nm FinFET technology for the single-cycle core, the unforwarded 4-stage pipeline, and the high-performance forwarded 4-stage pipeline with data bypassing.
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Workload Metric} & \textbf{DSP Kernel (Soft Mul)} & \textbf{DSP Kernel (Hard Mul)} & \textbf{Dhrystone 2.1 (20 runs)} & \textbf{CoreMark 1.0 (1 iter)} \\
+\hline
+Instruction Set Architecture     & Pure \texttt{RV32I} & \texttt{RV32I\_Zmmul} & Pure \texttt{RV32I} & Pure \texttt{RV32I} \\
+Dynamic Instructions ($I$)       & 6,511               & 804                   & 13,826              & 874,891 \\
+\hline
+Single-Cycle Cycles ($C_1$)      & 6,511               & 804                   & 13,826              & 874,891 \\
+Single-Cycle CPI                 & 1.00                & 1.00                  & 1.00                & 1.00 \\
+\hline
+4-Stage Pipe Cycles (No Fwd)     & 12,575              & 1,308                 & 24,311              & 1,643,060 \\
+4-Stage Pipe CPI (No Fwd)        & 1.93                & 1.63                  & 1.76                & 1.88 \\
+Hazard Stalls (No Forwarding)    & 6,064 (+93.1\%)     & 504 (+62.7\%)         & 10,485 (+75.8\%)    & 768,169 (+87.8\%) \\
+\hline
+\textbf{4-Stage Pipe Cycles (With Bypassing)} & \textbf{8,774} & \textbf{999} & \textbf{19,958}    & \textbf{1,160,199} \\
+\textbf{4-Stage Pipe CPI (With Bypassing)}    & \textbf{1.35}  & \textbf{1.24}& \textbf{1.44}       & \textbf{1.33} \\
+Hazard Stalls Remaining (Load-Use only)       & 2,263 (+34.8\%)& 195 (+24.3\%)& 6,132 (+44.3\%)     & 285,308 (+32.6\%) \\
+\textbf{RAW Stalls Eliminated by Bypassing}   & \textbf{3,801 ($-62.7\%$)} & \textbf{309 ($-61.3\%$)} & \textbf{4,353 ($-41.5\%$)} & \textbf{482,861 ($-62.9\%$)} \\
+\hline
+Operating Clock Delay ($T_{\text{clk}}$)  & Single=3.053\,ns (Sum) & Single=4.152\,ns (Sum) & Single=3.053\,ns (Sum) & Single=3.053\,ns (Sum) \\
+(ASAP7 7\,nm FinFET ASIC)        & Pipe=1.363\,ns (Max)   & Pipe=2.462\,ns (Max)   & Pipe=1.363\,ns (Max)   & Pipe=1.363\,ns (Max) \\
+Clock Period Delta ($\Delta T$)  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns}  & \textbf{$-1.690$\,ns} \\
+Operating Frequency ($f_{\text{clk}}$)& Single=327.5\,MHz & Single=240.8\,MHz     & Single=327.5\,MHz   & Single=327.5\,MHz \\
+                                  & Pipe=733.7\,MHz ($2.24\times$) & Pipe=406.2\,MHz ($1.69\times$) & Pipe=733.7\,MHz ($2.24\times$) & Pipe=733.7\,MHz ($2.24\times$) \\
+\hline
+Total Execution Time ($T_{\text{exec}}$) & Single=19,878\,ns ($19.88\,\mu$s) & Single=3,338\,ns ($3.34\,\mu$s) & Single=42,211\,ns ($42.21\,\mu$s) & Single=2,671,042\,ns ($2.67\,\text{ms}$) \\
+                                  & NoFwd=17,140\,ns ($17.14\,\mu$s)  & NoFwd=3,220\,ns ($3.22\,\mu$s)  & NoFwd=33,136\,ns ($33.14\,\mu$s)  & NoFwd=2,239,491\,ns ($2.24\,\text{ms}$) \\
+                                  & \textbf{Bypass=11,959\,ns ($11.96\,\mu$s)} & \textbf{Bypass=2,460\,ns ($2.46\,\mu$s)} & \textbf{Bypass=27,203\,ns ($27.20\,\mu$s)} & \textbf{Bypass=1,581,351\,ns ($1.58\,\text{ms}$)} \\
+\hline
+\textbf{Speedup vs.\ Single-Cycle Core} & NoFwd = 1.16$\times$ & NoFwd = 1.04$\times$ & NoFwd = 1.27$\times$ & NoFwd = 1.19$\times$ \\
+                                         & \textbf{Bypass = 1.66$\times$} & \textbf{Bypass = 1.36$\times$}$^*$ & \textbf{Bypass = 1.55$\times$} & \textbf{Bypass = 1.69$\times$} \\
+\textbf{Speedup Over Unforwarded Pipe}  & \textbf{1.43$\times$} & \textbf{1.31$\times$} & \textbf{1.22$\times$} & \textbf{1.42$\times$} \\
+\hline
+\textbf{Pipelined Multiplier + Bypass}$^*$ & --- & \textbf{1,362\,ns (2.45$\times$ Speedup)} & --- & --- \\
+\hline
+\textbf{Standard Metric / MHz}   & ---                 & ---                   & 0.824 (Single)          & 1.143 (Single) \\
+                                  &                     &                       & 0.468 (Pipe NoFwd)      & 0.608 (Pipe NoFwd)   \\
+                                  &                     &                       & \textbf{0.570 (Pipe Bypass)} & \textbf{0.862 (Pipe Bypass)} \\
+\hline
+\textbf{Aggregate Performance}   & ---                 & ---                   & 269.9 DMIPS (Single)    & 374.3 CoreMarks (Single) \\
+(at Operating $f_{\text{clk}}$)  &                     &                       & 343.4 DMIPS (Pipe NoFwd)& 446.1 CoreMarks (Pipe NoFwd) \\
+                                  &                     &                       & \textbf{418.5 DMIPS (Bypass)} & \textbf{632.4 CoreMarks (Bypass)} \\
+\hline
+\end{tabular}%
+}
+\caption{Empirical benchmark evaluation of single-cycle (FE) vs.\ 4-stage pipelined \texttt{RV32I} cores in ASAP7 7\,nm FinFET technology across DSP, Dhrystone 2.1, and EEMBC CoreMark 1.0 workloads, comparing unforwarded vs.\ forwarded (bypassing) implementations. $^*$When augmented with the 2-stage pipelined multiplier datapath (Section \ref{riscvHardwareMultiplier}), the operating clock period is restored to $1.363\,\text{ns}$ ($733.7\,\text{MHz}$), cutting DSP hardware multiply execution time to $1,362\,\text{ns}$ ($1.36\,\mu\text{s}$), achieving a $\mathbf{2.45\times}$ speedup over single-cycle and $\mathbf{1.81\times}$ over the unpipelined multiplier pipeline.}\label{tab:riscv_all_benchmarks}
+\end{table}
+
+\subsection{Why Ideal Pipeline Speedup is Inaccessible in Practice}
+\index{pipeline speedup!theoretical vs actual}\index{pipeline balancing!physical impediments}\index{stage delay quantization}\index{clock overhead}
+
+In introductory computer architecture, pipelining an $N$-stage processor is frequently described as achieving a theoretical speedup of:
+\begin{equation}
+S_{\text{ideal}} = N.
+\end{equation}
+For our 4-stage pipeline ($N = 4$), naive theory predicts a $4.0\times$ speedup. Yet, as demonstrated in Table \ref{tab:riscv_all_benchmarks}, the measured speedup in physical 7\,nm silicon is between $1.04\times$ and $1.27\times$ without forwarding, and between $1.36\times$ and $1.69\times$ with data bypassing.
+
+The actual speedup of a pipelined processor over a single-cycle implementation is governed by the classic processor performance equation:
+\begin{equation}
+\text{Speedup} = \frac{\text{Time}_{\text{single}}}{\text{Time}_{\text{pipe}}} = \frac{I \times \text{CPI}_{\text{single}} \times T_{\text{clk, single}}}{I \times \text{CPI}_{\text{pipe}} \times T_{\text{clk, pipe}}} = \left(\frac{\text{CPI}_{\text{single}}}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, single}}}{T_{\text{clk, pipe}}}\right).
+\end{equation}
+For an $N$-stage pipeline, achieving $S = N$ requires two simultaneous conditions:
+\begin{enumerate}
+    \item \textbf{Perfect CPI Invariance}: $\text{CPI}_{\text{pipe}} = \text{CPI}_{\text{single}} = 1.00$.
+    \item \textbf{Perfect Frequency Scaling}: $T_{\text{clk, pipe}} = \frac{1}{N} T_{\text{clk, single}}$.
+\end{enumerate}
+In physical hardware, three fundamental physical barriers prevent these conditions from being satisfied simultaneously:
+
+\subsubsection{Stage Delay Quantization and Imbalance}
+\index{pipeline balancing!delay quantization}\index{Amdahl's Law!for clock periods}
+Combinational logic cannot be sliced arbitrarily like a fluid. Logic circuits are constructed from discrete boolean primitives: multiplexers, adders, decoders, shifters, and comparator trees. In our pure \texttt{RV32I} core:
 \begin{itemize}
-    \item \textbf{EEMBC CoreMark 1.0}:
+    \item The physical pipeline steps have differing atomic delays in ASAP7 7\,nm FinFET:
     \begin{itemize}
-        \item Execution cycles plummeted from 1,643,060 down to **1,160,199 cycles**, slashing effective CPI from $1.88$ to **1.33**.
-        \item Forwarding eliminated **482,861 stall cycles**---a massive **62.9\% reduction** in total pipeline hazard overhead!
-        \item Total wall-clock execution time dropped from $2.24\,\text{ms}$ to **$1.58\,\text{ms}$**, delivering a **$1.42\times$ speedup over the unforwarded pipeline** and a net **$1.69\times$ speedup** over the single-cycle core.
-        \item CoreMark throughput surged from $0.608\,\text{CoreMark/MHz}$ to **$0.862\,\text{CoreMark/MHz}$**, yielding **632.4 CoreMarks** at operating frequency---a **+41.8\% throughput explosion**!
+        \item Step 1: SRAM Fetch ($T_{\text{fetch}} = 0.550\,\text{ns}$).
+        \item Step 2: Decode and Register Read ($T_{\text{decode}} = 0.540\,\text{ns}$).
+        \item Step 3: Execute (Baseline RCA: $T_{\text{execute}} = 1.363\,\text{ns}$; Carry Select Adder: $T_{\text{execute}} = 0.600\,\text{ns}$).
+        \item Step 4: SRAM Data Memory and Write-Back ($T_{\text{sram\_wb}} = 0.600\,\text{ns}$).
     \end{itemize}
-    
-    \item \textbf{Dhrystone 2.1}:
-    \begin{itemize}
-        \item Execution cycles dropped from 24,311 to **19,958 cycles**, lowering CPI from $1.76$ down to **1.44**.
-        \item Forwarding eliminated **4,353 stall cycles** (**41.5\% of all stalls**).
-        \item Execution time dropped from $33.14\,\mu\text{s}$ to **$27.20\,\mu\text{s}$**, achieving a **$1.22\times$ speedup over the unforwarded pipeline** and a **$1.55\times$ speedup** over the single-cycle baseline.
-        \item Dhrystone score increased from $0.468\,\text{DMIPS/MHz}$ to **$0.570\,\text{DMIPS/MHz}$**, delivering **418.5 DMIPS** (+21.9\% over unforwarded).
-    \end{itemize}
+    \item In the unoptimized baseline design with a Ripple-Carry Adder, the ALU critical path ($1.363\,\text{ns}$) bounded the pipelined clock period to $1.363\,\text{ns}$ ($733.7\,\text{MHz}$), yielding a frequency improvement of:
+    \begin{equation}
+    \frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}} = \frac{3.053\,\text{ns}}{1.363\,\text{ns}} = \mathbf{2.240\times} \quad (+124.0\% \text{ frequency gain}).
+    \end{equation}
+    This stage delay imbalance alone eliminated $(4.0 - 2.24) / 4.0 = \mathbf{44.0\%}$ of the theoretical 4-fold speedup.
+    \item When we balanced the pipeline using the Carry Select Adder (CSA) in Section \ref{riscvAdderBalancing}, the Execute stage delay dropped to $0.600\,\text{ns}$. The pipelined clock period was reduced to $\max(0.550, 0.540, 0.600, 0.600) = 0.600\,\text{ns}$ ($1.67\,\text{GHz}$), delivering a frequency scaling factor of:
+    \begin{equation}
+    \frac{T_{\text{clk, FE (CSA)}}}{T_{\text{clk, pipe (CSA)}}} = \frac{2.290\,\text{ns}}{0.600\,\text{ns}} = \mathbf{3.82\times} \quad (+281.7\% \text{ frequency gain}),
+    \end{equation}
+    which approaches the theoretical $4.0\times$ maximum.
+\end{itemize}
+However, even when stage balancing achieves near-ideal frequency scaling, the application speedup is held back by the remaining two barriers.
 
-    \item \textbf{DSP Kernel (Pure RV32I Software Multiply)}:
-    \begin{itemize}
-        \item Cycles dropped from 12,575 down to **8,774 cycles** ($\text{CPI} = 1.35$), eliminating **3,801 stalls ($-62.7\%$)**.
-        \item Wall-clock execution time improved from $17.14\,\mu\text{s}$ to **$11.96\,\mu\text{s}$**, delivering a **$1.43\times$ speedup** over the unforwarded pipeline and **$1.66\times$** over single-cycle.
-    \end{itemize}
+\subsubsection{Sequential Register Overhead}
+\index{pipeline register overhead}\index{setup time}\index{clock-to-Q delay}
+Every pipeline stage boundary requires sequential state storage (D flip-flops in standard cells):
+\begin{equation}
+T_{\text{stage}} = T_{\text{comb}} + t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}.
+\end{equation}
+In the ASAP7 7\,nm FinFET standard cell library:
+\begin{itemize}
+    \item Flip-flop setup time: $t_{\text{setup}} \approx 15\,\text{ps}$.
+    \item Clock-to-Q propagation delay: $t_{\text{cq}} \approx 25\,\text{ps}$.
+    \item Clock distribution skew and jitter margin: $t_{\text{skew}} \approx 15\,\text{ps}$.
+\end{itemize}
+This introduces an unshrinkable sequential overhead of $T_{\text{reg\_overhead}} \approx 55\,\text{ps}$ at each stage boundary. Over a 4-stage pipeline, over $200\,\text{ps}$ of cumulative delay is consumed solely by registers. This overhead represents dead time that performs zero computational work, directly diminishing the achievable clock frequency.
 
-    \item \textbf{DSP Kernel (RV32I\_Zmmul Hardware Multiply)}:
-    \begin{itemize}
-        \item Cycles dropped from 1,308 down to **999 cycles** ($\text{CPI} = 1.24$), eliminating **309 stalls ($-61.3\%$)**.
-        \item Wall-clock execution time improved from $3.22\,\mu\text{s}$ to **$2.46\,\mu\text{s}$**, delivering a **$1.31\times$ speedup** over unforwarded and **$1.36\times$** over single-cycle.
-    \end{itemize}
+\subsubsection{Hazard-Induced CPI Expansion}
+\index{hazard penalties}\index{CPI expansion}\index{forwarding!necessity}
+In a single-cycle processor, data dependencies and branch decisions are resolved combinationally within the single clock cycle in which the instruction executes ($\text{CPI}_{\text{single}} \equiv 1.00$).
+
+In a pipelined processor without forwarding, instructions execute concurrently across time. When an instruction in Decode depends on a value being computed in Execute or Memory/Write-Back, the Hazard Detection Unit must inject stall cycles (2 stalls for distance-1, 1 stall for distance-2). Furthermore, when a branch condition evaluates in the Execute stage, two speculatively fetched instructions must be flushed.
+
+Across real embedded workloads, this hazard overhead inflates the effective CPI:
+\begin{itemize}
+    \item \textbf{Dhrystone 2.1}: $\text{CPI}_{\text{pipe}} = 1.76$ (+75.8\% cycle penalty).
+    \item \textbf{CoreMark 1.0}: $\text{CPI}_{\text{pipe}} = 1.88$ (+87.8\% cycle penalty).
+    \item \textbf{DSP Kernel (Soft Mul)}: $\text{CPI}_{\text{pipe}} = 1.93$ (+93.1\% cycle penalty).
+\end{itemize}
+In the absence of forwarding, this CPI inflation erodes most of the frequency gain:
+\begin{equation}
+\text{Speedup}_{\text{CoreMark}} = \left(\frac{1}{1.878}\right) \times 2.240 = 0.532 \times 2.240 = \mathbf{1.19\times} \quad (+19.3\%).
+\end{equation}
+This explains why the unforwarded pipelined processor achieves only modest speedup ($1.16\times\text{--}1.27\times$).
+
+By adding data bypassing, we satisfy data dependencies with zero stall cycles (except for 1-cycle load-use hazards), driving CPI down to $1.24\text{--}1.44$. This slashes stalls by $>60\%$, unlocking the $1.55\times\text{--}1.69\times$ application speedups observed in Table \ref{tab:riscv_all_benchmarks}.
+
+
+\section{Hardware Multiplication (Zmmul): The Pipeline Balancing Dilemma and Pipelined Datapath}\label{riscvHardwareMultiplier}\label{riscvZmmulCaseStudy}\label{riscvPipelinedMultiplier}
+\index{Zmmul extension!microarchitectural case study}\index{pipeline balancing!multiplier bottleneck}\index{Amdahl's law!clock period unbalancing}\index{pipelined multiplier!single-stream acceleration}\index{multiply-accumulate (MAC)!zero-stall execution}
+
+Having established the baseline performance of the 4-stage \texttt{RV32I} pipeline and the necessity of data bypassing, we now examine what happens when hardware multiplication is added. In scientific computing, machine learning, and digital signal processing, multiplication is ubiquitous. Implementing multiplication in software via shift-and-add routines (\texttt{\_\_mulsi3}) requires roughly 35 instructions per multiply, bloating code size and consuming significant execution cycles. 
+
+To accelerate multiplication, the RISC-V standard defines the \texttt{Zmmul} extension, introducing four 32-bit multiplication instructions: \texttt{MUL} (lower 32 bits), \texttt{MULH} (upper 32 bits, signed $\times$ signed), \texttt{MULHSU} (upper 32 bits, signed $\times$ unsigned), and \texttt{MULHU} (upper 32 bits, unsigned $\times$ unsigned).
+
+A naive microarchitectural approach is to simply integrate a $32 \times 32$ combinational multiplier directly into the execution stage ALU (\texttt{RiscvALU}). However, this case study reveals how an unpipelined complex execution unit catastrophically destroys pipeline stage balancing.
+
+\subsection{Physical Area and Critical Path of Standalone ALUs}
+\index{ALU!multiplier area explosion}\index{ASAP7 7nm!ALU synthesis}
+
+To isolate the physical impact of the multiplier, the standalone \texttt{RiscvALU} was synthesized targeting the ASAP7 7\,nm FinFET standard cell library in two configurations:
+\begin{enumerate}
+    \item \textbf{Pure RV32I ALU (\texttt{enableZmmul = false})}: Supporting integer addition, subtraction, set-less-than, logical operations (\texttt{AND}, \texttt{OR}, \texttt{XOR}), and shifts (\texttt{SLL}, \texttt{SRL}, \texttt{SRA}).
+    \item \textbf{RV32I\_Zmmul ALU (\texttt{enableZmmul = true})}: The base ALU augmented with the complete $32 \times 32$ multiplier logic array.
+\end{enumerate}
+
+Table \ref{tab:alu_synthesis_comparison} contrasts the physical synthesis results of the two execution units.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{ALU Synthesis Metric} & \textbf{Pure RV32I ALU} & \textbf{RV32I\_Zmmul ALU} & \textbf{Impact of Multiplier} \\
+\hline
+Standard Cell Count          & 1,470 cells            & 12,092 cells             & \textbf{8.2$\times$ cell count} \\
+Total Silicon Area           & \textbf{103.31\,$\mu$m$^2$} & \textbf{1,186.67\,$\mu$m$^2$} & \textbf{11.5$\times$ area explosion} \\
+Critical Path Delay          & \textbf{1.047\,ns}      & \textbf{2.148\,ns}       & \textbf{+105.3\% delay penalty} \\
+Maximum Operating Frequency  & 955.6\,MHz             & 465.5\,MHz               & $-51.3\%$ frequency \\
+\hline
+\end{tabular}
+\caption{ASAP7 7\,nm FinFET ASIC synthesis comparison between standalone pure \texttt{RV32I} ALU and \texttt{RV32I\_Zmmul} ALU.}\label{tab:alu_synthesis_comparison}
+\end{table}
+
+The physical design data exposes a dramatic disparity:
+\begin{itemize}
+    \item Adding a single-cycle $32 \times 32$ multiplier increases ALU silicon area by \textbf{11.5$\times$} (from $103.31\,\mu\text{m}^2$ to $1,186.67\,\mu\text{m}^2$).
+    \item Remarkably, the $32 \times 32$ multiplier logic array alone ($>1,080\,\mu\text{m}^2$) is \textbf{larger than the entire pure \texttt{RV32I} single-cycle processor core} ($904.24\,\mu\text{m}^2$)!
+    \item The intrinsic propagation delay through the multiplier logic array is \textbf{2.148\,ns}, increasing the ALU critical path by +105.3\% over the pure integer ALU ($1.047\,\text{ns}$).
 \end{itemize}
 
-Even if evaluated conservatively under the standalone synthesized clock period ($1.589\,\text{ns}$, $629.2\,\text{MHz}$), the forwarded core achieves **542.0 CoreMarks** ($1.45\times$ faster than single-cycle) and **358.5 DMIPS** ($1.33\times$ faster than single-cycle), demonstrating that the CPI reduction ($\Delta \text{CPI} = -0.55$) vastly outweighs the minor combinational multiplexer delay.
+\subsection{Impact on Full Core Synthesis: The Frequency Collapse}
+\index{pipeline unbalancing!frequency collapse}\index{critical path!multiplier bottleneck}\index{Amdahl's law!multiplier threshold}
 
-This empirical result provides the definitive architectural lesson: **for a minuscule area cost of only +2.7\%, data bypassing eliminates $>60\%$ of all pipeline stalls, unlocking the true performance potential of pipelined computer architecture.**
+In the single-cycle Fetch-Execute (FE) architecture, the execution step delay is governed by the slower of the basic ALU operations or the hardware multiplier:
+\begin{equation}
+T_{\text{clk, FE}} = T_{\text{fetch}} + T_{\text{decode}} + \max(T_{\text{alu}}, T_{\text{mmul}}) + T_{\text{sram\_wb}}.
+\end{equation}
+When the monolithic combinational multiplier is integrated into the processor cores, it exerts a profound effect on core timing and area. To observe the full severity of this effect, Table \ref{tab:riscv_grand_comparison} compares the physical synthesis and benchmark metrics when the 4-stage pipeline employs the balanced Carry Select Adder (CSA) datapath developed in Section \ref{riscvAdderBalancing}.
 
-\section{Single-Stream Acceleration: Pipelined Multiplier Datapath for FIR and MAC Kernels}\label{riscvPipelinedMultiplier}
-\index{pipelined multiplier!single-stream acceleration}\index{multiply-accumulate (MAC)!zero-stall execution}\index{FIR filter!pipeline acceleration}\index{intermediate pipeline registers}\index{Booth multiplier!pipelined}
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Metric} & \textbf{RV32I Single-Cycle (FE)} & \textbf{RV32I 4-Stage Pipe (CSA)} & \textbf{Zmmul Single-Cycle (FE)} & \textbf{Zmmul 4-Stage Pipe} \\
+\hline
+Process Technology              & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET \\
+Total Standard Cells            & 9,730            & 11,872           & 21,336           & 22,709 \\
+Sequential Elements (DFFs)      & 1,023            & 1,434            & 1,023            & 1,434 \\
+Total Silicon Area ($\mu$m$^2$) & \textbf{904.24}  & \textbf{1,173.08} & \textbf{2,031.49} & \textbf{2,235.55} \\
+ALU Silicon Area ($\mu$m$^2$)   & 148.23           & 148.23           & 1,186.67         & 1,186.67 \\
+\hline
+Step 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns          & 0.550\,ns         & 0.550\,ns          & 0.550\,ns \\
+Step 2: Decode \& Reg Read ($T_{\text{decode}}$) & 0.540\,ns         & 0.540\,ns         & 0.540\,ns          & 0.540\,ns \\
+Step 3: Execute ($\max(T_{\text{alu}}, T_{\text{mmul}})$) & 0.600\,ns & 0.600\,ns         & 2.462\,ns          & 2.462\,ns \\
+Step 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,ns         & 0.600\,ns          & 0.600\,ns \\
+\hline
+Operating Clock Period ($T_{\text{clk}}$)       & \textbf{2.290\,ns} (Sum) & \textbf{0.600\,ns} (Max) & \textbf{4.152\,ns} (Sum) & \textbf{2.462\,ns} (Max) \\
+Operating Clock Frequency ($f_{\text{clk}}$)    & 436.7\,MHz         & \textbf{1,666.7\,MHz (1.67\,GHz)} & 240.8\,MHz         & 406.2\,MHz \\
+\textbf{Pipelining Frequency Boost}             & ---                & \textbf{+281.7\% ($3.82\times$)} & --- & \textbf{+68.7\% ($1.69\times$)} \\
+\hline
+Benchmark Multiplier Type       & Software (\texttt{\_\_mulsi3}) & Software (\texttt{\_\_mulsi3}) & Hardware (\texttt{MUL}) & Hardware (\texttt{MUL}) \\
+Benchmark Instructions ($I$)    & 6,511            & 6,511            & 804              & 804 \\
+Benchmark Execution Cycles ($C$)& 6,511            & 12,575           & 804              & 1,308 \\
+Effective Workload CPI          & 1.00             & 1.93             & 1.00             & 1.63 \\
+RAW Stalls + Branch Flushes     & 0                & 6,064            & 0                & 504 \\
+\hline
+Execution Time ($T_{\text{exec}}$) & 14,910\,ns ($14.91\,\mu$s) & \textbf{7,545\,ns ($7.55\,\mu$s)} & 3,338\,ns ($3.34\,\mu$s) & 3,220\,ns ($3.22\,\mu$s) \\
+\textbf{Pipelined Application Speedup}      & ---         & \textbf{1.98$\times$} & ---         & \textbf{1.04$\times$} \\
+\hline
+\end{tabular}
+\caption{ASAP7 7\,nm FinFET ASIC synthesis, delay decomposition, and benchmark comparison across pure \texttt{RV32I} (with CSA balanced pipeline) and \texttt{RV32I\_Zmmul} architectures in single-cycle (FE) and 4-stage pipelined configurations.}\label{tab:riscv_grand_comparison}
+\end{table}
+
+The comparative synthesis data reveals the dramatic consequences of pipeline unbalancing:
+\begin{enumerate}
+    \item \textbf{Annihilation of the Balanced Pipeline Frequency}:
+    In the balanced \texttt{RV32I} core using the Carry Select Adder, all four stages require $\approx 0.54\text{--}0.60\,\text{ns}$, enabling the 4-stage pipeline to achieve an operating clock frequency of \textbf{1.67\,GHz} ($T_{\text{clk}} = 0.600\,\text{ns}$)---a \textbf{$3.82\times$ frequency multiplier} over the single-cycle baseline.
+    
+    However, when the unpipelined combinational multiplier is added to the execution stage, the Execute stage delay expands to $T_{\text{execute}} = \max(T_{\text{alu}}, T_{\text{mmul}}) = 2.462\,\text{ns}$ (dominated by the $2.148\,\text{ns}$ multiplier logic array plus multiplexer routing and register setup times). Because the entire synchronous pipeline is throttled by its slowest stage:
+    \begin{equation}
+    T_{\text{clk, pipe}} = \max(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{mmul}}, T_{\text{sram\_wb}}) = \max(0.550, 0.540, 2.462, 0.600) = \mathbf{2.462\,\text{ns}}.
+    \end{equation}
+    The operating clock frequency of the processor collapses from \textbf{1.67\,GHz down to 406.2\,MHz}---a devastating \textbf{$-75.6\%$ frequency collapse} (a $4.10\times$ increase in clock period)!
+    
+    \item \textbf{Amdahl's Law and the Multiplier Breakeven Threshold}:
+    This catastrophic frequency penalty exposes a critical system-level question: \textit{Under what conditions does adding an unpipelined hardware multiplier actually improve execution time over pure software multiplication?}
+    
+    Consider an application composed of $M$ multiplication operations and $O$ other general-purpose operations.
+    \begin{itemize}
+        \item On the balanced pure \texttt{RV32I} core ($T_{\text{clk}} = 0.600\,\text{ns}$), each multiplication is performed by the software routine \texttt{\_\_mulsi3} in $\approx 35$ instructions. Assuming baseline CPI, the software-multiply execution time is:
+        \begin{equation}
+        T_{\text{exec, soft}} = (O + 35M) \times \text{CPI} \times 0.600\,\text{ns}.
+        \end{equation}
+        \item On the unbalanced \texttt{RV32I\_Zmmul} core ($T_{\text{clk}} = 2.462\,\text{ns}$), each multiplication executes in 1 hardware instruction (\texttt{MUL}). However, \textit{every single instruction} now runs at the throttled $2.462\,\text{ns}$ clock period:
+        \begin{equation}
+        T_{\text{exec, hard}} = (O + 1M) \times \text{CPI} \times 2.462\,\text{ns}.
+        \end{equation}
+    \end{itemize}
+    For the hardware multiplier to be beneficial ($T_{\text{exec, hard}} < T_{\text{exec, soft}}$):
+    \begin{align}
+    (O + M) \times 2.462 &< (O + 35M) \times 0.600, \\
+    2.462\,O + 2.462\,M &< 0.600\,O + 21.000\,M, \\
+    1.862\,O &< 18.538\,M \implies \frac{M}{O} > 0.1004.
+    \end{align}
+    Expressing this as the fraction of algorithmic multiplications $f_{\text{mul}} = \frac{M}{O + M}$:
+    \begin{equation}
+    f_{\text{mul}} > \frac{1.862}{18.538 + 1.862} = \frac{1.862}{20.400} \approx \mathbf{9.13\%}.
+    \end{equation}
+    Unless multiplications represent \textbf{more than 9.1\% of all algorithmic operations} (corresponding to $>77.8\%$ of dynamic instructions in the software-multiplication binary), \textbf{the core with the unpipelined hardware multiplier is slower than the pure RV32I core running software shift-and-add}! The $4.10\times$ clock penalty imposed on the remaining $90.9\%$ of instructions completely erases the algorithmic speedup of the hardware multiplier.
+\end{enumerate}
+
+\subsection{High-Performance Multipliers and Chisel Module Integration}
+\index{Booth multiplier!Chisel integration}\index{multiplier!ASAP7 evaluation}
+
+To investigate whether advanced multiplier topologies can resolve this bottleneck, we refer to the comprehensive physical synthesis evaluation conducted in Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:high_performance_multipliers}, Table \ref{tab:ch15_asap7_multipliers}), where five 32-bit multiplier architectures were evaluated in ASAP7 7\,nm FinFET technology:
+\begin{itemize}
+    \item \textbf{Array Multiplier}: $1,967.86\,\text{ps}$ delay, $527.04\,\mu\text{m}^2$ area.
+    \item \textbf{Radix-4 Modified Booth Multiplier}: $2,159.88\,\text{ps}$ delay, \textbf{464.45\,$\mu$m$^2$ area} ($-57.1\%$ area reduction).
+    \item \textbf{Wallace Tree Multiplier}: $2,088.55\,\text{ps}$ delay, $627.77\,\mu\text{m}^2$ area.
+    \item \textbf{Redundant Binary Multiplier (RBM)}: $2,245.91\,\text{ps}$ delay, $1,072.65\,\mu\text{m}^2$ area.
+\end{itemize}
+For standard-cell ASIC implementations, the \textbf{Radix-4 Modified Booth Multiplier} minimizes silicon area ($464.45\,\mu\text{m}^2$, saving 57.1\% area) while maintaining competitive latency. (In custom DSP layouts, the Redundant Binary Multiplier is selected for pitch-matched H-tree layout regularity).
+
+Listing \ref{lst:chisel_multiplier_call} illustrates invoking the dedicated Booth multiplier module within the Chisel execution stage.
+
+\begin{chiselcode}[caption={Calling the high-performance Booth Multiplier within the revised RISC-V ALU.},label={lst:chisel_multiplier_call}]
+// Instantiating the 32-bit Radix-4 Booth Multiplier within the revised ALU
+val multiplier = Module(new BoothMultiplier(width = 32))
+multiplier.io.a        := io.opA
+multiplier.io.b        := io.opB
+multiplier.io.isSigned := (io.aluOp === AluOp.MULH) || (io.aluOp === AluOp.MULHSU)
+val mulResultLow       = multiplier.io.result(31, 0)
+val mulResultHigh      = multiplier.io.result(63, 32)
+\end{chiselcode}
+
+However, as established in Chapter \ref{chap:perf_opt_logic}, \textbf{no single-cycle 32-bit multiplier can achieve a propagation delay under $\approx 1.97\text{--}2.25\,\text{ns}$ in standard cells}. To maintain high clock frequency without penalizing non-multiplication instructions, the multiplier must be pipelined.
+
+\subsection{Single-Stream Acceleration: Two-Stage Pipelined Multiplier Datapath}
+\index{pipelined multiplier!datapath}\index{intermediate pipeline registers}\index{zero-stall MAC}
 
 In high-performance processor design, after stage delay balancing and general data forwarding are implemented, the microarchitect is left with one final fundamental technique within a single instruction stream: \textbf{pipelining complex execution units and utilizing inter-stage pipeline registers to hold intermediate unmerged results, coupled with specialized forwarding paths back to the execution stage}.
 
@@ -1066,88 +844,39 @@ loop:
     addi a7, a7, -4    // Decrement sample pointer
     bne  a6, a3, loop  // Loop termination test
 \end{lstlisting}
+In this canonical kernel, each multiplication (\texttt{mul}) is immediately followed by an accumulation (\texttt{add}) that consumes the product (\texttt{t0}) as its source operand.
 
-In this canonical kernel, each multiplication (\texttt{mul}) is immediately followed by an accumulation (\texttt{add}) that consumes the product (\texttt{t0}) as its source operand. 
-
-In Section \ref{riscvZmmulCaseStudy}, we discovered that embedding a monolithic combinational multiplier directly inside the ALU wrecks pipeline stage balancing: the EX stage latency balloons to $2.462\,\text{ns}$, dragging the operating clock frequency of the entire core down from $733.7\,\text{MHz}$ to $406.2\,\text{MHz}$ (a $-44.6\%$ frequency collapse). Conversely, implementing the multiplier as a traditional multi-cycle iterative execution unit requires freezing the pipeline for 3 to 4 stall cycles per multiply, severely degrading throughput in MAC-dense loops.
-
-How can a single-issue processor core achieve an issue throughput approaching \textbf{1 instruction entering the pipeline per clock cycle} on FIR and MAC algorithms while maintaining the full $733.7\,\text{MHz}$ ($1.363\,\text{ns}$) operating clock frequency?
-
-The solution lies in \textbf{pipelining the multiplier across the existing processor pipeline stages} (EX and MEM/WB), passing intermediate unmerged carry-save vectors through the pipeline registers, and forwarding the merged product directly back into the EX stage for the subsequent accumulation.
-
-\subsection{Two-Stage Multiplier Partitioning and Intermediate Pipeline Registers}
-\index{carry-save reduction!intermediate registers}\index{vector-merging adder!MEM/WB stage}
-
-A 32-bit binary multiplier inherently performs three distinct arithmetic tasks:
+To achieve an issue throughput approaching \textbf{1 instruction entering the pipeline per clock cycle} while operating at maximum clock frequency, we partition the hardware multiplier across two adjacent pipeline stages (EX and MEM/WB):
 \begin{enumerate}
-    \item \textbf{Partial Product Generation (PPG)}: Generating 17 partial products via Radix-4 Booth recoding.
-    \item \textbf{Carry-Save Reduction Tree}: Compressing the 17 partial products down to two 64-bit redundant vectors: a $Sum$ vector and a $Carry$ vector.
-    \item \textbf{Vector-Merging Addition}: Performing a 64-bit carry-propagating addition ($Product = Sum + Carry$) and slicing the required 32-bit output.
-\end{enumerate}
-
-The critical insight is that \textbf{the Carry-Save Reduction Tree is completely carry-free}: every full adder (CSA cell) computes independent sum and carry outputs with zero horizontal propagation. Its delay is governed solely by tree depth:
-\begin{equation}
-T_{\text{tree}} = 6 \times T_{\text{CSA}} \approx 6 \times 65\,\text{ps} \approx 0.390\,\text{ns}.
-\end{equation}
-Together with Radix-4 Booth recoding and operand muxing ($\approx 0.220\,\text{ns}$), the entire Stage 1 logic requires only $\approx \mathbf{0.610\,\text{ns}}$ in ASAP7 7\,nm FinFET.
-
-Conversely, the \textbf{Vector-Merging Addition} requires full carry propagation across 64 bit positions. Using a fast parallel-prefix or carry-select architecture, this final addition requires $\approx \mathbf{0.520\,\text{ns}}$ in ASAP7 7\,nm FinFET.
-
-Notice the remarkable symmetry: both halves of the multiplier naturally require $\approx 0.52\text{--}0.61\,\text{ns}$, which perfectly matches the baseline stage delays of our 4-stage pipeline ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, $T_{\text{sram\_wb}} = 0.600\,\text{ns}$)!
-
-Therefore, we partition the hardware multiplier across two adjacent pipeline stages:
-\begin{itemize}
     \item \textbf{Stage 1: Multiplier Reduction in EX (\texttt{PipelinedMultiplierStage1})}:
-    When a multiply instruction (\texttt{MUL}, \texttt{MULH}, \texttt{MULHSU}, \texttt{MULHU}) reaches EX, the 32-bit operands ($rs1$, $rs2$) are recoded using Radix-4 Booth logic into 17 signed partial products. A 6-level Carry-Save Adder (CSA) compressor tree reduces these 17 rows down to two unmerged 64-bit vectors: \texttt{sumOut} ($64$ bits) and \texttt{carryOut} ($64$ bits). Crucially, \textit{no carry propagation occurs in EX}.
+    When a multiply instruction reaches EX, operands ($rs1$, $rs2$) are recoded using Radix-4 Booth logic into 17 partial products. A 6-level Carry-Save Adder (CSA) compressor tree reduces these 17 rows down to two unmerged 64-bit vectors: \texttt{sumOut} and \texttt{carryOut}. Crucially, \textit{no carry propagation occurs in EX} ($T_{\text{stage1}} \approx 0.61\,\text{ns}$).
     
     \item \textbf{Intermediate Pipeline Register Storage (\texttt{ex\_mem})}:
-    At the rising clock edge, the inter-stage pipeline register \texttt{ex\_mem} captures the intermediate unmerged vectors along with operation metadata:
+    At the rising clock edge, the inter-stage pipeline register \texttt{ex\_mem} captures the intermediate unmerged vectors:
     \begin{equation}
     \texttt{ex\_mem.mulSum} \leftarrow \texttt{mulStage1.sumOut}, \quad \texttt{ex\_mem.mulCarry} \leftarrow \texttt{mulStage1.carryOut}, \quad \texttt{ex\_mem.isMul} \leftarrow \texttt{id\_ex.isMul}.
     \end{equation}
-    The intermediate pipeline register acts as temporary redundant storage, completely decoupling partial product reduction from final vector-merging addition.
+    The intermediate pipeline register acts as temporary redundant storage, decoupling partial product reduction from final vector-merging addition.
     
     \item \textbf{Stage 2: Vector-Merging Addition in MEM/WB (\texttt{PipelinedMultiplierStage2})}:
-    In the MEM/WB stage, a 64-bit vector-merging adder computes the final sum:
+    In the MEM/WB stage, a 64-bit vector-merging adder computes the final product:
     \begin{equation}
     \text{Product}[63:0] = \texttt{ex\_mem.mulSum} + \texttt{ex\_mem.mulCarry}.
     \end{equation}
-    The multiplier output multiplexer slices either bits $[31:0]$ (for \texttt{MUL}) or bits $[63:32]$ (for \texttt{MULH}, \texttt{MULHSU}, \texttt{MULHU}) to produce \texttt{mulStage2Result}.
-\end{itemize}
+    The multiplier output multiplexer slices bits $[31:0]$ (for \texttt{MUL}) or bits $[63:32]$ (for \texttt{MULH}, \texttt{MULHSU}, \texttt{MULHU}) to produce \texttt{mulStage2Result} ($T_{\text{stage2}} \approx 0.52\,\text{ns}$).
+\end{enumerate}
 
 \subsection{Forwarding Mechanics for Zero-Stall Multiply-Accumulate}
 \index{forwarding!pipelined multiplier}\index{zero-stall MAC}
 
 Now examine how instructions traverse this datapath during a back-to-back FIR/MAC operation:
 \begin{itemize}
-    \item \textbf{Cycle $k$}:
-    The instruction \texttt{mul t0, t1, t0} is decoded in ID. The accumulation instruction \texttt{add a5, t0, a5} is fetched in IF.
-    
-    \item \textbf{Cycle $k+1$}:
-    \texttt{mul} enters the EX stage. Stage 1 generates the 17 Booth partial products and compresses them through the 6-level CSA tree into \texttt{mulSum} and \texttt{mulCarry}.
-    
-    Meanwhile, \texttt{add} enters the ID stage. The Hazard Detection Unit inspects the instruction in EX: because \texttt{mul} is an arithmetic instruction rather than a memory load ($\texttt{id\_ex.memRead} == 0$), \textbf{no load-use hazard is detected}. The hazard detection logic asserts no stall ($\texttt{stall} == 0$), allowing \texttt{add} to advance directly into EX on the very next cycle!
-    
-    \item \textbf{Cycle $k+2$}:
-    \texttt{mul} advances to the MEM/WB stage. The intermediate vectors in \texttt{ex\_mem.mulSum} and \texttt{ex\_mem.mulCarry} are added by Stage 2 to produce \texttt{mulStage2Result}.
-    
-    Simultaneously, \texttt{add} enters the EX stage. It requires register \texttt{t0} ($rs1$). The forwarding unit detects:
-    \begin{equation}
-    \texttt{exMemWillWrite} \land (\texttt{ex\_mem.rd} == \texttt{id\_ex.rs1}) \quad (\text{both refer to register } \texttt{t0}).
-    \end{equation}
-    The forwarding multiplexer in the MEM/WB stage selects \texttt{mulStage2Result}:
-    \begin{equation}
-    \texttt{exMemFwdData} = \text{Mux}(\texttt{ex\_mem.isMul}, \ \texttt{mulStage2Result}, \ \dots).
-    \end{equation}
-    This completed product is routed directly across the bypass bus to \texttt{alu.io.opA} in the EX stage!
-    
-    The ALU computes the accumulation $\texttt{a5} + \texttt{t0}$ in EX during Cycle $k+2$ with \textbf{ZERO STALL CYCLES}!
-    
-    \item \textbf{Cycle $k+3$}:
-    The next instruction in the inner loop (e.g., pointer increment \texttt{addi a7, a7, -4}) enters EX, while \texttt{add} advances to MEM/WB.
+    \item \textbf{Cycle $k$}: \texttt{mul t0, t1, t0} is in ID; \texttt{add a5, t0, a5} is fetched in IF.
+    \item \textbf{Cycle $k+1$}: \texttt{mul} enters EX. Stage 1 computes Booth PPG and the 6-level CSA tree into \texttt{mulSum} and \texttt{mulCarry}. \texttt{add} enters ID. Because \texttt{mul} is an arithmetic operation ($\texttt{id\_ex.memRead} == 0$), \textbf{no load-use hazard is detected}. The hazard unit asserts no stall ($\texttt{stall} == 0$), allowing \texttt{add} to advance directly into EX on the very next cycle!
+    \item \textbf{Cycle $k+2$}: \texttt{mul} advances to MEM/WB. Stage 2 computes the final product \texttt{mulStage2Result}. Simultaneously, \texttt{add} enters EX. The forwarding unit detects $\texttt{ex\_mem.rd} == \texttt{id\_ex.rs1}$ (\texttt{t0}) and routes the completed product directly across the bypass bus to \texttt{alu.io.opA} in EX. The ALU computes the accumulation with \textbf{ZERO STALL CYCLES}!
+    \item \textbf{Cycle $k+3$}: The next instruction in the inner loop enters EX, while \texttt{add} advances to MEM/WB.
 \end{itemize}
-
-Every single instruction in the compute sequence advances through the pipeline at \textbf{1 instruction entering the pipeline per clock cycle}! The multiply latency of 2 cycles is completely hidden by pipelining Stage 1 in EX and Stage 2 in MEM/WB, while data forwarding eliminates any pipeline bubble between the product generation and its accumulation.
+Every single instruction in the compute sequence advances through the pipeline at \textbf{1 instruction entering the pipeline per clock cycle}!
 
 \subsection{Chisel RTL Implementation}
 \index{Chisel!pipelined multiplier}
@@ -1201,9 +930,7 @@ if (enableZmmul && enablePipelinedMul) {
 \subsection{Physical ASIC Synthesis on ASAP7 7\,nm FinFET}
 \index{ASAP7 7nm!pipelined multiplier synthesis}\index{area reduction!modular pipelining}
 
-To rigorously quantify the physical design impact of pipelining the multiplier, the standalone pipelined multiplier and the complete processor core with pipelined multiplication were synthesized targeting the predictive **ASAP7 7\,nm FinFET standard-cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
-
-Table \ref{tab:asap7_pipemul_synthesis} contrasts the standalone multiplier architectures, while Table \ref{tab:asap7_core_pipemul_comparison} compares the full processor cores.
+Table \ref{tab:asap7_pipemul_synthesis} contrasts the standalone multiplier architectures, while Table \ref{tab:asap7_core_pipemul_comparison} compares the full processor cores in ASAP7 7\,nm FinFET technology.
 
 \begin{table}[htbp]
 \centering
@@ -1220,10 +947,6 @@ Combinational Booth Multiplier      & 5,590 cells            & 0 DFFs           
 \end{tabular}
 \caption{Physical synthesis comparison between standalone 32-bit combinational Booth Multiplier and 2-stage Pipelined Multiplier in ASAP7 7\,nm FinFET technology.}\label{tab:asap7_pipemul_synthesis}
 \end{table}
-
-The standalone 2-stage pipelined multiplier requires 6,891 standard cells and 127 flip-flops ($37.03\,\mu\text{m}^2$ sequential area), occupying a total silicon footprint of $554.07\,\mu\text{m}^2$. The maximum stage delay drops by \textbf{$-69.9\%$} (from $2.16\,\text{ns}$ down to $0.65\,\text{ns}$), enabling the multiplier to easily keep pace with a $733.7\,\text{MHz}\text{--}1.5\,\text{GHz}$ clock.
-
-Now observe what happens when we compare the \textbf{full 4-stage processor cores} in Table \ref{tab:asap7_core_pipemul_comparison}.
 
 \begin{table}[htbp]
 \centering
@@ -1251,19 +974,19 @@ Stage 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,n
 \caption{Full-core ASAP7 7\,nm FinFET physical synthesis comparison between 4-stage \texttt{RV32I\_Zmmul} cores with unpipelined vs.\ 2-stage pipelined multiplier.}\label{tab:asap7_core_pipemul_comparison}
 \end{table}
 
-Table \ref{tab:asap7_core_pipemul_comparison} exposes two profound physical synthesis results:
+Table \ref{tab:asap7_core_pipemul_comparison} exposes two profound physical design realities:
 \begin{enumerate}
-    \item \textbf{Restoration of the 733.7\,MHz Operating Frequency}:
-    By decoupling the Booth PPG and 6-level CSA tree from the 64-bit vector-merging adder, the Execute stage delay drops from $2.462\,\text{ns}$ back to $1.363\,\text{ns}$ (the pure integer ALU critical path). The operating clock frequency is restored to **733.7 MHz**---delivering an immediate **+80.6\% frequency boost** ($1.81\times$) across all instructions.
+    \item \textbf{Restoration of Operating Frequency}:
+    By decoupling Booth reduction from the 64-bit vector-merging adder, the Execute stage delay drops from $2.462\,\text{ns}$ back to $1.363\,\text{ns}$ (or $0.600\,\text{ns}$ with CSA), restoring operating frequency to $733.7\,\text{MHz}\text{--}1.67\,\text{GHz}$---delivering an immediate \textbf{+80.6\% frequency boost} ($1.81\times$).
     
-    \item \textbf{Significant Silicon Area Savings ($-22.6\%$ Area)}:
-    Surprisingly, pipelining the multiplier \textit{reduced} the total core silicon area by **$505.98\,\mu\text{m}^2$ ($-22.6\%$)**, slashing cell count from 22,709 cells down to 19,079 cells. In the unpipelined design, the synthesizer was forced to build massive high-drive buffer trees and wide combinational multiplexing networks to meet timing across the monolithic $2.462\,\text{ns}$ path. By cleanly separating the reduction tree from the final adder with 127 pipeline flip-flops, the logic synthesis engine optimized each stage independently using smaller, low-power standard cells, saving over 3,600 gates!
+    \item \textbf{Silicon Area Savings ($-22.6\%$ Area)}:
+    Pipelining the multiplier \textit{reduced} total core silicon area by \textbf{$505.98\,\mu\text{m}^2$ ($-22.6\%$)}, slashing cell count from 22,709 down to 19,079 cells. In the unpipelined design, the synthesizer built massive high-drive buffer trees to meet timing across the monolithic $2.462\,\text{ns}$ path. Separating the stages with 127 flip-flops allowed the synthesizer to use smaller, lower-power standard cells, saving over 3,600 gates!
 \end{enumerate}
 
 \subsection{Benchmark Performance: Accelerating FIR and MAC to 1 Instruction Per Cycle}
 \index{FIR filter!benchmark speedup}\index{MAC!speedup}
 
-Table \ref{tab:dsp_kernel_speedup_evolution} tracks the complete performance evolution of the DSP benchmark kernel across all four architectural generations: from the unpipelined single-cycle core, through the unforwarded pipeline and unpipelined bypassed pipeline, to the final pipelined multiplier datapath.
+Table \ref{tab:dsp_kernel_speedup_evolution} tracks performance evolution on the DSP benchmark kernel across all four architectural generations.
 
 \begin{table}[htbp]
 \centering
@@ -1281,23 +1004,14 @@ Single-Cycle FE Core (Zmmul)         & 4.152\,ns (240.8\,MHz)                  &
 \caption{Performance evolution of the DSP hardware multiply benchmark across processor generations in ASAP7 7\,nm FinFET technology.}\label{tab:dsp_kernel_speedup_evolution}
 \end{table}
 
-The empirical benchmark data demonstrates the cumulative power of microarchitectural design:
+The empirical benchmark data demonstrates:
 \begin{itemize}
-    \item \textbf{Total Execution Time Slashed to $1.36\,\mu$s}:
-    The DSP benchmark execution time drops from $3,338.21\,\text{ns}$ on the single-cycle core to **$1,361.64\,\text{ns}$** on the pipelined multiplier core---achieving a **$2.45\times$ net application speedup**!
-    
-    \item \textbf{$1.81\times$ Speedup Over Unpipelined Multiplier}:
-    Compared to the unpipelined forwarded core ($2,459.54\,\text{ns}$), pipelining the multiplier cuts execution time by **$1.81\times$** without requiring a single extra execution cycle ($999$ cycles in both cores).
-    
-    \item \textbf{Sustaining 1 Instruction Per Cycle on Compute Loops}:
-    In the inner FIR/MAC compute loop:
-    \begin{equation}
-    \texttt{mul t0, t1, t0} \longrightarrow \texttt{add a5, t0, a5}
-    \end{equation}
-    Both instructions advance through the execution stage at **exactly 1 instruction per cycle with zero stall cycles**. Data forwarding from the MEM/WB stage provides the product to the adder with zero latency overhead. The only stall in the entire loop is the unavoidable single-cycle load-use bubble following memory retrieval of filter coefficients.
+    \item Execution time drops from $3,338.21\,\text{ns}$ to \textbf{$1,361.64\,\text{ns}$}, a \textbf{$2.45\times$ net application speedup}.
+    \item Pipelining the multiplier cuts execution time by \textbf{$1.81\times$} over the unpipelined forwarded core ($2,459.54\,\text{ns} \to 1,361.64\,\text{ns}$) with 0 extra clock cycles.
+    \item In the inner FIR/MAC compute loop ($\texttt{mul} \to \texttt{add}$), both instructions advance through EX at \textbf{exactly 1 instruction per cycle with zero stall cycles}.
 \end{itemize}
 
-This completes our investigation of single-stream processor microarchitecture: by combining \textbf{stage delay balancing}, \textbf{data bypassing}, and \textbf{inter-stage pipelined execution units with intermediate register forwarding}, a single-issue processor achieves near-ideal instruction throughput while running at maximum physical clock frequency.
+This completes our investigation of single-stream processor microarchitecture: combining \textbf{stage delay balancing}, \textbf{data bypassing}, and \textbf{inter-stage pipelined execution units with intermediate register forwarding} achieves near-ideal instruction throughput while running at maximum physical clock frequency.
 
 \section{Control Hazard Elimination: Static BTFN and Dynamic Gshare Branch Prediction}\label{riscvBranchPrediction}
 \index{branch prediction!static BTFN}\index{branch prediction!dynamic gshare}\index{branch target buffer (BTB)}\index{control hazard!elimination}
@@ -1447,7 +1161,7 @@ The branch predictor is implemented as a standalone, modular hardware module (\t
 
 Listing \ref{lst:branch_predictor_chisel} displays the core logic for both BTFN and Gshare prediction in Chisel:
 
-\begin{lstlisting}[language=scala, caption={Chisel implementation of the parameterized Branch Predictor supporting Static BTFN and Dynamic Gshare (scabook/riscv/BranchPredictor.scala).}, label={lst:branch_predictor_chisel}]
+\begin{chiselcode}[caption={Chisel implementation of the parameterized Branch Predictor supporting Static BTFN and Dynamic Gshare (scabook/riscv/BranchPredictor.scala).}, label={lst:branch_predictor_chisel}]
 class BranchPredictor(
   val xlen: Int = 32,
   val predictorType: String = "none",
@@ -1529,10 +1243,10 @@ class BranchPredictor(
     }
   }
 }
-\end{lstlisting}
+\end{chiselcode}
 
 In the 4-stage pipeline (\texttt{RiscvPipelined.scala}), the Execute stage detects mispredictions by comparing actual branch resolution against the speculative prediction carried down the pipeline registers (\texttt{id\_ex.predTaken}, \texttt{id\_ex.predTarget}):
-\begin{lstlisting}[language=scala, caption={Misprediction detection and recovery logic in the Execute stage (scabook/riscv/RiscvPipelined.scala).}, label={lst:riscv_mispredict_chisel}]
+\begin{chiselcode}[caption={Misprediction detection and recovery logic in the Execute stage (scabook/riscv/RiscvPipelined.scala).}, label={lst:riscv_mispredict_chisel}]
   // Misprediction detection in EX:
   // If predicted outcome and target match actual execution: 0 FLUSH (0 BUBBLES)!
   val isBranch = id_ex.valid && id_ex.branch
@@ -1550,12 +1264,12 @@ In the 4-stage pipeline (\texttt{RiscvPipelined.scala}), the Execute stage detec
   val exTargetPC = Mux(jalrRedirect, jalrTarget,
                    Mux(jalMispredicted, jalTarget,
                        branchRecoveryPC))
-\end{lstlisting}
+\end{chiselcode}
 
 \subsection{Physical ASIC Synthesis on ASAP7 7\,nm FinFET}
 \index{ASAP7 7nm!branch predictor synthesis}\index{area overhead!branch predictor}
 
-To quantify the physical hardware cost and timing impact of branch prediction, all predictor designs and full processor cores were synthesized targeting the predictive **ASAP7 7\,nm FinFET standard-cell library** (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
+To quantify the physical hardware cost and timing impact of branch prediction, all predictor designs and full processor cores were synthesized targeting the predictive \textbf{ASAP7 7\,nm FinFET standard-cell library} (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, $C_{\text{load}} = 2.0\,\text{fF}$).
 
 Table \ref{tab:asap7_standalone_bp_synthesis} summarizes the standalone physical characteristics of the BTFN and Gshare predictors, while Table \ref{tab:asap7_core_bp_comparison} provides the comprehensive physical comparison across all six full-core processor configurations.
 
@@ -1667,6 +1381,300 @@ The benchmark results in Table \ref{tab:riscv_bp_benchmark_grand_summary} demons
     Because CPI is held near unity while clock frequency scales from $327.5\,\text{MHz}$ to $733.7\,\text{MHz}$, the pipelined core achieves a true \textbf{$2.05\times$ speedup on CoreMark} (766.3 CoreMarks) and \textbf{$2.89\times$ speedup on hardware DSP multiplication}, realizing the full promise of synchronous pipelining.
 \end{enumerate}
 
+
+\section{The Role of the Compiler in Processor Efficiency: Optimization Levels, Hazards, and Dynamic Execution}\label{riscvCompilerStudy}
+\index{compiler!optimization levels and processor efficiency}
+\index{microarchitecture!compiler interaction}
+
+Having developed the architectural techniques for a single scalar instruction stream---pipelining the datapath, balancing adder and multiplier stages, implementing data forwarding, and deploying dynamic branch prediction---we have driven the cycles per instruction (CPI) of the 4-stage RV32I core down to near-unity ($\text{CPI} \approx 1.09$). However, processor performance is not determined by hardware microarchitecture alone. It is governed by the classic Iron Law of Processor Performance:
+\begin{equation}
+T_{\text{exec}} = \text{Instruction Count } (I) \times \text{Cycles Per Instruction } (\text{CPI}) \times \text{Clock Period } (T_{\text{clk}}).
+\end{equation}
+While physical pipelining minimizes the clock period $T_{\text{clk}}$ and microarchitectural bypassing and branch prediction minimize $\text{CPI}$, the compiler toolchain exerts sovereign control over the dynamic instruction count $I$ and the instruction mix. 
+
+Before transitioning from a scalar pipeline to a superscalar multi-issue architecture, this section investigates the interplay between compiler optimization flags, static code generation, pipeline hazard dynamics, and dynamic execution efficiency across all five processor configurations developed in this chapter.
+
+\subsection{Compiler Toolchain Discovery: The Baseline Configuration}
+Inspection of the bare-metal benchmark build harness (\texttt{core\_portme.h} and the \texttt{.comment} metadata of compiled ELF binaries) reveals that the existing baseline Dhrystone and CoreMark binaries were compiled using the modern LLVM/Clang toolchain:
+\begin{itemize}
+    \item \textbf{Compiler}: \texttt{Ubuntu clang version 21.1.8 (6ubuntu1)} with \texttt{LLVM LLD 21.1.8}.
+    \item \textbf{Target Architecture}: \texttt{riscv32-unknown-elf}, \texttt{march=rv32i}, \texttt{mabi=ilp32}.
+    \item \textbf{Baseline Flags}: \texttt{-O1 -march=rv32i -mabi=ilp32 -ffreestanding -fno-builtin -nostdlib -fuse-ld=lld -T benchmarks/bench.ld}.
+\end{itemize}
+The baseline was explicitly set to \texttt{-O1}, representing basic linear optimization. To evaluate the full spectrum of compiler influence, we generated freestanding standalone binaries across ten optimization configurations: \texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, \texttt{-O4}, \texttt{-O5}, \texttt{-Os}, \texttt{-Oz}, \texttt{-Ofast}, and an extreme \texttt{ridiculous} optimization suite.
+
+\subsection{Taxonomy of Compiler Optimization Levels in Modern Clang/LLVM}
+The compilation options impact the generated code structure as follows:
+\begin{enumerate}
+    \item \textbf{\texttt{-O0} (Unoptimized Baseline)}:
+    Register allocation for local variables is disabled. Every local variable and intermediate expression is allocated to a dedicated stack frame slot in memory. Consequently, every arithmetic operation is preceded by stack loads (\texttt{lw}) and followed by stack stores (\texttt{sw}), flooding the pipeline with memory traffic.
+    
+    \item \textbf{\texttt{-O1} (Basic Optimization)}:
+    Enables global register allocation, basic block merging, constant folding, and dead-code elimination. Variables reside in the 32 general-purpose registers rather than on the stack, dramatically reducing load/store instructions.
+    
+    \item \textbf{\texttt{-O2} (Production Optimization)}:
+    Enables global common subexpression elimination (CSE), loop-invariant code motion (LICM), peephole optimization, and static instruction scheduling designed to interleave independent instructions.
+    
+    \item \textbf{\texttt{-O3} (Aggressive Optimization)}:
+    Enables aggressive function inlining, predictive loop unrolling, and vectorization analysis. Loop bounds and bodies are transformed to maximize execution throughput at the expense of moderate code size growth.
+    
+    \item \textbf{\texttt{-O4} and \texttt{-O5} (Clang Aliases)}:
+    In modern Clang/LLVM, levels above \texttt{-O3} do not exist as distinct optimization passes. Invoking \texttt{-O4} triggers a compiler warning (\texttt{warning: -O4 is equivalent to -O3 [-Wdeprecated]}), while \texttt{-O5} emits \texttt{warning: optimization level '-O5' is not supported; using '-O3' instead}. Exact MD5 cryptographic checksum analysis confirms that the binaries generated under \texttt{-O3}, \texttt{-O4}, and \texttt{-O5} are \textbf{100.000\% bit-for-bit identical} (MD5 checksum: \texttt{7b4e53a5511b5e49...} on CoreMark).
+    
+    \item \textbf{\texttt{-Ofast} (Fast Math)}:
+    Enables all \texttt{-O3} optimizations along with non-standard, fast floating-point arithmetic (\texttt{-ffast-math}). Because both CoreMark and Dhrystone are pure integer/pointer benchmarks without floating-point operations, \texttt{-Ofast} produces \textbf{identical machine code to \texttt{-O3}}.
+    
+    \item \textbf{\texttt{-Os} and \texttt{-Oz} (Code Size Minimization)}:
+    \texttt{-Os} optimizes for minimum code size while maintaining execution speed. \texttt{-Oz} pushes code density to the absolute extreme: inlining is disabled, common tail sequences are merged into shared helper subroutines, and loop bodies are strictly preserved rather than unrolled.
+    
+    \item \textbf{\texttt{ridiculous} (Extreme Inlining and Loop Unrolling)}:
+    To test the absolute limits of compiler aggression on RISC-V, we evaluated a specialized high-performance flag combination:
+    \begin{lstlisting}[language=bash]
+clang -O3 -flto -funroll-loops -fomit-frame-pointer \
+      -mllvm -inline-threshold=2000 -mllvm -unroll-threshold=2000 ...
+    \end{lstlisting}
+    This forces Link-Time Optimization (LTO) across all compilation units, aggressively inlines nested call graphs, and fully unrolls major loop kernels.
+\end{enumerate}
+
+\subsection{Static Code Analysis: Instruction Mix and Code Density}
+Table \ref{tab:compiler_static_coremark} and Table \ref{tab:compiler_static_dhrystone} report the static binary footprint and instruction classification across all optimization levels for CoreMark and Dhrystone, respectively.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Optimization} & \textbf{Text Size} & \textbf{Data} & \textbf{BSS} & \textbf{Static Insts} & \textbf{ALU (\%)} & \textbf{Loads (\%)} & \textbf{Stores (\%)} & \textbf{Branches (\%)} & \textbf{Jumps (\%)} \\
+\hline
+\texttt{-O0}         & 15,742\,B & 0\,B  & 2,012\,B & 3,623 & 30.7\% & 30.5\% & 20.2\% & 2.3\% & 16.3\% \\
+\texttt{-O1} (Base)  & 11,976\,B & 24\,B & 2,017\,B & 2,655 & 59.2\% & 16.2\% & 12.5\% & 4.4\% & 7.6\% \\
+\texttt{-O2}         & 12,292\,B & 8\,B  & 2,012\,B & 2,734 & 61.0\% & 15.4\% & 12.1\% & 3.7\% & 7.8\% \\
+\texttt{-O3 / O4 / O5}& 12,792\,B& 8\,B  & 2,012\,B & 2,859 & 60.6\% & 16.0\% & 12.2\% & 3.7\% & 7.4\% \\
+\texttt{-Os}         & 9,672\,B  & 8\,B  & 2,012\,B & 2,079 & 57.3\% & 16.9\% & 14.2\% & 4.2\% & 7.4\% \\
+\texttt{-Oz} (Min)   & \textbf{8,812\,B}  & 8\,B  & 2,012\,B & \textbf{1,864} & 57.0\% & 15.1\% & 13.3\% & 3.8\% & 10.9\% \\
+\texttt{-Ofast}      & 12,792\,B & 8\,B  & 2,012\,B & 2,859 & 60.6\% & 16.0\% & 12.2\% & 3.7\% & 7.4\% \\
+\texttt{ridiculous}  & 61,116\,B & 8\,B  & 2,012\,B & 15,199 & 64.9\% & 16.1\% & 3.3\%  & 1.4\% & 14.3\% \\
+\hline
+\end{tabular}
+\caption{Static code size and instruction breakdown for EEMBC CoreMark 1.0 across compiler optimization levels.}\label{tab:compiler_static_coremark}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Optimization} & \textbf{Text Size} & \textbf{Data} & \textbf{BSS} & \textbf{Static Insts} & \textbf{ALU (\%)} & \textbf{Loads (\%)} & \textbf{Stores (\%)} & \textbf{Branches (\%)} & \textbf{Jumps (\%)} \\
+\hline
+\texttt{-O0}         & 4,840\,B  & 0\,B & 100\,B & 1,174 & 34.0\% & 27.9\% & 20.0\% & 2.8\% & 15.3\% \\
+\texttt{-O1} (Base)  & 2,993\,B  & 0\,B & 100\,B & 720   & 64.9\% & 15.6\% & 11.8\% & 4.9\% & 2.9\% \\
+\texttt{-O2}         & 3,065\,B  & 0\,B & 100\,B & 738   & 60.8\% & 12.9\% & 20.5\% & 3.7\% & 2.2\% \\
+\texttt{-O3 / O4 / O5}& 3,085\,B & 0\,B & 100\,B & 743   & 60.8\% & 13.1\% & 20.3\% & 3.8\% & 2.0\% \\
+\texttt{-Os}         & 2,784\,B  & 0\,B & 100\,B & 665   & 63.8\% & 16.4\% & 11.9\% & 5.0\% & 3.0\% \\
+\texttt{-Oz} (Min)   & \textbf{2,336\,B}  & 0\,B & 100\,B & \textbf{553}   & 61.5\% & 15.6\% & 13.4\% & 2.2\% & 7.4\% \\
+\texttt{-Ofast}      & 3,085\,B  & 0\,B & 100\,B & 743   & 60.8\% & 13.1\% & 20.3\% & 3.8\% & 2.0\% \\
+\texttt{ridiculous}  & 14,028\,B & 0\,B & 100\,B & 3,478 & 68.1\% & 5.1\%  & 24.2\% & 0.8\% & 1.8\% \\
+\hline
+\end{tabular}
+\caption{Static code size and instruction breakdown for Dhrystone 2.1 across compiler optimization levels.}\label{tab:compiler_static_dhrystone}
+\end{table}
+
+The static metrics reveal several profound compiler characteristics:
+\begin{enumerate}
+    \item \textbf{Memory Access Proliferation at \texttt{-O0}}:
+    At \texttt{-O0}, memory instructions (Loads + Stores) account for \textbf{50.7\%} of the entire CoreMark binary and \textbf{47.9\%} of Dhrystone. Because registers are not allocated to hold intermediate values, the compiler generates back-to-back \texttt{sw} and \texttt{lw} operations around every single arithmetic instruction. When optimization is enabled (\texttt{-O1} to \texttt{-O3}), register allocation slashes memory instructions down to $\sim 28\%$, allowing register-to-register ALU instructions to dominate ($59\text{--}65\%$).
+    
+    \item \textbf{The Code-Density Paradox of \texttt{-Oz}}:
+    \texttt{-Oz} achieves the absolute smallest static footprint: CoreMark text shrinks by \textbf{31.1\%} ($12,792\,\text{B} \to 8,812\,\text{B}$) and Dhrystone shrinks by \textbf{24.3\%} ($3,085\,\text{B} \to 2,336\,\text{B}$). However, to achieve this compactness, the compiler aggressively outlines repeated code into small functions, causing jump instructions (\texttt{jal}/\texttt{jalr}) to jump from $7.4\%$ up to $10.9\%$ in CoreMark. As shown below, this static density comes at severe dynamic runtime cost!
+    
+    \item \textbf{Binary Explosion under \texttt{ridiculous} Optimization}:
+    Forcing loop unrolling and function inlining expands CoreMark text by \textbf{$5.1\times$} ($11,976\,\text{B} \to 61,116\,\text{B}$, with static instructions expanding from $2,655$ to $15,199$) and Dhrystone text by \textbf{$4.7\times$} ($2,993\,\text{B} \to 14,028\,\text{B}$). Loop branches are replaced with straight-line replicated ALU instructions, lowering branch instructions from $4.4\%$ down to $1.4\%$.
+\end{enumerate}
+
+\subsection{Dynamic Execution Profiling Across Processor Architectures}
+To quantify the interaction between compiler code generation and pipeline hazards, each compiled binary was evaluated across all five processor microarchitectures:
+\begin{enumerate}
+    \item \textbf{Single-Cycle (FE)}: Single-cycle Fetch-Execute ($T_{\text{clk}} = 3.053\,\text{ns}$, $327.5\,\text{MHz}$, ideal $\text{CPI} = 1.00$).
+    \item \textbf{4-Stage NoFwd}: 4-stage pipeline without forwarding ($T_{\text{clk}} = 1.363\,\text{ns}$, $733.7\,\text{MHz}$; stalls on distance-1 and distance-2 RAW hazards).
+    \item \textbf{4-Stage Bypassed}: 4-stage pipeline with full data bypassing ($T_{\text{clk}} = 1.363\,\text{ns}$; stalls only on load-use hazards; predict not-taken).
+    \item \textbf{4-Stage BTFN}: Bypassed pipeline with Static BTFN branch prediction ($T_{\text{clk}} = 1.363\,\text{ns}$).
+    \item \textbf{4-Stage Gshare}: Bypassed pipeline with 256-entry dynamic Gshare branch prediction ($T_{\text{clk}} = 1.363\,\text{ns}$).
+\end{enumerate}
+
+Table \ref{tab:compiler_dynamic_coremark} and Table \ref{tab:compiler_dynamic_dhrystone} present the complete cycle-by-cycle profiling results for CoreMark 1.0 and Dhrystone 2.1, respectively.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|c|c|c|}
+\hline
+\textbf{Opt} & \textbf{Microarchitecture} & \textbf{Dynamic Insts} & \textbf{Cycles} & \textbf{CPI} & \textbf{Stalls / Mispreds} & \textbf{ASAP7 Time} \\
+\hline
+\multirow{5}{*}{\texttt{-O0}} 
+ & Single-Cycle (FE)   & 4,204,574 & 4,204,574 & 1.00 & 0 / 0             & 12,836.6\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 4,204,574 & 9,638,795 & 2.29 & 3,833,010 / 116,438 & 13,137.7\,$\mu$s ($0.98\times$) \\
+ & 4-Stage Bypassed     & 4,204,574 & 6,865,221 & 1.63 & 1,020,410 / 116,438 & 9,357.3\,$\mu$s ($1.37\times$) \\
+ & 4-Stage BTFN         & 4,204,574 & 5,638,169 & 1.34 & 1,020,410 / 116,438 & 7,684.8\,$\mu$s ($1.67\times$) \\
+ & \textbf{4-Stage Gshare} & 4,204,574 & \textbf{5,536,055} & \textbf{1.32} & 1,020,410 / \textbf{65,381} & \textbf{7,545.6\,$\mu$s} (\textbf{1.70$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O1}} 
+ & Single-Cycle (FE)   & 874,891   & 874,891   & 1.00 & 0 / 0             & 2,671.0\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 874,891   & 1,643,060 & 1.88 & 517,244 / 97,308   & 2,239.5\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 874,891   & 1,160,199 & 1.33 & 27,915 / 97,308    & 1,581.4\,$\mu$s ($1.69\times$) \\
+ & 4-Stage BTFN         & 874,891   & 981,463   & 1.12 & 27,915 / 22,764    & 1,337.7\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 874,891   & \textbf{957,453} & \textbf{1.09} & 27,915 / \textbf{10,759} & \textbf{1,305.0\,$\mu$s} (\textbf{2.05$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O2}} 
+ & Single-Cycle (FE)   & 864,007   & 864,007   & 1.00 & 0 / 0             & 2,637.8\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 864,007   & 1,628,246 & 1.88 & 523,748 / 90,951   & 2,219.3\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 864,007   & 1,138,075 & 1.32 & 27,083 / 90,951    & 1,551.2\,$\mu$s ($1.70\times$) \\
+ & 4-Stage BTFN         & 864,007   & 967,243   & 1.12 & 27,083 / 21,031    & 1,318.4\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 864,007   & \textbf{948,745} & \textbf{1.10} & 27,083 / \textbf{11,782} & \textbf{1,293.1\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O3}} 
+ & Single-Cycle (FE)   & 859,290   & 859,290   & 1.00 & 0 / 0             & 2,623.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 859,290   & 1,621,310 & 1.89 & 523,586 / 90,888   & 2,209.8\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 859,290   & 1,131,060 & 1.32 & 27,083 / 90,888    & 1,541.6\,$\mu$s ($1.70\times$) \\
+ & 4-Stage BTFN         & 859,290   & 961,680   & 1.12 & 27,083 / 20,946    & 1,310.8\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 859,290   & \textbf{944,768} & \textbf{1.10} & 27,083 / \textbf{12,490} & \textbf{1,287.7\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Os}} 
+ & Single-Cycle (FE)   & 879,498   & 879,498   & 1.00 & 0 / 0             & 2,685.1\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 879,498   & 1,649,347 & 1.88 & 515,769 / 96,239   & 2,248.1\,$\mu$s ($1.19\times$) \\
+ & 4-Stage Bypassed     & 879,498   & 1,171,146 & 1.33 & 30,417 / 96,239    & 1,596.3\,$\mu$s ($1.68\times$) \\
+ & 4-Stage BTFN         & 879,498   & 986,700   & 1.12 & 30,417 / 19,375    & 1,344.9\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 879,498   & \textbf{968,158} & \textbf{1.10} & 30,417 / \textbf{10,104} & \textbf{1,319.6\,$\mu$s} (\textbf{2.03$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Oz}} 
+ & Single-Cycle (FE)   & 955,942   & 955,942   & 1.00 & 0 / 0             & 2,918.5\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 955,942   & 1,921,349 & 2.01 & 683,541 / 91,550   & 2,618.8\,$\mu$s ($1.11\times$) \\
+ & 4-Stage Bypassed     & 955,942   & 1,275,451 & 1.33 & 29,722 / 91,550    & 1,738.4\,$\mu$s ($1.68\times$) \\
+ & 4-Stage BTFN         & 955,942   & 1,071,561 & 1.12 & 29,722 / 22,074    & 1,460.5\,$\mu$s ($2.00\times$) \\
+ & \textbf{4-Stage Gshare} & 955,942   & \textbf{1,048,425} & \textbf{1.10} & 29,722 / \textbf{10,506} & \textbf{1,429.0\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{ridic.}} 
+ & Single-Cycle (FE)   & \textbf{829,488} & \textbf{829,488} & 1.00 & 0 / 0             & 2,532.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 829,488   & 1,572,147 & 1.90 & 506,588 / 94,582   & 2,142.8\,$\mu$s ($1.18\times$) \\
+ & 4-Stage Bypassed     & 829,488   & 1,096,163 & 1.32 & 24,006 / 94,582    & 1,494.1\,$\mu$s ($1.69\times$) \\
+ & 4-Stage BTFN         & 829,488   & 938,343   & 1.13 & 24,006 / 27,251    & 1,279.0\,$\mu$s ($1.98\times$) \\
+ & \textbf{4-Stage Gshare} & \textbf{829,488} & \textbf{911,217} & \textbf{1.10} & \textbf{24,006} / \textbf{13,688} & \textbf{1,242.0\,$\mu$s} (\textbf{2.04$\times$}) \\
+\hline
+\end{tabular}
+\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for EEMBC CoreMark 1.0 across compiler optimization levels and processor microarchitectures.}\label{tab:compiler_dynamic_coremark}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|c|c|c|}
+\hline
+\textbf{Opt} & \textbf{Microarchitecture} & \textbf{Dynamic Insts} & \textbf{Cycles} & \textbf{CPI} & \textbf{Stalls / Mispreds} & \textbf{ASAP7 Time} \\
+\hline
+\multirow{5}{*}{\texttt{-O0}} 
+ & Single-Cycle (FE)   & 64,810    & 64,810    & 1.00 & 0 / 0             & 197.9\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 64,810    & 143,649   & 2.22 & 56,780 / 1,031    & 195.8\,$\mu$s ($1.01\times$) \\
+ & 4-Stage Bypassed     & 64,810    & 102,318   & 1.58 & 15,001 / 1,031    & 139.5\,$\mu$s ($1.42\times$) \\
+ & 4-Stage BTFN         & 64,810    & 85,884    & 1.33 & 15,001 / 1,031    & 117.1\,$\mu$s ($1.69\times$) \\
+ & \textbf{4-Stage Gshare} & 64,810    & \textbf{84,706} & \textbf{1.31} & 15,001 / \textbf{442} & \textbf{115.5\,$\mu$s} (\textbf{1.71$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O1}} 
+ & Single-Cycle (FE)   & 13,826    & 13,826    & 1.00 & 0 / 0             & 42.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 13,826    & 24,311    & 1.76 & 6,038 / 2,157     & 33.1\,$\mu$s ($1.27\times$) \\
+ & 4-Stage Bypassed     & 13,826    & 19,958    & 1.44 & 1,685 / 2,157     & 27.2\,$\mu$s ($1.55\times$) \\
+ & 4-Stage BTFN         & 13,826    & 15,878    & 1.15 & 1,685 / 155       & 21.6\,$\mu$s ($1.95\times$) \\
+ & \textbf{4-Stage Gshare} & 13,826    & \textbf{15,806} & \textbf{1.14} & 1,685 / \textbf{119} & \textbf{21.5\,$\mu$s} (\textbf{1.96$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O2}} 
+ & Single-Cycle (FE)   & 10,233    & 10,233    & 1.00 & 0 / 0             & 31.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 10,233    & 18,775    & 1.83 & 5,497 / 1,457     & 25.6\,$\mu$s ($1.22\times$) \\
+ & 4-Stage Bypassed     & 10,233    & 14,901    & 1.46 & 1,623 / 1,457     & 20.3\,$\mu$s ($1.54\times$) \\
+ & 4-Stage BTFN         & 10,233    & 12,013    & 1.17 & 1,623 / 51        & 16.4\,$\mu$s ($1.91\times$) \\
+ & \textbf{4-Stage Gshare} & 10,233    & \textbf{12,017} & \textbf{1.17} & 1,623 / \textbf{53} & \textbf{16.4\,$\mu$s} (\textbf{1.91$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-O3}} 
+ & Single-Cycle (FE)   & 10,212    & 10,212    & 1.00 & 0 / 0             & 31.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 10,212    & 18,750    & 1.84 & 5,497 / 1,476     & 25.6\,$\mu$s ($1.22\times$) \\
+ & 4-Stage Bypassed     & 10,212    & 14,876    & 1.46 & 1,623 / 1,476     & 20.3\,$\mu$s ($1.54\times$) \\
+ & 4-Stage BTFN         & 10,212    & 12,026    & 1.18 & 1,623 / 70        & 16.4\,$\mu$s ($1.90\times$) \\
+ & \textbf{4-Stage Gshare} & 10,212    & \textbf{12,032} & \textbf{1.18} & 1,623 / \textbf{73} & \textbf{16.4\,$\mu$s} (\textbf{1.90$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Os}} 
+ & Single-Cycle (FE)   & 15,537    & 15,537    & 1.00 & 0 / 0             & 47.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 15,537    & 27,090    & 1.74 & 6,446 / 2,386     & 36.9\,$\mu$s ($1.28\times$) \\
+ & 4-Stage Bypassed     & 15,537    & 22,221    & 1.43 & 1,577 / 2,386     & 30.3\,$\mu$s ($1.57\times$) \\
+ & 4-Stage BTFN         & 15,537    & 17,971    & 1.16 & 1,577 / 337       & 24.5\,$\mu$s ($1.94\times$) \\
+ & \textbf{4-Stage Gshare} & 15,537    & \textbf{17,647} & \textbf{1.14} & 1,577 / \textbf{175} & \textbf{24.1\,$\mu$s} (\textbf{1.97$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{-Oz}} 
+ & Single-Cycle (FE)   & 30,605    & 30,605    & 1.00 & 0 / 0             & 93.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 30,605    & 53,762    & 1.76 & 15,002 / 2,965    & 73.3\,$\mu$s ($1.28\times$) \\
+ & 4-Stage Bypassed     & 30,605    & 38,952    & 1.27 & 146 / 2,965       & 53.1\,$\mu$s ($1.76\times$) \\
+ & 4-Stage BTFN         & 30,605    & 32,656    & 1.07 & 146 / 469         & 44.5\,$\mu$s ($2.10\times$) \\
+ & \textbf{4-Stage Gshare} & 30,605    & \textbf{32,470} & \textbf{1.06} & 146 / \textbf{376} & \textbf{44.3\,$\mu$s} (\textbf{2.11$\times$}) \\
+\hline
+\multirow{5}{*}{\texttt{ridic.}} 
+ & Single-Cycle (FE)   & \textbf{7,603}     & \textbf{7,603}     & 1.00 & 0 / 0             & 23.2\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd        & 7,603     & 13,699    & 1.80 & 3,815 / 1,098     & 18.7\,$\mu$s ($1.24\times$) \\
+ & 4-Stage Bypassed     & 7,603     & 11,027    & 1.45 & 1,141 / 1,098     & 15.0\,$\mu$s ($1.54\times$) \\
+ & 4-Stage BTFN         & 7,603     & 8,939     & 1.18 & 1,141 / 54        & 12.2\,$\mu$s ($1.91\times$) \\
+ & \textbf{4-Stage Gshare} & \textbf{7,603}     & \textbf{8,981}     & \textbf{1.18} & \textbf{1,141} / \textbf{75}  & \textbf{12.2\,$\mu$s} (\textbf{1.90$\times$}) \\
+\hline
+\end{tabular}
+\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for Dhrystone 2.1 across compiler optimization levels and processor microarchitectures.}\label{tab:compiler_dynamic_dhrystone}
+\end{table}
+
+\subsection{Microarchitectural Analysis: Why the Compiler Cannot Fix an Unforwarded Pipeline}
+The empirical results in Tables \ref{tab:compiler_dynamic_coremark} and \ref{tab:compiler_dynamic_dhrystone} reveal four fundamental lessons in computer engineering:
+
+\begin{enumerate}
+    \item \textbf{The Software Isolation of Pipeline Stalls}:
+    A common misconception is that a sufficiently sophisticated compiler can eliminate pipeline stalls via instruction scheduling. The data decisively refutes this: on the \texttt{4-Stage NoFwd} core, the CPI remains stubbornly anchored at $\mathbf{1.88\text{--}1.90}$ across \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, and \texttt{ridiculous}! Because basic blocks in integer C programs typically contain only 4 to 6 instructions with dense register dependencies, the compiler runs out of independent instructions to schedule into the 2-cycle hazard delay slots. The unforwarded core suffers \textbf{over 506,000 RAW stalls} regardless of compiler aggression. Pipeline stalls are a hardware defect that software cannot schedule away.
+    
+    \item \textbf{Data Bypassing as the Great Equalizer}:
+    Hardware data bypassing slashes CoreMark data stalls by \textbf{94.6\%} (from 517,244 down to 27,915 stalls at \texttt{-O1}), leaving only irreducible Load-Use stalls. This drops the CPI from $1.88$ to $1.32\text{--}1.33$ across all optimization levels.
+    
+    \item \textbf{Branch Prediction Accuracy Across Optimization Levels}:
+    Static BTFN branch prediction reduces CoreMark branch mispredictions by $76.6\%$ (from 97,308 down to 22,764). Dynamic Gshare prediction cuts mispredictions by \textbf{88.9\%} (down to 10,759 mispredictions out of 147,627 dynamic branches, an overall prediction accuracy of \textbf{92.7\%}). This eliminates over 173,000 branch flush bubbles, bringing CoreMark CPI down to \textbf{1.09}.
+    
+    \item \textbf{The Runtime Cost of Extreme Code Size Optimization (\texttt{-Oz})}:
+    While \texttt{-Oz} successfully minimizes code size to 8.8\,KB, it causes dynamic instruction count to expand by \textbf{+11.2\%} on CoreMark ($859,290 \to 955,942$) and by \textbf{+199.7\%} on Dhrystone ($10,212 \to 30,605$). Total execution time on the Gshare core increases from $1,287.7\,\mu\text{s}$ (\texttt{-O3}) to $1,429.0\,\mu\text{s}$ (\texttt{-Oz}), demonstrating the universal trade-off between memory footprint and execution latency.
+\end{enumerate}
+
+\subsection{The Scalar Asymptote: Reaching the Asymptotic Scalar Limit}
+Notice the effective CPI achieved on the \texttt{4-Stage Gshare} core across all optimized variants:
+\begin{equation}
+\text{CPI}_{\text{CoreMark, O1}} = 1.09, \quad \text{CPI}_{\text{CoreMark, O2}} = 1.10, \quad \text{CPI}_{\text{CoreMark, O3}} = 1.10, \quad \text{CPI}_{\text{CoreMark, ridic}} = 1.10.
+\end{equation}
+In a single-issue scalar processor, the theoretical maximum instruction throughput is strictly bounded by:
+\begin{equation}
+\text{IPC}_{\text{max}} = 1.00 \quad \iff \quad \text{CPI}_{\text{min}} = 1.00.
+\end{equation}
+An achieved CPI of $1.094$ corresponds to an issue throughput of $\text{IPC} = 0.914$ instructions per cycle. In other words, \textbf{the 4-stage RV32I core with bypassing and Gshare branch prediction is operating at 91.4\% of theoretical maximum scalar throughput}!
+
+The residual $8.6\%$ overhead consists of physical constraints inherent to scalar execution:
+\begin{itemize}
+    \item True load-use data stalls (1 cycle when an instruction immediately consumes data loaded from memory).
+    \item Indirect jump redirects (\texttt{JALR} targets must be computed in EX, incurring 2 bubbles).
+    \item The remaining $7.3\%$ branch mispredictions.
+\end{itemize}
+We have reached the physical and algorithmic performance ceiling of a single instruction stream.
+
+\subsection{The Next Architectural Frontier: Dual-Issue Superscalar Execution}
+To break through the fundamental $\text{CPI} = 1.00$ ($\text{IPC} = 1.00$) barrier, processor architecture must abandon the scalar single-issue paradigm and transition to \textbf{superscalar execution}.
+
+In the next chapter, we will design and implement a \textbf{2-Way In-Order Dual-Issue Superscalar RV32I Processor Core} (\texttt{RiscvSuperscalar2Way}):
+\begin{enumerate}
+    \item \textbf{Dual Instruction Fetch}: The IF stage fetches 64 bits (two 32-bit instructions, $I_0$ and $I_1$) per clock cycle from instruction memory.
+    \item \textbf{Parallel Dual Decode and Intra-Issue Dependency Checking}: The ID stage decodes $I_0$ and $I_1$ simultaneously and evaluates:
+    \begin{itemize}
+        \item Structural hazards: e.g., if only one data memory port exists, two simultaneous load/store instructions cannot co-issue.
+        \item Intra-group RAW hazards: if $I_1$ reads the register written by $I_0$ ($I_1.rs1 == I_0.rd$ or $I_1.rs2 == I_0.rd$), $I_1$ cannot issue in parallel with $I_0$.
+    \end{itemize}
+    \item \textbf{Dual Execution and Multi-Ported Register Files}: When $I_0$ and $I_1$ are independent, both issue concurrently into parallel execution units (ALU0 and ALU1), writing back up to two results per cycle into a 4-read/2-write port register file.
+\end{enumerate}
+By issuing up to 2 instructions per cycle, a dual-issue superscalar core elevates peak throughput to $\mathbf{\text{IPC} = 2.00}$ ($\text{CPI} = 0.50$), unlocking a new dimension of performance on the exact same silicon technology.
+
+
 \section{Summary}\label{riscvSummary}
 \index{RISC-V!chapter summary}
 
@@ -1690,7 +1698,11 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item Static BTFN with a 32-entry Branch Target Buffer (BTB) in the IF stage predicts backward branches ($\text{Target} < \text{PC}$) and unconditional jumps (\texttt{JAL}) taken, eliminating bubbles on tight loops (0 bubbles). Dynamic Gshare combines an 8-bit Global History Register (GHR) XORed with branch PC to index a 256-entry Pattern History Table (PHT) of 2-bit saturating counters, adapting dynamically to correlated branches and loop exits.
     \item Standalone ASAP7 7\,nm FinFET synthesis demonstrated that both BTFN ($661.7\,\text{ps}$, $1.51\,\text{GHz}$) and Gshare ($523.1\,\text{ps}$, $1.91\,\text{GHz}$) operate with delay well below the $1.363\,\text{ns}$ critical path, adding less than $46\,\text{ps}$ to the full processor clock period while preserving operating frequency ($576\text{--}579\,\text{MHz}$).
     \item On empirical benchmarks, branch prediction slashed CPI on the DSP kernel from 1.35 to 1.05 ($2.14\times$ speedup over single-cycle), on Dhrystone 2.1 from 1.44 to 1.14 ($1.96\times$ speedup, 528.2 DMIPS), and on EEMBC CoreMark 1.0 from 1.33 to 1.09 ($2.05\times$ speedup, 766.3 CoreMarks). Across CoreMark, the combination of data bypassing and Gshare eliminated 89.3\% of all pipeline stalls.
-    \item A taxonomy of computer architecture benchmarks was established: application-class benchmarks such as SPEC CPU2017 require virtual memory (MMU), a full POSIX OS (Linux), and gigabytes of RAM, rendering them physically inapplicable to bare-metal microcontroller-class cores. Microcontroller-class architectures rely on freestanding suites including Dhrystone, EEMBC CoreMark, and Embench-IoT.
+    \item A taxonomy of embedded benchmarks was established: microcontroller-class architectures rely on freestanding benchmark suites including Dhrystone 2.1, EEMBC CoreMark 1.0, and Embench-IoT.
+    \item The interaction between compiler optimization levels and processor microarchitecture was systematically quantified across ten optimization configurations (\texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, \texttt{-O4}, \texttt{-O5}, \texttt{-Os}, \texttt{-Oz}, \texttt{-Ofast}, and \texttt{ridiculous} LTO/unrolling). In modern Clang 21, \texttt{-O4} and \texttt{-O5} are deprecated aliases for \texttt{-O3} (producing 100\% bit-for-bit identical binaries), while \texttt{-Ofast} on integer code is equivalent to \texttt{-O3}.
+    \item Moving from unoptimized \texttt{-O0} to basic \texttt{-O1} slashes dynamic instruction count by $4.8\times$ on CoreMark ($4,204,574 \to 874,891$) by replacing stack spills with register allocation. However, compilers cannot schedule away RAW pipeline hazards: the unforwarded pipeline exhibits a persistently poor $\text{CPI} \approx 1.88\text{--}2.29$ across all compiler optimization levels.
+    \item The code-size paradox of \texttt{-Oz} was demonstrated: while achieving the smallest static text footprint (8.8\,KB, a $-31\%$ reduction), \texttt{-Oz} increases dynamic instruction count by $+11.2\%$ on CoreMark and $+199.7\%$ on Dhrystone by converting inlined loops into outlined helper calls, increasing runtime latency. Conversely, extreme loop unrolling (\texttt{ridiculous}) expands text size by $5.1\times$ to 61.1\,KB, but retires the fewest dynamic instructions (829,488 on CoreMark).
+    \item On the 4-stage pipeline with data bypassing and dynamic Gshare branch prediction, CoreMark achieves $\text{CPI} = 1.09\text{--}1.10$ ($\text{IPC} \approx 0.914$) across all optimized compiler variants, operating at \textbf{91.4\% of theoretical maximum scalar throughput}. Because a single-issue scalar core cannot exceed $\text{IPC} = 1.00$, this empirical limit establishes the imperative for \textbf{superscalar dual-issue execution} ($\text{IPC} \le 2.00$) explored in subsequent chapters.
 \end{itemize}
 
 
@@ -1799,9 +1811,9 @@ $\diamond$
 \begin{problem}
 Consider the empirical EEMBC CoreMark 1.0 benchmark results from Table \ref{tab:riscv_all_benchmarks} executing on the pure \texttt{RV32I} single-cycle (FE) core ($T_{\text{clk}} = 3.053\,\text{ns}$) and 4-stage pipelined core ($T_{\text{clk}} = 1.363\,\text{ns}$):
 \begin{enumerate}
-    \item A student expects a 4-stage pipeline to achieve a $4.0\times$ speedup over the single-cycle core. Compute the actual benchmark speedup using instruction count $I = 874,891$, single-cycle cycles $C_1 = 874,891$, and pipelined cycles $C_4 = 1,643,060$.
-    \item Decompose the actual speedup into its frequency multiplier factor and CPI factor. Explain why the pipelined core runs ``only a tiny bit faster'' ($1.19\times$) despite a $2.24\times$ clock frequency increase.
-    \item Why cannot desktop/server benchmarks such as SPEC CPU2017 be executed directly on bare-metal \texttt{RV32I} microcontroller cores? What modern open-source benchmark suite was created to evaluate microcontroller-class RISC-V processors?
+    \item Compute the actual benchmark speedup using instruction count $I = 874,891$, single-cycle cycles $C_1 = 874,891$, and pipelined cycles $C_4 = 1,643,060$.
+    \item Decompose the actual speedup into its frequency multiplier factor and CPI factor. Explain why the pipelined core achieves a $1.19\times$ speedup without forwarding despite a $2.24\times$ clock frequency increase.
+    \item How does adding data forwarding and Carry Select Addition resolve these bottlenecks and accelerate CoreMark?
 \end{enumerate}
 
 \textbf{Solution}:
@@ -1820,8 +1832,8 @@ Consider the empirical EEMBC CoreMark 1.0 benchmark results from Table \ref{tab:
     \begin{equation}
     \text{Speedup} = \left(\frac{\text{CPI}_{\text{single}}}{\text{CPI}_{\text{pipe}}}\right) \times \left(\frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}}\right) = \left(\frac{1.00}{1.878}\right) \times \left(\frac{3.053\,\text{ns}}{1.363\,\text{ns}}\right) = 0.532 \times 2.240 = \mathbf{1.193\times}.
     \end{equation}
-    Pipelining provides a $2.240\times$ frequency multiplier by overlapping the four physical pipeline steps across clock cycles. However, in the absence of data forwarding, RAW data hazard stalls (2-cycle stalls for distance-1, 1-cycle stall for distance-2) and 2-cycle taken branch flushes inflate the CPI from 1.00 to 1.878 (+87.8\% cycle overhead). This CPI penalty factor ($1 / 1.878 = 0.532$) devours nearly three-quarters of the frequency gain, leaving only a modest $+19.3\%$ net speedup.
-    \item SPEC CPU2017 cannot run on bare-metal \texttt{RV32I} microcontroller cores because SPEC benchmarks require a Memory Management Unit (MMU) with virtual memory paging, a full POSIX operating system (Linux), multi-gigabyte RAM capacity, glibc with dynamic file I/O, and commercial proprietary licenses. The modern open-source embedded alternative created by David Patterson and the FOSSi consortium is \textbf{Embench-IoT}.
+    Pipelining provides a $2.240\times$ frequency multiplier by overlapping the four physical pipeline steps across clock cycles. However, in the absence of data forwarding, RAW data hazard stalls (2-cycle stalls for distance-1, 1-cycle stall for distance-2) and 2-cycle taken branch flushes inflate the CPI from 1.00 to 1.878 (+87.8\% cycle overhead). This CPI penalty factor ($1 / 1.878 = 0.532$) absorbs nearly three-quarters of the frequency gain, leaving only a modest $+19.3\%$ net speedup.
+    \item Data forwarding satisfies data dependencies with zero stall cycles (reducing CPI from 1.88 to 1.33, an application speedup of $1.69\times$). Carry Select Addition balances stage delays ($0.600\,\text{ns}$), scaling operating frequency to $1.67\,\text{GHz}$.
 \end{enumerate}
 $\diamond$
 \end{problem}
@@ -1900,5 +1912,22 @@ Consider branch prediction in the 4-stage \texttt{RiscvPipelined} processor:
 $\diamond$
 \end{problem}
 
+\begin{problem}
+Consider the interaction between compiler optimization flags and processor microarchitecture evaluated in Section \ref{riscvCompilerStudy}:
+\begin{enumerate}
+    \item In Table \ref{tab:compiler_static_coremark}, memory instructions (Loads + Stores) account for $50.7\%$ of all static instructions at \texttt{-O0}, but drop to $28.7\%$ at \texttt{-O1}. Explain why disabling optimization causes memory instructions to proliferate so dramatically.
+    \item In Table \ref{tab:compiler_dynamic_coremark}, why does the \texttt{4-Stage NoFwd} pipeline suffer an almost identical $\text{CPI} \approx 1.88\text{--}1.90$ across \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, and \texttt{ridiculous}, despite vast differences in compiler optimization aggression?
+    \item The \texttt{-Oz} flag minimizes static code size, while the \texttt{ridiculous} flag maximizes loop unrolling. Compare their static footprints and dynamic instruction counts on CoreMark. What fundamental architectural trade-off does this comparison illustrate?
+    \item On the \texttt{4-Stage Gshare} core, CoreMark executes at $\text{CPI} = 1.09$. Explain why it is physically impossible for any software compiler technique to reduce the CPI of this processor below $1.00$. What microarchitectural modification is required to break through this limit?
+\end{enumerate}
 
+\textbf{Solution}:
+\begin{enumerate}
+    \item At \texttt{-O0}, the compiler disables the register allocator for local variables, mapping every local variable and compiler temporary to an offset on the activation stack frame. Consequently, every expression requires loading operands from memory into temporary registers via \texttt{lw} and immediately writing the result back to memory with \texttt{sw}. At \texttt{-O1}, the compiler constructs live ranges and allocates local variables to the 32 general-purpose registers, allowing values to persist across instructions without touching memory.
+    \item In integer C code (such as CoreMark), basic blocks average only 4 to 6 instructions, and computations are tightly serialized by data dependencies. The compiler's static instruction scheduler cannot find independent instructions to separate dependent ALU operations by 2 delay slots (for distance-1 RAW hazards). Therefore, regardless of optimization level, the unforwarded pipeline continually stalls on RAW dependencies, resulting in a fixed $\text{CPI} \approx 1.88\text{--}1.90$. Hardware data bypassing is mandatory to resolve these hazards.
+    \item On CoreMark, \texttt{-Oz} achieves a text footprint of only $8,812\,\text{B}$ ($1,864$ static instructions), but executes $955,942$ dynamic instructions. The \texttt{ridiculous} configuration expands text to $61,116\,\text{B}$ ($15,199$ static instructions, a $5.1\times$ expansion!), but executes only $829,488$ dynamic instructions (a $-13.2\%$ reduction compared to \texttt{-Oz}). This illustrates the classic Space-Time Trade-off in computer systems: loop unrolling eliminates loop branch overhead and enables cross-iteration scheduling at the cost of instruction cache/ROM footprint.
+    \item In a synchronous single-issue processor, the datapath can fetch, decode, execute, and retire at most \textbf{one instruction per clock cycle}. Therefore, $\text{IPC} \le 1.00$, which dictates that $\text{CPI} = 1 / \text{IPC} \ge 1.00$. Even with zero stalls and zero branch mispredictions, the CPI cannot drop below $1.00$. To achieve $\text{CPI} < 1.00$ ($\text{IPC} > 1.00$), the processor microarchitecture must be redesigned as a \textbf{superscalar processor} that fetches, decodes, and executes multiple instructions concurrently in parallel execution units each clock cycle.
+\end{enumerate}
+$\diamond$
+\end{problem}
 

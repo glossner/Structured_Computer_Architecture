@@ -196,9 +196,9 @@ Listing \ref{lst:chisel_conformance_spec} illustrates the Chisel/Scala conforman
 \includechiselcode[caption={Chisel/Scala Conformance Test Suite (RiscvConformanceSpec.scala)}, label={lst:chisel_conformance_spec}, firstline=12, firstnumber=12, lastline=150]{\chiselTestBenchSourceDir/riscv/RiscvConformanceSpec.scala}
 
 \subsection{Conformance Results}
-\index{conformance testing!results summary}
+\index{conformance testing!results summary}\index{conformance testing!RV32I verification}
 
-All 42 official architectural conformance test suites execute and pass against the \texttt{RiscvFetchExecute} processor in Chisel/Scala simulation with a 100\% exact signature match against Spike golden reference signatures (spanning 86,964 simulation cycles and 16,140 verified signature words). Table \ref{tab:conformance_results} details the verified test suites by instruction category.
+The official architectural conformance test suites were executed against both the single-cycle \texttt{RiscvFetchExecute} processor and the 4-stage pipelined \texttt{RiscvPipelined} processor in cycle-accurate Chisel simulation. Both cores achieved a \textbf{100\% pass rate} with bit-exact signature matches against the official Spike reference model across all test suites (spanning 42 suites for the base+Zmmul single-cycle core and 38 suites for the pure RV32I pipelined core). Table \ref{tab:conformance_results} details the verified test suites by instruction category, and Table \ref{tab:rv32i_pipelined_conformance_results} details the cycle-by-cycle execution comparison between the single-cycle and 4-stage pipelined implementations.
 
 \begin{table}[htbp]
 \centering
@@ -228,22 +228,86 @@ All 42 official architectural conformance test suites execute and pass against t
 \multicolumn{2}{|l|}{\textbf{Total / Summary}: 42 official test suites (38 RV32I + 4 Zmmul) --- 100\% signature match} \\
 \hline
 \end{tabularx}
-\caption{Official RISC-V architectural conformance verification test suites for \texttt{RiscvFetchExecute}.}\label{tab:conformance_results}
+\caption{Official RISC-V architectural conformance verification test suites.}\label{tab:conformance_results}
 \end{table}
 
-\subsection{Architectural Nuances Uncovered by Conformance Testing}
-\index{conformance testing!architectural nuances}\index{JALR!LSB mask requirement}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Test Category} & \textbf{Suites Tested} & \textbf{Single-Cycle Cycles} & \textbf{4-Stage Pipelined Cycles (No Fwd)} \\
+\hline
+Arithmetic (R-type)     & 10 & 30,680  & 65,361 \\
+Immediate (I-type)      & 9  & 20,412  & 41,202 \\
+Upper Immediates        & 2  & 730     & 1,414  \\
+Jumps (\texttt{JAL}, \texttt{JALR}) & 2  & 2,224   & 3,747  \\
+Branches (B-type)       & 6  & 18,240  & 47,885 \\
+Loads (\texttt{LB}, \texttt{LH}, \texttt{LW}, etc.) & 5 & 2,860 & 4,831 \\
+Stores (\texttt{SB}, \texttt{SH}, \texttt{SW})      & 3 & 1,980 & 3,960 \\
+Synchronization (\texttt{FENCE})                    & 1 & 148   & 238   \\
+\hline
+\textbf{Total / Summary} & \textbf{38 Suites} & \textbf{77,274 Cycles} & \textbf{168,638 Cycles} \\
+\hline
+\end{tabular}
+\caption{Official RISC-V \texttt{RV32I} architectural conformance results and cycle counts for single-cycle vs.\ 4-stage pipelined cores without forwarding (100\% signature match across all 38 test suites).}\label{tab:rv32i_pipelined_conformance_results}
+\end{table}
 
-Executing the official conformance test suite against \texttt{RiscvFetchExecute} exposed subtle edge cases that are frequently overlooked in textbook processor designs:
+Across the 38 pure \texttt{RV32I} test suites, cumulative execution cycles increased from 77,274 cycles on the single-cycle core to 168,638 cycles on the unforwarded pipelined core, yielding an average CPI of 2.18 across the verification suite. This overhead reflects the 2-cycle stalls on distance-1 RAW dependencies, 1-cycle stalls on distance-2 RAW dependencies, and 2-cycle flushes incurred whenever conditional branches or unconditional jumps are taken.
+
+
+\section{Embedded Benchmark Workloads and Performance Evaluation Methodology}\label{riscvBenchmarks}
+\index{benchmark!workloads}\index{benchmark!taxonomy}\index{CoreMark}\index{Dhrystone}\index{Embench-IoT}
+
+While architectural conformance suites verify functional correctness, they are not representative of real-world application performance. Microprocessor performance evaluation requires standardized benchmark workloads that exercise computational, memory, and control-flow subsystems in realistic combinations. In this chapter, we evaluate all processor configurations against four distinct benchmark workloads:
+
 \begin{enumerate}
-    \item \textbf{JALR Target Calculation and ALU Operand Routing}:
-    Under \texttt{JALR}, the processor computes the target address by adding register $\text{rs1}$ to sign-extended 12-bit immediate \texttt{imm}, and subsequently clears bit 0. In an early implementation, the instruction decoder failed to assert \texttt{c.aluSrc} for opcode \texttt{JALR}. Consequently, the ALU multiplexer erroneously routed $\text{rs2}$ into operand B, evaluating target $\text{rs1} + \text{rs2}$ rather than $\text{rs1} + \text{imm}$. Conformance test \texttt{jalr-01} immediately identified this discrepancy.
-    \item \textbf{Shift Amount Clamping}:
-    The RISC-V specification dictates that for all 32-bit shift instructions (\texttt{SLL}, \texttt{SRL}, \texttt{SRA}, \texttt{SLLI}, \texttt{SRLI}, \texttt{SRAI}), only the least significant 5 bits of the shift operand ($\text{shamt}[4:0]$) are utilized. If higher bits are allowed to influence the shifter, shifts with values $\ge 32$ produce zero or invalid results.
-    \item \textbf{Signed vs. Unsigned Relational Comparisons}:
-    The comparison instructions (\texttt{SLT} vs. \texttt{SLTU}, \texttt{BLT} vs. \texttt{BLTU}, \texttt{BGE} vs. \texttt{BGEU}) test extreme integer values, including negative numbers ($\text{MSB} = 1$) compared against small positive numbers. Unsigned comparisons must treat \texttt{0xFFFFFFFF} as $2^{32}-1$, whereas signed comparisons treat it as $-1$. The \texttt{RiscvALU} properly segregates signed (\texttt{.asSInt}) and unsigned (\texttt{.asUInt}) relational logic.
-    \item \textbf{Sub-Word Alignment and Sign Extension}:
-    For load instructions (\texttt{LB}, \texttt{LH}, \texttt{LBU}, \texttt{LHU}), data memory delivers a full 32-bit word. The memory subsystem must extract the appropriate byte or halfword using lower address bits $\text{addr}[1:0]$ and either sign-extend or zero-extend the result into bits 31:8 (or 31:16).
-    \item \textbf{Register $x0$ Invariance}:
-    The architecture strictly requires that $x0$ remains 0 under all conditions. Instructions targeting $x0$ as destination (\texttt{rd = 0}) must discard the write-back data, and reads of $x0$ must return zero combinationally even if a concurrent write is attempted.
+    \item \textbf{Digital Signal Processing (DSP) Kernels}:
+    Signal processing workloads demand sustained multiply-accumulate throughput. We implement two canonical DSP kernels compiled as a bare-metal application:
+    \begin{itemize}
+        \item A \textbf{16-point 4-tap Finite Impulse Response (FIR) filter}:
+        \begin{equation}
+        y[n] = \sum_{k=0}^{3} h[k] \cdot x[n-k].
+        \end{equation}
+        \item A \textbf{16-element vector dot product}:
+        \begin{equation}
+        P = \sum_{i=0}^{15} a[i] \cdot b[i].
+        \end{equation}
+    \end{itemize}
+    In pure \texttt{RV32I}, multiplications are executed using compiler runtime shift-and-add software subroutines (\texttt{\_\_mulsi3}), which require approximately 35 instructions per multiply. When the \texttt{Zmmul} extension is present, each multiplication is executed in a single hardware \texttt{MUL} instruction.
+    
+    \item \textbf{Dhrystone 2.1}:
+    Originally developed by Reinhold P. Weicker in 1984, Dhrystone is a synthetic integer benchmark that models general-purpose system programming workloads. It contains representative mixes of integer arithmetic, string operations (\texttt{strcpy}, \texttt{strcmp}), pointer chasing, structure copying, and nested procedure calls. Dhrystone reports performance in Dhrystones per second, normalized against the DEC VAX-11/780 (rated at 1,757 Dhrystones/second = 1.0 DMIPS), yielding:
+    \begin{equation}
+    \text{DMIPS} = \frac{\text{Dhrystones/second}}{1757}, \qquad \text{DMIPS/MHz} = \frac{\text{DMIPS}}{f_{\text{clk}} \ (\text{MHz})}.
+    \end{equation}
+    
+    \item \textbf{EEMBC CoreMark 1.0}:
+    Developed by the Embedded Microprocessor Benchmark Consortium (EEMBC), CoreMark is the de-facto industry standard for evaluating embedded microcontroller cores. Unlike synthetic benchmarks, CoreMark exercises algorithms commonly found in embedded systems: 2D matrix manipulation, linked-list search and reversal, state machine parsing, and a 16-bit Cyclic Redundancy Check (CRC-16). CoreMark incorporates a self-checking CRC that validates computational correctness, ensuring optimizing compilers cannot eliminate algorithmic work through dead-code removal. Performance is reported in:
+    \begin{equation}
+    \text{CoreMark/MHz} = \frac{\text{CoreMarks}}{f_{\text{clk}} \ (\text{MHz})} = \frac{10^6}{\text{Cycles per Iteration}}.
+    \end{equation}
+    
+    \item \textbf{Embench-IoT}:
+    Developed by the Free and Open Source Silicon (FOSSi) Foundation in collaboration with David Patterson, Embench is a modern, open-source benchmark suite consisting of 19 real-world embedded programs (e.g., AES encryption, Huffman decoding, Minver, QR-code, Wic) designed specifically to provide a reproducible, non-proprietary evaluation standard for microcontroller-class RISC-V cores.
 \end{enumerate}
+
+Table \ref{tab:benchmark_taxonomy} summarizes the taxonomy of embedded benchmark standards used in this text.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\textbf{Benchmark Suite} & \textbf{Primary Target} & \textbf{Runtime Environment} & \textbf{Footprint} & \textbf{Primary Metric} \\
+\hline
+\textbf{DSP Kernels}     & Embedded Signal Processing & Freestanding Bare-Metal & $<2$\,KB RAM & Cycles, Execution Time \\
+\textbf{Dhrystone 2.1}   & General Integer Systems  & Freestanding Bare-Metal & $<4$\,KB RAM & DMIPS, DMIPS/MHz \\
+\textbf{CoreMark 1.0}    & Embedded Microcontrollers & Freestanding Bare-Metal & $<8$\,KB RAM & CoreMark, CoreMark/MHz \\
+\textbf{Embench-IoT}     & Embedded IoT Cores      & Freestanding Bare-Metal & $<64$\,KB RAM & Geometric Mean Relative Speed \\
+\hline
+\end{tabular}
+\caption{Taxonomy of embedded computer architecture benchmarks.}\label{tab:benchmark_taxonomy}
+\end{table}
+
+Throughout this chapter, rather than presenting benchmark data in isolation, results are reported in a core-by-core manner as each processor microarchitecture is developed: from the single-cycle baseline, through the unforwarded pipeline, balanced adder stages, data bypassing, pipelined multiplication, branch prediction, and compiler optimization flags.
