@@ -8,7 +8,7 @@
 \section{Introduction to the RISC-V Architecture}\label{riscvIntro}
 \index{RISC-V!design philosophy}\index{open standard instruction set}
 
-The RISC-V (pronounced ``risk-five'') instruction set architecture represents a fundamental paradigm shift in computer architecture. Unlike proprietary instruction set architectures (such as x86 and ARM) whose definitions are tightly controlled by commercial entities, RISC-V is an open, royalty-free standard governed by RISC-V International. Conceived in 2010 at the University of California, Berkeley, RISC-V was developed to provide a clean, modern, extensible, and mathematically structured instruction set architecture suitable for academic instruction, research, and high-performance commercial silicon.
+The RISC-V (pronounced ``risk-five'') instruction set architecture represents a fundamental paradigm shift in computer architecture. Unlike proprietary instruction set architectures (such as x86 and ARM) whose definitions are tightly controlled by commercial entities, RISC-V is an open, royalty-free standard governed by RISC-V International. Conceived in 2010 at the University of California, Berkeley \cite{asanovic2014case,waterman2014riscv,waterman2016design,patterson2017riscvreader}, RISC-V was developed to provide a clean, modern, extensible, and mathematically structured instruction set architecture suitable for academic instruction, research, and high-performance commercial silicon. The formal definition of the architecture is maintained in the RISC-V Instruction Set Manual, comprising Volume I for the Unprivileged ISA \cite{riscv-spec}, Volume II for the Privileged Architecture \cite{riscv-priv-spec}, and modular ratified extension standards including the \texttt{Zmmul} multiplication extension \cite{riscv-zmmul-spec}.
 
 The architectural philosophy of RISC-V is guided by four foundational principles:
 \begin{enumerate}
@@ -184,11 +184,11 @@ To establish absolute correctness, all processor implementations in this chapter
 \subsection{Verification Methodology: Pure Chisel/Scala Simulation}
 \index{EphemeralSimulator!architectural testbench}
 
-While we can generate Verilog and compile a C++ simulator using external tools (such as Verilator), we choose to use Chisel's built-in simulator (\texttt{EphemeralSimulator}). For the prior approach, see the KryptoNyte processor environment. This achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework without requiring external synthesis or toolchain dependencies:
+While we can generate Verilog and compile a C++ simulator using external tools (such as Verilator), we choose to use Chisel's built-in simulator (\texttt{EphemeralSimulator}). For the prior approach, see the KryptoNyte processor environment.\footnote{\url{https://github.com/Ypologist/KryptoNyte}} This achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework without requiring external synthesis or toolchain dependencies:
 \begin{itemize}
     \item \textbf{4MB Emulated Memory System}: A simulation memory buffer is initialized at base address \texttt{0x80000000} (the canonical RISC-V boot vector).
     \item \textbf{Mailbox Completion Protocol}: The testbench continuously executes instructions and monitors data memory writes. When the processor writes to the memory-mapped mailbox register \texttt{tohost} (\texttt{0x80004000}), the test completes. A write value of \texttt{0x1} signifies success, whereas any other non-zero value indicates a failure code.
-    \item \textbf{Golden Reference Signature Comparison}: Upon test completion, memory contents between linker symbols \texttt{begin\_signature} and \texttt{end\_signature} are extracted word-by-word into a test signature. This signature is compared against the golden reference signature produced by \textbf{Spike}, the official RISC-V reference golden model.
+    \item \textbf{Golden Reference Signature Comparison}: Upon test completion, memory contents between linker symbols \texttt{begin\_signature} and \texttt{end\_signature} are extracted word-by-word into a test signature. This signature is compared against the golden reference signature produced by \textbf{Spike}, the official RISC-V reference golden model \cite{riscv-spike}\footnote{\url{https://github.com/riscv-software-src/riscv-isa-sim}}.
 \end{itemize}
 
 Listing \ref{lst:chisel_conformance_spec} illustrates a partial listing of the Chisel/Scala conformance test runner (showing lines 94--111).
@@ -198,7 +198,7 @@ Listing \ref{lst:chisel_conformance_spec} illustrates a partial listing of the C
 \subsection{Conformance Results}
 \index{conformance testing!results summary}\index{conformance testing!RV32I verification}
 
-All processor core configurations developed throughout Chapter 19 pass 100\% of the official architectural conformance tests with bit-exact signature matches against the official Spike reference golden model across all test suites (spanning 38 suites for pure \texttt{RV32I} cores and 42 suites when the \texttt{Zmmul} extension is enabled). Table \ref{tab:conformance_results} details the complete suite of verified architectural test cases by instruction category. Detailed cycle-by-cycle execution metrics and comparative analysis for each core microarchitecture are presented in their respective results sections throughout this chapter, culminating in a grand verification summary in Section \ref{riscvSummary}.
+All processor core configurations developed throughout Chapter 19 pass 100\% of the official architectural conformance tests with bit-exact signature matches against the official Spike reference golden model \cite{riscv-spike} across all test suites (spanning 38 suites for pure \texttt{RV32I} cores and 42 suites when the \texttt{Zmmul} extension is enabled). Table \ref{tab:conformance_results} details the complete suite of verified architectural test cases by instruction category. Detailed cycle-by-cycle execution metrics and comparative analysis for each core microarchitecture are presented in their respective results sections throughout this chapter, culminating in a grand verification summary in Section \ref{riscvSummary}.
 
 \begin{table}[htbp]
 \centering
@@ -253,19 +253,19 @@ While architectural conformance suites verify functional correctness, they are n
     In pure \texttt{RV32I}, multiplications are executed using compiler runtime shift-and-add software subroutines (\texttt{\_\_mulsi3}), which require approximately 35 instructions per multiply. When the \texttt{Zmmul} extension is present, each multiplication is executed in a single hardware \texttt{MUL} instruction.
     
     \item \textbf{Dhrystone 2.1}:
-    Originally developed by Reinhold P. Weicker in 1984, Dhrystone is a synthetic integer benchmark that models general-purpose system programming workloads. It contains representative mixes of integer arithmetic, string operations (\texttt{strcpy}, \texttt{strcmp}), pointer chasing, structure copying, and nested procedure calls. Dhrystone reports performance in Dhrystones per second, normalized against the DEC VAX-11/780 (rated at 1,757 Dhrystones/second = 1.0 DMIPS), yielding:
+    Originally developed by Reinhold P. Weicker in 1984 \cite{weicker1984dhrystone}, Dhrystone is a synthetic integer benchmark that models general-purpose system programming workloads. It contains representative mixes of integer arithmetic, string operations (\texttt{strcpy}, \texttt{strcmp}), pointer chasing, structure copying, and nested procedure calls. Dhrystone reports performance in Dhrystones per second, normalized against the DEC VAX-11/780 (rated at 1,757 Dhrystones/second = 1.0 DMIPS), yielding:
     \begin{equation}
     \text{DMIPS} = \frac{\text{Dhrystones/second}}{1757}, \qquad \text{DMIPS/MHz} = \frac{\text{DMIPS}}{f_{\text{clk}} \ (\text{MHz})}.
     \end{equation}
     
     \item \textbf{EEMBC CoreMark 1.0}:
-    Developed by the Embedded Microprocessor Benchmark Consortium (EEMBC), CoreMark is the de-facto industry standard for evaluating embedded microcontroller cores. Unlike synthetic benchmarks, CoreMark exercises algorithms commonly found in embedded systems: 2D matrix manipulation, linked-list search and reversal, state machine parsing, and a 16-bit Cyclic Redundancy Check (CRC-16). CoreMark incorporates a self-checking CRC that validates computational correctness, ensuring optimizing compilers cannot eliminate algorithmic work through dead-code removal. Performance is reported in:
+    Developed by the Embedded Microprocessor Benchmark Consortium (EEMBC) \cite{galon2012coremark}, CoreMark is the de-facto industry standard for evaluating embedded microcontroller cores. Unlike synthetic benchmarks, CoreMark exercises algorithms commonly found in embedded systems: 2D matrix manipulation, linked-list search and reversal, state machine parsing, and a 16-bit Cyclic Redundancy Check (CRC-16). CoreMark incorporates a self-checking CRC that validates computational correctness, ensuring optimizing compilers cannot eliminate algorithmic work through dead-code removal. Performance is reported in:
     \begin{equation}
     \text{CoreMark/MHz} = \frac{\text{CoreMarks}}{f_{\text{clk}} \ (\text{MHz})} = \frac{10^6}{\text{Cycles per Iteration}}.
     \end{equation}
     
     \item \textbf{Embench-IoT}:
-    Developed by the Free and Open Source Silicon (FOSSi) Foundation in collaboration with David Patterson, Embench is a modern, open-source benchmark suite consisting of 19 real-world embedded programs (e.g., AES encryption, Huffman decoding, Minver, QR-code, Wic) designed specifically to provide a reproducible, non-proprietary evaluation standard for microcontroller-class RISC-V cores.
+    Developed by the Free and Open Source Silicon (FOSSi) Foundation in collaboration with David Patterson \cite{embench2020}, Embench is a modern, open-source benchmark suite consisting of 19 real-world embedded programs (e.g., AES encryption, Huffman decoding, Minver, QR-code, Wic) designed specifically to provide a reproducible, non-proprietary evaluation standard for microcontroller-class RISC-V cores.
 \end{enumerate}
 
 Table \ref{tab:benchmark_taxonomy} summarizes the taxonomy of embedded benchmark standards used in this text.
