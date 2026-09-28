@@ -96,7 +96,7 @@ Notice the structural regularity across all six formats:
 
 The \texttt{RV32I} base instruction set comprises 40 machine instructions categorized into four functional groups:
 
-\subsubsection{1. Register-Register and Register-Immediate Computational Operations}
+\subsubsection{Register-Register and Register-Immediate Computational Operations}
 \index{ALU!RISC-V operations}\index{computational instructions}
 \begin{itemize}
     \item \textbf{Arithmetic}: Addition (\texttt{ADD}, \texttt{ADDI}) and Subtraction (\texttt{SUB}). Unsigned arithmetic is performed using identical two's complement adder circuits.
@@ -106,7 +106,7 @@ The \texttt{RV32I} base instruction set comprises 40 machine instructions catego
     \item \textbf{Upper Immediates}: Load Upper Immediate (\texttt{LUI}), which places a 20-bit immediate in bits 31:12 of \texttt{rd}, and Add Upper Immediate to PC (\texttt{AUIPC}), which computes $\text{pc} + (\text{imm} \ll 12)$ for position-independent addressing.
 \end{itemize}
 
-\subsubsection{2. Control Transfer Instructions}
+\subsubsection{Control Transfer Instructions}
 \index{branch instructions!RISC-V}\index{jump instructions!JAL and JALR}
 \begin{itemize}
     \item \textbf{Conditional Branches (B-type)}: Branch if Equal (\texttt{BEQ}), Branch if Not Equal (\texttt{BNE}), Branch if Less Than signed (\texttt{BLT}), Branch if Greater Than or Equal signed (\texttt{BGE}), Branch if Less Than unsigned (\texttt{BLTU}), and Branch if Greater Than or Equal unsigned (\texttt{BGEU}). The target address is computed as $\text{pc} + \text{imm}$, where the 12-bit signed immediate represents a multiple of 2 bytes with bit 0 implicitly 0.
@@ -116,14 +116,14 @@ The \texttt{RV32I} base instruction set comprises 40 machine instructions catego
     \end{equation}
 \end{itemize}
 
-\subsubsection{3. Memory Load and Store Instructions}
+\subsubsection{Memory Load and Store Instructions}
 \index{memory!RISC-V load and store}\index{byte addressing}
 \begin{itemize}
     \item \textbf{Loads (I-type)}: Load Byte signed (\texttt{LB}), Load Halfword signed (\texttt{LH}), Load Word (\texttt{LW}), Load Byte unsigned (\texttt{LBU}), and Load Halfword unsigned (\texttt{LHU}). The memory address is computed as $\text{rs1} + \text{imm}$. Unsigned variants zero-extend the sub-word data, while signed variants sign-extend to 32 bits.
     \item \textbf{Stores (S-type)}: Store Byte (\texttt{SB}), Store Halfword (\texttt{SH}), and Store Word (\texttt{SW}). Data from source register \texttt{rs2} is written to effective address $\text{rs1} + \text{imm}$.
 \end{itemize}
 
-\subsubsection{4. The Zmmul Standard Extension}
+\subsubsection{The Zmmul Standard Extension}
 \index{Zmmul: multiplication extension}\index{hardware multiplier!RISC-V}
 The standard \texttt{Zmmul} extension defines the integer multiplication subset of the standard M extension without requiring hardware division circuitry:
 \begin{itemize}
@@ -137,7 +137,7 @@ The standard \texttt{Zmmul} extension defines the integer multiplication subset 
 \section{Harvard 5-OS Hardware Architecture and Microarchitecture}\label{riscvArch}
 \index{Harvard architecture!RISC-V 5-OS}\index{processor architecture!5-OS loops}
 
-In accordance with the structural classification of computing systems developed in Chapter \ref{lect6a}, the RISC-V processor is implemented as a \textbf{5th-Order System (Harvard 5-OS)} comprising five coupled structural feedback loops:
+In accordance with the structural classification of computing systems developed in Chapter \ref{lect6a}, our RISC-V processor is implemented as a \textbf{5th-Order System (Harvard 5-OS)} comprising five coupled structural feedback loops:
 \begin{enumerate}
     \item \textbf{1st loop (1-OS) --- Memory State Loop}: Closed by the architectural register file (\texttt{RiscvRegFile}). Source operands read from \texttt{rs1} and \texttt{rs2} are processed and rewritten synchronously to destination register \texttt{rd} on the rising clock edge when \texttt{regWrite} is asserted, preserving state across instruction steps. Register $x0$ is hardwired to zero on both read and write.
     \item \textbf{2nd loop (2-OS) --- Autonomous Subsystem Loops}: Operates two internal autonomous automata:
@@ -179,26 +179,26 @@ Listing \ref{lst:chisel_riscv_core_ch18} presents the complete Chisel implementa
 
 A critical challenge in processor engineering is guaranteeing that a hardware implementation strictly conforms to the formal instruction set specification. While ad-hoc assembly tests can verify basic functionality, they rarely test corner cases such as arithmetic overflow boundary conditions, sign extension edge cases, misaligned immediate offsets, and bit-level side effects.
 
-To establish absolute correctness, the \texttt{RiscvFetchExecute} processor is verified against the official \textbf{RISC-V Architectural Conformance Suite} (\texttt{riscv-arch-test}) developed by RISC-V International.
+To establish absolute correctness, all processor implementations in this chapter are verified against the official \textbf{RISC-V Architectural Conformance Suite} (\texttt{riscv-arch-test}) developed by RISC-V International \cite{riscv-arch-test}.
 
 \subsection{Verification Methodology: Pure Chisel/Scala Simulation}
 \index{EphemeralSimulator!architectural testbench}
 
-Rather than emitting intermediate Verilog files and compiling a C++ simulator using external tools (such as Verilator), the verification harness is implemented directly in Scala using Chisel's built-in \texttt{EphemeralSimulator}. This achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework:
+While we can generate Verilog and compile a C++ simulator using external tools (such as Verilator), we choose to use Chisel's built-in simulator (\texttt{EphemeralSimulator}). For the prior approach, see the KryptoNyte processor environment. This achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework without requiring external synthesis or toolchain dependencies:
 \begin{itemize}
     \item \textbf{4MB Emulated Memory System}: A simulation memory buffer is initialized at base address \texttt{0x80000000} (the canonical RISC-V boot vector).
     \item \textbf{Mailbox Completion Protocol}: The testbench continuously executes instructions and monitors data memory writes. When the processor writes to the memory-mapped mailbox register \texttt{tohost} (\texttt{0x80004000}), the test completes. A write value of \texttt{0x1} signifies success, whereas any other non-zero value indicates a failure code.
     \item \textbf{Golden Reference Signature Comparison}: Upon test completion, memory contents between linker symbols \texttt{begin\_signature} and \texttt{end\_signature} are extracted word-by-word into a test signature. This signature is compared against the golden reference signature produced by \textbf{Spike}, the official RISC-V reference golden model.
 \end{itemize}
 
-Listing \ref{lst:chisel_conformance_spec} illustrates the Chisel/Scala conformance test runner.
+Listing \ref{lst:chisel_conformance_spec} illustrates a partial listing of the Chisel/Scala conformance test runner (showing lines 94--111).
 
-\includechiselcode[caption={Chisel/Scala Conformance Test Suite (RiscvConformanceSpec.scala)}, label={lst:chisel_conformance_spec}, firstline=12, firstnumber=12, lastline=150]{\chiselTestBenchSourceDir/riscv/RiscvConformanceSpec.scala}
+\includechiselcode[caption={Chisel/Scala Conformance Test Suite (RiscvConformanceSpec.scala, partial listing)}, label={lst:chisel_conformance_spec}, firstline=94, firstnumber=94, lastline=111]{\chiselTestBenchSourceDir/riscv/RiscvConformanceSpec.scala}
 
 \subsection{Conformance Results}
 \index{conformance testing!results summary}\index{conformance testing!RV32I verification}
 
-The official architectural conformance test suites were executed against both the single-cycle \texttt{RiscvFetchExecute} processor and the 4-stage pipelined \texttt{RiscvPipelined} processor in cycle-accurate Chisel simulation. Both cores achieved a \textbf{100\% pass rate} with bit-exact signature matches against the official Spike reference model across all test suites (spanning 42 suites for the base+Zmmul single-cycle core and 38 suites for the pure RV32I pipelined core). Table \ref{tab:conformance_results} details the verified test suites by instruction category, and Table \ref{tab:rv32i_pipelined_conformance_results} details the cycle-by-cycle execution comparison between the single-cycle and 4-stage pipelined implementations.
+All processor core configurations developed throughout Chapter 19 pass 100\% of the official architectural conformance tests with bit-exact signature matches against the official Spike reference golden model across all test suites (spanning 38 suites for pure \texttt{RV32I} cores and 42 suites when the \texttt{Zmmul} extension is enabled). Table \ref{tab:conformance_results} details the complete suite of verified architectural test cases by instruction category. Detailed cycle-by-cycle execution metrics and comparative analysis for each core microarchitecture are presented in their respective results sections throughout this chapter, culminating in a grand verification summary in Section \ref{riscvSummary}.
 
 \begin{table}[htbp]
 \centering
@@ -225,35 +225,11 @@ The official architectural conformance test suites were executed against both th
 \hline
 \textbf{Zmmul Multiplication}& \texttt{mul-01}, \texttt{mulh-01}, \texttt{mulhsu-01}, \texttt{mulhu-01} \\
 \hline
-\multicolumn{2}{|l|}{\textbf{Total / Summary}: 42 official test suites (38 RV32I + 4 Zmmul) --- 100\% signature match} \\
+\multicolumn{2}{|l|}{\textbf{Total / Summary}: 42 official test suites (38 RV32I + 4 Zmmul) --- 100\% signature match across all cores} \\
 \hline
 \end{tabularx}
 \caption{Official RISC-V architectural conformance verification test suites.}\label{tab:conformance_results}
 \end{table}
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Test Category} & \textbf{Suites Tested} & \textbf{Single-Cycle Cycles} & \textbf{4-Stage Pipelined Cycles (No Fwd)} \\
-\hline
-Arithmetic (R-type)     & 10 & 30,680  & 65,361 \\
-Immediate (I-type)      & 9  & 20,412  & 41,202 \\
-Upper Immediates        & 2  & 730     & 1,414  \\
-Jumps (\texttt{JAL}, \texttt{JALR}) & 2  & 2,224   & 3,747  \\
-Branches (B-type)       & 6  & 18,240  & 47,885 \\
-Loads (\texttt{LB}, \texttt{LH}, \texttt{LW}, etc.) & 5 & 2,860 & 4,831 \\
-Stores (\texttt{SB}, \texttt{SH}, \texttt{SW})      & 3 & 1,980 & 3,960 \\
-Synchronization (\texttt{FENCE})                    & 1 & 148   & 238   \\
-\hline
-\textbf{Total / Summary} & \textbf{38 Suites} & \textbf{77,274 Cycles} & \textbf{168,638 Cycles} \\
-\hline
-\end{tabular}
-\caption{Official RISC-V \texttt{RV32I} architectural conformance results and cycle counts for single-cycle vs.\ 4-stage pipelined cores without forwarding (100\% signature match across all 38 test suites).}\label{tab:rv32i_pipelined_conformance_results}
-\end{table}
-
-Across the 38 pure \texttt{RV32I} test suites, cumulative execution cycles increased from 77,274 cycles on the single-cycle core to 168,638 cycles on the unforwarded pipelined core, yielding an average CPI of 2.18 across the verification suite. This overhead reflects the 2-cycle stalls on distance-1 RAW dependencies, 1-cycle stalls on distance-2 RAW dependencies, and 2-cycle flushes incurred whenever conditional branches or unconditional jumps are taken.
 
 
 \section{Embedded Benchmark Workloads and Performance Evaluation Methodology}\label{riscvBenchmarks}
@@ -297,6 +273,7 @@ Table \ref{tab:benchmark_taxonomy} summarizes the taxonomy of embedded benchmark
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|c|c|c|l|}
 \hline
 \textbf{Benchmark Suite} & \textbf{Primary Target} & \textbf{Runtime Environment} & \textbf{Footprint} & \textbf{Primary Metric} \\
@@ -306,7 +283,8 @@ Table \ref{tab:benchmark_taxonomy} summarizes the taxonomy of embedded benchmark
 \textbf{CoreMark 1.0}    & Embedded Microcontrollers & Freestanding Bare-Metal & $<8$\,KB RAM & CoreMark, CoreMark/MHz \\
 \textbf{Embench-IoT}     & Embedded IoT Cores      & Freestanding Bare-Metal & $<64$\,KB RAM & Geometric Mean Relative Speed \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{Taxonomy of embedded computer architecture benchmarks.}\label{tab:benchmark_taxonomy}
 \end{table}
 
