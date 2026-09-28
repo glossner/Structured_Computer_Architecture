@@ -182,30 +182,34 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
       println(f"\nAll ${rv32iEntries.length} RV32I conformance tests passed! Total pipelined cycles: $totalCycles")
     }
 
-    it should "pass all 4 official Zmmul architectural conformance tests (enableZmmul = true)" in {
-      println(s"\nExecuting ${zmmulEntries.length} official Zmmul architectural conformance tests on RiscvPipelined (with multiplier):")
+    it should "pass all 42 official architectural conformance tests on Core 4 (4-Stage Pipelined + Zmmul)" in {
+      println(s"\n[Core 4] Executing all ${testEntries.length} official architectural conformance tests on RiscvPipelined + Zmmul:")
       var totalCycles = 0
-      for ((name, tohost, beginSig, endSig) <- zmmulEntries) {
-        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = true)
+      for ((name, tohost, beginSig, endSig) <- testEntries) {
+        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = true, branchPredictor = "none")
         totalCycles += c
       }
-      println(f"\nAll ${zmmulEntries.length} Zmmul conformance tests passed! Total pipelined cycles: $totalCycles")
+      println(f"\nAll ${testEntries.length} conformance tests passed on Core 4 (4-Stage Pipelined + Zmmul)! Total cycles: $totalCycles")
     }
 
-    it should "pass control transfer conformance tests with BTFN branch prediction" in {
-      println(s"\nExecuting branch and jump conformance tests with BTFN predictor:")
-      val branchTests = rv32iEntries.filter(e => e._1.startsWith("b") || e._1.startsWith("jal"))
-      for ((name, tohost, beginSig, endSig) <- branchTests) {
-        runTest(name, tohost, beginSig, endSig, enableZmmul = false, branchPredictor = "btfn")
+    it should "pass all 42 official architectural conformance tests on Core 5 (4-Stage Pipelined + BTFN Branch Predictor)" in {
+      println(s"\n[Core 5] Executing all ${testEntries.length} official architectural conformance tests on RiscvPipelined + BTFN:")
+      var totalCycles = 0
+      for ((name, tohost, beginSig, endSig) <- testEntries) {
+        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = true, branchPredictor = "btfn")
+        totalCycles += c
       }
+      println(f"\nAll ${testEntries.length} conformance tests passed on Core 5 (4-Stage Pipelined + BTFN)! Total cycles: $totalCycles")
     }
 
-    it should "pass control transfer conformance tests with Gshare branch prediction" in {
-      println(s"\nExecuting branch and jump conformance tests with Gshare predictor:")
-      val branchTests = rv32iEntries.filter(e => e._1.startsWith("b") || e._1.startsWith("jal"))
-      for ((name, tohost, beginSig, endSig) <- branchTests) {
-        runTest(name, tohost, beginSig, endSig, enableZmmul = false, branchPredictor = "gshare")
+    it should "pass all 42 official architectural conformance tests on Core 6 (4-Stage Pipelined + Gshare Branch Predictor)" in {
+      println(s"\n[Core 6] Executing all ${testEntries.length} official architectural conformance tests on RiscvPipelined + Gshare:")
+      var totalCycles = 0
+      for ((name, tohost, beginSig, endSig) <- testEntries) {
+        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = true, branchPredictor = "gshare")
+        totalCycles += c
       }
+      println(f"\nAll ${testEntries.length} conformance tests passed on Core 6 (4-Stage Pipelined + Gshare)! Total cycles: $totalCycles")
     }
 
     it should "pass all 38 official RV32I architectural conformance tests without forwarding (enableForwarding = false)" in {
