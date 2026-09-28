@@ -50,11 +50,17 @@ class RiscvBarrel4T(
     val rawDmem = new DmemPort(xlen, xlen)
     val bypassCaches = Input(Bool())
 
+    // Per-thread dynamic reset / restart control
+    val threadReset   = Input(UInt(numThreads.W))
+    val threadResetPC = Input(Vec(numThreads, UInt(xlen.W)))
+
     // Architectural Profiling Signals
     val currentThread   = Output(UInt(threadWidth.W))
     val activePC        = Output(UInt(xlen.W))
     val instRetired     = Output(Bool())
     val retiredThread   = Output(UInt(threadWidth.W))
+    val retiredPC       = Output(UInt(xlen.W))
+    val retiredInst     = Output(UInt(xlen.W))
     val isStall         = Output(Bool())
     val icacheHit       = Output(Bool())
     val icacheMiss      = Output(Bool())
@@ -62,12 +68,13 @@ class RiscvBarrel4T(
     val dcacheMiss      = Output(Bool())
   })
 
-  // Hardware Thread Contexts (Independent PCs)
-  val pcRegs = RegInit(VecInit(Seq.tabulate(numThreads)(i => (initPC + (i * 0x10000L)).U(xlen.W))))
+  // Hardware Thread Contexts (Independent PCs initialized to initPC)
+  val pcRegs = RegInit(VecInit(Seq.fill(numThreads)(initPC.U(xlen.W))))
   val fetchToken = RegInit(0.U(threadWidth.W))
 
   // Subsystems
   val regFile   = Module(new RiscvRegFileMT(xlen, numThreads))
+  regFile.io.clearThread := io.threadReset
   val decoder   = Module(new RiscvDecoder())
   val alu       = Module(new RiscvALU(xlen, enableZmmul = !enablePipelinedMul))
   val mulStage1 = if (enableZmmul && enablePipelinedMul) Some(Module(new PipelinedMultiplierStage1(xlen))) else None
@@ -83,7 +90,7 @@ class RiscvBarrel4T(
   io.dmemRefill <> dcache.io.memReq
   dcache.io.memResp := io.dmemResp
 
-  val cacheStall = icache.io.stall || dcache.io.stall
+  val cacheStall = !io.bypassCaches && (icache.io.stall || dcache.io.stall)
   io.isStall := cacheStall
 
   // Thread-annotated Pipeline Registers
@@ -146,7 +153,7 @@ class RiscvBarrel4T(
   val currentFetchPC     = pcRegs(currentFetchThread)
 
   // Drive cache / raw memory request
-  icache.io.req.valid := !cacheStall && !io.bypassCaches
+  icache.io.req.valid := !io.bypassCaches && !dcache.io.stall
   icache.io.req.bits.addr := currentFetchPC
   icache.io.req.bits.writeData := 0.U
   icache.io.req.bits.isWrite := false.B
@@ -156,7 +163,7 @@ class RiscvBarrel4T(
   val fetchedInst = Mux(io.bypassCaches, io.rawImem.inst, icache.io.resp.bits.readData)
 
   when(!cacheStall) {
-    if_id_valid    := true.B
+    if_id_valid    := !io.threadReset(currentFetchThread)
     if_id_threadId := currentFetchThread
     if_id_pc       := currentFetchPC
     if_id_inst     := fetchedInst
@@ -209,7 +216,7 @@ class RiscvBarrel4T(
   val rs2Val = Mux(wbBypassRs2, wbData, regFile.io.rs2_data)
 
   when(!cacheStall) {
-    id_ex_valid    := if_id_valid
+    id_ex_valid    := if_id_valid && !io.threadReset(if_id_threadId)
     id_ex_threadId := if_id_threadId
     id_ex_pc       := if_id_pc
     id_ex_inst     := if_id_inst
@@ -231,7 +238,7 @@ class RiscvBarrel4T(
     id_ex_isJalr   := (f.opcode === RiscvOpcodes.JALR)
     id_ex_isLui    := (f.opcode === RiscvOpcodes.LUI)
     id_ex_isAuipc  := (f.opcode === RiscvOpcodes.AUIPC)
-    id_ex_isMul    := f.isMul
+    id_ex_isMul    := enableZmmul.B && f.isMul && (f.opcode === RiscvOpcodes.OP)
     id_ex_funct3   := f.funct3
   }
 
@@ -272,12 +279,12 @@ class RiscvBarrel4T(
   // When branch is taken, update the architectural PC of THAT thread directly!
   // In a 4-thread barrel core, that thread will not fetch again until cycle t+4,
   // so the branch target is ready with ZERO pipeline bubbles!
-  when(id_ex_valid && branchTaken) {
+  when(id_ex_valid && branchTaken && !io.threadReset(id_ex_threadId)) {
     pcRegs(id_ex_threadId) := branchTarget
   }
 
   when(!cacheStall) {
-    ex_mem_valid     := id_ex_valid
+    ex_mem_valid     := id_ex_valid && !io.threadReset(id_ex_threadId)
     ex_mem_threadId  := id_ex_threadId
     ex_mem_pc        := id_ex_pc
     ex_mem_inst      := id_ex_inst
@@ -313,21 +320,39 @@ class RiscvBarrel4T(
 
   io.rawDmem.addr := ex_mem_aluResult
   io.rawDmem.writeData := ex_mem_writeData
-  io.rawDmem.memRead := ex_mem_valid && ex_mem_memRead
-  io.rawDmem.memWrite := ex_mem_valid && ex_mem_memWrite
+  io.rawDmem.memRead := ex_mem_valid && ex_mem_memRead && !io.threadReset(ex_mem_threadId)
+  io.rawDmem.memWrite := ex_mem_valid && ex_mem_memWrite && !io.threadReset(ex_mem_threadId)
   io.rawDmem.funct3 := ex_mem_funct3
 
   // Commit to Register File for the committing thread
   regFile.io.writeThreadId := ex_mem_threadId
   regFile.io.rd := ex_mem_rd
   regFile.io.rd_data := wbData
-  regFile.io.wen := ex_mem_valid && ex_mem_regWrite && !cacheStall
+  regFile.io.wen := ex_mem_valid && ex_mem_regWrite && !cacheStall && !io.threadReset(ex_mem_threadId)
+
+  // Priority per-thread dynamic reset overrides
+  for (t <- 0 until numThreads) {
+    when(io.threadReset(t)) {
+      pcRegs(t) := io.threadResetPC(t)
+      when(if_id_threadId === t.U) {
+        if_id_valid := false.B
+      }
+      when(id_ex_threadId === t.U) {
+        id_ex_valid := false.B
+      }
+      when(ex_mem_threadId === t.U) {
+        ex_mem_valid := false.B
+      }
+    }
+  }
 
   // Profiling Outputs
   io.currentThread := currentFetchThread
   io.activePC      := currentFetchPC
   io.instRetired   := ex_mem_valid && !cacheStall
   io.retiredThread := ex_mem_threadId
+  io.retiredPC     := ex_mem_pc
+  io.retiredInst   := ex_mem_inst
   io.icacheHit     := icache.io.perfHit
   io.icacheMiss    := icache.io.perfMiss
   io.dcacheHit     := dcache.io.perfHit

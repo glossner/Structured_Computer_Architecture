@@ -32,6 +32,9 @@ class RiscvRegFileMT(val width: Int = 32, val threads: Int = 4) extends Module {
     val rd            = Input(UInt(5.W))
     val rd_data       = Input(UInt(width.W))
     val wen           = Input(Bool())
+
+    // Per-thread register clear (active-high per thread)
+    val clearThread   = Input(UInt(threads.W))
   })
 
   // Register array: threads * 32 registers
@@ -45,6 +48,15 @@ class RiscvRegFileMT(val width: Int = 32, val threads: Int = 4) extends Module {
   // Synchronous write logic: guard against writing to x0 of any thread
   when(io.wen && (io.rd =/= 0.U)) {
     regs(writeIdx) := io.rd_data
+  }
+
+  // Clear thread registers if requested (takes priority over normal write)
+  for (t <- 0 until threads) {
+    when(io.clearThread(t)) {
+      for (r <- 0 until 32) {
+        regs(t * 32 + r) := 0.U
+      }
+    }
   }
 
   // Combinational read logic: register x0 is hardwired to 0 for all threads
