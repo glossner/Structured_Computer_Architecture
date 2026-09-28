@@ -2241,6 +2241,198 @@ In CoreMark (-O1), the program performs $81,507$ data memory operations ($57,015
     \item \textbf{Optimal L1 Configuration for Compact Benchmarks}: Combining the results of Sections \ref{riscvIcacheStudy} and \ref{riscvDcacheStudy}, a Harvard configuration with a \textbf{4\,KB 2-Way I-Cache} and a \textbf{4\,KB 2-Way D-Cache} provides the optimal Pareto trade-off between silicon area ($131\,\mu\text{m}^2$) and performance, achieving an aggregate $\text{CPI} \approx 1.138$ against realistic DDR-5 main memory.
 \end{enumerate}
 
+
+\subsection{Symmetric Harvard L1 Cache Evaluation: Sizing $I = D$ and Associativity Scaling}\label{riscvSymmetricCacheStudy}
+\index{Harvard cache!symmetric sweep}\index{cache associativity!CPI impact}\index{combined cache stalls}
+
+In Sections \ref{riscvIcacheStudy} and \ref{riscvDcacheStudy}, the Instruction Cache and Data Cache were characterized independently under an isolated profiling methodology (assuming the alternate cache was infinite). While isolation is essential for identifying the precise working set boundaries and miss mechanisms of instruction fetch versus memory operands, physical systems deploy both caches simultaneously against the memory subsystem. Because on-chip SRAM real estate is budgeted across the entire die, microarchitects commonly balance the Level-1 memory subsystem by provisioning symmetrically sized instruction and data caches:
+\begin{equation}
+C_{\text{I}} = C_{\text{D}}.
+\end{equation}
+
+When both caches operate concurrently in our 4-stage pipelined processor core (\texttt{RiscvCachedPipelined}), memory stalls from instruction fetch misses and data load/store misses serialize across the in-order pipeline. The cumulative execution cycles and final effective CPI are governed by:
+\begin{equation}\label{eq:riscv_combined_cycles}
+\text{Cycles}_{\text{total}} = \text{Cycles}_{\text{base}} + \text{Stalls}_{\text{I}} + \text{Stalls}_{\text{D}},
+\end{equation}
+\begin{equation}\label{eq:riscv_combined_cpi}
+\text{CPI}_{\text{final}} = \frac{\text{Cycles}_{\text{total}}}{I} = \text{CPI}_{\text{base}} + \left(\frac{\text{MPKI}_{\text{I}} + \text{MPKI}_{\text{D}}}{1000}\right) \times P_{\text{mem}},
+\end{equation}
+where $P_{\text{mem}} = 100$ processor clock cycles ($65.0\,\text{ns}$ round-trip latency to DDR-5 DRAM at $1.538\,\text{GHz}$).
+
+To establish the overall system trade-offs, we sweep symmetrical cache capacities from $512\,\text{B}$ to $32\,\text{KB}$ per cache (yielding an aggregate on-chip L1 SRAM capacity of $1\,\text{KB}$ to $64\,\text{KB}$) across $1$-way (direct-mapped), $2$-way, and $4$-way set-associativities. Table \ref{tab:riscv_symmetric_cache_sweep} presents the empirical results for EEMBC CoreMark 1.0 ($874,891$ dynamic instructions, baseline ideal $\text{CPI} = 1.094$) and Dhrystone 2.1 ($13,826$ dynamic instructions, baseline ideal $\text{CPI} = 1.143$). Figure \ref{fig:riscv_symmetric_cache_cpi} plots the resulting final CPI curves.
+
+\begin{table}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Symmetric Size} & \textbf{Ways} & \multicolumn{3}{c|}{\textbf{EEMBC CoreMark 1.0 (-O1)}} & \multicolumn{3}{c|}{\textbf{Dhrystone 2.1 (-O1)}} \\
+\cline{3-8}
+($C_{\text{I}} = C_{\text{D}}$) & ($W$) & \textbf{Total Stalls} & \textbf{Total Cycles} & \textbf{Final CPI} & \textbf{Total Stalls} & \textbf{Total Cycles} & \textbf{Final CPI} \\
+\hline
+512\,B + 512\,B & 1-Way (Direct) & 2,386,200 & 3,343,653 & \textbf{3.822} & 50,700 & 66,506 & \textbf{4.810} \\
+512\,B + 512\,B & 2-Way          & 857,600   & 1,815,053 & \textbf{2.075} & 21,400 & 37,206 & \textbf{2.691} \\
+512\,B + 512\,B & 4-Way          & 564,300   & 1,521,753 & \textbf{1.739} & 11,800 & 27,606 & \textbf{1.997} \\
+\hline
+1\,KB + 1\,KB  & 1-Way (Direct) & 546,400   & 1,503,853 & \textbf{1.719} & 39,300 & 55,106 & \textbf{3.986} \\
+1\,KB + 1\,KB  & 2-Way          & 109,200   & 1,066,653 & \textbf{1.219} & 6,100  & 21,906 & \textbf{1.584} \\
+1\,KB + 1\,KB  & 4-Way          & 106,600   & 1,064,053 & \textbf{1.216} & 5,900  & 21,706 & \textbf{1.570} \\
+\hline
+2\,KB + 2\,KB  & 1-Way (Direct) & 278,200   & 1,235,653 & \textbf{1.412} & 9,900  & 25,706 & \textbf{1.859} \\
+2\,KB + 2\,KB  & 2-Way          & 71,100    & 1,028,553 & \textbf{1.176} & 5,900  & 21,706 & \textbf{1.570} \\
+2\,KB + 2\,KB  & 4-Way          & 61,000    & 1,018,453 & \textbf{1.164} & 5,900  & 21,706 & \textbf{1.570} \\
+\hline
+4\,KB + 4\,KB  & 1-Way (Direct) & 105,200   & 1,062,653 & \textbf{1.215} & 5,900  & 21,706 & \textbf{1.570} \\
+4\,KB + 4\,KB  & 2-Way          & 37,600    & 995,053   & \textbf{1.137} & 5,900  & 21,706 & \textbf{1.570} \\
+4\,KB + 4\,KB  & 4-Way          & 38,900    & 996,353   & \textbf{1.139} & 5,900  & 21,706 & \textbf{1.570} \\
+\hline
+8\,KB + 8\,KB  & 1-Way (Direct) & 70,100    & 1,027,553 & \textbf{1.174} & 5,900  & 21,706 & \textbf{1.570} \\
+8\,KB + 8\,KB  & 2-Way          & 34,500    & 991,953   & \textbf{1.134} & 5,900  & 21,706 & \textbf{1.570} \\
+8\,KB + 8\,KB  & 4-Way          & 33,900    & 991,353   & \textbf{1.133} & 5,900  & 21,706 & \textbf{1.570} \\
+\hline
+16\,KB + 16\,KB& 1-Way (Direct) & 33,600    & 991,053   & \textbf{1.133} & 5,900  & 21,706 & \textbf{1.570} \\
+16\,KB + 16\,KB& 2-Way          & 33,600    & 991,053   & \textbf{1.133} & 5,900  & 21,706 & \textbf{1.570} \\
+16\,KB + 16\,KB& 4-Way          & 33,600    & 991,053   & \textbf{1.133} & 5,900  & 21,706 & \textbf{1.570} \\
+\hline
+32\,KB + 32\,KB& 2-Way          & 33,600    & 991,053   & \textbf{1.133} & 5,900  & 21,706 & \textbf{1.570} \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Ideal Flat Memory}} & \textbf{0} & \textbf{957,453} & \textbf{1.094} & \textbf{0} & \textbf{15,806} & \textbf{1.143} \\
+\hline
+\end{tabular}%
+}
+\caption{Empirical evaluation of symmetrically sized Harvard L1 caches ($C_{\text{I}} = C_{\text{D}}$) across capacities and associativities under 100-cycle DDR-5 main memory latency for CoreMark 1.0 and Dhrystone 2.1.}\label{tab:riscv_symmetric_cache_sweep}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[scale=0.92]
+  % Left plot: CoreMark
+  \begin{scope}[shift={(0,0)}]
+    \draw[->, thick] (0,0) -- (7.5,0) node[right] {\footnotesize $C_{\text{I}} = C_{\text{D}}$};
+    \draw[->, thick] (0,0) -- (0,5.2) node[above] {\footnotesize Final CPI (CoreMark)};
+    
+    \foreach \y/\val in {0/1.0, 1.0/1.5, 2.0/2.0, 3.0/2.5, 4.0/3.0, 5.0/4.0} {
+      \draw[dashed, gray!30] (0,\y) -- (7,\y);
+      \node[left, font=\footnotesize] at (0,\y) {\val};
+    }
+    \foreach \x/\lbl in {1/512\,B, 2/1\,KB, 3/2\,KB, 4/4\,KB, 5/8\,KB, 6/16\,KB, 7/32\,KB} {
+      \draw (\x, 0.1) -- (\x, -0.1) node[below, font=\scriptsize] {\lbl};
+    }
+    \draw[red, dotted, thick] (0, 0.19) -- (7, 0.19) node[above right, font=\tiny] {Ideal (1.094)};
+    
+    % 1-way curve (red)
+    \draw[thick, red!80!black, mark=*] plot coordinates {
+      (1, 4.65) % 3.822
+      (2, 1.44) % 1.719
+      (3, 0.82) % 1.412
+      (4, 0.43) % 1.215
+      (5, 0.35) % 1.174
+      (6, 0.27) % 1.133
+      (7, 0.27) % 1.133
+    };
+    
+    % 2-way curve (blue)
+    \draw[thick, blue!80!black, mark=square*] plot coordinates {
+      (1, 2.15) % 2.075
+      (2, 0.44) % 1.219
+      (3, 0.35) % 1.176
+      (4, 0.27) % 1.137
+      (5, 0.27) % 1.134
+      (6, 0.27) % 1.133
+      (7, 0.27) % 1.133
+    };
+    
+    % 4-way curve (teal)
+    \draw[thick, teal!80!black, mark=triangle*] plot coordinates {
+      (1, 1.48) % 1.739
+      (2, 0.43) % 1.216
+      (3, 0.33) % 1.164
+      (4, 0.28) % 1.139
+      (5, 0.27) % 1.133
+      (6, 0.27) % 1.133
+      (7, 0.27) % 1.133
+    };
+    
+    \node[draw, fill=white, font=\tiny, anchor=north east] at (6.8, 5.0) {
+      \begin{tabular}{ll}
+        \tikz{\draw[thick, red!80!black, mark=*] plot coordinates {(0,0) (0.25,0)};} & 1-Way (Direct) \\
+        \tikz{\draw[thick, blue!80!black, mark=square*] plot coordinates {(0,0) (0.25,0)};} & 2-Way \\
+        \tikz{\draw[thick, teal!80!black, mark=triangle*] plot coordinates {(0,0) (0.25,0)};} & 4-Way \\
+      \end{tabular}
+    };
+  \end{scope}
+
+  % Right plot: Dhrystone
+  \begin{scope}[shift={(8.8,0)}]
+    \draw[->, thick] (0,0) -- (7.5,0) node[right] {\footnotesize $C_{\text{I}} = C_{\text{D}}$};
+    \draw[->, thick] (0,0) -- (0,5.2) node[above] {\footnotesize Final CPI (Dhrystone)};
+    
+    \foreach \y/\val in {0/1.0, 1.0/1.5, 2.0/2.0, 3.0/2.5, 4.0/3.0, 5.0/5.0} {
+      \draw[dashed, gray!30] (0,\y) -- (7,\y);
+      \node[left, font=\footnotesize] at (0,\y) {\val};
+    }
+    \foreach \x/\lbl in {1/512\,B, 2/1\,KB, 3/2\,KB, 4/4\,KB, 5/8\,KB, 6/16\,KB, 7/32\,KB} {
+      \draw (\x, 0.1) -- (\x, -0.1) node[below, font=\scriptsize] {\lbl};
+    }
+    \draw[red, dotted, thick] (0, 0.29) -- (7, 0.29) node[above right, font=\tiny] {Ideal (1.143)};
+    
+    % 1-way curve (red)
+    \draw[thick, red!80!black, mark=*] plot coordinates {
+      (1, 4.80) % 4.810
+      (2, 3.95) % 3.986
+      (3, 1.72) % 1.859
+      (4, 1.14) % 1.570
+      (5, 1.14) % 1.570
+      (6, 1.14) % 1.570
+      (7, 1.14) % 1.570
+    };
+    
+    % 2-way curve (blue)
+    \draw[thick, blue!80!black, mark=square*] plot coordinates {
+      (1, 2.69) % 2.691
+      (2, 1.17) % 1.584
+      (3, 1.14) % 1.570
+      (4, 1.14) % 1.570
+      (5, 1.14) % 1.570
+      (6, 1.14) % 1.570
+      (7, 1.14) % 1.570
+    };
+    
+    % 4-way curve (teal)
+    \draw[thick, teal!80!black, mark=triangle*] plot coordinates {
+      (1, 1.99) % 1.997
+      (2, 1.14) % 1.570
+      (3, 1.14) % 1.570
+      (4, 1.14) % 1.570
+      (5, 1.14) % 1.570
+      (6, 1.14) % 1.570
+      (7, 1.14) % 1.570
+    };
+    
+    \node[draw, fill=white, font=\tiny, anchor=north east] at (6.8, 5.0) {
+      \begin{tabular}{ll}
+        \tikz{\draw[thick, red!80!black, mark=*] plot coordinates {(0,0) (0.25,0)};} & 1-Way (Direct) \\
+        \tikz{\draw[thick, blue!80!black, mark=square*] plot coordinates {(0,0) (0.25,0)};} & 2-Way \\
+        \tikz{\draw[thick, teal!80!black, mark=triangle*] plot coordinates {(0,0) (0.25,0)};} & 4-Way \\
+      \end{tabular}
+    };
+  \end{scope}
+\end{tikzpicture}%
+}
+\caption{Final Effective CPI vs.\ Symmetrical L1 Cache Capacity ($C_{\text{I}} = C_{\text{D}}$) and Associativity for EEMBC CoreMark 1.0 (left) and Dhrystone 2.1 (right) under 100-cycle DDR-5 main memory latency.}\label{fig:riscv_symmetric_cache_cpi}
+\end{figure}
+
+\subsubsection{Key Architectural Insights from the Combined Symmetric Study}
+\begin{enumerate}
+    \item \textbf{The Direct-Mapped Performance Cliff}: At $512\,\text{B}$ per cache, direct-mapped execution severely degrades processor performance. CoreMark CPI degrades to $\mathbf{3.822}$ ($3.5\times$ worse than ideal memory) because simultaneous I-cache conflict misses and D-cache collisions inject over $2.38\times 10^6$ stall cycles into the pipeline. On Dhrystone, conflict misses between the execution loop and stack/global structures push CPI to an extreme $\mathbf{4.810}$ ($4.2\times$ slowdown vs.\ ideal).
+    \item \textbf{The Enormous ROI of 2-Way Associativity}: Moving from direct-mapped to $2$-way set-associativity at $1\,\text{KB} + 1\,\text{KB}$ delivers the largest single performance leap in the memory subsystem. On CoreMark, $2$-way associativity slashes total memory stalls from $546,400$ down to $109,200$ (an $\mathbf{80.0\%}$ reduction in stall bubbles!), collapsing final CPI from $\mathbf{1.719}$ to $\mathbf{1.219}$. On Dhrystone, $2$-way associativity plunges final CPI from $\mathbf{3.986}$ down to $\mathbf{1.584}$ (a $\mathbf{60.3\%}$ drop in total execution cycles!).
+    \item \textbf{Diminishing Returns of 4-Way Associativity}: Expanding associativity beyond $2$-way to $4$-way yields marginal additional gains on these workloads. At $1\,\text{KB}$, $4$-way brings CoreMark CPI from $1.219$ to $1.216$ ($<0.3\%$ improvement), while requiring twice as many tag comparators, wider hit priority encoders, and more complex multiplexing logic.
+    \item \textbf{The Optimal Design Point ($4\,\text{KB} + 4\,\text{KB}$, 2-Way)}: Provisioning a \textbf{4\,KB 2-way I-cache and 4\,KB 2-way D-cache} represents the clear architectural sweet spot. On CoreMark, this configuration achieves $\mathbf{\text{CPI} = 1.137}$---operating within $\mathbf{3.9\%}$ of theoretical ideal flat memory! On Dhrystone, it reaches the compulsory miss floor ($\text{CPI} = 1.570$).
+    \item \textbf{The Compulsory Miss Floor ($16\,\text{KB} + 16\,\text{KB}$)}: At $16\,\text{KB}$ per cache ($32\,\text{KB}$ total L1 SRAM), all conflict and capacity misses are eliminated. Both benchmarks hit their irreducible compulsory miss floors ($\text{CPI} = 1.133$ for CoreMark, $\text{CPI} = 1.570$ for Dhrystone), where every remaining stall cycle is strictly due to initial cold refills from DDR-5 DRAM.
+\end{enumerate}
+
+
 \subsection{Multi-Level Cache Hierarchy: L1 and L2 Caching for the Embench-IoT Suite}\label{riscvL2Hierarchy}
 \index{multi-level cache}\index{L2 cache}\index{Embench-IoT!cache evaluation}
 
