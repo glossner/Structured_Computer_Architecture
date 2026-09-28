@@ -139,7 +139,7 @@ class RiscvFetchExecute(val xlen: Int = 32, val initPC: BigInt = 0x80000000L, va
 /** Complete Harvard 5-OS Computing System Harness.
   * Reuses RiscvDataMemory (ByteMemory) from Chapter 9.
   */
-class RiscvSystem(val program: Seq[BigInt], val memWords: Int = 1024) extends Module {
+class RiscvSystem(val program: Seq[BigInt], val memWords: Int = 1024, val initPC: BigInt = 0) extends Module {
   val io = IO(new Bundle {
     val pc       = Output(UInt(32.W))
     val inst     = Output(UInt(32.W))
@@ -147,7 +147,7 @@ class RiscvSystem(val program: Seq[BigInt], val memWords: Int = 1024) extends Mo
     val regWrite = Output(Bool())
   })
 
-  val core       = Module(new RiscvFetchExecute(xlen = 32))
+  val core       = Module(new RiscvFetchExecute(xlen = 32, initPC = initPC))
   val byteMemory = Module(new RiscvDataMemory(depthWords = memWords))
 
   val progSize   = 1 << log2Ceil(math.max(2, program.length))
