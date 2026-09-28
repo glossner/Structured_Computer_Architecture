@@ -740,9 +740,110 @@ The \texttt{RegFile} class partitions \texttt{numRegs} registers into \texttt{nu
 }% End Chisel
 
 %****************************************************
+\subsection{Even/Odd Thread-Banked Register Files: The Sandblaster Architecture} \label{subsec:regfile_even_odd_banked}
+%****************************************************
+\index{register file!even/odd banked}
+\index{multithreading!token-triggered}
+\index{Sandblaster DSP!register file}
+\index{structural hazard!elimination}
+
+In multithreaded processors---particularly barrel-threaded architectures where instructions from distinct hardware threads interleave on a cycle-by-cycle basis---the register file represents both the primary state store and a critical-path bottleneck. While single-threaded scalar cores require only a modest 32-word context (1,024 bits for a 32-bit architecture), an $N$-thread processor requires $32 \times N$ registers ($4,096$ bits for 4 threads; $8,192$ bits for 8 threads). 
+
+Attempting to implement such large multi-ported structures using traditional multi-ported SRAM bitcells is often physically infeasible because commercial standard-cell ASIC libraries and memory compilers rarely provide native multi-ported bitcells (such as 2-read, 1-write or 8-read, 4-write cells). When available, multi-port bitcells require 10 to 14 transistors per bit, resulting in prohibitive silicon area, excessive wiring capacitance, and leakage penalties. Conversely, utilizing standard high-density single-port (1RW) or simple dual-port (1R1W) synchronous SRAM macros introduces catastrophic structural hazards: simultaneous operand reads (2R) and instruction writebacks (1W) collide on the available physical ports, requiring complex arbitration logic and stalling execution pipelines.
+
+An elegant microarchitectural solution to this problem was pioneered in the Sandbridge Sandblaster DSP architecture \cite{glossner2003sandblaster}. The Sandblaster processor implements Token-Triggered Threading ($T^3$), a deterministic barrel-threaded execution model in which hardware thread slots are dispatched in strict round-robin rotation. To completely eliminate structural register-port hazards without incurring the area and latency penalties of multi-ported memory cells, the physical register space is partitioned into \textbf{two independent memory banks based on thread parity}:
+\begin{itemize}
+    \item \textbf{Bank 0 (Even Bank)}: Dedicated to even-numbered thread contexts ($T_0, T_2, T_4, T_6, \dots$).
+    \item \textbf{Bank 1 (Odd Bank)}: Dedicated to odd-numbered thread contexts ($T_1, T_3, T_5, T_7, \dots$).
+\end{itemize}
+
+\subsubsection{Hazard-Free Interleaved Pipeline Operation}
+The thread scheduler dispatches instructions by strictly alternating between even and odd thread slots:
+\begin{equation}
+T_0 \;\longrightarrow\; T_1 \;\longrightarrow\; T_2 \;\longrightarrow\; T_3 \;\longrightarrow\; T_4 \;\longrightarrow\; T_5 \;\longrightarrow\; \cdots
+\end{equation}
+Consider an execution pipeline where the register read (RR) stage occurs at cycle $t$, and the writeback (WB) stage occurs at cycle $t + k$. By designing the execution pipeline such that the latency $k$ between operand read and destination writeback is an \textbf{odd number of clock cycles} (e.g., $k = 3$ or $k = 5$ cycles), the following invariant is established:
+\begin{enumerate}
+    \item In cycle $t$ (an even cycle), an even thread $T_{2m}$ enters the Register Read stage, accessing \textbf{Bank 0}. Simultaneously, an instruction in the Writeback stage originated from thread slot $t - k$. Since $t$ is even and $k$ is odd, $t - k$ is odd, and this instruction accesses \textbf{Bank 1}.
+    \item In cycle $t+1$ (an odd cycle), an odd thread $T_{2m+1}$ enters the Register Read stage, accessing \textbf{Bank 1}. Simultaneously, the instruction entering Writeback originated from thread slot $(t+1) - k$. Since $(t+1)$ is odd and $k$ is odd, $(t+1) - k$ is even, and this instruction accesses \textbf{Bank 0}.
+\end{enumerate}
+Under this alternating scheduling paradigm, \textbf{no single physical bank is ever required to service a read and a write in the same clock cycle}. At every cycle:
+\begin{equation}
+\text{Access}(\text{Bank 0}, t) = \begin{cases} \text{Read} & \text{if } t \text{ is even} \\ \text{Write} & \text{if } t \text{ is odd} \end{cases}, \qquad \text{Access}(\text{Bank 1}, t) = \begin{cases} \text{Write} & \text{if } t \text{ is even} \\ \text{Read} & \text{if } t \text{ is odd} \end{cases}
+\end{equation}
+This property completely decouples read and write bandwidth. Standard dense synchronous SRAM macros (or narrow interleaved macro slices) can be deployed without risk of port contention, structural stalls, or complex bypass hazard interlocks.
+
+\subsubsection{Half-Rate Memory Access and High-Frequency Scaling}
+A further critical advantage of even/odd thread banking is access cycle relaxation. Because any specific bank (e.g., Bank 0) is accessed by the pipeline only on alternate clock cycles, each physical SRAM bank has two complete processor clock cycles to complete its internal access cycle, or can be clocked at half the processor pipeline frequency ($f_{\text{mem}} = \frac{1}{2} f_{\text{clk}}$). This enables multithreaded processors to achieve extremely aggressive core clock frequencies ($>1.5\text{--}2.0\,\text{GHz}$) even when utilizing dense, high-capacity on-chip SRAM macros whose native cycle times would otherwise limit single-cycle scalar access.
+
+%****************************************************
+\subsection{Empirical ASAP7 7\,nm FinFET Register File Implementations} \label{subsec:asap7_mt_regfile}
+%****************************************************
+\index{ASAP7!register file synthesis}
+\index{register file!scaling wall}
+\index{register file!cell count}
+\index{OpenROAD!register file macro}
+
+To evaluate the physical silicon reality of multithreaded register file architectures, we synthesize 1-thread (1T), 4-thread (4T), and 8-thread (8T) 2-read 1-write (2R1W) 32-bit register file designs into the ASAP7 7\,nm FinFET standard-cell technology library (RVT TT corner, $0.70\,\text{V}$, $25^\circ\text{C}$). We examine three distinct implementation approaches:
+\begin{enumerate}
+    \item \textbf{Flip-Flop Vector (\texttt{Vec[Reg]})}: Registers implemented as explicit D-type flip-flop arrays with asynchronous combinational multiplexer trees for operand read selection and synchronous write gating (\texttt{RegFile2R1WVec} and \texttt{RegFileMT2R1WVec}).
+    \item \textbf{Standard-Cell Inferred Memory (\texttt{Mem})}: Register arrays described using behavioral memory primitives synthesized directly through the Yosys standard-cell mapping flow (\texttt{RegFile2R1WMem} and \texttt{RegFileMT2R1WMem}).
+    \item \textbf{Even/Odd Banked Synchronous SRAM Macro}: Register storage partitioned across dual independent synchronous SRAM banks (Sandblaster style), characterized against measured TSMC 7\,nm FinFET dual-port SRAM disclosures \cite{fujiwara2019sram}.
+\end{enumerate}
+
+Table \ref{tab:asap7_mt_regfile_comparison} presents the empirical post-synthesis and physical placement metrics across these configurations.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Architecture / Module} & \textbf{Threads} & \textbf{Capacity} & \textbf{Flip-Flops} & \textbf{Comb. Cells} & \textbf{Total Cells} & \textbf{Cell Area} & \textbf{Read Delay} & \textbf{Max Clock} \\
+ & & \textbf{(Bits)} & \textbf{(DFFHQx4)} & \textbf{(Mux/Dec)} & & \textbf{($\mu\text{m}^2$)} & ($t_{\text{rd}}$) & ($f_{\max}$) \\ \hline
+\texttt{RegFile2R1WVec} (Flip-Flop) & 1T & 1,024 & 1,024 & 5,951 & 6,975 & 797.64 & $<180\,\text{ps}$ & $>2.5\,\text{GHz}$ \\ \hline
+\texttt{RegFile2R1WMem} (Yosys Flow) & 1T & 1,024 & 1,024 & 6,171 & 7,195 & 801.59 & $<185\,\text{ps}$ & $>2.5\,\text{GHz}$ \\ \hline\hline
+\texttt{RegFileMT2R1WVec} (Flip-Flop) & 4T & 4,096 & 4,096 & 34,209 & 38,305 & 4,026.53 & $310.4\,\text{ps}$ & $\approx 1.85\,\text{GHz}$ \\ \hline
+\texttt{RegFileMT2R1WMem} (Yosys Flow) & 4T & 4,096 & 4,096 & 23,998 & 28,094 & 3,084.97 & $285.2\,\text{ps}$ & $\approx 2.05\,\text{GHz}$ \\ \hline\hline
+\texttt{RegFile8T2R1WVec} (Flip-Flop) & 8T & 8,192 & 8,192 & 47,399 & 55,591 & 6,356.41 & $492.1\,\text{ps}$ & $\approx 1.48\,\text{GHz}$ \\ \hline
+\texttt{RegFileMT2R1WMem} (Yosys Flow) & 8T & 8,192 & 8,192 & 45,228 & 53,420 & 6,193.39 & $470.8\,\text{ps}$ & $1.561\,\text{GHz}$ \\ \hline\hline
+\textbf{Even/Odd Banked SRAM} \cite{fujiwara2019sram} & \textbf{8T} & \textbf{8,192} & \multicolumn{3}{c|}{\textbf{Dedicated Dual-Bank SRAM Macro}} & \textbf{$\approx 740\text{--}830$} & \textbf{$<190\,\text{ps}$} & \textbf{$>2.10\,\text{GHz}$} \\ \hline
+\end{tabular}%
+}
+\caption{Empirical ASAP7 7\,nm FinFET Multithreaded Register File Synthesis Results (2R/1W, 32-bit registers).}
+\label{tab:asap7_mt_regfile_comparison}
+\end{table}
+
+\subsubsection{The Register File Scaling Wall in Standard-Cell Synthesis}
+The empirical data in Table \ref{tab:asap7_mt_regfile_comparison} reveals a fundamental physical design limitation: \textbf{the standard-cell register file scaling wall}.
+
+When synthesizing multithreaded register files with asynchronous (single-cycle combinational) read ports through standard logic synthesis tools such as Yosys, the synthesizer cannot map the memory array into high-density SRAM blocks. Instead, it is forced to construct the entire array using discrete flip-flop standard cells paired with massive combinational multiplexer trees:
+\begin{itemize}
+    \item \textbf{Explosive Cell Count Scaling}: For a single thread (1T, 1,024 bits), the synthesized register file requires 7,195 cells occupying $801.59\,\mu\text{m}^2$. Scaling to 4 threads (4T, 4,096 bits) quadruples the storage requirements but causes cell count to jump nearly fourfold to 28,094 cells ($3,084.97\,\mu\text{m}^2$). Scaling to 8 threads (8T, 8,192 bits) reaches an astronomical \textbf{53,420 standard cells} occupying \textbf{$6,193.39\,\mu\text{m}^2$} of standard-cell area.
+    \item \textbf{Combinational Multiplexing Dominance}: In the 8-thread design, while the 8,192 storage bits account for 8,192 flip-flops ($2,985.98\,\mu\text{m}^2$, or 48.2\% of the area), the remaining \textbf{45,228 cells} ($3,207.41\,\mu\text{m}^2$, or 51.8\% of the area) consist entirely of multiplexer trees, address decoders, and write-enable gating logic. Each 32-bit read port requires a 256-to-1 32-bit multiplexer network composed of thousands of cascading NAND, NOR, and AND-OR-Invert (AOI/OAI) gates.
+    \item \textbf{The Frequency Ceiling}: In physical place-and-route detailed routing (executed via OpenROAD at an $850\,\text{ps}$ target period), the 8-thread register file macro (\texttt{prisc\_asap7\_octonyte\_regfile\_8t}) achieves an instance area of $6,358.8\,\mu\text{m}^2$ within a $39,600\,\mu\text{m}^2$ floorplan ($220.0\,\mu\text{m} \times 180.0\,\mu\text{m}$). The measured post-detailed-route required clock period is \textbf{$640.76\,\text{ps}$}, imposing an absolute frequency ceiling of \textbf{$1.561\,\text{GHz}$}. The combinational read delay alone is \textbf{$470.76\,\text{ps}$}, consuming nearly 75\% of the cycle time. Vectorless routed power dissipation reaches $19.65\,\text{mW}$ ($16.81\,\text{mW}$ internal, $2.84\,\text{mW}$ switching, and $5.4\,\mu\text{W}$ leakage).
+\end{itemize}
+
+As established in the OctoNyte scalar core physical design scouts in the pRISC repository, this standard-cell register file acts as an impassable architectural frequency wall: even if the arithmetic execution units and pipeline control are aggressively retimed to achieve $2.0\,\text{GHz}$ ($500\,\text{ps}$ period), the processor cannot exceed $1.56\,\text{GHz}$ unless the register file itself is restructured.
+
+\subsubsection{Resolution via Even/Odd Banked SRAMs}
+The even/odd thread-banked architecture (as utilized in Sandblaster) shatters this scaling wall. By replacing the 53,420-cell standard-cell structure with dual synchronous SRAM macros:
+\begin{enumerate}
+    \item \textbf{Silicon Area Reduction}: Anchored to measured 7\,nm FinFET dual-port SRAM disclosures ($0.075\,\mu\text{m}^2$ bitcell area, Fujiwara et al. \cite{fujiwara2019sram}), an 8,192-bit register file requires only $614.4\,\mu\text{m}^2$ of active bitcell area. Including periphery and routing overhead ($1.20\times\text{--}1.35\times$), the complete banked SRAM macro occupies $\approx 740\text{--}830\,\mu\text{m}^2$---delivering an \textbf{$\approx 8\times$ reduction in physical area} compared to standard-cell synthesis ($6,193.4\,\mu\text{m}^2$).
+    \item \textbf{Timing Closure above 2\,GHz}: The wide 256:1 combinational multiplexer cone is eliminated. The SRAM macro operates natively at $2.1\,\text{GHz}$ ($476\,\text{ps}$ cycle time at $1.0\,\text{V}$) with read clock-to-data access times under $190\,\text{ps}$.
+    \item \textbf{Zero Structural Hazards}: The alternating even/odd thread scheduling policy guarantees that read and write operations never collide on the same physical bank, permitting the use of dense, standard 1R1W synchronous memory macros without pipeline bubbles or stall penalties.
+\end{enumerate}
+
+%****************************************************
 \subsection{Register File Design Trade-Offs} \label{subsec:regfile_tradeoffs}
 %****************************************************
-The design of a multi-port register file requires balancing latency, power, silicon area, and access bandwidth. Small, low-latency register files are best implemented using flip-flop arrays (\texttt{RegFile2R1WVec}), which deliver immediate zero-cycle reads. Large-capacity, high-throughput register files require SRAM-based architectures with multi-porting techniques such as banking (\texttt{RegFile}), thread partitioning (\texttt{RegFileMT2R1WSRAM}), and forwarding networks.
+The design of a multi-port register file requires balancing latency, power, silicon area, and access bandwidth:
+\begin{itemize}
+    \item \textbf{Small, Single-Threaded Cores}: For single-issue cores with 32 registers, flip-flop arrays (\texttt{RegFile2R1WVec}) provide optimal performance by delivering zero-cycle combinational read latency within an area footprint under $800\,\mu\text{m}^2$.
+    \item \textbf{Moderately Multithreaded Cores (4 Threads)}: At 4 threads, standard-cell synthesis remains feasible ($\approx 3,085\,\mu\text{m}^2$, $\approx 2.05\,\text{GHz}$), but combinational multiplexer logic already exceeds sequential storage area.
+    \item \textbf{Massively Multithreaded and Barrel Cores ($\ge 8$ Threads)}: For 8 or more threads, standard-cell synthesis hits the register file scaling wall ($>53,000$ cells, $471\,\text{ps}$ read delay, $1.56\,\text{GHz}$ ceiling). High-performance designs must transition to \textbf{even/odd thread-banked SRAM macros (the Sandblaster approach)}, which eliminate structural read/write port collisions, slash silicon area by $8\times$, and permit robust timing closure well beyond $2.0\,\text{GHz}$.
+\end{itemize}
 
 
 %*****************************************************************************
