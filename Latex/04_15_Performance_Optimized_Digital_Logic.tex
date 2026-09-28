@@ -81,7 +81,7 @@ For wide selectors, \texttt{switch} statements can inadvertently create large de
 %*****************************************************************************
 \index{adder!high-performance}
 \index{carry lookahead adder (CLA)}
-\index{carry select adder (CSA)}
+\index{carry select adder (CSelA)}
 \index{carry save adder (CSA)}
 \index{Kogge-Stone adder}
 \index{parallel prefix adder}
@@ -113,22 +113,26 @@ C_4 &= G_3 + P_3 G_2 + P_3 P_2 G_1 + P_3 P_2 P_1 G_0 + P_3 P_2 P_1 P_0 C_0
 \end{align}
 In theory, all carries are available after just two gate delays (an AND level followed by an OR level), enabling constant-time carry computation ($O(1)$). In practice, physical fan-in and fan-out limits restrict flat lookahead blocks to 4 or 8 bits. Larger adders use hierarchical (block) CLA structures, defining block generate ($G_{\text{block}}$) and block propagate ($P_{\text{block}}$) terms, resulting in an overall latency of $O(\log N)$.
 
-\subsection{Carry Select Adder (CSA)}
-The Carry Select Adder accelerates addition through speculation. The $N$-bit adder is partitioned into smaller blocks (e.g., 4-bit or 8-bit groups). For each block, two additions are performed simultaneously in parallel:
+\subsection{Carry-Select Adder (CSelA)}
+\index{carry select adder (CSelA)}
+\index{CSelA@\texttt{CSelA}}
+The Carry-Select Adder (CSelA) \cite{bedrij1962} accelerates addition through speculation. The $N$-bit adder is partitioned into smaller blocks (e.g., 4-bit or 8-bit groups). For each block, two additions are performed simultaneously in parallel:
 \begin{enumerate}
     \item One adder computes the sum assuming the incoming carry is $0$ ($C_{\text{in}} = 0$).
     \item A second adder computes the sum assuming the incoming carry is $1$ ($C_{\text{in}} = 1$).
 \end{enumerate}
 When the true carry-in arrives from the preceding block, a 2-to-1 multiplexer selects the precomputed sum and carry-out. 
 
-In a uniform carry select adder with block size $k$, the carry propagates through $N/k$ multiplexers. To further optimize performance, a \textbf{square-root carry select adder} uses variable block sizes that increase by one bit per stage (e.g., 2, 3, 4, 5, 6 bits). The larger blocks take progressively longer to compute their tentative sums, but this delay is hidden because the carry-in signal from earlier stages arrives later. This balances the arrival times of data and carry inputs at each multiplexer, achieving an overall delay of:
+In a uniform carry-select adder with block size $k$, the carry propagates through $N/k$ multiplexers. To further optimize performance, a \textbf{square-root carry-select adder} uses variable block sizes that increase by one bit per stage (e.g., 2, 3, 4, 5, 6 bits). The larger blocks take progressively longer to compute their tentative sums, but this delay is hidden because the carry-in signal from earlier stages arrives later. This balances the arrival times of data and carry inputs at each multiplexer, achieving an overall delay of:
 \begin{equation}
-t_{\text{sq-CSA}} = O(\sqrt{N})
+t_{\text{sq-CSelA}} = O(\sqrt{N})
 \end{equation}
-The Carry Select Adder provides an excellent speed-area trade-off: it reduces delay substantially compared to a ripple-carry adder while avoiding the complex routing of a full parallel prefix tree, requiring approximately 40\% to 60\% more area than a ripple-carry adder.
+The Carry-Select Adder provides an effective speed-area trade-off: it reduces delay substantially compared to a ripple-carry adder while avoiding the dense interconnect wiring of a full parallel prefix tree, requiring approximately 40\% to 60\% more area than a ripple-carry adder.
 
-\subsection{Carry Save Adder (CSA)}
-When summing three or more operands (as in multi-operand addition and multiplier partial-product reduction), propagating carries after each addition introduces unnecessary delay. The Carry Save Adder (CSA) resolves this by deferring carry propagation entirely.
+\subsection{Carry-Save Adder (CSA)}
+\index{carry save adder (CSA)}
+\index{CSA@\texttt{CSA}}
+When summing three or more operands (as in multi-operand addition and multiplier partial-product reduction), propagating carries after each addition introduces unnecessary delay. The Carry-Save Adder (CSA) resolves this by deferring carry propagation entirely.
 
 A carry-save adder cell is essentially a Full Adder acting as a \textbf{3:2 compressor}. Given three input bits ($A_i, B_i, C_i$), it produces two output bits: a sum bit $S_i$ and a carry bit $C_{i+1}$:
 \begin{align}
@@ -156,69 +160,74 @@ The \textbf{Kogge-Stone Adder} is the most prominent parallel prefix topology, o
 \subsubsection{Comparison of High-Performance Adder Architectures}
 Table \ref{tab:adder_comparison} summarizes the asymptotic delay, area, fan-out, and routing complexity of the major adder architectures.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
-\renewcommand{\arraystretch}{1.3}
+\small
+\setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{|l|c|c|c|c|}
 \hline
 \textbf{Adder Architecture} & \textbf{Logic Delay} & \textbf{Area Complexity} & \textbf{Max Fan-out} & \textbf{Wiring Density} \\ \hline
 Ripple-Carry Adder (RCA) & $O(N)$ & $O(N)$ & $O(1)$ & Very Low \\ \hline
 Carry Lookahead (CLA) & $O(\log N)$ & $O(N \log N)$ & High & Moderate \\ \hline
-Carry Select (Square-Root) & $O(\sqrt{N})$ & $O(N)$ & $O(\sqrt{N})$ & Low \\ \hline
-Carry Save (per stage) & $O(1)$ & $O(N)$ & $O(1)$ & Low \\ \hline
-Kogge-Stone Prefix Adder & $O(\log_2 N)$ & $O(N \log_2 N)$ & 2 & Very High \\ \hline
-Brent-Kung Prefix Adder & $O(2 \log_2 N)$ & $O(N)$ & 2 & Low \\ \hline
+Carry-Select (Square-Root, CSelA) & $O(\sqrt{N})$ & $O(N)$ & $O(\sqrt{N})$ & Low \\ \hline
+Carry-Save (per stage, CSA) & $O(1)$ & $O(N)$ & $O(1)$ & Low \\ \hline
+Kogge-Stone Prefix Adder (KSA) & $O(\log_2 N)$ & $O(N \log_2 N)$ & 2 & Very High \\ \hline
+Brent-Kung Prefix Adder (BKA) & $O(2 \log_2 N)$ & $O(N)$ & 2 & Low \\ \hline
 \end{tabular}
 \caption{Comparison of High-Performance Adder Architectures.}
 \label{tab:adder_comparison}
 \end{table}
 
 \subsection{Physical ASIC Synthesis of High-Performance Adders on ASAP7 7\,nm FinFET}\label{sec:asap7_adders_synthesis}
-\index{adders!ASAP7 7nm FinFET synthesis}\index{synthesis!32-bit adders}\index{carry select adder!delay evaluation}
+\index{adders!ASAP7 7nm FinFET synthesis}\index{synthesis!32-bit adders}\index{carry select adder (CSelA)!delay evaluation}
 
-While asymptotic big-$O$ complexity provides foundational theoretical intuition, real-world arithmetic performance depends critically on standard-cell driving strengths, interconnect routing congestion, and physical gate delays. To evaluate the practical trade-offs among the adder topologies discussed in this section, five 32-bit adder architectures were implemented in parameterized Chisel RTL, verified with comprehensive functional testbenches covering corner cases, maximum carry propagations, and randomized vectors, and generated into clean gate-level SystemVerilog netlists:
-\begin{enumerate}
-    \item \textbf{Ripple-Carry Adder (RCA)}: Baseline $O(N)$ linear carry-propagation chain composed of 32 cascaded full adders.
-    \item \textbf{Carry Lookahead Adder (CLA)}: Hierarchical two-level block lookahead adder grouping bits into 4-bit lookahead blocks with lookahead carry generators.
-    \item \textbf{Brent-Kung Parallel Prefix Adder (BKA)}: A 9-level parallel prefix tree designed to minimize total cell count and routing density with a maximum fan-out of 2 \cite{brent1982regular}.
-    \item \textbf{Kogge-Stone Parallel Prefix Adder (KSA)}: A 5-level ($\lceil \log_2 32 \rceil$) parallel prefix tree designed for minimum logic depth with uniform fan-out of 2 \cite{kogge1973parallel}.
-    \item \textbf{Carry Select Adder (CSA)}: Speculative block adder partitioning 32 bits into 4-bit blocks where dual ripple chains compute speculative sums for $C_{\text{in}} = 0$ and $C_{\text{in}} = 1$ in parallel, multiplexed by incoming block carries.
-\end{enumerate}
+While asymptotic big-$O$ complexity provides foundational theoretical intuition, real-world arithmetic performance depends critically on standard-cell driving strengths, interconnect routing congestion, and physical gate delays. To evaluate the practical trade-offs among the adder topologies discussed in this section, five 32-bit adder architectures---Ripple-Carry (RCA), hierarchical Carry Lookahead (CLA), Brent-Kung parallel prefix (BKA) \cite{brent1982regular}, Kogge-Stone parallel prefix (KSA) \cite{kogge1973parallel}, and Carry-Select (CSelA) \cite{bedrij1962}---were implemented in parameterized Chisel RTL, verified with comprehensive functional testbenches covering corner cases, maximum carry propagations, and randomized vectors, and generated into clean gate-level SystemVerilog netlists.
 
 Each design was synthesized using \textbf{Yosys} and mapped with \textbf{Berkeley ABC} to the predictive \textbf{ASAP7 7\,nm FinFET} standard-cell library (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, output capacitive load $C_{\text{load}} = 2.0\,\text{fF}$). Table \ref{tab:asap7_adders_comparison} summarizes the resulting gate counts, standard-cell silicon area, critical path propagation latency, speedup relative to the ripple-carry baseline, and maximum standalone operating clock frequency ($f_{\max} = 1 / t_{\text{pd}}$).
 
 \begin{table}[htbp]
 \centering
-\small
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|c|c|c|c|c|c|}
 \hline
 \textbf{Adder Architecture} & \textbf{Theoretical} & \textbf{Standard} & \textbf{Total Area} & \textbf{Delay ($t_{\text{pd}}$)} & \textbf{Speedup vs.} & \textbf{Max Frequency} \\
 & \textbf{Delay} & \textbf{Cells} & \textbf{($\mu$m$^2$)} & \textbf{(ps / ns)} & \textbf{RCA Baseline} & \textbf{($f_{\max}$, GHz)} \\
 \hline
-Ripple-Carry Adder (RCA)       & $O(N)$         & 106 & 13.91 & 1,045.43\,ps (1.045\,ns) & $1.00\times$ (Base) & 0.96\,GHz \\
-Carry Lookahead Adder (CLA)    & $O(\log N)$    & 122 & 12.98 & 987.99\,ps (0.988\,ns)   & $1.06\times$        & 1.01\,GHz \\
-Brent-Kung Prefix Adder (BKA)  & $O(2\log_2 N)$ & 144 & 14.83 & 836.25\,ps (0.836\,ns)   & $1.25\times$        & 1.20\,GHz \\
-Kogge-Stone Prefix Adder (KSA) & $O(\log_2 N)$  & 190 & 17.48 & 712.57\,ps (0.713\,ns)   & $1.47\times$        & 1.40\,GHz \\
-\textbf{Carry Select Adder (CSA)} & \textbf{$O(\sqrt{N})$} & \textbf{190} & \textbf{18.01} & \textbf{519.83\,ps (0.520\,ns)} & \textbf{2.01$\times$} & \textbf{1.92\,GHz} \\
+Ripple-Carry Adder (RCA)            & $O(N)$         & 106 & 13.91 & 1,045.43\,ps (1.045\,ns) & $1.00\times$ (Base) & 0.96\,GHz \\
+Carry Lookahead Adder (CLA)         & $O(\log N)$    & 122 & 12.98 & 987.99\,ps (0.988\,ns)   & $1.06\times$        & 1.01\,GHz \\
+Brent-Kung Prefix Adder (BKA)       & $O(2\log_2 N)$ & 144 & 14.83 & 836.25\,ps (0.836\,ns)   & $1.25\times$        & 1.20\,GHz \\
+Kogge-Stone Prefix Adder (KSA)      & $O(\log_2 N)$  & 190 & 17.48 & 712.57\,ps (0.713\,ns)   & $1.47\times$        & 1.40\,GHz \\
+\textbf{Carry-Select Adder (CSelA)} & \textbf{$O(\sqrt{N})$} & \textbf{190} & \textbf{18.01} & \textbf{519.83\,ps (0.520\,ns)} & \textbf{2.01$\times$} & \textbf{1.92\,GHz} \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{Empirical synthesis and timing evaluation of 32-bit high-performance adder architectures mapped to ASAP7 7\,nm FinFET technology.}\label{tab:asap7_adders_comparison}
 \end{table}
 
 \subsubsection{Architectural Analysis and Synthesis Insights}
-\index{carry select adder!advantages in standard cells}
+\index{carry select adder (CSelA)!standard cells analysis}
+\index{parallel prefix adders!pipelining advantages}
 
 The empirical synthesis results reveal several critical insights into deep-submicron arithmetic design:
 \begin{enumerate}
     \item \textbf{The Ripple-Carry Bottleneck Confirmed}: The ripple-carry adder exhibits a propagation delay of $1,045.43\,\text{ps}$ ($1.045\,\text{ns}$). The critical path consists of 31 cascaded majority and inverter stages (\texttt{MAJx2\_ASAP7\_75t\_R}), confirming that the $O(N)$ carry chain is a severe structural bottleneck in high-frequency datapaths.
     \item \textbf{Hierarchical CLA Limitations}: While the 4-bit block CLA reduces delay to $987.99\,\text{ps}$, it offers only a modest $6\%$ speedup. In static CMOS standard cells, the complex multi-input AND-OR trees required for lookahead logic suffer from fan-in stacking and internal node capacitance, diluting the theoretical logarithmic advantage.
     \item \textbf{Parallel Prefix Trade-offs}: The parallel prefix trees yield substantial latency reductions: Brent-Kung reaches $836.25\,\text{ps}$ ($1.25\times$ faster) while maintaining a compact $14.83\,\mu\text{m}^2$ footprint. Kogge-Stone further cuts latency to $712.57\,\text{ps}$ ($1.47\times$ faster, $1.40\,\text{GHz}$) by maintaining minimum logic depth ($5$ prefix stages), albeit with higher cell count (190 cells) and dense inter-stage routing tracks.
-    \item \textbf{Superiority of Carry Select in 32-bit Standard Cells}: The \textbf{Carry Select Adder (CSA)} achieves the absolute lowest propagation delay of all architectures evaluated: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}.
+    \item \textbf{Carry-Select Characteristics in 32-bit Standard Cells}: In this 32-bit standard-cell evaluation, the \textbf{Carry-Select Adder (CSelA)} achieves the lowest propagation delay: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}.
     
-    In 32-bit standard cells, partitioning the adder into 4-bit blocks allows the speculative carry chains to settle in parallel in under $120\,\text{ps}$. The arriving carries then ripple through a linear chain of transmission-gate and static multiplexers (\texttt{NAND2}, \texttt{MAJI}), each introducing an average gate delay of only $\approx 35\text{--}40\,\text{ps}$. Because 2:1 multiplexers are among the fastest and most highly optimized primitives in modern FinFET standard-cell libraries, the carry-select topology decisively outperforms tree structures at the 32-bit operand width.
+    In 32-bit standard cells, partitioning the adder into 4-bit blocks allows the speculative carry chains to settle in parallel in under $120\,\text{ps}$. The arriving carries then ripple through a linear chain of transmission-gate and static multiplexers (\texttt{NAND2}, \texttt{MAJI}), each introducing an average gate delay of only $\approx 35\text{--}40\,\text{ps}$. Because 2:1 multiplexers are among the fastest and most highly optimized primitives in modern FinFET standard-cell libraries, the carry-select topology performs exceptionally well at the 32-bit operand width.
+    
+    \item \textbf{Technology and Scaling Trade-Offs in the Literature}: While the Carry-Select Adder exhibits favorable delay at 32 bits in this static CMOS library, published research in computer arithmetic demonstrates that its relative performance depends heavily on operand width, technology node, and pipeline partitioning:
+    \begin{itemize}
+        \item \textit{Scaling to 64-bit and 128-bit Datapaths}: As analyzed by Knowles \cite{knowles2001} and Harris \cite{harris2003taxonomy}, Carry-Select adder delay scales with $O(\sqrt{N})$, whereas parallel prefix adders scale with $O(\log_2 N)$. For 64-bit and 128-bit words, the logarithmic depth of prefix networks (such as Kogge-Stone, Han-Carlson \cite{han1987}, or Knowles networks) yields lower propagation latency than carry-select schemes, whose rippling multiplexer chains become the dominant delay path.
+        \item \textit{Ease of Pipelining}: Parallel prefix adders feature regular, feed-forward directed acyclic graph topologies with uniform logic depth across all bit positions. This structural regularity makes prefix adders straightforward to pipeline across multiple clock cycles by inserting pipeline registers between prefix levels (e.g., two prefix levels per cycle). In contrast, pipelining a Carry-Select Adder requires retiming the multiplexer chain across speculative block boundaries, which introduces irregular pipeline cuts, uneven stage delays, and significant register overhead.
+        \item \textit{Interconnect and Driving Strength Variations}: In technologies with high interconnect resistance or standard-cell libraries lacking transmission-gate multiplexers, parallel prefix adders and hybrid prefix/carry-select topologies (such as Han-Carlson adders \cite{han1987}) often achieve better timing closure and lower power dissipation than pure carry-select designs \cite{beaumont2001}.
+    \end{itemize}
 \end{enumerate}
 
-In Chapter \ref{riscvProcessor} (Section \ref{riscvAdderBalancing}), this Carry Select Adder is chosen to replace the slow ripple-carry adder in the execution unit of the 4-stage RISC-V processor, eliminating the dominant stage delay bottleneck and balancing the pipeline.
+In Chapter \ref{riscvProcessor} (Section \ref{riscvAdderBalancing}), this Carry-Select Adder (CSelA) is chosen to replace the slow ripple-carry adder in the execution unit of the 4-stage RISC-V processor, eliminating the dominant stage delay bottleneck and balancing the pipeline.
 
 
 
@@ -269,7 +278,7 @@ In a linear carry-save array, each row of full adders accumulates one partial pr
 \index{Booth multiplier!Radix-4 recoding}
 \index{Booth recoding!modified}
 
-Rather than generating $N$ separate partial products, \textbf{Radix-4 Modified Booth Recoding} inspects three consecutive multiplier bits with a 1-bit overlap $(b_{2i+1}, b_{2i}, b_{2i-1})$ to recode the multiplier into a signed-digit base-4 representation with digit set $d_i \in \{-2, -1, 0, +1, +2\}$:
+Rather than generating $N$ separate partial products, \textbf{Radix-4 Modified Booth Recoding} \cite{booth1951, macsorley1961} inspects three consecutive multiplier bits with a 1-bit overlap $(b_{2i+1}, b_{2i}, b_{2i-1})$ to recode the multiplier into a signed-digit base-4 representation with digit set $d_i \in \{-2, -1, 0, +1, +2\}$:
 \begin{equation}
 d_i = -2 b_{2i+1} + b_{2i} + b_{2i-1}.
 \end{equation}
@@ -312,7 +321,7 @@ By halving the number of operands entering the reduction tree, Radix-4 Booth rec
 Once partial products are generated, they must be compressed into two equivalent vectors. In an unpipelined linear array, partial products are accumulated serially. \textbf{Tree multipliers} compress partial products in parallel across both dimensions using Carry-Save Adders (CSAs). A 3:2 full adder compresses three binary inputs into two outputs (sum and carry) in $O(1)$ gate delays, while a 2:2 half adder compresses two inputs into two outputs.
 
 \subsubsection{Wallace Trees}
-In a \textbf{Wallace Tree}, full adders and half adders are deployed greedily at every level of the reduction hierarchy. In each reduction stage:
+In a \textbf{Wallace Tree} \cite{wallace1964}, full adders and half adders are deployed greedily at every level of the reduction hierarchy. In each reduction stage:
 \begin{itemize}
     \item Every available group of three bits at column $j$ is routed to a 3:2 counter.
     \item Every remaining pair of two bits is routed to a 2:2 counter.
@@ -329,7 +338,7 @@ L_{\text{Wallace}} = \lceil \log_{1.5} (N / 2) \rceil = O(\log N).
 For $N = 32$ rows, a Wallace tree requires only 8 reduction levels; combined with Radix-4 Booth recoding (17 rows), the tree depth collapses to just 6 levels!
 
 \subsubsection{Dadda Trees}
-A \textbf{Dadda Tree} optimizes the Wallace construction by deferring compression. Rather than reducing as aggressively as possible in early stages, Luigi Dadda showed that the number of reduction stages is identical if compression is delayed to match the maximum capacity of each subsequent stage (the sequence $d_1 = 2, d_2 = 3, d_3 = 4, d_4 = 6, d_6 = 9, d_7 = 13, d_8 = 19, \dots$, where $d_{j+1} = \lfloor 1.5 d_j \rfloor$).
+A \textbf{Dadda Tree} \cite{dadda1965} optimizes the Wallace construction by deferring compression. Rather than reducing as aggressively as possible in early stages, Luigi Dadda showed that the number of reduction stages is identical if compression is delayed to match the maximum capacity of each subsequent stage (the sequence $d_1 = 2, d_2 = 3, d_3 = 4, d_4 = 6, d_6 = 9, d_7 = 13, d_8 = 19, \dots$, where $d_{j+1} = \lfloor 1.5 d_j \rfloor$).
 
 By placing full and half adders only when the number of bits in a column exceeds the target threshold $d_j$, Dadda multipliers use fewer counters in early stages than Wallace trees. However, this leaves more uncompressed bits at the boundary, requiring a slightly wider final Carry-Propagate Adder.
 
@@ -347,7 +356,7 @@ Despite their asymptotic speed ($O(\log N)$ delay), Wallace and Dadda trees pres
 \index{redundant binary signed-digit (RBSD)}
 \index{carry-free addition}
 
-To overcome the irregular routing congestion of Wallace trees while maintaining logarithmic delay, computer architects developed the \textbf{Redundant Binary Multiplier (RBM)}. The RBM is grounded in the Redundant Binary Signed-Digit (RBSD) arithmetic originally formulated by Avizienis and adapted for VLSI by Takagi, Yasuura, and Yajima.
+To overcome the irregular routing congestion of Wallace trees while maintaining logarithmic delay, computer architects developed the \textbf{Redundant Binary Multiplier (RBM)}. The RBM is grounded in the Redundant Binary Signed-Digit (RBSD) arithmetic originally formulated by Avizienis \cite{avizienis1961} and adapted for VLSI by Takagi, Yasuura, and Yajima \cite{takagi1985}.
 
 \subsubsection{Redundant Binary Representation}
 In a radix-2 redundant binary system, each digit $x_i$ takes values from the signed-digit set:
@@ -394,18 +403,19 @@ Because each RBA cell adds two redundant binary vectors into a single redundant 
     \begin{equation}
     P = P^+ - P^-.
     \end{equation}
-    This final conversion is computed in parallel using a Carry Select or parallel prefix adder.
+    This final conversion is computed in parallel using a Carry-Select (CSelA) or parallel prefix adder.
 \end{itemize}
 
-\subsubsection{Why Redundant Binary Multipliers in High-Performance DSP Designs?}
-\index{DSP!redundant binary multiplier}\index{Sandblaster DSP}\index{layout regularity!RBM}
+\subsubsection{Redundant Binary Multipliers in Custom DSP Architectures}
+\index{DSP!redundant binary multiplier}\index{IBM Mwave DSP}\index{layout regularity!RBM}
 
-The Redundant Binary Multiplier occupies a distinguished place in high-performance digital signal processor (DSP) design. In audio, video, telecommunications, and radar processing, multiplication and multiply-accumulate (MAC) operations dominate the instruction mix:
+In specialized custom VLSI digital signal processors---such as the IBM Mwave DSP architecture \cite{pechanek1995mfast} and high-performance floating-point and arithmetic processors \cite{harata1987, makino1996, edamatsu1988}---the Redundant Binary Multiplier provides compelling physical and algorithmic advantages:
 \begin{enumerate}
-    \item \textbf{Perfect Layout Regularity}: Unlike the tangled wiring interconnects of Wallace and Dadda trees, the RBM's binary tree reduction is \textbf{strictly modular and structurally regular}. Every node in the tree is an identical 2-to-1 RBA block with uniform, localized bit-slice wiring. In custom and semi-custom DSP datapath layout, bit-slices can be tiled linearly with identical pitch-matching across all 32 or 64 bit positions.
-    \item \textbf{Predictable Interconnect and Scalability}: Because interconnect lengths double predictably between tree levels (forming an H-tree or binary layout), wire lengths and parasitics are deterministic. In high-frequency gigahertz DSP engines (such as the multithreaded Sandblaster DSP architecture), predictable wiring prevents the unroutable wire congestion, timing variance, and crosstalk spikes that frequently afflict Wallace tree layouts.
-    \item \textbf{Direct Accumulation in Redundant Form}: In DSP vector MAC units ($A \cdot B + C$), the accumulation operand $C$ can be fed directly into an extra RBA node in redundant binary format without requiring intermediate two's complement conversion, enabling chained high-speed multiply-accumulate operations at maximum clock rates.
+    \item \textbf{Pitch-Matched Modular Layout}: Every node in the binary reduction tree is an identical 2-to-1 RBA block with uniform, localized bit-slice wiring. In custom and semi-custom datapath layouts, bit-slices can be pitch-matched and tiled linearly across all bit positions.
+    \item \textbf{Predictable Interconnect}: Because interconnect lengths double predictably between tree levels (forming an H-tree layout), wire lengths and parasitics are deterministic, avoiding the chaotic routing congestion and timing variance of Wallace trees in custom layouts.
+    \item \textbf{Direct Chained Multiply-Accumulate (MAC)}: In DSP vector MAC units ($A \cdot B + C$), the running accumulation value can be retained directly in redundant binary format across successive clock cycles. An extra RBA node adds the incoming product into the accumulator in strictly constant $O(1)$ time, eliminating the final two's complement vector subtractor ($P = P^+ - P^-$) from the critical inner loop until accumulation completes.
 \end{enumerate}
+It is important to note that RBMs do not dominate generic DSP designs. Most commercial general-purpose DSPs (such as TI TMS320, CEVA, and Qualcomm Hexagon) and general-purpose microprocessors employ Booth-recoded 4:2 carry-save compressor trees due to the silicon area overhead and dual-rail wiring requirements of redundant binary logic.
 
 \subsection{Architectural Comparison of High-Performance Multipliers}
 
@@ -413,40 +423,53 @@ Table \ref{tab:multiplier_comparison} summarizes the structural, asymptotic, and
 
 \begin{table}[htbp]
 \centering
-\small
-\begin{tabular}{|l|c|c|c|c|l|}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|p{4.2cm}|}
 \hline
-\textbf{Architecture} & \textbf{Delay Complexity} & \textbf{Area Complexity} & \textbf{Reduction Structure} & \textbf{Routing Regularity} & \textbf{Optimal Application Domain} \\
+\textbf{Architecture} & \textbf{Delay Complexity} & \textbf{Area Complexity} & \textbf{Reduction Structure} & \textbf{Routing Regularity} & \textbf{Typical Application Domain} \\
 \hline
-Array Multiplier       & $O(N)$           & $O(N^2)$      & Linear 1D cascade       & Excellent (Planar 2D) & Low-frequency, small bit-widths ($N \le 16$) \\
-Radix-4 Booth          & $O(N)$ or $O(\log N)$ & $O(N^2)$ / $O(N \log N)$ & Halved rows (17 for 32b) & High (Booth recoder) & Area-constrained cores, ASIC standard cells \\
-Wallace Tree Multiplier& $O(\log_{1.5} N)$& $O(N^2)$      & Irregular 3:2 CSA tree   & Poor (Wiring congestion)& Standalone high-speed arithmetic units \\
-Dadda Tree Multiplier  & $O(\log_{1.5} N)$& $O(N^2)$      & Deferral 3:2 CSA tree    & Poor (Wiring congestion)& Minimum counter count in standard cells \\
-Redundant Binary (RBM) & $O(\log_2 N)$    & $O(N^2)$      & Balanced 2:1 binary tree & \textbf{Superior (Modular)} & \textbf{High-Performance DSP datapaths, custom VLSI} \\
+Array Multiplier        & $O(N)$                 & $O(N^2)$                 & Linear 1D cascade         & High (Planar 2D)            & Low-frequency, small bit-widths ($N \le 16$) \\
+Radix-4 Booth           & $O(N)$ or $O(\log N)$  & $O(N^2)$ / $O(N \log N)$ & Halved rows (17 for 32b)  & High (Booth recoder)        & Standard-cell ASICs, area-constrained cores \\
+Wallace Tree Multiplier & $O(\log_{1.5} N)$      & $O(N^2)$                 & Irregular 3:2 CSA tree     & Low (Wiring congestion)     & High-speed arithmetic units \\
+Dadda Tree Multiplier   & $O(\log_{1.5} N)$      & $O(N^2)$                 & Deferral 3:2 CSA tree      & Low (Wiring congestion)     & Minimum counter count in standard cells \\
+Redundant Binary (RBM)  & $O(\log_2 N)$          & $O(N^2)$                 & Balanced 2:1 binary tree   & High (Modular H-Tree)       & Custom VLSI DSPs (e.g., IBM Mwave DSP) \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{Architectural Comparison of High-Performance Multiplier Topologies.}
 \label{tab:multiplier_comparison}
 \end{table}
 
 While big-$O$ asymptotic analysis provides valuable theoretical insight, real-world processor performance is determined by standard-cell library characteristics, FinFET gate drive strengths, and physical wiring parasitics.
 
-\subsection{Physical Synthesis Realities: EDA Baseline Multipliers vs. Explicit Architectures}\label{sec:multiplier_eda_synthesis_realities}\label{riscvMultiplierSynthesis}
-\index{multiplier!EDA synthesis realities}
+\subsection{Physical Synthesis Realities: Automated Standard-Cell Synthesis vs. Custom Datapath Implementation}\label{sec:multiplier_eda_synthesis_realities}\label{riscvMultiplierSynthesis}
+\index{multiplier!synthesis realities}
 \index{multiplier!ASAP7 7nm FinFET synthesis}
 \index{synthesis!Yosys multiplier inference}
 \index{synthesis!Berkeley ABC optimization}
 \index{Booth multiplier!front-end delay penalty}
 \index{redundant binary multiplier!custom DSP layout}
-\index{Sandblaster DSP!redundant binary arithmetic}
+\index{IBM Mwave DSP!redundant binary arithmetic}
 
-While big-$O$ asymptotic complexity analysis provides fundamental theoretical guidance, real-world microprocessor execution unit performance is governed by standard-cell library electrical characteristics, FinFET gate drive strengths, automated logic synthesis algorithms, and deep-submicron wiring parasitics. To uncover the physical design trade-offs of the multiplier topologies discussed in this section, each 32-bit multiplier architecture was modeled in Chisel, rigorously verified against randomized signed and unsigned testbenches, generated into clean gate-level SystemVerilog, and synthesized using Yosys and Berkeley ABC targeting the predictive \textbf{ASAP7 7\,nm FinFET standard-cell library} (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, output capacitive load $C_{\text{load}} = 2.0\,\text{fF}$).
+While big-$O$ asymptotic complexity analysis provides fundamental theoretical guidance, real-world microprocessor execution unit performance is governed by standard-cell library electrical characteristics, FinFET gate drive strengths, automated logic synthesis algorithms, and deep-submicron wiring parasitics. 
+
+In commercial high-performance microprocessors and digital signal processors, execution unit multipliers are rarely implemented via unguided standard-cell logic synthesis. Instead, processor architects typically employ one of two methodologies:
+\begin{enumerate}
+    \item \textbf{Commercial Datapath Synthesis}: EDA environments like Synopsys Design Compiler (with DesignWare) or Cadence Genus (with ChipWare) provide specialized, configurable arithmetic generator blocks. These tools recognize arithmetic operations and map them directly into parameter-tuned 4:2 compressor trees, Radix-4 or Radix-8 Booth recoders, and parallel-prefix final adders optimized for user timing constraints.
+    \item \textbf{Custom Datapath Macro Design}: In high-frequency commercial processors (documented extensively in IEEE ISSCC, JSSC, and CICC literature \cite{santoro1989, goto1992, ohkubo1995, goto1997, hagihara1998}), multipliers are hand-crafted as hardened, pitch-matched datapath macros. Designers use optimized custom dynamic/static compound gates, transmission-gate multiplexers, and dedicated metal routing channels to eliminate interconnect congestion and achieve single-digit gigahertz clock frequencies. In custom silicon, tree multipliers and Booth recoders run significantly faster than array multipliers ($O(\log N)$ vs. $O(N)$) because custom physical layout avoids the placement scattering and wire congestion of standard cells.
+\end{enumerate}
+
+To evaluate how standard-cell logic synthesis behaves when unguided by commercial macro generators, each 32-bit multiplier architecture was modeled in parameterized Chisel RTL, verified against randomized signed and unsigned testbenches, generated into clean gate-level SystemVerilog, and synthesized using the open-source \textbf{Yosys} framework and \textbf{Berkeley ABC} targeting the predictive \textbf{ASAP7 7\,nm FinFET standard-cell library} (\texttt{asap7sc7p5t\_28}, RVT, $V_{dd} = 0.70\,\text{V}$, $T = 25^\circ\text{C}$, Typical TT corner, output capacitive load $C_{\text{load}} = 2.0\,\text{fF}$).
 
 Table \ref{tab:ch15_asap7_multipliers} presents the empirical physical synthesis results for all five 32-bit multiplier configurations.
 
 \begin{table}[htbp]
 \centering
-\small
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|c|c|c|c|c|c|}
 \hline
 \textbf{Multiplier Architecture} & \textbf{Standard Cells} & \textbf{Area ($\mu$m$^2$)} & \textbf{Delay ($t_{\text{pd}}$)} & \textbf{Standalone $f_{\max}$} & \textbf{Area vs. Base} & \textbf{Speedup} \\
@@ -457,51 +480,53 @@ Radix-4 Modified Booth           & 5,590  & \textbf{464.45} & 2,159.88\,ps (2.16
 Wallace Tree Multiplier          & 7,293  & 627.77   & 2,088.55\,ps (2.089\,ns) & 0.479\,GHz & $-42.0\%$ & $1.03\times$ \\
 Redundant Binary Multiplier (RBM)& 14,920 & 1,072.65 & 2,245.91\,ps (2.246\,ns) & 0.445\,GHz & $-1.0\%$  & $0.96\times$ \\
 \hline
-\end{tabular}
-\caption{Empirical synthesis and timing evaluation of 32-bit high-performance multiplier architectures mapped to ASAP7 7\,nm FinFET predictive standard-cell library ($V_{dd} = 0.70\,\text{V}$, $C_{\text{load}} = 2.0\,\text{fF}$).}\label{tab:ch15_asap7_multipliers}
+\end{tabular}%
+}
+\caption{Empirical synthesis and timing evaluation of 32-bit multiplier architectures mapped to ASAP7 7\,nm FinFET predictive standard-cell library ($V_{dd} = 0.70\,\text{V}$, $C_{\text{load}} = 2.0\,\text{fF}$).}\label{tab:ch15_asap7_multipliers}
 \end{table}
 
-At first glance, these synthesis results present several striking surprises that challenge conventional textbook intuitions:
+At first glance, these synthesis results present several interesting findings that illustrate the differences between textbook gate-level models and automated standard-cell synthesis:
 \begin{enumerate}
-    \item Why does the synthesis tool's ``baseline'' multiplier achieve a competitive delay of $2.148\,\text{ns}$, rather than the agonizingly slow latency of a naive shift-and-add or ripple-carry cascade?
-    \item Why did the ostensibly ``slow'' $O(N)$ Array Multiplier synthesize to the lowest propagation delay ($1.968\,\text{ns}$, $0.508\,\text{GHz}$), outperforming both the Wallace tree ($2.089\,\text{ns}$) and Radix-4 Booth ($2.160\,\text{ns}$)?
-    \item Why did the Radix-4 Modified Booth Multiplier exhibit a slightly longer delay ($2.160\,\text{ns}$) than the Array Multiplier despite cutting the number of partial product rows in half, yet achieved a staggering \textbf{57.1\% reduction in silicon area}?
-    \item Why did the Wallace tree not deliver its theoretical logarithmic speed advantage in standard cells?
-    \item Why did the Redundant Binary Multiplier (RBM) synthesize to the largest area and highest delay in standard cells, despite being the preferred architecture in industry-leading custom DSP silicon?
+    \item Why does the synthesis tool's ``baseline'' multiplier achieve a competitive delay of $2.148\,\text{ns}$, rather than the slow latency of a naive shift-and-add cascade?
+    \item Why did the Array Multiplier synthesize to the lowest propagation delay ($1.968\,\text{ns}$, $0.508\,\text{GHz}$) under Yosys and ABC, slightly faster than the Wallace tree ($2.089\,\text{ns}$) and Radix-4 Booth ($2.160\,\text{ns}$)?
+    \item Why did the Radix-4 Modified Booth Multiplier exhibit a slightly longer delay ($2.160\,\text{ns}$) than the Array Multiplier despite halving the partial product rows, yet achieved a \textbf{57.1\% reduction in silicon area}?
+    \item Why did the Wallace tree not deliver a dramatic speed advantage in standard cells?
+    \item Why did the Redundant Binary Multiplier (RBM) synthesize to the largest area and highest delay in standard cells, despite its advantages in custom VLSI DSP designs?
 \end{enumerate}
-Understanding these physical realities requires examining the interaction between hardware description language (HDL) semantics, electronic design automation (EDA) synthesis algorithms, standard-cell logic mapping, and physical wiring parasitics.
 
-\subsubsection{What is the EDA Baseline in Logic Synthesis?}
+\subsubsection{Yosys Multiplier Synthesis}
 \index{Yosys!alumacc pass}\index{Yosys!maccmap pass}\index{Berkeley ABC!AIG rewriting}\index{Brent-Kung adder!synthesis baseline}
 
-When a hardware designer writes a multiplication expression in HDL (such as \texttt{val product = io.a * io.b} in Chisel or \texttt{assign p = a * b} in Verilog), modern logic synthesizers do \textbf{not} implement a naive shift-and-add algorithm or a sequential state machine. In modern EDA flows such as Yosys:
+When a hardware designer writes a multiplication expression in HDL (such as \texttt{val product = io.a * io.b} in Chisel or \texttt{assign p = a * b} in Verilog), modern logic synthesizers do not implement a naive shift-and-add algorithm or a sequential state machine. In open-source synthesis flows like Yosys:
 \begin{itemize}
     \item \textbf{AST Cell Extraction}: The HDL elaboration phase infers an abstract internal multiplication operator cell (\texttt{\$mul}).
-    \item \textbf{Multiply-Accumulate Transformation (\texttt{alumacc})}: The synthesis engine executes the \texttt{alumacc} pass, which scans the design hierarchy to group multiplication, addition, and subtraction operations into multi-operand multiply-accumulate macro-cells (\texttt{\$macc}).
-    \item \textbf{Carry-Save Compressor Tree Mapping (\texttt{maccmap})}: Rather than flattening the multiplication into a linear ripple-carry chain, the \texttt{maccmap} pass expands the \texttt{\$macc} cell into a high-performance bit-slice carry-save compressor tree built from 1-bit full adders (\texttt{\$fa}). It then generates a fast parallel-prefix vector-merging adder (specifically a Brent-Kung parallel prefix carry-lookahead adder, \texttt{\$lcu\_brent\_kung}) to merge the final sum and carry vectors.
-    \item \textbf{Boolean Resynthesis and Delay Optimization (Berkeley ABC)}: The resulting gate netlist is passed to Berkeley ABC for technology mapping. ABC executes structural hashing (\texttt{strash}), Functional Redundancy Identification and FRAIGing, and cut-based delay mapping (\texttt{dch}, \texttt{map}) targeting the ASAP7 7\,nm standard-cell library. ABC aggressively restructures logic cones along the critical path into balanced And-Inverter Graph (AIG) trees.
+    \item \textbf{Multiply-Accumulate Transformation (\texttt{alumacc})}: The synthesis engine executes the \texttt{alumacc} pass, scanning the design hierarchy to group multiplication, addition, and subtraction operations into multi-operand multiply-accumulate macro-cells (\texttt{\$macc}).
+    \item \textbf{Carry-Save Compressor Tree Mapping (\texttt{maccmap})}: Rather than flattening the multiplication into a linear ripple-carry chain, the \texttt{maccmap} pass expands the \texttt{\$macc} cell into a bit-slice carry-save compressor tree built from 1-bit full adders (\texttt{\$fa}). It then generates a fast parallel-prefix vector-merging adder (specifically a Brent-Kung parallel prefix carry-lookahead adder, \texttt{\$lcu\_brent\_kung}) to merge the final sum and carry vectors.
+    \item \textbf{Boolean Resynthesis and Delay Optimization (Berkeley ABC)}: The resulting netlist is processed by Berkeley ABC for technology mapping. ABC executes structural hashing (\texttt{strash}), Functional Redundancy Identification, and cut-based delay mapping (\texttt{dch}, \texttt{map}) targeting the ASAP7 standard-cell library. ABC restructures logic cones along the critical path into balanced And-Inverter Graph (AIG) trees.
 \end{itemize}
 
-Consequently, the synthesizer's ``behavioral baseline'' is \textbf{already an aggressively optimized carry-save compressor tree with a parallel-prefix final adder}! 
+Consequently, the synthesizer's ``behavioral baseline'' is already an optimized carry-save compressor tree with a parallel-prefix final adder. 
 
-Why, then, did the baseline multiplier consume an enormous silicon area of \textbf{10,240 cells} ($1,083.36\,\mu\text{m}^2$)? In the RISC-V \texttt{Zmmul} extension, the hardware must support four distinct signed/unsigned multiplication operations: \texttt{MUL} (lower 32 bits), \texttt{MULH} (signed $\times$ signed upper 32 bits), \texttt{MULHSU} (signed $\times$ unsigned upper 32 bits), and \texttt{MULHU} (unsigned $\times$ unsigned upper 32 bits). In behavioral HDL code, multiplexing between signed and unsigned product expressions caused the synthesizer to instantiate \textbf{two complete, independent 64-bit carry-save compressor trees} behind an output multiplexer---one for sign-extended signed operands and one for zero-extended unsigned operands. This macro duplication doubled the cell count and silicon area without improving propagation delay.
+Why, then, did the baseline multiplier consume an enormous silicon area of \textbf{10,240 cells} ($1,083.36\,\mu\text{m}^2$)? In the RISC-V \texttt{Zmmul} extension, the datapath must support four distinct signed/unsigned multiplication instructions: \texttt{MUL}, \texttt{MULH}, \texttt{MULHSU}, and \texttt{MULHU}. In unoptimized behavioral HDL code, multiplexing between signed and unsigned product expressions caused the synthesizer to instantiate \textbf{two complete, independent 64-bit carry-save compressor trees} behind an output multiplexer---one for sign-extended signed operands and one for zero-extended unsigned operands. This duplication doubled the cell count and silicon area without improving propagation delay.
 
-\subsubsection{Why Did the Array Multiplier Synthesize to the Lowest Delay?}
+\subsubsection{Array Multiplier Synthesis Delay}
 \index{array multiplier!synthesis delay advantage}\index{partial product generation!AND gate delay}
 
-The Array Multiplier achieved the lowest propagation delay of all evaluated topologies: \textbf{1,967.86\,ps (1.968\,ns)}, operating at \textbf{0.508\,GHz} ($1.09\times$ speedup over the baseline). This result appears paradoxical because the textbook array multiplier has an asymptotic delay complexity of $O(N)$. 
+The Array Multiplier achieved the lowest propagation delay of all evaluated topologies under Yosys/ABC: \textbf{1,967.86\,ps (1.968\,ns)}, operating at \textbf{0.508\,GHz} ($1.09\times$ speedup over the baseline). This result may appear counterintuitive because textbook array multipliers have an asymptotic delay complexity of $O(N)$. 
 
-The resolution lies in the front-end timing of Phase 1 (Partial Product Generation):
+The explanation lies in the front-end timing of Phase 1 (Partial Product Generation) and the behavior of the logic synthesizer:
 \begin{enumerate}
     \item \textbf{Instantaneous Partial Product Generation}: In the array multiplier, every single bit-product $P_{i,j} = A_j \cdot B_i$ is computed by an independent 2-input \texttt{AND2} gate. In the ASAP7 7\,nm FinFET technology library, an \texttt{AND2x2\_ASAP7\_75t\_R} cell has an intrinsic propagation delay of merely \textbf{$\approx 15\,\text{ps}$}. There is zero decoding logic, zero multiplexing, and zero operand negation. All 1,024 partial product bits are available almost simultaneously at $t \approx 15\,\text{ps}$.
-    \item \textbf{Multi-Operand Synthesis Optimization}: When the partial product summation is expressed as a multi-operand sum ($\sum_{i=0}^{31} T_i$), Yosys and ABC do not lay out the full adders as a naive, single-rail linear cascade. Instead, the synthesizer decomposes the 32 input terms into a balanced tree of carry-save adders, and ABC's cut-based delay mapping restructures the logic into a shallow AIG tree.
-    \item \textbf{Absence of Front-End Overhead}: Because the array multiplier begins reduction with zero front-end logic penalty, the entire budget of the clock period is dedicated to reduction and vector merging. In an unpipelined 32-bit datapath, this pristine front-end allows the array multiplier to reach the final vector-merging adder earlier than architectures burdened by complex recoding logic.
+    \item \textbf{Multi-Operand Synthesis Optimization}: When the partial product summation is expressed as a multi-operand sum ($\sum_{i=0}^{31} T_i$), Yosys and ABC do not lay out the full adders as a single-rail linear cascade. Instead, the synthesizer decomposes the 32 input terms into a balanced tree of carry-save adders, and ABC's cut-based delay mapping restructures the logic into a shallow AIG tree.
+    \item \textbf{Absence of Front-End Overhead}: Because the array multiplier begins reduction with zero front-end logic penalty, the entire budget of the clock period is dedicated to reduction and vector merging. In an unpipelined 32-bit datapath, this clean front-end allows the netlist to reach the final vector-merging adder earlier than architectures burdened by complex recoding logic.
 \end{enumerate}
 
-\subsubsection{The Radix-4 Booth Trade-Off: Front-End Delay Penalty vs. Massive Silicon Area Reduction}
+However, this delay advantage is specific to unguided automated standard-cell synthesis at 32 bits. In custom VLSI silicon or deep-submicron layouts with physical wire routing constraints, the linear $O(N)$ carry ripple and large cell count make array multipliers unsuitable for high-frequency processors compared to custom tree multipliers \cite{santoro1989}.
+
+\subsubsection{Radix-4 Booth Recoding: Area Efficiency vs. Front-End Overhead}
 \index{Booth multiplier!front-end penalty}\index{Booth multiplier!area reduction}\index{Radix-4!breakeven analysis}
 
-The Radix-4 Modified Booth Multiplier achieved an area of \textbf{464.45\,$\mu$m$^2$} (5,590 cells) and a critical path delay of \textbf{2,159.88\,ps (2.160\,ns)}. While it achieved a colossal \textbf{57.1\% reduction in silicon area} compared to the baseline (and 12\% less area than the Array Multiplier), its propagation delay was slightly higher than that of the Array Multiplier ($2.160\,\text{ns}$ vs. $1.968\,\text{ns}$).
+The Radix-4 Modified Booth Multiplier achieved an area of \textbf{464.45\,$\mu$m$^2$} (5,590 cells) and a critical path delay of \textbf{2,159.88\,ps (2.160\,ns)}. While it achieved a \textbf{57.1\% reduction in silicon area} compared to the baseline (and 12\% less area than the Array Multiplier), its propagation delay was slightly higher than that of the Array Multiplier ($2.160\,\text{ns}$ vs. $1.968\,\text{ns}$).
 
 This outcome illustrates the fundamental architectural trade-off between \textbf{front-end recoding overhead} and \textbf{reduction tree depth}:
 \begin{itemize}
@@ -520,37 +545,39 @@ This outcome illustrates the fundamental architectural trade-off between \textbf
         \item A 5:1 multiplexer per bit position to select among $0, +A, +2A, -A,$ and $-2A$;
         \item Inversion and carry-in generation logic ($\sim A + 1$) to compute two's complement negations.
     \end{enumerate}
-    In ASAP7 standard cells, this front-end decoding, multiplexing, and conditional negation logic requires 3 to 4 stages of combinational logic, introducing a propagation delay of \textbf{$\approx 150\text{--}200\,\text{ps}$} before the first partial product bits can even enter the reduction tree!
+    In ASAP7 standard cells, this front-end decoding, multiplexing, and conditional negation logic requires 3 to 4 stages of combinational logic, introducing a propagation delay of \textbf{$\approx 150\text{--}200\,\text{ps}$} before the first partial product bits enter the reduction tree.
     
     \item \textbf{The Breakeven Calculus at 32 Bits}: At $N = 32$ bits, the front-end recoding penalty ($\approx 180\,\text{ps}$) exceeds the reduction tree savings ($\approx 80\,\text{ps}$):
     \begin{equation}
     t_{\text{Booth\_net}} \approx t_{\text{array}} + \Delta t_{\text{frontend}} - \Delta t_{\text{reduction}} \approx t_{\text{array}} + 180\,\text{ps} - 80\,\text{ps} \approx t_{\text{array}} + 100\,\text{ps}.
     \end{equation}
-    This precisely matches our empirical physical synthesis results, where Radix-4 Booth ($2,159.88\,\text{ps}$) is approximately $192\,\text{ps}$ slower than the Array Multiplier ($1,967.86\,\text{ps}$).
+    This corresponds with our empirical physical synthesis results, where Radix-4 Booth ($2,159.88\,\text{ps}$) is approximately $192\,\text{ps}$ slower than the Array Multiplier ($1,967.86\,\text{ps}$) in standard cells.
     
-    \item \textbf{The Area and Wiring Triumph}: What Radix-4 Booth sacrifices in single-cycle delay at 32 bits, it overwhelmingly wins in silicon area and wireability. By eliminating 15 full rows of partial products, Booth recoding eliminates thousands of full adders, multiplexers, and routing tracks. In our synthesis results, Booth achieves \textbf{464.45\,$\mu$m$^2$}---the smallest silicon footprint of any multiplier architecture, slashing dynamic switching power and eliminating routing congestion.
+    \item \textbf{Area and Wiring Savings}: What Radix-4 Booth sacrifices in single-cycle delay at 32 bits, it makes up in silicon area and wireability. By eliminating 15 full rows of partial products, Booth recoding eliminates thousands of full adders and routing tracks. In our synthesis results, Booth achieves \textbf{464.45\,$\mu$m$^2$}---the smallest silicon footprint of any multiplier architecture, slashing dynamic switching power and eliminating routing congestion.
     
-    \item \textbf{Scaling to 64-Bit and 128-Bit Datapaths}: The front-end recoding delay is constant ($O(1)$) regardless of word length $N$. However, the reduction tree depth savings scale with $\log_{1.5}(N)$. For a 64-bit multiplier (such as in RISC-V RV64M), Booth recoding cuts 64 rows down to 33, eliminating 4 reduction levels and saving $\approx 160\,\text{ps}$. For a 128-bit multiplier (in floating-point or cryptographic accelerators), Booth cuts 128 rows down to 65, eliminating 6 to 8 reduction levels and saving $\approx 240\text{--}320\,\text{ps}$. At these larger bit-widths, the reduction tree savings easily eclipse the constant front-end penalty, making Radix-4 Booth strictly superior to non-Booth topologies in \textbf{both area and propagation delay}.
+    \item \textbf{Scaling to 64-Bit and 128-Bit Datapaths}: The front-end recoding delay is constant ($O(1)$) regardless of word length $N$. However, the reduction tree depth savings scale with $\log_{1.5}(N)$. For a 64-bit multiplier (such as in RISC-V RV64M), Booth recoding cuts 64 rows down to 33, eliminating 4 reduction levels and saving $\approx 160\,\text{ps}$. For a 128-bit multiplier (in floating-point or cryptographic accelerators), Booth cuts 128 rows down to 65, eliminating 6 to 8 reduction levels and saving $\approx 240\text{--}320\,\text{ps}$. At these larger bit-widths, the reduction tree savings easily eclipse the constant front-end penalty, making Radix-4 Booth advantageous in both area and propagation delay.
 \end{itemize}
 
-\subsubsection{Wallace Trees in Standard-Cell Synthesis: The Pitfalls of Rigid Structural Netlists}
+\subsubsection{Wallace Tree Standard Cell Synthesis}
 \index{Wallace tree!standard cell synthesis limitations}\index{routing congestion!Wallace tree}\index{wire parasitics!deep submicron}
 
-In theoretical literature, the Wallace Tree Multiplier is celebrated for its $O(\log_{1.5} N)$ reduction latency. Yet in our ASAP7 7\,nm FinFET standard-cell synthesis, the Wallace tree achieved a delay of \textbf{2,088.55\,ps (2.089\,ns)} and an area of \textbf{627.77\,$\mu$m$^2$}---slower than the Array Multiplier ($1.968\,\text{ns}$) and substantially larger than the Booth Multiplier ($464.45\,\mu\text{m}^2$).
+In theoretical literature, the Wallace Tree Multiplier is celebrated for its $O(\log_{1.5} N)$ reduction latency. Yet in our ASAP7 7\,nm FinFET standard-cell synthesis, the Wallace tree achieved a delay of \textbf{2,088.55\,ps (2.089\,ns)} and an area of \textbf{627.77\,$\mu$m$^2$}---slower than the Array Multiplier ($1.968\,\text{ns}$) and larger than the Booth Multiplier ($464.45\,\mu\text{m}^2$).
 
-This discrepancy highlights the difference between textbook gate-level models and physical standard-cell implementation:
+This highlights several key differences between textbook gate models and automated standard-cell synthesis:
 \begin{enumerate}
-    \item \textbf{Optimization Constraints of Structural Netlists}: When a designer models a Wallace tree by explicitly instantiating thousands of individual full adder modules with hardcoded 3:2 port assignments, the structural HDL hierarchy constrains the downstream logic synthesizer. While Berkeley ABC can perform local gate transformations, it respects structural module boundaries and cannot freely recombine Boolean terms across irregular 3:2 reduction stages as fluidly as it optimizes an unconstrained multi-operand AIG.
-    \item \textbf{Irregular Interconnect and Fan-Out}: In a Wallace tree, carries and sums are routed across disparate bit columns and tree stages. This irregular interconnect creates high fan-out on intermediate nets and non-uniform capacitive loading.
-    \item \textbf{Deep-Submicron Wiring Realities}: In modern FinFET processes such as ASAP7 7\,nm, wire resistance and parasitic fringing capacitance ($RC$) dominate gate propagation delays. The non-planar, crisscrossing wiring topology of a Wallace tree creates routing congestion and requires multi-layer metal layer hopping, incurring via resistances and parasitic wire delays that offset its theoretical gate-depth advantage.
+    \item \textbf{Optimization Constraints of Structural Netlists}: When a designer models a Wallace tree by explicitly instantiating thousands of individual full adder modules with hardcoded 3:2 port assignments in HDL, the structural hierarchy constrains the downstream logic synthesizer. While Berkeley ABC can perform local gate transformations, it respects structural module boundaries and cannot freely recombine Boolean terms across irregular 3:2 reduction stages as fluidly as it optimizes an unconstrained multi-operand AIG.
+    \item \textbf{Irregular Interconnect and Fan-Out}: In a Wallace tree, carries and sums are routed across disparate bit columns and tree stages. This irregular interconnect creates non-uniform capacitive loading and fan-out on intermediate nets.
+    \item \textbf{Standard-Cell Placement Scattering}: In contrast to custom VLSI designs where Wallace and 4:2 compressor trees are laid out in pitch-matched datapath stacks with dedicated vertical routing tracks \cite{ohkubo1995, goto1997}, automated standard-cell placers scatter adder cells across arbitrary rows. The resulting crisscrossing interconnect consumes multiple metal layers and incurs parasitic wire resistance and capacitance that erode the theoretical gate-depth advantage.
 \end{enumerate}
 
-\subsubsection{Redundant Binary Multipliers: Standard Cells vs. Custom DSP Datapaths}
-\index{redundant binary multiplier!ASIC standard cells}\index{Sandblaster DSP!custom datapath}\index{multiply-accumulate (MAC)!redundant binary}\index{H-tree layout!RBM}
+\subsubsection{Redundant Binary Multipliers: Standard Cells vs. Custom Datapaths}
+\index{redundant binary multiplier!ASIC standard cells}\index{IBM Mwave DSP!custom datapath}\index{multiply-accumulate (MAC)!redundant binary}\index{H-tree layout!RBM}
 
 The Redundant Binary Multiplier (RBM) synthesized to \textbf{14,920 cells}, a silicon area of \textbf{1,072.65\,$\mu$m$^2$}, and a propagation delay of \textbf{2,245.91\,ps (2.246\,ns)}. In automated standard-cell ASIC synthesis, the RBM appears uncompetitive, consuming more cells and exhibiting higher delay than the other architectures. 
 
-However, in industry-leading high-performance digital signal processor (DSP) design---such as the multithreaded Sandblaster DSP architecture---the Redundant Binary Multiplier is often the \textbf{architecture of choice}. Understanding this dichotomy reveals the profound gap between automated standard-cell synthesis and custom VLSI datapath engineering:
+It is important to emphasize that Redundant Binary Multipliers do \textbf{not} dominate generic DSP or general-purpose CPU designs. Most commercial DSPs (such as TI TMS320, CEVA, and Qualcomm Hexagon) and general-purpose microprocessors utilize Booth-recoded 4:2 carry-save compressor trees. 
+
+However, RBM was successfully employed in specialized custom processors and high-speed arithmetic units---most notably the **IBM Mwave DSP** \cite{pechanek1995mfast} and landmark research prototypes \cite{harata1987, makino1996, edamatsu1988}. Understanding why RBM was chosen in custom DSP silicon while underperforming in standard-cell synthesis reveals the profound gap between automated standard-cell synthesis and custom VLSI datapath engineering:
 \begin{itemize}
     \item \textbf{Why Standard-Cell Synthesis Penalizes RBM}:
     \begin{enumerate}
@@ -560,30 +587,31 @@ However, in industry-leading high-performance digital signal processor (DSP) des
         \item \textbf{Destruction of Layout Symmetry}: Automated standard-cell place-and-route tools treat RBA cells as generic standard cells, scattering them across arbitrary rows and routing channels. This completely obliterates the geometric symmetry that makes redundant binary arithmetic advantageous.
     \end{enumerate}
 
-    \item \textbf{Why RBM Dominates in Custom DSP Datapath Silicon}:
+    \item \textbf{Why RBM Was Employed in Custom DSP Datapath Silicon}:
     \begin{enumerate}
         \item \textbf{Pitch-Matched Bit-Slice Layout}: In custom and semi-custom DSP silicon, datapath units are not synthesized into random standard-cell placement rows. Instead, VLSI designers create \textbf{pitch-matched, bit-slice tiled layouts} where arithmetic cells are physically aligned and abutted column by column across all bit positions.
         \item \textbf{Modular H-Tree Interconnect}: The RBM reduces partial products using a strictly balanced 2:1 binary tree ($\log_2 32 = 5$ levels). Unlike the tangled, chaotic wiring of Wallace trees, a balanced binary tree maps with mathematical perfection into a planar \textbf{H-tree layout}. Wire lengths between successive tree stages are completely uniform, predictable, and localized.
-        \item \textbf{Immunity to Deep-Submicron Wiring Congestion}: In gigahertz DSP engines, unpredictable wire RC delays, cross-talk coupling noise, and timing closure failures in Wallace trees become catastrophic. The RBM's deterministic, modular interconnect topology ensures uniform propagation delays and zero routing congestion across all bit positions.
-        \item \textbf{Direct Chained Multiply-Accumulate (MAC)}: In digital signal processing (e.g., FIR filtering, FFT, matrix multiplication, telecommunication filtering), the fundamental computational primitive is Multiply-Accumulate:
+        \item \textbf{Immunity to Wiring Congestion}: In custom gigahertz DSP engines, the RBM's deterministic, modular interconnect topology ensures uniform propagation delays and eliminates unpredictable routing congestion across bit positions.
+        \item \textbf{Direct Chained Multiply-Accumulate (MAC)}: In digital signal processing (e.g., FIR filtering, FFT, matrix multiplication), the fundamental computational primitive is Multiply-Accumulate:
         \begin{equation}
         \text{Acc} \leftarrow \text{Acc} + (A \cdot B).
         \end{equation}
-        In a custom RBM datapath, the running accumulator value is retained \textbf{directly in redundant binary format} $(\text{Acc}^+, \text{Acc}^-)$ across successive clock cycles! The incoming product $(P^+, P^-)$ is accumulated into the running accumulator using a single extra RBA stage in strictly constant time:
+        In a custom RBM datapath (such as the IBM Mwave DSP \cite{pechanek1995mfast}), the running accumulator value is retained \textbf{directly in redundant binary format} $(\text{Acc}^+, \text{Acc}^-)$ across successive clock cycles. The incoming product $(P^+, P^-)$ is accumulated into the running accumulator using a single extra RBA stage in strictly constant time:
         \begin{equation}
         t_{\text{accumulate}} = O(1).
         \end{equation}
-        The costly final carry-propagate subtractor ($P = P^+ - P^-$) is \textbf{completely eliminated from the loop cycle}; it is executed only once when the accumulated result is finally retired to the register file or memory. Consequently, custom RBM datapaths achieve sustained multi-gigahertz MAC throughput that cannot be matched by standard two's complement multipliers.
+        The costly final carry-propagate subtractor ($P = P^+ - P^-$) is \textbf{completely eliminated from the inner loop}; it is executed only once when the accumulated result is finally retired to the register file or memory.
     \end{enumerate}
 \end{itemize}
 
-\subsubsection{Microarchitectural Summary and Implementation Choice}
+\subsubsection{Architectural Summary and Pipelining Implications}
 \index{Zmmul!multiplier selection}\index{pipeline unbalancing!multiplier}
 
-The empirical synthesis realities demonstrate that:
+The empirical synthesis realities and architectural literature demonstrate that:
 \begin{itemize}
-    \item For \textbf{automated standard-cell ASIC implementations} of general-purpose RISC-V processors, the \textbf{Radix-4 Modified Booth Multiplier} is the superior architectural choice. It slashes silicon area by \textbf{57.1\%} ($464.45\,\mu\text{m}^2$) while maintaining competitive clock frequency ($0.463\,\text{GHz}$).
-    \item For \textbf{custom and semi-custom DSP datapath engines}, the \textbf{Redundant Binary Multiplier} remains unmatched due to its modular layout regularity, predictable H-tree wiring, and ability to perform chained carry-free accumulation in $O(1)$ time.
+    \item For \textbf{automated standard-cell ASIC implementations} of general-purpose RISC-V processors, the \textbf{Radix-4 Modified Booth Multiplier} is the most balanced architectural choice. It slashes silicon area by \textbf{57.1\%} ($464.45\,\mu\text{m}^2$) while maintaining competitive clock frequency ($0.463\,\text{GHz}$) and minimal routing congestion.
+    \item For \textbf{commercial production ASICs}, designers typically rely on commercial datapath generators (such as Synopsys DesignWare or Cadence ChipWare) or hardened custom macros rather than unguided standard-cell netlists.
+    \item For \textbf{custom DSP datapath engines}, specialized architectures like the IBM Mwave DSP leverage Redundant Binary arithmetic for modular layout regularity and $O(1)$ carry-free accumulation in MAC loops, though generic DSPs predominantly utilize Booth-recoded 4:2 compressor trees.
     \item \textbf{The Pipeline Balancing Dilemma}: Most critically, Table \ref{tab:ch15_asap7_multipliers} exposes a vital microarchitectural reality: in ASAP7 7\,nm FinFET technology, \textbf{no single-cycle 32-bit multiplier can achieve a propagation delay under $\approx 1.96\text{--}2.25\,\text{ns}$}. Integrating any single-cycle combinational multiplier directly into an execution stage designed for $0.54\text{--}0.60\,\text{ns}$ clock periods will catastrophically collapse processor clock frequency. In Chapter \ref{riscvProcessor} (Section \ref{riscvZmmulCaseStudy}), we examine the full system impact of this bottleneck and explore architectural solutions, including multi-cycle execution and pipelined multiplier designs.
 \end{itemize}
 
@@ -655,9 +683,11 @@ The placement of the register file in the processor pipeline also influences per
 %****************************************************
 A comparison of multi-porting strategies is shown in Table \ref{tab:multiport_regfile_comparison}:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
+\footnotesize
 \renewcommand{\arraystretch}{1.3}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|c|c|c|}
 \hline
 \textbf{Method} & \textbf{Latency} & \textbf{Scalability} & \textbf{Area Efficiency} \\ \hline
@@ -665,7 +695,8 @@ A comparison of multi-porting strategies is shown in Table \ref{tab:multiport_re
 Multi-Banked SRAM & 1-cycle read delay & Good, requires conflict resolution & Efficient for large files \\ \hline
 Register Replication & 1-cycle read delay & Scalable but increases power & High area cost \\ \hline
 Bypass Networks & Zero-cycle forwarding & Enhances performance & Increases control complexity \\ \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{Comparison of Multi-Porting Strategies.}
 \label{tab:multiport_regfile_comparison}
 \end{table}

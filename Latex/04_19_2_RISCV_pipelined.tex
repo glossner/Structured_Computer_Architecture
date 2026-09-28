@@ -311,16 +311,16 @@ The synthesis and performance results of the pure \texttt{RV32I} baseline in ASA
 
 As established in Section \ref{riscvPerformance}, the critical path of the baseline 4-stage \texttt{RV32I} pipeline is overwhelmingly dominated by the Execute (EX) stage ($T_{\text{execute}} = 1.363\,\text{ns}$). More strikingly, the unoptimized 32-bit ripple-carry adder (RCA) embedded inside the baseline ALU accounts for $1.045\,\text{ns}$ of that latency---nearly \textbf{$2\times$ the delay of any other stage} in the entire processor ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, and $T_{\text{sram\_wb}} = 0.600\,\text{ns}$). Because a synchronous pipeline can run no faster than its slowest stage, the slow ripple-carry adder acts as an anchor holding the clock frequency to $733.7\,\text{MHz}$, even though the remaining three-quarters of the machine are physically capable of clocking at $1.67\,\text{GHz}$ ($1 / 0.600\,\text{ns}$).
 
-To eliminate this structural bottleneck, we select the optimal high-performance adder from the comprehensive empirical evaluation conducted in Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:asap7_adders_synthesis}, Table \ref{tab:asap7_adders_comparison}). Among all 32-bit topologies evaluated in ASAP7 7\,nm FinFET technology (Ripple-Carry, Carry Lookahead, Brent-Kung, Kogge-Stone, and Carry Select), the \textbf{Carry Select Adder (CSA)} achieves the absolute lowest propagation delay: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}. In deep-submicron FinFET standard cells, partitioning the 32-bit adder into 4-bit blocks allows speculative dual-carry chains ($C_{\text{in}} = 0$ and $C_{\text{in}} = 1$) to evaluate concurrently in under $120\,\text{ps}$. The block carry selection then ripples through an ultra-fast chain of transmission-gate multiplexers with an average delay of only $35\text{--}40\,\text{ps}$ per block, outperforming parallel prefix tree structures at the 32-bit width. We therefore choose the Carry Select Adder to replace the ripple-carry adder in our processor's execution unit.
+To eliminate this structural bottleneck, we select the high-performance adder identified in the empirical evaluation conducted in Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:asap7_adders_synthesis}, Table \ref{tab:asap7_adders_comparison}). Among the 32-bit topologies evaluated in ASAP7 7\,nm FinFET technology (Ripple-Carry, Carry Lookahead, Brent-Kung, Kogge-Stone, and Carry-Select), the \textbf{Carry-Select Adder (CSelA)} achieves the lowest propagation delay: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}. In deep-submicron FinFET standard cells, partitioning the 32-bit adder into 4-bit blocks allows speculative dual-carry chains ($C_{\text{in}} = 0$ and $C_{\text{in}} = 1$) to evaluate concurrently in under $120\,\text{ps}$. The block carry selection then ripples through an ultra-fast chain of transmission-gate multiplexers with an average delay of only $35\text{--}40\,\text{ps}$ per block, making it exceptionally fast at the 32-bit width. We therefore choose the Carry-Select Adder to replace the ripple-carry adder in our processor's execution unit.
 
 \subsection{Integrating the High-Performance Adder in Chisel}
 \index{Chisel!adder instantiation}
 
-To integrate the Carry Select Adder into the execution unit, the ALU's arithmetic subtraction and addition are routed through the dedicated adder module. In two's complement arithmetic, subtraction $A - B$ is computed as $A + \sim B + 1$, which is directly mapped to the adder's primary inputs and carry-in. 
+To integrate the Carry-Select Adder into the execution unit, the ALU's arithmetic subtraction and addition are routed through the dedicated adder module. In two's complement arithmetic, subtraction $A - B$ is computed as $A + \sim B + 1$, which is directly mapped to the adder's primary inputs and carry-in. 
 
 Listing \ref{lst:chisel_csa_call} illustrates the revised execution stage design, showing only the high-performance adder invocation within the Chisel ALU.
 
-\begin{chiselcode}[caption={Calling the high-performance Carry Select Adder within the revised RISC-V ALU.},label={lst:chisel_csa_call}]
+\begin{chiselcode}[caption={Calling the high-performance Carry-Select Adder within the revised RISC-V ALU.},label={lst:chisel_csa_call}]
 // Instantiating the 32-bit Carry-Select Adder within the revised ALU
 val isSub = io.aluOp === AluOp.SUB
 val adder = Module(new CarrySelectAdder(width = 32))
@@ -330,16 +330,16 @@ adder.io.carryIn := isSub
 val addSubResult = adder.io.sum
 \end{chiselcode}
 
-By encapsulating the addition and subtraction inside the Carry Select Adder, the ALU avoids generating CIRCT's default carry chains, replacing them with the optimized speculative block architecture.
+By encapsulating the addition and subtraction inside the Carry-Select Adder, the ALU avoids generating CIRCT's default carry chains, replacing them with the optimized speculative block architecture.
 
 \subsection{Impact on Pipeline Balancing and Clock Frequency}
 
-Replacing the ripple-carry adder ($1.045\,\text{ns}$) with the Carry Select Adder ($0.520\,\text{ns}$) dramatically transforms the timing profile of the entire processor:
+Replacing the ripple-carry adder ($1.045\,\text{ns}$) with the Carry-Select Adder ($0.520\,\text{ns}$) dramatically transforms the timing profile of the entire processor:
 \begin{itemize}
     \item \textbf{Adder Latency Delta}: $\Delta t_{\text{adder}} = 1.045\,\text{ns} - 0.520\,\text{ns} = \mathbf{-0.525\,\text{ns}}$ (a $50.3\%$ reduction in addition latency).
-    \item \textbf{ALU Critical Path}: With the Carry Select Adder, the standalone ALU critical path drops from $1.046\,\text{ns}$ to $\mathbf{0.786\,\text{ns}}$ (including the 32-bit zero-reduction tree for condition testing). When branch condition testing ($rs1 == rs2$) is computed directly across register operands rather than waiting for the subtracted ALU result, the addition critical path directly driving the pipeline register is only $\mathbf{0.520\,\text{ns}} + t_{\text{mux}} = \mathbf{0.585\,\text{ns}}$.
+    \item \textbf{ALU Critical Path}: With the Carry-Select Adder, the standalone ALU critical path drops from $1.046\,\text{ns}$ to $\mathbf{0.786\,\text{ns}}$ (including the 32-bit zero-reduction tree for condition testing). When branch condition testing ($rs1 == rs2$) is computed directly across register operands rather than waiting for the subtracted ALU result, the addition critical path directly driving the pipeline register is only $\mathbf{0.520\,\text{ns}} + t_{\text{mux}} = \mathbf{0.585\,\text{ns}}$.
     \item \textbf{Balanced Pipeline Step Delays}:
-    Table \ref{tab:balanced_pipeline_delays} compares the original pipeline stage delays against the revised pipeline with the Carry Select Adder.
+    Table \ref{tab:balanced_pipeline_delays} compares the original pipeline stage delays against the revised pipeline with the Carry-Select Adder.
 \end{itemize}
 
 \begin{table}[htbp]
@@ -347,7 +347,7 @@ Replacing the ripple-carry adder ($1.045\,\text{ns}$) with the Carry Select Adde
 \small
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Pipeline Stage} & \textbf{Original Delay (RCA)} & \textbf{Revised Delay (CSA)} & \textbf{Status / Improvement} \\
+\textbf{Pipeline Stage} & \textbf{Original Delay (RCA)} & \textbf{Revised Delay (CSelA)} & \textbf{Status / Improvement} \\
 \hline
 Stage 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns & 0.550\,ns & Balanced ($\approx 0.55\text{--}0.60$\,ns) \\
 Stage 2: Decode \& Reg Read ($T_{\text{decode}}$) & 0.540\,ns & 0.540\,ns & Balanced ($\approx 0.55\text{--}0.60$\,ns) \\
@@ -633,9 +633,9 @@ Combinational logic cannot be sliced arbitrarily like a fluid. Logic circuits ar
     \frac{T_{\text{clk, FE}}}{T_{\text{clk, pipe}}} = \frac{3.053\,\text{ns}}{1.363\,\text{ns}} = \mathbf{2.240\times} \quad (+124.0\% \text{ frequency gain}).
     \end{equation}
     This stage delay imbalance alone eliminated $(4.0 - 2.24) / 4.0 = \mathbf{44.0\%}$ of the theoretical 4-fold speedup.
-    \item When we balanced the pipeline using the Carry Select Adder (CSA) in Section \ref{riscvAdderBalancing}, the Execute stage delay dropped to $0.600\,\text{ns}$. The pipelined clock period was reduced to $\max(0.550, 0.540, 0.600, 0.600) = 0.600\,\text{ns}$ ($1.67\,\text{GHz}$), delivering a frequency scaling factor of:
+    \item When we balanced the pipeline using the Carry-Select Adder (CSelA) in Section \ref{riscvAdderBalancing}, the Execute stage delay dropped to $0.600\,\text{ns}$. The pipelined clock period was reduced to $\max(0.550, 0.540, 0.600, 0.600) = 0.600\,\text{ns}$ ($1.67\,\text{GHz}$), delivering a frequency scaling factor of:
     \begin{equation}
-    \frac{T_{\text{clk, FE (CSA)}}}{T_{\text{clk, pipe (CSA)}}} = \frac{2.290\,\text{ns}}{0.600\,\text{ns}} = \mathbf{3.82\times} \quad (+281.7\% \text{ frequency gain}),
+    \frac{T_{\text{clk, FE (CSelA)}}}{T_{\text{clk, pipe (CSelA)}}} = \frac{2.290\,\text{ns}}{0.600\,\text{ns}} = \mathbf{3.82\times} \quad (+281.7\% \text{ frequency gain}),
     \end{equation}
     which approaches the theoretical $4.0\times$ maximum.
 \end{itemize}
@@ -726,14 +726,14 @@ In the single-cycle Fetch-Execute (FE) architecture, the execution step delay is
 \begin{equation}
 T_{\text{clk, FE}} = T_{\text{fetch}} + T_{\text{decode}} + \max(T_{\text{alu}}, T_{\text{mmul}}) + T_{\text{sram\_wb}}.
 \end{equation}
-When the monolithic combinational multiplier is integrated into the processor cores, it exerts a profound effect on core timing and area. To observe the full severity of this effect, Table \ref{tab:riscv_grand_comparison} compares the physical synthesis and benchmark metrics when the 4-stage pipeline employs the balanced Carry Select Adder (CSA) datapath developed in Section \ref{riscvAdderBalancing}.
+When the monolithic combinational multiplier is integrated into the processor cores, it exerts a profound effect on core timing and area. To observe the full severity of this effect, Table \ref{tab:riscv_grand_comparison} compares the physical synthesis and benchmark metrics when the 4-stage pipeline employs the balanced Carry-Select Adder (CSelA) datapath developed in Section \ref{riscvAdderBalancing}.
 
 \begin{table}[htbp]
 \centering
 \scriptsize
 \begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Metric} & \textbf{RV32I Single-Cycle (FE)} & \textbf{RV32I 4-Stage Pipe (CSA)} & \textbf{Zmmul Single-Cycle (FE)} & \textbf{Zmmul 4-Stage Pipe} \\
+\textbf{Metric} & \textbf{RV32I Single-Cycle (FE)} & \textbf{RV32I 4-Stage Pipe (CSelA)} & \textbf{Zmmul Single-Cycle (FE)} & \textbf{Zmmul 4-Stage Pipe} \\
 \hline
 Process Technology              & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET & ASAP7 7\,nm FinFET \\
 Total Standard Cells            & 9,730            & 11,872           & 21,336           & 22,709 \\
@@ -760,13 +760,13 @@ Execution Time ($T_{\text{exec}}$) & 14,910\,ns ($14.91\,\mu$s) & \textbf{7,545\
 \textbf{Pipelined Application Speedup}      & ---         & \textbf{1.98$\times$} & ---         & \textbf{1.04$\times$} \\
 \hline
 \end{tabular}
-\caption{ASAP7 7\,nm FinFET ASIC synthesis, delay decomposition, and benchmark comparison across pure \texttt{RV32I} (with CSA balanced pipeline) and \texttt{RV32I\_Zmmul} architectures in single-cycle (FE) and 4-stage pipelined configurations.}\label{tab:riscv_grand_comparison}
+\caption{ASAP7 7\,nm FinFET ASIC synthesis, delay decomposition, and benchmark comparison across pure \texttt{RV32I} (with CSelA balanced pipeline) and \texttt{RV32I\_Zmmul} architectures in single-cycle (FE) and 4-stage pipelined configurations.}\label{tab:riscv_grand_comparison}
 \end{table}
 
 The comparative synthesis data reveals the dramatic consequences of pipeline unbalancing:
 \begin{enumerate}
     \item \textbf{Annihilation of the Balanced Pipeline Frequency}:
-    In the balanced \texttt{RV32I} core using the Carry Select Adder, all four stages require $\approx 0.54\text{--}0.60\,\text{ns}$, enabling the 4-stage pipeline to achieve an operating clock frequency of \textbf{1.67\,GHz} ($T_{\text{clk}} = 0.600\,\text{ns}$)---a \textbf{$3.82\times$ frequency multiplier} over the single-cycle baseline.
+    In the balanced \texttt{RV32I} core using the Carry-Select Adder (CSelA), all four stages require $\approx 0.54\text{--}0.60\,\text{ns}$, enabling the 4-stage pipeline to achieve an operating clock frequency of \textbf{1.67\,GHz} ($T_{\text{clk}} = 0.600\,\text{ns}$)---a \textbf{$3.82\times$ frequency multiplier} over the single-cycle baseline.
     
     However, when the unpipelined combinational multiplier is added to the execution stage, the Execute stage delay expands to $T_{\text{execute}} = \max(T_{\text{alu}}, T_{\text{mmul}}) = 2.462\,\text{ns}$ (dominated by the $2.148\,\text{ns}$ multiplier logic array plus multiplexer routing and register setup times). Because the entire synchronous pipeline is throttled by its slowest stage:
     \begin{equation}
@@ -977,7 +977,7 @@ Stage 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,n
 Table \ref{tab:asap7_core_pipemul_comparison} exposes two profound physical design realities:
 \begin{enumerate}
     \item \textbf{Restoration of Operating Frequency}:
-    By decoupling Booth reduction from the 64-bit vector-merging adder, the Execute stage delay drops from $2.462\,\text{ns}$ back to $1.363\,\text{ns}$ (or $0.600\,\text{ns}$ with CSA), restoring operating frequency to $733.7\,\text{MHz}\text{--}1.67\,\text{GHz}$---delivering an immediate \textbf{+80.6\% frequency boost} ($1.81\times$).
+    By decoupling Booth reduction from the 64-bit vector-merging adder, the Execute stage delay drops from $2.462\,\text{ns}$ back to $1.363\,\text{ns}$ (or $0.600\,\text{ns}$ with CSelA), restoring operating frequency to $733.7\,\text{MHz}\text{--}1.67\,\text{GHz}$---delivering an immediate \textbf{+80.6\% frequency boost} ($1.81\times$).
     
     \item \textbf{Silicon Area Savings ($-22.6\%$ Area)}:
     Pipelining the multiplier \textit{reduced} total core silicon area by \textbf{$505.98\,\mu\text{m}^2$ ($-22.6\%$)}, slashing cell count from 22,709 down to 19,079 cells. In the unpipelined design, the synthesizer built massive high-drive buffer trees to meet timing across the monolithic $2.462\,\text{ns}$ path. Separating the stages with 127 flip-flops allowed the synthesizer to use smaller, lower-power standard cells, saving over 3,600 gates!
