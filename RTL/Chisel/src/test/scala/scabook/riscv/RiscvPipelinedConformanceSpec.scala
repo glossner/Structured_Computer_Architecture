@@ -91,7 +91,7 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
     }
   }
 
-  def runTest(testName: String, tohostAddr: Long, beginSig: Long, endSig: Long, maxCycles: Int = 150000, enableZmmul: Boolean = true, branchPredictor: String = "none"): Int = {
+  def runTest(testName: String, tohostAddr: Long, beginSig: Long, endSig: Long, maxCycles: Int = 150000, enableZmmul: Boolean = true, branchPredictor: String = "none", enableForwarding: Boolean = true): Int = {
     val binPath = Paths.get(s"src/test/resources/conformance/${testName}.bin")
     val refPath = Paths.get(s"src/test/resources/conformance/${testName}.reference.sig")
     assert(Files.exists(binPath), s"Test binary $binPath not found")
@@ -106,7 +106,7 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
 
     var cyclesRan = 0
 
-    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul, branchPredictor = branchPredictor)) { dut =>
+    simulate(new RiscvPipelined(xlen = 32, initPC = baseAddr, enableZmmul = enableZmmul, enableForwarding = enableForwarding, branchPredictor = branchPredictor)) { dut =>
       dut.reset.poke(true.B)
       dut.clock.step(5)
       dut.reset.poke(false.B)
@@ -207,5 +207,16 @@ class RiscvPipelinedConformanceSpec extends AnyFlatSpec {
         runTest(name, tohost, beginSig, endSig, enableZmmul = false, branchPredictor = "gshare")
       }
     }
+
+    it should "pass all 38 official RV32I architectural conformance tests without forwarding (enableForwarding = false)" in {
+      println(s"\nExecuting ${rv32iEntries.length} official RV32I architectural conformance tests on RiscvPipelined without forwarding (interlock stall-based hazard detection):")
+      var totalCycles = 0
+      for ((name, tohost, beginSig, endSig) <- rv32iEntries) {
+        val c = runTest(name, tohost, beginSig, endSig, enableZmmul = false, enableForwarding = false)
+        totalCycles += c
+      }
+      println(f"\nAll ${rv32iEntries.length} RV32I conformance tests passed on No-Forwarding core! Total pipelined cycles: $totalCycles")
+    }
   }
 }
+
