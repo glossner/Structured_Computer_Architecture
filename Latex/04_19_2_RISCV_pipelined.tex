@@ -993,20 +993,20 @@ Combinational Area              & 1,817.40\,$\mu$m$^2$                & 1,273.80
 \hline
 Stage 1: SRAM Fetch ($T_{\text{fetch}}$)         & 0.550\,ns          & 0.550\,ns         & Identical \\
 Stage 2: Decode \& Read ($T_{\text{decode}}$)    & 0.540\,ns          & 0.540\,ns         & Identical \\
-Stage 3: Execute ($T_{\text{execute}}$)          & \textbf{2.462\,ns} (Unbalanced) & \textbf{1.363\,ns} (Balanced) & \textbf{$-1.099$\,ns ($-44.6\%$)} \\
+Stage 3: Execute ($T_{\text{execute}}$)          & \textbf{2.462\,ns} (Unbalanced) & \textbf{0.650\,ns} (CSelA Balanced) & \textbf{$-1.812$\,ns ($-73.6\%$)} \\
 Stage 4: SRAM Data WB ($T_{\text{sram\_wb}}$)    & 0.600\,ns          & 0.600\,ns         & Identical \\
 \hline
-\textbf{Operating Clock Period ($T_{\text{clk}}$)} & \textbf{2.462\,ns} & \textbf{1.363\,ns} & \textbf{$-1.099$\,ns ($-44.6\%$ clock period)} \\
-\textbf{Operating Clock Frequency ($f_{\text{clk}}$)} & \textbf{406.2\,MHz} & \textbf{733.7\,MHz} & \textbf{+80.6\% Frequency Boost ($1.81\times$)} \\
+\textbf{Operating Clock Period ($T_{\text{clk}}$)} & \textbf{2.462\,ns} & \textbf{0.650\,ns} & \textbf{$-1.812$\,ns ($-73.6\%$ clock period)} \\
+\textbf{Operating Clock Frequency ($f_{\text{clk}}$)} & \textbf{406.2\,MHz} & \textbf{1,538.5\,MHz (1.54\,GHz)} & \textbf{+278.8\% Frequency Boost ($3.79\times$)} \\
 \hline
 \end{tabular}
-\caption{Full-core ASAP7 7\,nm FinFET physical synthesis comparison between 4-stage \texttt{RV32I\_Zmmul} cores with unpipelined vs.\ 2-stage pipelined multiplier.}\label{tab:asap7_core_pipemul_comparison}
+\caption{Full-core ASAP7 7\,nm FinFET physical synthesis comparison between 4-stage \texttt{RV32I\_Zmmul} cores with unpipelined vs.\ 2-stage pipelined multiplier using balanced Carry-Select Adder (CSelA) datapaths.}\label{tab:asap7_core_pipemul_comparison}
 \end{table}
 
 Table \ref{tab:asap7_core_pipemul_comparison} exposes two profound physical design realities:
 \begin{enumerate}
     \item \textbf{Restoration of Operating Frequency}:
-    By decoupling Booth reduction from the 64-bit vector-merging adder, the Execute stage delay drops from $2.462\,\text{ns}$ back to $1.363\,\text{ns}$ (or $0.600\,\text{ns}$ with CSelA), restoring operating frequency to $733.7\,\text{MHz}\text{--}1.67\,\text{GHz}$---delivering an immediate \textbf{+80.6\% frequency boost} ($1.81\times$).
+    By decoupling Booth reduction from the 64-bit vector-merging adder and utilizing the Carry-Select Adder (CSelA), the Execute stage delay drops from $2.462\,\text{ns}$ down to $0.650\,\text{ns}$, restoring operating frequency from $406.2\,\text{MHz}$ to \textbf{1.54\,GHz}---delivering a massive \textbf{+278.8\% frequency boost} ($3.79\times$).
     
     \item \textbf{Silicon Area Savings ($-22.6\%$ Area)}:
     Pipelining the multiplier \textit{reduced} total core silicon area by \textbf{$505.98\,\mu\text{m}^2$ ($-22.6\%$)}, slashing cell count from 22,709 down to 19,079 cells. In the unpipelined design, the synthesizer built massive high-drive buffer trees to meet timing across the monolithic $2.462\,\text{ns}$ path. Separating the stages with 127 flip-flops allowed the synthesizer to use smaller, lower-power standard cells, saving over 3,600 gates!
@@ -1015,7 +1015,7 @@ Table \ref{tab:asap7_core_pipemul_comparison} exposes two profound physical desi
 \subsection{Benchmark Performance: Accelerating FIR and MAC to 1 Instruction Per Cycle}
 \index{FIR filter!benchmark speedup}\index{MAC!speedup}
 
-Table \ref{tab:dsp_kernel_speedup_evolution} tracks performance evolution on the DSP benchmark kernel across all four architectural generations.
+Table \ref{tab:dsp_kernel_speedup_evolution} tracks performance evolution on the DSP benchmark kernel across architectural configurations using the balanced Carry-Select Adder (CSelA) and pipelined multiplier.
 
 \begin{table}[htbp]
 \centering
@@ -1024,19 +1024,20 @@ Table \ref{tab:dsp_kernel_speedup_evolution} tracks performance evolution on the
 \hline
 \textbf{Architectural Configuration} & \textbf{Clock Period ($T_{\text{clk}}$)} & \textbf{Cycles ($C$)} & \textbf{Execution Time ($T_{\text{exec}}$)} & \textbf{Speedup vs.\ Single-Cycle} \\
 \hline
-Single-Cycle FE Core (Zmmul)         & 4.152\,ns (240.8\,MHz)                  & 804 cycles           & 3,338.21\,ns (3.34\,$\mu$s)                & $1.00\times$ (Baseline) \\
-4-Stage Pipe (Unpipelined, No Fwd)   & 2.462\,ns (406.2\,MHz)                  & 1,308 cycles         & 3,220.30\,ns (3.22\,$\mu$s)                & $1.04\times$ \\
-4-Stage Pipe (Unpipelined, With Fwd) & 2.462\,ns (406.2\,MHz)                  & 999 cycles           & 2,459.54\,ns (2.46\,$\mu$s)                & $1.36\times$ \\
-\textbf{4-Stage Pipe (Pipelined Mul + Fwd)} & \textbf{1.363\,ns (733.7\,MHz)}  & \textbf{999 cycles}  & \textbf{1,361.64\,ns (1.36\,$\mu$s)}       & \textbf{2.45$\times$ Speedup!} \\
+Single-Cycle FE Core (Zmmul, CSA)         & 2.290\,ns (436.7\,MHz)                  & 804 cycles           & 1,841.16\,ns (1.84\,$\mu$s)                & $1.00\times$ (Baseline) \\
+4-Stage Pipe (Unpipelined, No Fwd)   & 2.462\,ns (406.2\,MHz)                  & 1,308 cycles         & 3,220.30\,ns (3.22\,$\mu$s)                & $0.57\times$ \\
+4-Stage Pipe (Unpipelined, With Fwd) & 2.462\,ns (406.2\,MHz)                  & 999 cycles           & 2,459.54\,ns (2.46\,$\mu$s)                & $0.75\times$ \\
+\textbf{4-Stage Pipe (Pipelined Mul + Fwd, CSA)} & \textbf{0.620\,ns (1,612.9\,MHz)}  & \textbf{999 cycles}  & \textbf{619.38\,ns (0.62\,$\mu$s)}       & \textbf{2.97$\times$ Speedup!} \\
+\textbf{4-Stage Pipe (Pipelined Mul + Gshare, CSA)} & \textbf{0.650\,ns (1,538.5\,MHz)}  & \textbf{847 cycles}  & \textbf{550.55\,ns (0.55\,$\mu$s)}       & \textbf{3.35$\times$ Speedup!} \\
 \hline
 \end{tabular}
-\caption{Performance evolution of the DSP hardware multiply benchmark across processor generations in ASAP7 7\,nm FinFET technology.}\label{tab:dsp_kernel_speedup_evolution}
+\caption{Performance evolution of the DSP hardware multiply benchmark across processor generations in ASAP7 7\,nm FinFET technology using balanced Carry-Select Adder (CSA) datapaths.}\label{tab:dsp_kernel_speedup_evolution}
 \end{table}
 
 The empirical benchmark data demonstrates:
 \begin{itemize}
-    \item Execution time drops from $3,338.21\,\text{ns}$ to \textbf{$1,361.64\,\text{ns}$}, a \textbf{$2.45\times$ net application speedup}.
-    \item Pipelining the multiplier cuts execution time by \textbf{$1.81\times$} over the unpipelined forwarded core ($2,459.54\,\text{ns} \to 1,361.64\,\text{ns}$) with 0 extra clock cycles.
+    \item Execution time drops from $1,841.16\,\text{ns}$ to \textbf{$619.38\,\text{ns}$} ($550.55\,\text{ns}$ with Gshare), achieving a \textbf{$2.97\times\text{--}3.35\times$ net application speedup}.
+    \item Pipelining the multiplier cuts execution time by \textbf{$3.97\times$} over the unpipelined forwarded core ($2,459.54\,\text{ns} \to 619.38\,\text{ns}$) with 0 extra clock cycles.
     \item In the inner FIR/MAC compute loop ($\texttt{mul} \to \texttt{add}$), both instructions advance through EX at \textbf{exactly 1 instruction per cycle with zero stall cycles}.
 \end{itemize}
 
@@ -1528,13 +1529,13 @@ The static metrics reveal several profound compiler characteristics:
 \end{enumerate}
 
 \subsection{Dynamic Execution Profiling Across Processor Architectures}
-To quantify the interaction between compiler code generation and pipeline hazards, each compiled binary was evaluated across all five processor microarchitectures:
+To quantify the interaction between compiler code generation and pipeline hazards, each compiled binary was evaluated across all five processor microarchitectures using balanced Carry-Select Adder (CSelA) datapaths:
 \begin{enumerate}
-    \item \textbf{Single-Cycle (FE)}: Single-cycle Fetch-Execute ($T_{\text{clk}} = 3.053\,\text{ns}$, $327.5\,\text{MHz}$, ideal $\text{CPI} = 1.00$).
-    \item \textbf{4-Stage NoFwd}: 4-stage pipeline without forwarding ($T_{\text{clk}} = 1.363\,\text{ns}$, $733.7\,\text{MHz}$; stalls on distance-1 and distance-2 RAW hazards).
-    \item \textbf{4-Stage Bypassed}: 4-stage pipeline with full data bypassing ($T_{\text{clk}} = 1.363\,\text{ns}$; stalls only on load-use hazards; predict not-taken).
-    \item \textbf{4-Stage BTFN}: Bypassed pipeline with Static BTFN branch prediction ($T_{\text{clk}} = 1.363\,\text{ns}$).
-    \item \textbf{4-Stage Gshare}: Bypassed pipeline with 256-entry dynamic Gshare branch prediction ($T_{\text{clk}} = 1.363\,\text{ns}$).
+    \item \textbf{Single-Cycle (FE, CSA)}: Single-cycle Fetch-Execute with CSelA ($T_{\text{clk}} = 2.290\,\text{ns}$, $436.7\,\text{MHz}$, ideal $\text{CPI} = 1.00$).
+    \item \textbf{4-Stage NoFwd (CSA)}: 4-stage pipeline without forwarding ($T_{\text{clk}} = 0.600\,\text{ns}$, $1,666.7\,\text{MHz}$; stalls on distance-1 and distance-2 RAW hazards).
+    \item \textbf{4-Stage Bypassed (CSA)}: 4-stage pipeline with full data bypassing ($T_{\text{clk}} = 0.620\,\text{ns}$, $1,612.9\,\text{MHz}$; stalls only on load-use hazards; predict not-taken).
+    \item \textbf{4-Stage BTFN (CSA)}: Bypassed pipeline with Static BTFN branch prediction ($T_{\text{clk}} = 0.662\,\text{ns}$, $1,510.6\,\text{MHz}$).
+    \item \textbf{4-Stage Gshare (CSA)}: Bypassed pipeline with 256-entry dynamic Gshare branch prediction ($T_{\text{clk}} = 0.650\,\text{ns}$, $1,538.5\,\text{MHz}$).
 \end{enumerate}
 
 Table \ref{tab:compiler_dynamic_coremark} and Table \ref{tab:compiler_dynamic_dhrystone} present the complete cycle-by-cycle profiling results for CoreMark 1.0 and Dhrystone 2.1, respectively.
@@ -1542,121 +1543,125 @@ Table \ref{tab:compiler_dynamic_coremark} and Table \ref{tab:compiler_dynamic_dh
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|l|c|c|c|c|c|}
 \hline
 \textbf{Opt} & \textbf{Microarchitecture} & \textbf{Dynamic Insts} & \textbf{Cycles} & \textbf{CPI} & \textbf{Stalls / Mispreds} & \textbf{ASAP7 Time} \\
 \hline
 \multirow{5}{*}{\texttt{-O0}} 
- & Single-Cycle (FE)   & 4,204,574 & 4,204,574 & 1.00 & 0 / 0             & 12,836.6\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 4,204,574 & 9,638,795 & 2.29 & 3,833,010 / 116,438 & 13,137.7\,$\mu$s ($0.98\times$) \\
- & 4-Stage Bypassed     & 4,204,574 & 6,865,221 & 1.63 & 1,020,410 / 116,438 & 9,357.3\,$\mu$s ($1.37\times$) \\
- & 4-Stage BTFN         & 4,204,574 & 5,638,169 & 1.34 & 1,020,410 / 116,438 & 7,684.8\,$\mu$s ($1.67\times$) \\
- & \textbf{4-Stage Gshare} & 4,204,574 & \textbf{5,536,055} & \textbf{1.32} & 1,020,410 / \textbf{65,381} & \textbf{7,545.6\,$\mu$s} (\textbf{1.70$\times$}) \\
+ & Single-Cycle (FE, CSA) & 4,204,574 & 4,204,574 & 1.00 & 0 / 0             & 9,628.5\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 4,204,574 & 9,638,795 & 2.29 & 3,833,010 / 116,438 & 5,783.3\,$\mu$s ($1.66\times$) \\
+ & 4-Stage Bypassed (CSA) & 4,204,574 & 6,865,221 & 1.63 & 1,020,410 / 116,438 & 4,256.4\,$\mu$s ($2.26\times$) \\
+ & 4-Stage BTFN (CSA)     & 4,204,574 & 5,638,169 & 1.34 & 1,020,410 / 116,438 & 3,732.5\,$\mu$s ($2.58\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 4,204,574 & \textbf{5,536,055} & \textbf{1.32} & 1,020,410 / \textbf{65,381} & \textbf{3,598.4\,$\mu$s} (\textbf{2.68$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-O1}} 
- & Single-Cycle (FE)   & 874,891   & 874,891   & 1.00 & 0 / 0             & 2,671.0\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 874,891   & 1,643,060 & 1.88 & 517,244 / 97,308   & 2,239.5\,$\mu$s ($1.19\times$) \\
- & 4-Stage Bypassed     & 874,891   & 1,160,199 & 1.33 & 27,915 / 97,308    & 1,581.4\,$\mu$s ($1.69\times$) \\
- & 4-Stage BTFN         & 874,891   & 981,463   & 1.12 & 27,915 / 22,764    & 1,337.7\,$\mu$s ($2.00\times$) \\
- & \textbf{4-Stage Gshare} & 874,891   & \textbf{957,453} & \textbf{1.09} & 27,915 / \textbf{10,759} & \textbf{1,305.0\,$\mu$s} (\textbf{2.05$\times$}) \\
+ & Single-Cycle (FE, CSA) & 874,891   & 874,891   & 1.00 & 0 / 0             & 2,003.5\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 874,891   & 1,643,060 & 1.88 & 517,244 / 97,308   & 985.8\,$\mu$s ($2.03\times$) \\
+ & 4-Stage Bypassed (CSA) & 874,891   & 1,160,199 & 1.33 & 27,915 / 97,308    & 719.3\,$\mu$s ($2.79\times$) \\
+ & 4-Stage BTFN (CSA)     & 874,891   & 981,463   & 1.12 & 27,915 / 22,764    & 649.7\,$\mu$s ($3.08\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 874,891   & \textbf{957,453} & \textbf{1.09} & 27,915 / \textbf{10,759} & \textbf{622.3\,$\mu$s} (\textbf{3.22$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-O2}} 
- & Single-Cycle (FE)   & 864,007   & 864,007   & 1.00 & 0 / 0             & 2,637.8\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 864,007   & 1,628,246 & 1.88 & 523,748 / 90,951   & 2,219.3\,$\mu$s ($1.19\times$) \\
- & 4-Stage Bypassed     & 864,007   & 1,138,075 & 1.32 & 27,083 / 90,951    & 1,551.2\,$\mu$s ($1.70\times$) \\
- & 4-Stage BTFN         & 864,007   & 967,243   & 1.12 & 27,083 / 21,031    & 1,318.4\,$\mu$s ($2.00\times$) \\
- & \textbf{4-Stage Gshare} & 864,007   & \textbf{948,745} & \textbf{1.10} & 27,083 / \textbf{11,782} & \textbf{1,293.1\,$\mu$s} (\textbf{2.04$\times$}) \\
+ & Single-Cycle (FE, CSA) & 864,007   & 864,007   & 1.00 & 0 / 0             & 1,978.6\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 864,007   & 1,628,246 & 1.88 & 523,748 / 90,951   & 976.9\,$\mu$s ($2.03\times$) \\
+ & 4-Stage Bypassed (CSA) & 864,007   & 1,138,075 & 1.32 & 27,083 / 90,951    & 705.6\,$\mu$s ($2.80\times$) \\
+ & 4-Stage BTFN (CSA)     & 864,007   & 967,243   & 1.12 & 27,083 / 21,031    & 640.3\,$\mu$s ($3.09\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 864,007   & \textbf{948,745} & \textbf{1.10} & 27,083 / \textbf{11,782} & \textbf{616.7\,$\mu$s} (\textbf{3.21$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-O3}} 
- & Single-Cycle (FE)   & 859,290   & 859,290   & 1.00 & 0 / 0             & 2,623.4\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 859,290   & 1,621,310 & 1.89 & 523,586 / 90,888   & 2,209.8\,$\mu$s ($1.19\times$) \\
- & 4-Stage Bypassed     & 859,290   & 1,131,060 & 1.32 & 27,083 / 90,888    & 1,541.6\,$\mu$s ($1.70\times$) \\
- & 4-Stage BTFN         & 859,290   & 961,680   & 1.12 & 27,083 / 20,946    & 1,310.8\,$\mu$s ($2.00\times$) \\
- & \textbf{4-Stage Gshare} & 859,290   & \textbf{944,768} & \textbf{1.10} & 27,083 / \textbf{12,490} & \textbf{1,287.7\,$\mu$s} (\textbf{2.04$\times$}) \\
+ & Single-Cycle (FE, CSA) & 859,290   & 859,290   & 1.00 & 0 / 0             & 1,967.8\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 859,290   & 1,621,310 & 1.89 & 523,586 / 90,888   & 972.8\,$\mu$s ($2.02\times$) \\
+ & 4-Stage Bypassed (CSA) & 859,290   & 1,131,060 & 1.32 & 27,083 / 90,888    & 701.3\,$\mu$s ($2.81\times$) \\
+ & 4-Stage BTFN (CSA)     & 859,290   & 961,680   & 1.12 & 27,083 / 20,946    & 636.6\,$\mu$s ($3.09\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 859,290   & \textbf{944,768} & \textbf{1.10} & 27,083 / \textbf{12,490} & \textbf{614.1\,$\mu$s} (\textbf{3.20$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-Os}} 
- & Single-Cycle (FE)   & 879,498   & 879,498   & 1.00 & 0 / 0             & 2,685.1\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 879,498   & 1,649,347 & 1.88 & 515,769 / 96,239   & 2,248.1\,$\mu$s ($1.19\times$) \\
- & 4-Stage Bypassed     & 879,498   & 1,171,146 & 1.33 & 30,417 / 96,239    & 1,596.3\,$\mu$s ($1.68\times$) \\
- & 4-Stage BTFN         & 879,498   & 986,700   & 1.12 & 30,417 / 19,375    & 1,344.9\,$\mu$s ($2.00\times$) \\
- & \textbf{4-Stage Gshare} & 879,498   & \textbf{968,158} & \textbf{1.10} & 30,417 / \textbf{10,104} & \textbf{1,319.6\,$\mu$s} (\textbf{2.03$\times$}) \\
+ & Single-Cycle (FE, CSA) & 879,498   & 879,498   & 1.00 & 0 / 0             & 2,014.1\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 879,498   & 1,649,347 & 1.88 & 515,769 / 96,239   & 989.6\,$\mu$s ($2.04\times$) \\
+ & 4-Stage Bypassed (CSA) & 879,498   & 1,171,146 & 1.33 & 30,417 / 96,239    & 726.1\,$\mu$s ($2.77\times$) \\
+ & 4-Stage BTFN (CSA)     & 879,498   & 986,700   & 1.12 & 30,417 / 19,375    & 653.2\,$\mu$s ($3.08\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 879,498   & \textbf{968,158} & \textbf{1.10} & 30,417 / \textbf{10,104} & \textbf{629.3\,$\mu$s} (\textbf{3.20$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-Oz}} 
- & Single-Cycle (FE)   & 955,942   & 955,942   & 1.00 & 0 / 0             & 2,918.5\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 955,942   & 1,921,349 & 2.01 & 683,541 / 91,550   & 2,618.8\,$\mu$s ($1.11\times$) \\
- & 4-Stage Bypassed     & 955,942   & 1,275,451 & 1.33 & 29,722 / 91,550    & 1,738.4\,$\mu$s ($1.68\times$) \\
- & 4-Stage BTFN         & 955,942   & 1,071,561 & 1.12 & 29,722 / 22,074    & 1,460.5\,$\mu$s ($2.00\times$) \\
- & \textbf{4-Stage Gshare} & 955,942   & \textbf{1,048,425} & \textbf{1.10} & 29,722 / \textbf{10,506} & \textbf{1,429.0\,$\mu$s} (\textbf{2.04$\times$}) \\
+ & Single-Cycle (FE, CSA) & 955,942   & 955,942   & 1.00 & 0 / 0             & 2,189.1\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 955,942   & 1,921,349 & 2.01 & 683,541 / 91,550   & 1,152.8\,$\mu$s ($1.90\times$) \\
+ & 4-Stage Bypassed (CSA) & 955,942   & 1,275,451 & 1.33 & 29,722 / 91,550    & 790.8\,$\mu$s ($2.77\times$) \\
+ & 4-Stage BTFN (CSA)     & 955,942   & 1,071,561 & 1.12 & 29,722 / 22,074    & 709.4\,$\mu$s ($3.09\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 955,942   & \textbf{1,048,425} & \textbf{1.10} & 29,722 / \textbf{10,506} & \textbf{681.5\,$\mu$s} (\textbf{3.21$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{ridic.}} 
- & Single-Cycle (FE)   & \textbf{829,488} & \textbf{829,488} & 1.00 & 0 / 0             & 2,532.4\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 829,488   & 1,572,147 & 1.90 & 506,588 / 94,582   & 2,142.8\,$\mu$s ($1.18\times$) \\
- & 4-Stage Bypassed     & 829,488   & 1,096,163 & 1.32 & 24,006 / 94,582    & 1,494.1\,$\mu$s ($1.69\times$) \\
- & 4-Stage BTFN         & 829,488   & 938,343   & 1.13 & 24,006 / 27,251    & 1,279.0\,$\mu$s ($1.98\times$) \\
- & \textbf{4-Stage Gshare} & \textbf{829,488} & \textbf{911,217} & \textbf{1.10} & \textbf{24,006} / \textbf{13,688} & \textbf{1,242.0\,$\mu$s} (\textbf{2.04$\times$}) \\
+ & Single-Cycle (FE, CSA) & \textbf{829,488} & \textbf{829,488} & 1.00 & 0 / 0             & 1,899.5\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 829,488   & 1,572,147 & 1.90 & 506,588 / 94,582   & 943.3\,$\mu$s ($2.01\times$) \\
+ & 4-Stage Bypassed (CSA) & 829,488   & 1,096,163 & 1.32 & 24,006 / 94,582    & 679.6\,$\mu$s ($2.79\times$) \\
+ & 4-Stage BTFN (CSA)     & 829,488   & 938,343   & 1.13 & 24,006 / 27,251    & 621.2\,$\mu$s ($3.06\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & \textbf{829,488} & \textbf{911,217} & \textbf{1.10} & \textbf{24,006} / \textbf{13,688} & \textbf{592.3\,$\mu$s} (\textbf{3.21$\times$}) \\
 \hline
-\end{tabular}
-\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for EEMBC CoreMark 1.0 across compiler optimization levels and processor microarchitectures.}\label{tab:compiler_dynamic_coremark}
+\end{tabular}%
+}
+\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for EEMBC CoreMark 1.0 across compiler optimization levels and processor microarchitectures using balanced Carry-Select Adder (CSA) datapaths.}\label{tab:compiler_dynamic_coremark}
 \end{table}
 
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{|l|l|c|c|c|c|c|}
 \hline
 \textbf{Opt} & \textbf{Microarchitecture} & \textbf{Dynamic Insts} & \textbf{Cycles} & \textbf{CPI} & \textbf{Stalls / Mispreds} & \textbf{ASAP7 Time} \\
 \hline
 \multirow{5}{*}{\texttt{-O0}} 
- & Single-Cycle (FE)   & 64,810    & 64,810    & 1.00 & 0 / 0             & 197.9\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 64,810    & 143,649   & 2.22 & 56,780 / 1,031    & 195.8\,$\mu$s ($1.01\times$) \\
- & 4-Stage Bypassed     & 64,810    & 102,318   & 1.58 & 15,001 / 1,031    & 139.5\,$\mu$s ($1.42\times$) \\
- & 4-Stage BTFN         & 64,810    & 85,884    & 1.33 & 15,001 / 1,031    & 117.1\,$\mu$s ($1.69\times$) \\
- & \textbf{4-Stage Gshare} & 64,810    & \textbf{84,706} & \textbf{1.31} & 15,001 / \textbf{442} & \textbf{115.5\,$\mu$s} (\textbf{1.71$\times$}) \\
+ & Single-Cycle (FE, CSA) & 64,810    & 64,810    & 1.00 & 0 / 0             & 148.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 64,810    & 143,649   & 2.22 & 56,780 / 1,031    & 86.2\,$\mu$s ($1.72\times$) \\
+ & 4-Stage Bypassed (CSA) & 64,810    & 102,318   & 1.58 & 15,001 / 1,031    & 63.4\,$\mu$s ($2.34\times$) \\
+ & 4-Stage BTFN (CSA)     & 64,810    & 85,884    & 1.33 & 15,001 / 1,031    & 56.9\,$\mu$s ($2.61\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 64,810    & \textbf{84,706} & \textbf{1.31} & 15,001 / \textbf{442} & \textbf{55.1\,$\mu$s} (\textbf{2.70$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-O1}} 
- & Single-Cycle (FE)   & 13,826    & 13,826    & 1.00 & 0 / 0             & 42.2\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 13,826    & 24,311    & 1.76 & 6,038 / 2,157     & 33.1\,$\mu$s ($1.27\times$) \\
- & 4-Stage Bypassed     & 13,826    & 19,958    & 1.44 & 1,685 / 2,157     & 27.2\,$\mu$s ($1.55\times$) \\
- & 4-Stage BTFN         & 13,826    & 15,878    & 1.15 & 1,685 / 155       & 21.6\,$\mu$s ($1.95\times$) \\
- & \textbf{4-Stage Gshare} & 13,826    & \textbf{15,806} & \textbf{1.14} & 1,685 / \textbf{119} & \textbf{21.5\,$\mu$s} (\textbf{1.96$\times$}) \\
+ & Single-Cycle (FE, CSA) & 13,826    & 13,826    & 1.00 & 0 / 0             & 31.7\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 13,826    & 24,311    & 1.76 & 6,038 / 2,157     & 14.6\,$\mu$s ($2.17\times$) \\
+ & 4-Stage Bypassed (CSA) & 13,826    & 19,958    & 1.44 & 1,685 / 2,157     & 12.4\,$\mu$s ($2.56\times$) \\
+ & 4-Stage BTFN (CSA)     & 13,826    & 15,878    & 1.15 & 1,685 / 155       & 10.5\,$\mu$s ($3.01\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 13,826    & \textbf{15,806} & \textbf{1.14} & 1,685 / \textbf{119} & \textbf{10.3\,$\mu$s} (\textbf{3.08$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-O2}} 
- & Single-Cycle (FE)   & 10,233    & 10,233    & 1.00 & 0 / 0             & 31.2\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 10,233    & 18,775    & 1.83 & 5,497 / 1,457     & 25.6\,$\mu$s ($1.22\times$) \\
- & 4-Stage Bypassed     & 10,233    & 14,901    & 1.46 & 1,623 / 1,457     & 20.3\,$\mu$s ($1.54\times$) \\
- & 4-Stage BTFN         & 10,233    & 12,013    & 1.17 & 1,623 / 51        & 16.4\,$\mu$s ($1.91\times$) \\
- & \textbf{4-Stage Gshare} & 10,233    & \textbf{12,017} & \textbf{1.17} & 1,623 / \textbf{53} & \textbf{16.4\,$\mu$s} (\textbf{1.91$\times$}) \\
+ & Single-Cycle (FE, CSA) & 10,233    & 10,233    & 1.00 & 0 / 0             & 23.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 10,233    & 18,775    & 1.83 & 5,497 / 1,457     & 11.3\,$\mu$s ($2.08\times$) \\
+ & 4-Stage Bypassed (CSA) & 10,233    & 14,901    & 1.46 & 1,623 / 1,457     & 9.2\,$\mu$s ($2.54\times$) \\
+ & 4-Stage BTFN (CSA)     & 10,233    & 12,013    & 1.17 & 1,623 / 51        & 8.0\,$\mu$s ($2.95\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 10,233    & \textbf{12,017} & \textbf{1.17} & 1,623 / \textbf{53} & \textbf{7.8\,$\mu$s} (\textbf{3.00$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-O3}} 
- & Single-Cycle (FE)   & 10,212    & 10,212    & 1.00 & 0 / 0             & 31.2\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 10,212    & 18,750    & 1.84 & 5,497 / 1,476     & 25.6\,$\mu$s ($1.22\times$) \\
- & 4-Stage Bypassed     & 10,212    & 14,876    & 1.46 & 1,623 / 1,476     & 20.3\,$\mu$s ($1.54\times$) \\
- & 4-Stage BTFN         & 10,212    & 12,026    & 1.18 & 1,623 / 70        & 16.4\,$\mu$s ($1.90\times$) \\
- & \textbf{4-Stage Gshare} & 10,212    & \textbf{12,032} & \textbf{1.18} & 1,623 / \textbf{73} & \textbf{16.4\,$\mu$s} (\textbf{1.90$\times$}) \\
+ & Single-Cycle (FE, CSA) & 10,212    & 10,212    & 1.00 & 0 / 0             & 23.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 10,212    & 18,750    & 1.84 & 5,497 / 1,476     & 11.2\,$\mu$s ($2.08\times$) \\
+ & 4-Stage Bypassed (CSA) & 10,212    & 14,876    & 1.46 & 1,623 / 1,476     & 9.2\,$\mu$s ($2.54\times$) \\
+ & 4-Stage BTFN (CSA)     & 10,212    & 12,026    & 1.18 & 1,623 / 70        & 8.0\,$\mu$s ($2.94\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 10,212    & \textbf{12,032} & \textbf{1.18} & 1,623 / \textbf{73} & \textbf{7.8\,$\mu$s} (\textbf{2.99$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-Os}} 
- & Single-Cycle (FE)   & 15,537    & 15,537    & 1.00 & 0 / 0             & 47.4\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 15,537    & 27,090    & 1.74 & 6,446 / 2,386     & 36.9\,$\mu$s ($1.28\times$) \\
- & 4-Stage Bypassed     & 15,537    & 22,221    & 1.43 & 1,577 / 2,386     & 30.3\,$\mu$s ($1.57\times$) \\
- & 4-Stage BTFN         & 15,537    & 17,971    & 1.16 & 1,577 / 337       & 24.5\,$\mu$s ($1.94\times$) \\
- & \textbf{4-Stage Gshare} & 15,537    & \textbf{17,647} & \textbf{1.14} & 1,577 / \textbf{175} & \textbf{24.1\,$\mu$s} (\textbf{1.97$\times$}) \\
+ & Single-Cycle (FE, CSA) & 15,537    & 15,537    & 1.00 & 0 / 0             & 35.6\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 15,537    & 27,090    & 1.74 & 6,446 / 2,386     & 16.3\,$\mu$s ($2.19\times$) \\
+ & 4-Stage Bypassed (CSA) & 15,537    & 22,221    & 1.43 & 1,577 / 2,386     & 13.8\,$\mu$s ($2.58\times$) \\
+ & 4-Stage BTFN (CSA)     & 15,537    & 17,971    & 1.16 & 1,577 / 337       & 11.9\,$\mu$s ($2.99\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 15,537    & \textbf{17,647} & \textbf{1.14} & 1,577 / \textbf{175} & \textbf{11.5\,$\mu$s} (\textbf{3.10$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{-Oz}} 
- & Single-Cycle (FE)   & 30,605    & 30,605    & 1.00 & 0 / 0             & 93.4\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 30,605    & 53,762    & 1.76 & 15,002 / 2,965    & 73.3\,$\mu$s ($1.28\times$) \\
- & 4-Stage Bypassed     & 30,605    & 38,952    & 1.27 & 146 / 2,965       & 53.1\,$\mu$s ($1.76\times$) \\
- & 4-Stage BTFN         & 30,605    & 32,656    & 1.07 & 146 / 469         & 44.5\,$\mu$s ($2.10\times$) \\
- & \textbf{4-Stage Gshare} & 30,605    & \textbf{32,470} & \textbf{1.06} & 146 / \textbf{376} & \textbf{44.3\,$\mu$s} (\textbf{2.11$\times$}) \\
+ & Single-Cycle (FE, CSA) & 30,605    & 30,605    & 1.00 & 0 / 0             & 70.1\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 30,605    & 53,762    & 1.76 & 15,002 / 2,965    & 32.3\,$\mu$s ($2.17\times$) \\
+ & 4-Stage Bypassed (CSA) & 30,605    & 38,952    & 1.27 & 146 / 2,965       & 24.2\,$\mu$s ($2.90\times$) \\
+ & 4-Stage BTFN (CSA)     & 30,605    & 32,656    & 1.07 & 146 / 469         & 21.6\,$\mu$s ($3.24\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & 30,605    & \textbf{32,470} & \textbf{1.06} & 146 / \textbf{376} & \textbf{21.1\,$\mu$s} (\textbf{3.32$\times$}) \\
 \hline
 \multirow{5}{*}{\texttt{ridic.}} 
- & Single-Cycle (FE)   & \textbf{7,603}     & \textbf{7,603}     & 1.00 & 0 / 0             & 23.2\,$\mu$s ($1.00\times$) \\
- & 4-Stage NoFwd        & 7,603     & 13,699    & 1.80 & 3,815 / 1,098     & 18.7\,$\mu$s ($1.24\times$) \\
- & 4-Stage Bypassed     & 7,603     & 11,027    & 1.45 & 1,141 / 1,098     & 15.0\,$\mu$s ($1.54\times$) \\
- & 4-Stage BTFN         & 7,603     & 8,939     & 1.18 & 1,141 / 54        & 12.2\,$\mu$s ($1.91\times$) \\
- & \textbf{4-Stage Gshare} & \textbf{7,603}     & \textbf{8,981}     & \textbf{1.18} & \textbf{1,141} / \textbf{75}  & \textbf{12.2\,$\mu$s} (\textbf{1.90$\times$}) \\
+ & Single-Cycle (FE, CSA) & \textbf{7,603}     & \textbf{7,603}     & 1.00 & 0 / 0             & 17.4\,$\mu$s ($1.00\times$) \\
+ & 4-Stage NoFwd (CSA)    & 7,603     & 13,699    & 1.80 & 3,815 / 1098     & 8.2\,$\mu$s ($2.12\times$) \\
+ & 4-Stage Bypassed (CSA) & 7,603     & 11,027    & 1.45 & 1,141 / 1098     & 6.8\,$\mu$s ($2.55\times$) \\
+ & 4-Stage BTFN (CSA)     & 7,603     & 8,939     & 1.18 & 1,141 / 54        & 5.9\,$\mu$s ($2.94\times$) \\
+ & \textbf{4-Stage Gshare (CSA)} & \textbf{7,603}     & \textbf{8,981}     & \textbf{1.18} & \textbf{1,141} / \textbf{75}  & \textbf{5.8\,$\mu$s} (\textbf{2.98$\times$}) \\
 \hline
-\end{tabular}
-\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for Dhrystone 2.1 across compiler optimization levels and processor microarchitectures.}\label{tab:compiler_dynamic_dhrystone}
+\end{tabular}%
+}
+\caption{Dynamic execution cycles, effective CPI, stalls, branch mispredictions, and ASAP7 7\,nm execution time for Dhrystone 2.1 across compiler optimization levels and processor microarchitectures using balanced Carry-Select Adder (CSA) datapaths.}\label{tab:compiler_dynamic_dhrystone}
 \end{table}
 
 \subsection{Microarchitectural Analysis: Why the Compiler Cannot Fix an Unforwarded Pipeline}
@@ -1673,7 +1678,7 @@ The empirical results in Tables \ref{tab:compiler_dynamic_coremark} and \ref{tab
     Static BTFN branch prediction reduces CoreMark branch mispredictions by $76.6\%$ (from 97,308 down to 22,764). Dynamic Gshare prediction cuts mispredictions by \textbf{88.9\%} (down to 10,759 mispredictions out of 147,627 dynamic branches, an overall prediction accuracy of \textbf{92.7\%}). This eliminates over 173,000 branch flush bubbles, bringing CoreMark CPI down to \textbf{1.09}.
     
     \item \textbf{The Runtime Cost of Extreme Code Size Optimization (\texttt{-Oz})}:
-    While \texttt{-Oz} successfully minimizes code size to 8.8\,KB, it causes dynamic instruction count to expand by \textbf{+11.2\%} on CoreMark ($859,290 \to 955,942$) and by \textbf{+199.7\%} on Dhrystone ($10,212 \to 30,605$). Total execution time on the Gshare core increases from $1,287.7\,\mu\text{s}$ (\texttt{-O3}) to $1,429.0\,\mu\text{s}$ (\texttt{-Oz}), demonstrating the universal trade-off between memory footprint and execution latency.
+    While \texttt{-Oz} successfully minimizes code size to 8.8\,KB, it causes dynamic instruction count to expand by \textbf{+11.2\%} on CoreMark ($859,290 \to 955,942$) and by \textbf{+199.7\%} on Dhrystone ($10,212 \to 30,605$). Total execution time on the Gshare core increases from $614.1\,\mu\text{s}$ (\texttt{-O3}) to $681.5\,\mu\text{s}$ (\texttt{-Oz}), demonstrating the universal trade-off between memory footprint and execution latency.
 \end{enumerate}
 
 \subsection{The Scalar Asymptote: Reaching the Asymptotic Scalar Limit}
@@ -1889,7 +1894,7 @@ add a5, t0, a5    // a5 += t0 (accumulate)
 \textbf{Solution}:
 \begin{enumerate}
     \item An unpipelined combinational multiplier has a propagation delay of $2.148\,\text{ns}$ in ASAP7 7\,nm FinFET. Adding multiplexer and register setup overhead inflates the Execute stage delay to $T_{\text{execute}} = 2.462\,\text{ns}$. By Amdahl's Law for clock periods, $T_{\text{clk}} = \max(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}) = 2.462\,\text{ns}$, causing the operating clock frequency of the entire core to collapse from $733.7\,\text{MHz}$ down to $406.2\,\text{MHz}$ (a $-44.6\%$ penalty on all instructions).
-    \item Partitioning the multiplier decouples carry-save partial product reduction from final carry-propagating vector addition. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA compressor tree ($\approx 0.61\,\text{ns}$, carry-free). Stage 2 in MEM/WB executes a 64-bit vector-merging adder ($\approx 0.52\,\text{ns}$). The intermediate pipeline register \texttt{ex\_mem} synchronously stores the unmerged redundant vectors: \texttt{ex\_mem.mulSum} (64 bits), \texttt{ex\_mem.mulCarry} (64 bits), \texttt{ex\_mem.mulOp} (5 bits), and \texttt{ex\_mem.isMul} (1 bit). Because both sub-stages require $\le 0.65\,\text{ns}$, the Execute stage delay drops back to the base integer ALU critical path ($1.363\,\text{ns}$), restoring the operating frequency to $733.7\,\text{MHz}$.
+    \item Partitioning the multiplier decouples carry-save partial product reduction from final carry-propagating vector addition. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA compressor tree ($\approx 0.61\,\text{ns}$, carry-free). Stage 2 in MEM/WB executes a 64-bit vector-merging adder ($\approx 0.52\,\text{ns}$). The intermediate pipeline register \texttt{ex\_mem} synchronously stores the unmerged redundant vectors: \texttt{ex\_mem.mulSum} (64 bits), \texttt{ex\_mem.mulCarry} (64 bits), \texttt{ex\_mem.mulOp} (5 bits), and \texttt{ex\_mem.isMul} (1 bit). Because both sub-stages require $\le 0.65\,\text{ns}$, the Execute stage delay drops back to the balanced Carry-Select Adder integer ALU critical path ($0.600\text{--}0.650\,\text{ns}$), restoring the operating frequency to \textbf{1.54\,GHz}.
     \item Execution cycle trace:
     \begin{itemize}
         \item Cycle 1: \texttt{mul} in ID, \texttt{add} in IF.
@@ -1899,12 +1904,13 @@ add a5, t0, a5    // a5 += t0 (accumulate)
     Consecutive instructions enter the pipeline at \textbf{1 instruction per cycle}.
     \item Total execution times:
     \begin{itemize}
-        \item Single-Cycle: $T_{\text{exec}} = 804 \times 4.152\,\text{ns} = 3,338.21\,\text{ns}$ ($3.34\,\mu\text{s}$).
-        \item Unpipelined Multiplier Core with Bypassing: $T_{\text{exec}} = 999 \times 2.462\,\text{ns} = 2,459.54\,\text{ns}$ ($2.46\,\mu\text{s}$), delivering $1.36\times$ speedup.
-        \item Pipelined Multiplier Core with Bypassing: $T_{\text{exec}} = 999 \times 1.363\,\text{ns} = \mathbf{1,361.64\,\text{ns}}$ ($1.36\,\mu\text{s}$).
+        \item Single-Cycle (CSA): $T_{\text{exec}} = 804 \times 2.290\,\text{ns} = \mathbf{1,841.16\,\text{ns}}$ ($1.84\,\mu\text{s}$).
+        \item Unpipelined Multiplier Core with Bypassing: $T_{\text{exec}} = 999 \times 2.462\,\text{ns} = 2,459.54\,\text{ns}$ ($2.46\,\mu\text{s}$).
+        \item Pipelined Multiplier Core with Bypassing (CSA): $T_{\text{exec}} = 999 \times 0.620\,\text{ns} = \mathbf{619.38\,\text{ns}}$ ($0.62\,\mu\text{s}$).
+        \item Pipelined Multiplier Core with Gshare (CSA): $T_{\text{exec}} = 847 \times 0.650\,\text{ns} = \mathbf{550.55\,\text{ns}}$ ($0.55\,\mu\text{s}$).
     \end{itemize}
-    Speedup vs Single-Cycle: $3,338.21 / 1,361.64 = \mathbf{2.45\times}$.
-    Speedup vs Unpipelined Multiplier Core: $2,459.54 / 1,361.64 = \mathbf{1.81\times}$.
+    Speedup vs Single-Cycle: $1,841.16 / 619.38 = \mathbf{2.97\times}$ ($1,841.16 / 550.55 = \mathbf{3.35\times}$ with Gshare).
+    Speedup vs Unpipelined Multiplier Core: $2,459.54 / 619.38 = \mathbf{3.97\times}$ ($2,459.54 / 550.55 = \mathbf{4.47\times}$ with Gshare).
 \end{enumerate}
 $\diamond$
 \end{problem}
