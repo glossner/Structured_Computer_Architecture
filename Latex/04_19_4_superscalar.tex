@@ -30,6 +30,36 @@ In the next chapter, we will design, verify, and physically synthesize a \textbf
 By issuing up to two instructions per cycle, a dual-issue superscalar core elevates peak throughput to $\mathbf{\text{IPC} = 2.00}$ ($\text{CPI} = 0.50$), unlocking a new dimension of performance on the exact same silicon technology.
 
 
+\section{VLIW Processors}\label{riscvVLIW}
+\index{VLIW processors}\index{Very Long Instruction Word}\index{instruction-level parallelism!static multiple issue}\index{compiler!instruction scheduling}
+
+While superscalar processors rely on sophisticated runtime hardware logic to dynamically extract instruction-level parallelism (ILP), \textbf{Very Long Instruction Word (VLIW)} architectures embody the alternative architectural philosophy: shifting the burden of parallelism detection, dependency analysis, and hazard prevention entirely from execution silicon into the \textbf{optimizing compiler}.
+
+\subsection{Architectural Principles of Static Multiple Issue}
+In a classical VLIW processor, the compiler statically analyzes the data dependency graph (DDG) of the program, identifies mutually independent instructions, and packs them into a single wide instruction word (often termed an \emph{instruction packet} or \emph{bundle}). Each issue slot within the packet directly controls a specific, dedicated functional unit:
+\begin{equation}
+\text{VLIW Packet} = \big[ \;\text{Slot}_0 \ (\text{ALU}_0) \;\big|\; \text{Slot}_1 \ (\text{ALU}_1 / \text{Multiplier}) \;\big|\; \text{Slot}_2 \ (\text{Load/Store}) \;\big|\; \text{Slot}_3 \ (\text{Branch/Control}) \;\big].
+\end{equation}
+When the processor fetches a VLIW packet, the hardware does not perform intra-group Read-After-Write (RAW) hazard checks or dynamic dependency resolution. Instead, the packet is decoded in parallel and dispatched directly to the execution units in lockstep. Because the compiler guarantees that operations within a packet are independent, the runtime dispatch hardware is drastically simplified:
+\begin{itemize}
+    \item \textbf{Elimination of Dynamic Dependency Checkers}: Superscalar issue logic scales quadratically with issue width ($O(W^2)$) to compare all source registers against all destination registers in the issue window. VLIW eliminates these comparator networks entirely.
+    \item \textbf{Silicon Energy and Area Efficiency}: By eliminating scoreboards, reservation stations, and reorder buffers, VLIW processors devote a much larger fraction of their silicon area and power budget to raw arithmetic execution datapaths (ALUs, MACs, and vector units).
+\end{itemize}
+
+\subsection{VLIW Microarchitectural Challenges and Modern Solutions}
+Despite their structural efficiency, traditional VLIW architectures confront three classic microarchitectural challenges:
+\begin{enumerate}
+    \item \textbf{Code Density and NOP Bloat}: When the compiler cannot identify sufficient independent operations to populate every issue slot (e.g., in sequential code regions with tight serial dependencies), empty slots must be padded with \texttt{NOP} (No-Operation) syllables. In early VLIW machines, this caused severe code bloat and degraded instruction cache hit rates. Modern VLIW architectures resolve this through \emph{compressed VLIW encodings}, using variable-length packets, header template bits (as in Intel/HP IA-64 EPIC), or execution stop bits that suppress unissued syllables.
+    \item \textbf{Multi-Ported Register File Scalability}: Issuing $W$ instructions per cycle requires scaling the architectural register file to $2W$ read ports and $W$ write ports (e.g., 8 read ports and 4 write ports for a 4-slot VLIW). To avoid the quadratic area and capacitance penalties of monolithic multi-ported register files, high-performance VLIW designs employ \emph{clustered register files}, partitioning functional units and register storage into semi-autonomous clusters interconnected by crossbar bypass networks.
+    \item \textbf{Microarchitectural Binary Compatibility}: In pure VLIW architectures, operation latencies (e.g., load latency or multiplier latency) are explicitly scheduled by the compiler into software pipeline delay slots. Changing the hardware pipeline depth in a subsequent silicon generation breaks binary compatibility, requiring recompilation. Modern designs mitigate this through hardware interlock support or dynamic binary translation.
+\end{enumerate}
+
+\subsection{Synergy with Fine-Grained Multithreading and DSP}
+VLIW architectures achieve their highest operational efficiency in workloads characterized by regular, predictable loop dataflow, such as Digital Signal Processing (DSP), radar baseband processing, image filtering, and deep learning matrix kernels. In these domains, the compiler leverages advanced loop transformations---including \textbf{Software Pipelining} (Modulo Scheduling) and \textbf{Trace Scheduling}---to keep every issue slot saturated with operations across loop iterations.
+
+Furthermore, VLIW execution can be synergistically combined with \textbf{Fine-Grained Multithreading (FGMT)}: by interleaving VLIW packets from multiple independent threads in round-robin sequence, the architecture hides memory latency and functional unit latencies while sustaining massive parallel arithmetic throughput. Subsequent chapters will detail the formal compilation algorithms, datapath synthesis, and benchmark characterization of VLIW and hybrid multithreaded-VLIW architectures.
+
+
 \section{Summary}\label{riscvSummary}
 \index{RISC-V!chapter summary}
 
@@ -61,7 +91,8 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item Isolated cache sweeps established that a 4\,KB 2-Way I-Cache and 4\,KB 2-Way D-Cache recover $>97\%$ of ideal flat-memory throughput on CoreMark ($\text{CPI} = 1.127$) and Dhrystone ($\text{CPI} = 1.266$). For complex embedded workloads with larger footprints (the 19-kernel Embench-IoT suite), an on-chip Unified Level-2 Cache (10-cycle hit latency) was shown to filter $>94\%$ of L1 misses, boosting geometric mean performance by $3.60\times$ (slashing CPI from $4.82$ down to $1.34$).
     \item Multithreaded execution was introduced via the 4-thread barrel core (\texttt{RiscvBarrel4T}), inspired by the TetraNyte core from the pRISC/KryptoNyte architecture. Interleaving 4 threads in round-robin order structurally eliminates pipeline interlocks and branch delay bubbles. Multithreaded register file synthesis in ASAP7 showed that 4 threads require $285.2\,\text{ps}$ read delay, leaving $+189.8\,\text{ps}$ positive slack at $600\,\text{ps}$ ($1.67\,\text{GHz}$).
     \item When 4 concurrent threads share a 4\,KB Level-1 cache, direct-mapped (1-way) organization collapses due to severe inter-thread cache thrashing (miss rates $>54\text{--}70\%$, CPI $>75\text{--}85$). Expanding associativity to 4-way completely resolves thrashing by providing each active thread with a dedicated line per set, slashing miss rates to $<0.4\%$ and restoring aggregate CPI to $1.08\text{--}1.10$.
-    \item Because a single-issue scalar or barrel core cannot exceed $\text{IPC} = 1.00$, this empirical limit establishes the imperative for \textbf{superscalar dual-issue execution} ($\text{IPC} \le 2.00$) explored in subsequent chapters.
+    \item Multithreading trade-offs were systematically synthesized: deepening execution to 5 stages with 5 threads structurally eliminates Pipemul interlocks; deepening to 6 stages with 6 threads eliminates accumulator recursive hazards in DSP MAC filter loops; and deepening to 8 stages with 8 threads arrives at the single-issue Sandblaster DSP architecture, eliminating all vector SIMD hazards while relaxing SRAM access cycles to half clock frequency.
+    \item Having exhausted the single-stream efficiency frontier ($\text{CPI} \approx 1.05\text{--}1.08$, $\text{IPC} \approx 0.93\text{--}0.95$), the primary figure of architectural merit fundamentally flips from \textbf{minimizing CPI} ($\text{CPI} \ge 1.00$) to \textbf{maximizing IPC} ($\text{IPC} \le W$). Multiple-issue execution is explored across two competing paradigms: dynamic issue in \textbf{superscalar processors} ($\text{IPC} \le 2.00$) and static compiler bundling in \textbf{VLIW processors}.
 \end{itemize}
 
 

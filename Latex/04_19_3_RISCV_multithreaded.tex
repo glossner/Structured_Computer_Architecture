@@ -879,16 +879,178 @@ Key insights from Figure \ref{fig:riscv_mt_embench_l2_cpi} include:
 \end{enumerate}
 
 
-\subsection{Architectural Synthesis and Design Guidelines}
+\subsection{Multithreading Trade-off Summary}\label{subsec:mt_tradeoff_summary}
+\index{multithreading!trade-off analysis}\index{barrel processor!pipeline matching}\index{Sandblaster DSP!token-triggered threading}
 
-The integration of fine-grained multithreading, pipelined arithmetic, and multi-level caching demonstrates how orthogonal architectural techniques compose to maximize silicon throughput:
+The integration of fine-grained multithreading, pipelined arithmetic, and multi-level caching illuminates a profound architectural principle: \textbf{pipeline depth and hardware thread count are duals of one another in fine-grained multithreading}. 
+
+In a deterministic barrel processor operating under Token-Triggered Threading ($T^3$) \cite{glossner2003sandblaster}, instructions from $N$ hardware threads are dispatched in strict round-robin rotation. If an execution pipeline has latency (depth) $D$, then the time interval between consecutive instruction dispatches from the \emph{same} thread is exactly $N$ clock cycles. This establishes the fundamental condition for hazard-free execution:
+\begin{equation}
+N_{\text{threads}} \ge D_{\text{pipeline}} \implies \text{Zero Inter-Instruction Data and Control Hazards}.
+\end{equation}
+When the thread count matches or exceeds the pipeline latency, every hazard that would otherwise require complex hardware forwarding multiplexers, interlock stalling state machines, or speculative branch prediction tables is completely eliminated by the physical interleaving of independent threads.
+
+\subsubsection{The 4-Stage / 4-Thread Baseline}
+In our baseline 4-stage barrel core (\texttt{RiscvBarrel4T}), the pipeline is partitioned into:
+\begin{equation}
+\text{IF} \;\longrightarrow\; \text{ID} \;\longrightarrow\; \text{EX} \;\longrightarrow\; \text{WB} \qquad (D = 4).
+\end{equation}
+Interleaving $N = 4$ threads ($T_0, T_1, T_2, T_3$) ensures that thread $T_i$ dispatches an instruction at cycle $t$, evaluates ALU operations and branch conditions in EX at cycle $t+2$, and commits the architectural result to the register file in WB at cycle $t+3$. The next instruction from thread $T_i$ enters ID at cycle $t+5$ and reads the newly updated register file. Because writeback ($t+3$) finishes two cycles before operand read ($t+5$), all single-cycle ALU data dependencies and branch resolution delays are resolved with \textbf{zero stall cycles and zero data forwarding multiplexers}.
+
+Furthermore, as established in Section \ref{subsec:mt_memory_wall}, sharing Level-1 caches among $N$ threads introduces the risk of catastrophic cache thrashing. To maintain peak throughput, the cache associativity $W$ must satisfy the \textbf{Cache Sizing Law}:
+\begin{equation}
+W_{\text{L1}} \ge N_{\text{threads}},
+\end{equation}
+providing each active thread slot with a dedicated line per cache set. For $N = 4$, a 4-way set-associative $4\,\text{KB}$ cache completely resolves inter-thread thrashing, recovering $>98\%$ of ideal scalar throughput.
+
+\subsubsection{Removing the Pipemul Interlock: 5 Stages and 5 Threads}
+While the 4-thread barrel core effortlessly resolves single-cycle ALU dependencies, multi-cycle arithmetic primitives introduce a subtle hazard. As established in Section \ref{riscvHardwareMultiplier}, a high-speed $32 \times 32$ integer multiplier cannot complete Booth recoding, CSA tree reduction, and final vector-merging addition within a single $600\,\text{ps}$ clock period at $1.67\,\text{GHz}$. The multiplier was therefore pipelined across two execution steps:
+\begin{enumerate}
+    \item \textbf{Stage 1 ($EX_1$)}: Radix-4 Booth recoding and a 6-level Carry-Save Adder (CSA) Wallace tree producing redundant Sum and Carry vectors.
+    \item \textbf{Stage 2 ($EX_2$)}: Carry-Propagate Addition (CPA / vector merge) synthesizing the final 32-bit product.
+\end{enumerate}
+In the 4-stage pipeline, if thread $T_i$ issues a \texttt{mul} instruction followed immediately by a dependent instruction (e.g., \texttt{add rd, rs1, mul\_result}), the product is produced at the end of the MEM/WB stage ($t+3$). In a 4-thread core, thread $T_i$'s dependent instruction enters ID at cycle $t+4$ and reads registers at $t+4$. If register writeback occurs at the end of cycle $t+3$, the newly produced product must either be forwarded into ID or write-through bypassed, requiring a multi-bit bypass multiplexer. If writeback is buffered or if memory loads take 2 cycles, a 1-cycle pipeline interlock stall is forced.
+
+To completely eliminate the pipemul interlock and remove all multiplier forwarding multiplexers without stalling, the execution pipeline can be explicitly deepened to 5 stages:
+\begin{equation}
+\text{IF} \;\longrightarrow\; \text{ID} \;\longrightarrow\; EX_1 \;\longrightarrow\; EX_2 \;\longrightarrow\; \text{WB} \qquad (D = 5).
+\end{equation}
+By adding \textbf{1 more EX stage} and \textbf{1 more hardware thread} ($N = 5$ threads: $T_0, T_1, T_2, T_3, T_4$):
 \begin{itemize}
-    \item \textbf{Throughput Efficiency}: By interleaving 4 threads across the 4-stage pipeline, the processor sustains near-ideal scalar throughput ($\text{CPI}_{\text{agg}} \approx 1.05\text{--}1.08$, $\text{IPC}_{\text{agg}} \approx 0.93\text{--}0.95$) across complex multi-programmed embedded workloads.
-    \item \textbf{Hazard Independence}: Hardware interlocks, data forwarding multiplexers, and dynamic branch prediction tables are unnecessary in pure barrel execution, freeing silicon area and simplifying verification.
-    \item \textbf{Cache Sizing Law}: For an $N$-thread barrel core sharing Level-1 caches, the cache associativity $W$ must satisfy:
-    \begin{equation}
-    W_{\text{L1}} \ge N_{\text{threads}},
-    \end{equation}
-    to prevent catastrophic inter-thread cache thrashing. For $N = 4$, a 4-way set-associative $4\,\text{KB}$ cache provides the optimal balance of hit latency, timing closure ($348\,\text{ps}$ tag comparison in ASAP7), and conflict immunity.
+    \item Thread $T_i$ issues \texttt{mul} at cycle $t$.
+    \item $EX_1$ computes the Booth/CSA reduction at cycle $t+2$.
+    \item $EX_2$ performs the vector-merging addition at cycle $t+3$.
+    \item WB commits the finalized product to the architectural register file at cycle $t+4$.
+    \item The next instruction from thread $T_i$ enters ID at cycle $t+6$ and reads the register file.
 \end{itemize}
-However, even when all stalls and thrashing are eliminated, a single-issue barrel core can retire at most \textbf{one instruction per clock cycle} ($\text{IPC}_{\text{agg}} \le 1.00$). To surpass this barrier and retire multiple instructions per cycle, the processor microarchitecture must transition to \textbf{superscalar execution}, explored in the following section.
+Because destination writeback ($t+4$) commits two full cycles before the register read in ID ($t+6$), \textbf{the pipemul interlock is completely and structurally eliminated}. Back-to-back \texttt{mul} and dependent arithmetic operations sustain 100\% issue throughput with zero pipeline bubbles and zero bypass logic.
+
+\subsubsection{DSP Applications: Multiply-Accumulate (MAC) in a 3rd EX Stage, 6 Stages, 6 Threads}
+In Digital Signal Processing (DSP) algorithms---such as Finite Impulse Response (FIR) filtering, Infinite Impulse Response (IIR) filtering, Fast Fourier Transforms (FFT), convolution, and Least Mean Squares (LMS) adaptive equalization---computation is overwhelmingly dominated by the inner Multiply-Accumulate (MAC) loop:
+\begin{equation}
+A \;\longleftarrow\; A + (B \times C).
+\end{equation}
+In hardware, accumulating the product $B \times C$ into a dedicated accumulator register $A$ (frequently augmented with guard bits for overflow protection, saturation clipping, and rounding) requires an additional adder stage following product generation. Compressing product formation and 40-bit/64-bit accumulation into a single cycle degrades timing closure, pulling the operating frequency down from $1.67\,\text{GHz}$ to $<1.0\,\text{GHz}$.
+
+The optimal high-frequency DSP pipeline cleanly partitions the arithmetic path into three dedicated execution stages:
+\begin{enumerate}
+    \item \textbf{Stage 1 ($EX_1$)}: Booth recoding and CSA Wallace tree reduction to redundant carry-save vectors.
+    \item \textbf{Stage 2 ($EX_2$)}: Carry-propagate addition (vector merge) to generate the unaccumulated product.
+    \item \textbf{Stage 3 ($EX_3$)}: Accumulator addition ($A + Product$), overflow detection, saturation clipping, and rounding.
+\end{enumerate}
+This yields a 6-stage physical pipeline:
+\begin{equation}
+\text{IF} \;\longrightarrow\; \text{ID} \;\longrightarrow\; EX_1 \;\longrightarrow\; EX_2 \;\longrightarrow\; EX_3 \;\longrightarrow\; \text{WB} \qquad (D = 6).
+\end{equation}
+In a single-threaded DSP processor, inner MAC loops suffer from an acute recursive dependency: the accumulator result of loop iteration $k$ is the immediate input operand to loop iteration $k+1$. In a scalar pipeline, this creates a tight recursive feedback hazard requiring multi-level bypass paths or stall cycles.
+
+In our multithreaded architecture, we resolve this recursive dependency by adding \textbf{yet another hardware thread}, scaling to \textbf{6 threads} ($N = 6$ threads: $T_0 \dots T_5$). With 6 threads interleaved in round-robin sequence:
+\begin{itemize}
+    \item Thread $T_i$ dispatches a MAC operation at cycle $t$.
+    \item Accumulation finishes in $EX_3$ at cycle $t+4$, and WB commits the accumulator value to the register file at cycle $t+5$.
+    \item The subsequent MAC instruction of thread $T_i$ enters ID at cycle $t+7$ and reads the newly committed accumulator from the register file.
+\end{itemize}
+All 6 threads can continuously execute inner DSP filter loops at peak clock frequency ($>1.67\,\text{GHz}$) with 100\% functional unit efficiency, zero interlocks, and zero accumulator bypass multiplexers!
+
+\subsubsection{Vector MAC and the Sandblaster DSP Architecture: 8 Stages, 8 Threads}
+When computational demands expand into Software-Defined Radio (SDR), 5G wireless baseband processing, radar signal processing, and multidimensional matrix linear algebra, scalar architectures give way to wide \textbf{Vector SIMD (Single Instruction, Multiple Data) processing}. 
+
+A high-performance vector execution unit must handle:
+\begin{itemize}
+    \item Multi-lane vector operand address generation and register reading across wide vector register files (e.g., 4-way or 8-way parallel 16-bit or 32-bit lanes).
+    \item Parallel Booth reduction arrays across all SIMD lanes.
+    \item Lane alignment and vector product merge addition.
+    \item Vector accumulation, intra-vector horizontal reductions, and cross-lane permute/shuffle operations.
+    \item Saturation arithmetic, fractional scaling, rounding, and formatting.
+    \item Multi-word vector register writeback.
+\end{itemize}
+To maintain multi-gigahertz clock speeds in standard silicon processes, this deep arithmetic datapath naturally requires an 8-stage pipeline:
+\begin{equation}
+\text{IF} \;\longrightarrow\; \text{ID} \;\longrightarrow\; \text{RR} \;\longrightarrow\; EX_1 \;\longrightarrow\; EX_2 \;\longrightarrow\; EX_3 \;\longrightarrow\; EX_4 \;\longrightarrow\; \text{WB} \qquad (D = 8),
+\end{equation}
+where:
+\begin{itemize}
+    \item \textbf{IF}: Instruction Fetch from instruction memory/cache.
+    \item \textbf{ID}: Instruction Decode and vector address generation.
+    \item \textbf{RR}: Vector Register File Read.
+    \item \textbf{$EX_1$}: Vector Booth recoding and carry-save multiplier reduction.
+    \item \textbf{$EX_2$}: Vector product merge addition and lane alignment.
+    \item \textbf{$EX_3$}: Vector accumulator addition and intra-vector reduction.
+    \item \textbf{$EX_4$}: Saturation clipping, rounding, formatting, and vector permutation.
+    \item \textbf{WB}: Vector register file commit and writeback.
+\end{itemize}
+
+Matching this 8-stage vector pipeline with \textbf{8 hardware threads} ($N = 8$) yields an extraordinary architectural synthesis:
+\begin{enumerate}
+    \item \textbf{Complete Vector Hazard Elimination}: With 8 threads executing in strict round-robin rotation, all data dependencies across complex vector MAC pipelines are satisfied naturally. No vector data forwarding multiplexers, no hazard detection units, and no branch prediction tables are required anywhere in the vector datapath.
+    \item \textbf{Even/Odd Thread-Banked Synchronous SRAM Macros}: As proved in Section \ref{subsec:regfile_even_odd_banked}, synthesizing an 8-thread register file from standard cells requires over $53,000$ cells and exceeds $470\,\text{ps}$ read delay. However, by partitioning the 8 threads into dual independent synchronous SRAM banks based on thread parity (Bank 0 for Even threads $T_0, T_2, T_4, T_6$; Bank 1 for Odd threads $T_1, T_3, T_5, T_7$), read and write ports never collide ($1R1W$ macros suffice).
+    \item \textbf{Half-Frequency Memory Relaxation}: Because each SRAM bank is accessed only on alternate clock cycles, the SRAM macros operate at half the processor pipeline frequency ($f_{\text{sram}} = \frac{1}{2} f_{\text{clk}}$), effortlessly closing timing at $>1.5\text{--}2.0\,\text{GHz}$ in standard foundry nodes.
+    \item \textbf{The Sandblaster Architecture}: This exact configuration---Token-Triggered Threading ($T^3$) with 8 threads, an 8-stage execution datapath, even/odd banked synchronous SRAM register storage, and single-issue vector SIMD execution---is precisely the \textbf{single-issue Sandblaster DSP} architecture pioneered by Glossner et al. \cite{glossner2003sandblaster}. It demonstrates how deep pipelining, fine-grained multithreading, and banked memory organization eliminate the traditional area, power, and verification overheads of bypass networks, yielding ultra-efficient supercomputer-grade digital signal processing on a single chip.
+\end{enumerate}
+
+Table \ref{tab:mt_pipeline_thread_tradeoffs} summarizes the structural progression from our 4-thread scalar core to the 8-thread Sandblaster vector DSP.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|c|c|l|l|l|}
+\hline
+\textbf{Pipeline} & \textbf{Thread} & \textbf{Execution Stage} & \textbf{Hazards Eliminated} & \textbf{Architectural} \\
+\textbf{Depth ($D$)} & \textbf{Count ($N$)} & \textbf{Partitioning} & \textbf{Structurally} & \textbf{Archetype} \\ \hline\hline
+4 & 4 & Single-cycle ALU, branch in EX & ALU RAW, branch delay & \texttt{RiscvBarrel4T} (Baseline RV32I) \\ \hline
+5 & 5 & $EX_1$: Booth/CSA, $EX_2$: CPA merge & Pipemul interlock, load-use & Unrolled Pipemul Integer Core \\ \hline
+6 & 6 & $EX_1$: Mult, $EX_2$: Merge, $EX_3$: Accum & MAC accumulator recursion & High-Performance DSP MAC Core \\ \hline
+8 & 8 & $EX_{1\text{--}4}$: 8-lane SIMD MAC, Permute & All vector RAW/WAW/WAR & \textbf{Sandblaster DSP} \cite{glossner2003sandblaster} \\ \hline
+\end{tabular}
+\caption{Multithreading pipeline depth and thread count trade-offs across architectural archetypes.}
+\label{tab:mt_pipeline_thread_tradeoffs}
+\end{table}
+
+
+\subsection{The Single-Stream Efficiency Frontier and the Transition to Multi-Issue Execution}\label{subsec:single_stream_frontier}
+\index{single-stream efficiency frontier}\index{CPI to IPC transition}\index{issue width!multi-issue}
+
+Across Chapter 19, we have systematically explored, optimized, and exhausted the microarchitectural design space for executing a \textbf{single instruction stream}:
+\begin{enumerate}
+    \item \textbf{Harvard 5-OS Baseline}: Established an unpipelined, single-cycle RV32I core operating at $327.5\,\text{MHz}$ with an ideal $\text{CPI} = 1.00$.
+    \item \textbf{Pipelining and Adder Balancing}: Decomposed the datapath into 4 balanced stages (IF, ID, EX, WB) and integrated a Carry-Select Adder (CSelA), pushing operating frequency to $\mathbf{1.67\,\text{GHz}}$ ($0.600\,\text{ns}$).
+    \item \textbf{Data Forwarding and Multiplication}: Implemented full data bypassing to eliminate ALU RAW stalls and introduced a 2-stage pipelined multiplier (Pipemul) to sustain 1 mul/cycle throughput ($2.97\times$ speedup on DSP).
+    \item \textbf{Branch Prediction}: Integrated Static BTFN and Dynamic Gshare branch prediction, eliminating taken loop branch penalties and collapsing CoreMark CPI to $1.09$.
+    \item \textbf{Compiler Optimization}: Quantified the synergy between compiler optimization levels (\texttt{-O3}, \texttt{-Ofast}, \texttt{-Oz}, and aggressive loop unrolling) and the hardware pipeline, minimizing dynamic instruction counts.
+    \item \textbf{Memory Hierarchy}: Designed split Level-1 caches ($4\,\text{KB}$ 2-way/4-way) and unified Level-2 caches ($128\,\text{KB}/256\,\text{KB}$) to bridge the 100-cycle DDR-5 DRAM memory wall.
+    \item \textbf{Fine-Grained Multithreading}: Scaled the architecture to a 4-thread barrel core (\texttt{RiscvBarrel4T}), interleaving independent threads to structurally eliminate all remaining pipeline bubbles and data forwarding multiplexers, achieving an aggregate $\text{CPI} \approx 1.05\text{--}1.08$ ($\text{IPC} \approx 0.93\text{--}0.95$).
+\end{enumerate}
+
+At this juncture, the single-issue processor core operates at over \textbf{95\% of the theoretical maximum throughput} physically achievable by a single instruction issue stream:
+\begin{equation}
+\text{CPI}_{\text{scalar, min}} = 1.00 \quad \iff \quad \text{IPC}_{\text{scalar, max}} = 1.00.
+\end{equation}
+The remaining overhead ($\sim 5\%$) is attributable strictly to irreducible physical boundary constraints: compulsory Level-1 cache misses, multi-tenant L2 capacity spillover, and indirect jump redirections. We have reached the \textbf{single-stream efficiency frontier}: within the microarchitectural bounds of fetching, decoding, and dispatching \emph{one instruction per clock cycle}, the design space has been fully exploited. No amount of additional data forwarding, deeper branch prediction, or pipeline balancing can retire more than one instruction per cycle from a single-issue datapath.
+
+\subsubsection{The Metric Inversion: From Minimizing CPI to Maximizing IPC}
+Throughout our study of scalar and single-issue barrel cores, the primary figure of architectural merit has been \textbf{Cycles Per Instruction (CPI)}:
+\begin{equation}
+\text{CPI} = \frac{\text{Clock Cycles}}{\text{Instructions Retired}} \ge 1.00.
+\end{equation}
+Under the single-issue paradigm, the architect's fundamental objective is driving CPI down toward the ideal floor of $1.00$ by identifying and eliminating pipeline stall cycles, data hazard bubbles, branch misprediction flushes, and cache miss penalties.
+
+However, once a core reaches the scalar frontier ($\text{CPI} \approx 1.00$), further performance scaling demands that the processor break the single-issue barrier by issuing and retiring \textbf{more than one instruction per clock cycle}:
+\begin{equation}
+\text{Issue Width } W > 1 \implies \text{Instructions Per Cycle (IPC)} > 1.00.
+\end{equation}
+When multiple instructions retire concurrently in each clock cycle, the effective CPI drops strictly below unity ($\text{CPI} < 1.00$). Under this multi-issue regime, expressing performance in fractional cycles per instruction ($\text{CPI} = 0.50, 0.25, \dots$) becomes mathematically clumsy. 
+
+Consequently, as we transition from single-issue to multiple-issue execution, the primary figure of architectural merit fundamentally flips from \textbf{minimizing CPI} to \textbf{maximizing Instructions Per Cycle (IPC)}:
+\begin{equation}
+\text{IPC} = \frac{1}{\text{CPI}} = \frac{\text{Instructions Retired}}{\text{Clock Cycles}} \le W.
+\end{equation}
+For a dual-issue processor ($W = 2$), peak throughput is $\mathbf{\text{IPC} = 2.00}$ ($\text{CPI} = 0.50$); for a 4-way issue processor ($W = 4$), peak throughput is $\mathbf{\text{IPC} = 4.00}$ ($\text{CPI} = 0.25$). The overarching design goal shifts from compressing stalls to unlocking Instruction-Level Parallelism (ILP).
+
+\subsubsection{Two Paradigms for Multi-Issue Execution}
+To cross the $\text{IPC} = 1.00$ frontier, computer architecture provides two distinct, competing philosophies for dispatching multiple instructions concurrently:
+\begin{enumerate}
+    \item \textbf{Dynamic Multiple Issue (Superscalar Processors)}:
+    The hardware dynamically inspects the instruction stream at runtime, decodes multiple instructions simultaneously, detects intra-issue data and structural dependencies in silicon, and dispatches independent instructions to parallel execution units. This paradigm, explored in Section \ref{riscvSuperscalarFrontier}, preserves standard sequential binary compatibility at the cost of sophisticated dependency checking logic.
+    \item \textbf{Static Multiple Issue (VLIW Processors)}:
+    The burden of instruction-level parallelism detection, dependency analysis, and parallel scheduling is shifted entirely from hardware into the \textbf{optimizing compiler}. The compiler bundles independent operations into Very Long Instruction Words (or execution packets) that are dispatched directly to parallel functional units without runtime hazard checking. This paradigm, introduced in Section \ref{riscvVLIW}, maximizes hardware energy efficiency and throughput for compute-intensive workloads.
+\end{enumerate}
