@@ -315,19 +315,18 @@ And thus, the most important negative result in the history of mathematics under
 \chapter*{Preface to the Second Edition}
 \addcontentsline{toc}{chapter}{Preface to the Second Edition}
 
-[Placeholder for Preface to the Second Edition]
+Welcome to the second edition of \emph{Structured Computer Architecture: From Gates to Compilers and Beyond}. Since the initial release of the textbook, our focus has been to elevate the work from foundational theoretical models into a fully physically realized, empirically benchmarked, and tapeout-ready treatise on modern computer architecture and silicon design.
 
-Notable updates in this second edition include:
-\begin{itemize}
-    \item Upgraded the hardware construction environment to Chisel 7.15.0 and Scala 2.13.18 (supported by CIRCT firtool 1.158.0 and the \texttt{EphemeralSimulator} cycle-accurate simulation framework).
-    \item Reference and integration with the BreadBoard Computer Zoo repository (\url{https://github.com/glossner/BBzoo}), documenting diverse historical and modern computer architecture implementations.
-    \item Reference and integration with the KryptoNyte RISC-V processor family repository (\url{https://github.com/Ypologist/KryptoNyte}), covering the ZeroNyte (fetch-execute), PipeNyte (pipelined), TetraNyte (barrel-multithreaded), and OctoNyte processor cores and ASIC design flows.
-\end{itemize}
+The centerpiece of this second edition is an end-to-end, production-grade realization of the open-standard RISC-V (RV32I and Zmmul) processor architecture. Moving beyond abstract block diagrams, we guide readers through the complete architectural lifecycle: single-cycle Harvard execution, deep 4-stage pipelining, and rigorous formal conformance verification passing 100\% of the official RISC-V architectural suites with bit-exact signature matches. We systematically address pipeline balancing by diagnosing logic stage imbalances, integrating high-speed Carry-Select Adders (CSelA) to unlock $1.67\,\text{GHz}$ core operation, synthesizing full distance-1 and distance-2 data bypassing networks to eliminate over 60\% of pipeline stalls, and pipelining the $32\times 32$ Radix-4 Booth multiplier to deliver zero-stall multiply-accumulate throughput. Control hazards are tackled through static BTFN and dynamic Gshare branch prediction, slashing loop overheads and driving CoreMark CPI down to $1.09$.
+
+To bridge the 100-cycle DDR-5 memory wall, this edition introduces parameterized Level-1 split caches and unified Level-2 caches, evaluating memory hierarchy trade-offs across industry-standard embedded workloads---including Dhrystone 2.1, EEMBC CoreMark 1.0, and the comprehensive 19-kernel Embench-IoT suite---under realistic compiler optimization levels. We further expand the architectural frontier with fine-grained multithreading, implementing a 4-thread barrel core (\texttt{RiscvBarrel4T}) inspired by the TetraNyte core from the KryptoNyte processor family. We demonstrate how interleaving independent thread contexts structurally eliminates pipeline interlocks and branch delay bubbles, formulate the cache associativity sizing law ($W_{\text{L1}} \ge N_{\text{threads}}$) to prevent multi-tenant cache thrashing, and analyze pipeline depth versus thread count trade-offs---scaling to 5 threads for unrolled multiplier execution, 6 threads for DSP MAC loops, and 8 threads for the single-issue Sandblaster vector DSP with even/odd thread-banked SRAM macros. Finally, having exhausted the single-stream efficiency frontier ($\text{IPC} \approx 0.95$), we chart the paradigm shift from minimizing CPI to maximizing IPC through dual-issue superscalar execution and VLIW architectures.
+
+Throughout the textbook, all digital logic, sequential automata, and processor microarchitectures are accompanied by gate-level physical synthesis targeting the predictive ASAP7 7\,nm FinFET standard cell library. The entire hardware construction and cycle-accurate simulation infrastructure has been modernized to Chisel 7.15.0 and Scala 2.13.18 (supported by CIRCT firtool 1.158.0 and \texttt{EphemeralSimulator}), with direct companion integration to the open-source BreadBoard Computer Zoo (\url{https://github.com/glossner/BBzoo}) and KryptoNyte processor family (\url{https://github.com/Ypologist/KryptoNyte}) repositories.
 
 \vspace{\baselineskip}\par \noindent
 John Glossner and Gheorghe M. \c{S}tefan
 \vspace{\baselineskip}\par \noindent
-[Date TBD]
+September 2026
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preface to the First Edition
@@ -391,7 +390,7 @@ John Glossner and Gheorghe M. \c{S}tefan
 \vspace{\baselineskip}\par \noindent
 June 3rd, 2026
 
-\input{changelog}
+%\input{changelog}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Acknowledgments
