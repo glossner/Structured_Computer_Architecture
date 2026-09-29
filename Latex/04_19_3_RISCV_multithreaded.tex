@@ -106,11 +106,13 @@ Even if using the larger flip-flop vector array (\texttt{RegFileMT2R1WVec}, $t_{
 
 \subsection{Hardware Chisel Implementation of RiscvBarrel4T}
 
-The \texttt{RiscvBarrel4T} processor core is implemented modularly in Chisel. Listing \ref{lst:riscv_barrel4t_chisel} highlights the core token rotation, thread-indexed register file dispatch, and zero-bubble branch resolution logic.
+The complete hardware implementation of the \texttt{RiscvBarrel4T} processor core is located in \texttt{RTL/Chisel/src/main/scala/scabook/riscv/RiscvBarrel4T.scala}. The full 361-line synthesizable module integrates the balanced Carry-Select Adder ALU (\texttt{RiscvALU}), 2-stage Pipelined Multiplier (\texttt{PipelinedMultiplierStage1} and \texttt{Stage2}), multi-threaded register file (\texttt{RiscvRegFileMT}), Level-1 Instruction and Data Caches (\texttt{L1Cache}), sub-word memory alignment, and dynamic per-thread reset controllers. This complete hardware core is directly verified in cycle-accurate simulation by the randomized multi-threaded conformance testbench (\texttt{RTL/Chisel/src/test/scala/scabook/riscv/RiscvBarrel4TConformanceSpec.scala}) and synthesized to gate-level netlists for ASIC timing closure.
 
-\begin{chiselcode}[caption={Chisel implementation of the 4-thread barrel core token-triggered execution and register dispatch (\texttt{RiscvBarrel4T.scala}).}, label={lst:riscv_barrel4t_chisel}]
-// Dedicated Program Counters for 4 Hardware Threads
-val pcRegs = RegInit(VecInit(Seq.tabulate(numThreads)(i => (initPC + (i * 0x10000L)).U(xlen.W))))
+Listing \ref{lst:riscv_barrel4t_chisel} presents an architectural excerpt from \texttt{RiscvBarrel4T.scala}, highlighting the core token rotation, thread-indexed register file dispatch, and zero-bubble branch resolution logic.
+
+\begin{chiselcode}[caption={Architectural excerpt of the 4-thread barrel core token-triggered execution and register dispatch (full implementation in \texttt{RTL/Chisel/src/main/scala/scabook/riscv/RiscvBarrel4T.scala}).}, label={lst:riscv_barrel4t_chisel}]
+// Dedicated Program Counters for 4 Hardware Threads (initialized to initPC)
+val pcRegs = RegInit(VecInit(Seq.fill(numThreads)(initPC.U(xlen.W))))
 val fetchToken = RegInit(0.U(threadWidth.W))
 
 // Stage 1: Instruction Fetch (IF) - Round-Robin Token Rotation
