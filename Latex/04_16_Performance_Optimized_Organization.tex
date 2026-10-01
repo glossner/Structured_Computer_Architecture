@@ -2,7 +2,7 @@
 \index{pipelining!performance optimized organization}\index{ILP (Instruction-Level Parallelism): }\index{performance optimized organization}
 \localtoc
 
-In Chapter \ref{chap:perf_opt_logic}, we examined component-level digital logic optimizations---such as carry-lookahead adders, Kogge-Stone parallel prefix networks, and Wallace tree multipliers---designed to minimize combinational propagation delay along critical paths within individual functional blocks. In this chapter, we elevate our perspective from circuit-level logic to \textbf{system- and microarchitectural-level organization}. Rather than merely accelerating an isolated combinational operation, performance-optimized organization restructures the cooperative flow of instructions through time and space.
+In Chapter \ref{chap:perf_opt_logic}, we examined component-level digital logic optimizations---such as carry-lookahead adders, Kogge-Stone parallel prefix networks, and Wallace tree multipliers---designed to minimize combinational propagation delay along critical paths within individual functional blocks. In this chapter, we move from circuit-level logic to \textbf{system- and microarchitectural-level organization}. 
 
 Instruction-Level Parallelism (ILP) represents the family of architectural techniques that enable multiple machine operations to be executed simultaneously. We focus on the foundational organizational mechanisms that govern modern processor throughput: pipelining, pipeline hazard management (structural, data, and control), dynamic branch prediction, and superscalar dispatch with dynamic scheduling. As we will discover, every performance gain realized through spatial or temporal overlap introduces architectural dependencies that demand rigorous hardware solutions.
 
@@ -692,35 +692,38 @@ $\diamond$
 \index{S-1 supercomputer}
 \index{speculative execution!historical origins}
 
-In early, strictly sequential computers (such as ENIAC, EDVAC, UNIVAC, and the IBM 704), instructions were fetched and executed one after another. In a purely serial architecture, the processor simply waits for the conditional evaluation of an instruction to complete before fetching the next target; guessing or predicting the branch outcome is neither necessary nor beneficial.
+In early, sequential computers (such as ENIAC, EDVAC, UNIVAC, and the IBM 704), instructions were fetched and executed one after another. In a sequential microarchitecture, the processor simply waits for the conditional evaluation of an instruction to complete before fetching the next target; guessing or predicting the branch outcome is neither necessary nor beneficial.
 
-The architectural necessity of branch prediction arose the exact moment computer architects decoupled instruction fetching from arithmetic execution through \textbf{instruction prefetching, pipelining, and lookahead}. When instruction fetching runs several clock cycles ahead of the execution stage, the instruction unit encounters conditional branches whose outcomes depend on arithmetic or logical flags that have not yet been evaluated. The architect is confronted with a fundamental dilemma: stall instruction fetching until the condition resolves (wasting precious pipeline throughput), or make an educated guess and proceed \emph{speculatively} down the anticipated instruction path.
+The architectural necessity of branch prediction arose the exact moment computer architects decoupled instruction fetching from arithmetic execution through instruction prefetching, pipelining, and lookahead. When instruction fetching runs several clock cycles ahead of the execution stage, the instruction unit encounters conditional branches whose outcomes depend on arithmetic or logical flags that have not yet been evaluated. The architect is confronted with a fundamental dilemma: stall instruction fetching until the condition resolves (wasting precious pipeline throughput), or make an educated guess and proceed \emph{speculatively} down the anticipated instruction path.
 
 \paragraph{The Earliest Implementation: IBM 7030 Stretch (1956--1961)}
-Hardware branch prediction and speculative execution were first conceived and implemented in the late 1950s for the \textbf{IBM 7030 (known as ``Stretch'')} supercomputer project \cite{buchholz1962}. Stretch was managed by Stephen Dunwell, with system architecture developed by Gene Amdahl, John Cocke, and Frederick Brooks. Stretch decoupled instruction processing across specialized hardware units, integrating an advanced \textbf{Instruction Unit (I-Unit)} and a speculative \textbf{Look-Ahead Unit} \cite{blosk1960, ballance1962lookahead}:
+Hardware branch prediction and speculative execution were first conceived and implemented in the late 1950s for the IBM 7030 (known as ``Stretch'') supercomputer project \cite{buchholz1962}. Stretch was managed by Stephen Dunwell, with system architecture developed by Gene Amdahl, John Cocke, and Frederick Brooks. Stretch decoupled instruction processing across specialized hardware units, integrating an advanced Instruction Unit (I-Unit) and a speculative Look-Ahead Unit \cite{blosk1960, ballance1962lookahead}:
 \begin{itemize}
-    \item \textbf{Index-Dependent and Unconditional Branches:} Unconditional jumps and branches conditioned on index registers were resolved and executed directly within the I-Unit with zero branch penalty.
-    \item \textbf{Static Prediction (Predict Untaken):} For conditional branches depending on pending arithmetic results, the initial Stretch machines implemented the first hardware branch predictor: they statically \textbf{predicted the branch as untaken} and speculatively prefetched instructions along the sequential fall-through path. Subsequent revisions refined this heuristic to predict based on the current state of indicator bits (condition codes).
-    \item \textbf{Hardware Speculative Recovery:} Crucially, the Look-Ahead Unit introduced the world's first hardware mechanism for \textbf{speculative recovery}: if an arithmetic branch was subsequently resolved as taken (a misprediction), the Look-Ahead Unit initiated a ``housecleaning'' recovery sequence that flushed the speculative instructions, restored the register state, and redirected instruction fetch along the taken path.
+    \item \textit{Index-Dependent and Unconditional Branches:} Unconditional jumps and branches conditioned on index registers were resolved and executed directly within the I-Unit with zero branch penalty.
+    
+    \item \textit{Static Prediction (Predict Untaken):} For conditional branches depending on pending arithmetic results, the initial Stretch machines implemented the first hardware branch predictor: they statically predicted the branch as untaken and speculatively prefetched instructions along the sequential fall-through path. Subsequent revisions refined this heuristic to predict based on the current state of indicator bits (condition codes).
+    
+    \item \textit{Hardware Speculative Recovery:} The Look-Ahead Unit introduced the world's first hardware mechanism for speculative recovery: if an arithmetic branch was subsequently resolved as taken (a misprediction), the Look-Ahead Unit initiated a ``housecleaning'' recovery sequence that flushed the speculative instructions, restored the register state, and redirected instruction fetch along the taken path.
 \end{itemize}
 
 \paragraph{Static Heuristics (1960s--1970s)}
-Following Stretch, pipelined machines in the 1960s and 1970s relied primarily on static heuristics, most notably the \textbf{BTFNT (Backward Taken, Forward Not Taken)} convention: backward branches typically close iterative loops and are taken with high probability, whereas forward branches often guard exceptional conditions or conditional skips and are predominantly not taken. Compilers also began embedding static branch hints into instruction opcodes.
+Following Stretch, pipelined machines in the 1960s and 1970s relied primarily on static heuristics, most notably the \textit{BTFNT (Backward Taken, Forward Not Taken)} convention: backward branches typically close iterative loops and are taken with high probability, whereas forward branches often guard exceptional conditions or conditional skips and are predominantly not taken. Compilers also began embedding static branch hints into instruction opcodes.
 
 \paragraph{Dynamic Branch Prediction (Late 1970s)}
-Static heuristics cannot adapt to data-dependent branch behaviors that vary across program phases. The revolutionary transition to \textbf{dynamic branch prediction}---where specialized hardware monitors runtime branch outcomes to dynamically learn and predict future behavior---emerged independently in the late 1970s:
+Static heuristics cannot adapt to data-dependent branch behaviors that vary across program phases. The  transition to \textit{dynamic branch prediction}---where specialized hardware monitors runtime branch outcomes to dynamically learn and predict future behavior---emerged independently in the late 1970s:
 \begin{itemize}
-    \item \textbf{Tom McWilliams and Curt Widdoes (1977):} Working on the \textbf{S-1 supercomputer} project at Lawrence Livermore National Laboratory (LLNL), McWilliams and Widdoes invented the \textbf{2-bit saturating counter branch predictor}. To maintain high throughput in their deeply pipelined processor without stalling on conditional branches, their design used a ``reverse bit'' mechanism that required two consecutive mispredictions before reversing the predicted branch direction \cite{s1project1979}.
+    \item \textbf{Tom McWilliams and Curt Widdoes (1977):} Working on the \textbf{S-1 supercomputer} project at Lawrence Livermore National Laboratory (LLNL), McWilliams and Widdoes invented the \textit{2-bit saturating counter branch predictor}. To maintain high throughput in their deeply pipelined processor without stalling on conditional branches, their design used a ``reverse bit'' mechanism that required two consecutive mispredictions before reversing the predicted branch direction \cite{s1project1979}.
+    
     \item \textbf{James E. Smith (1979--1981):} Concurrently, James E. Smith at Control Data Corporation (CDC) and the University of Wisconsin formalized table-based dynamic branch prediction, patenting random-access memory branch predictor tables and evaluating 1-bit and 2-bit saturating counters and Branch Target Buffers (BTBs) \cite{smith1981study, smith1983patent}. This empirical analysis was subsequently expanded into a comprehensive evaluation of branch target cache designs by Johnny K. F. Lee and Alan Jay Smith \cite{lee1984branch}.
 \end{itemize}
 
 \paragraph{Modern Adaptive Predictors (1990s)}
-While 2-bit bimodal counters served early pipelined microprocessors effectively, deep superscalar pipelines (where a misprediction penalty wastes dozens of in-flight instructions) demanded accuracy well beyond the bimodal ceiling of $\sim 85\text{--}90\%$. As detailed later in Section \ref{sec:yeh_patt}, Tse-Yu Yeh and Yale N. Patt revolutionized the field by inventing \textbf{Two-Level Adaptive Branch Prediction}, tracking correlated branch histories to achieve over $97\%$ accuracy \cite{yeh1991twolevel, yeh1992alternative}. This breakthrough established the foundation for subsequent innovations, including Scott McFarling's \textbf{gshare} and \textbf{tournament combining predictors} \cite{mcfarling1993combining}.
+While 2-bit bimodal counters served early pipelined microprocessors effectively, deep superscalar pipelines (where a misprediction penalty wastes dozens of in-flight instructions) demanded accuracy well beyond the bimodal ceiling of $\sim 85\text{--}90\%$. As detailed later in Section \ref{sec:yeh_patt}, \textbf{Tse-Yu Yeh and Yale N. Patt} revolutionized the field by inventing \textit{Two-Level Adaptive Branch Prediction}, tracking correlated branch histories to achieve over $97\%$ accuracy \cite{yeh1991twolevel, yeh1992alternative}. This breakthrough established the foundation for subsequent innovations, including \textbf{Scott McFarling's} \textit{gshare} and tournament combining predictors \cite{mcfarling1993combining}.
 
 
 \subsubsection{Static Branch Prediction\index{branch prediction!static branch prediction}}
 
-Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction\index{branch prediction!static branch prediction}presumes that backward branches will be taken and that forward branches will not.
+Let us see now how the conditioned jumps, the branches, are managed to be performed efficiently. There are two cases: backward branches or forward branches. Static prediction\index{branch prediction!static branch prediction} presumes that backward branches will be taken and that forward branches will not.
 
 In this case, most of the predictions will be correct. Indeed, if we have a jump back to execute a loop that repeats $n$ times, then once in $n+1$ situations the prediction will have to be corrected.
 
@@ -847,7 +850,7 @@ While 1-bit and 2-bit bimodal counters track the history of individual branches 
 \end{verbatim}
 If both preceding conditions are true, the third branch is guaranteed not to be taken. An isolated 2-bit counter indexed solely by the branch address cannot capture this inter-branch correlation because it does not record which path led to the branch.
 
-In landmark research, Tse-Yu Yeh and Yale N.~Patt solved this limitation by introducing \textbf{Two-Level Adaptive Branch Prediction} \cite{yeh1991twolevel, yeh1992alternative}. Aggressive out-of-order execution and wide superscalar dispatch cannot succeed without near-perfect branch prediction, because branch misprediction penalties flush large instruction windows, as demonstrated in Yale Patt's High Performance Substrate (HPS) architecture \cite{patt1985hps}.
+In landmark research, Tse-Yu Yeh and Yale N.~Patt solved this limitation by introducing \textit{Two-Level Adaptive Branch Prediction} \cite{yeh1991twolevel, yeh1992alternative}. Aggressive out-of-order execution and wide superscalar dispatch cannot succeed without near-perfect branch prediction, because branch misprediction penalties flush large instruction windows, as demonstrated in Yale Patt's High Performance Substrate (HPS) architecture \cite{patt1985hps}.
 
 The key insight of Yeh and Patt was to decouple dynamic branch prediction into two distinct levels of history:
 \begin{enumerate}
@@ -857,7 +860,7 @@ The key insight of Yeh and Patt was to decouple dynamic branch prediction into t
 
 Yeh and Patt classified two-level adaptive predictors into nine variations based on whether the history register is Global ($G$), Per-branch ($P$), or Set-associative ($S$), and whether the pattern table is Global ($g$), Per-branch ($p$), or Set-associative ($s$)---yielding configurations such as \emph{GAg}, \emph{GAp}, \emph{PAg}, and \emph{PAp} \cite{yeh1992alternative}. By maintaining separate saturating counters for each specific sequence of recent branch outcomes (e.g., distinguishing the behavior after pattern \texttt{1010} from pattern \texttt{1111}), Yeh and Patt demonstrated that two-level adaptive predictors shattered the accuracy ceiling of isolated 2-bit counters, elevating prediction accuracy from $\sim 85\text{--}90\%$ to over $97\%$.
 
-Building upon Yeh and Patt's two-level framework, Scott McFarling introduced the \textbf{gshare predictor}, which computes a bitwise XOR of the global branch history register with the branch instruction address (PC) to index the PHT, significantly reducing aliasing (conflict interference) between different branches \cite{mcfarling1993combining}. McFarling also pioneered \textbf{combining (tournament) predictors}, which use a secondary array of 2-bit counters to dynamically select between two different prediction strategies (such as a local bimodal predictor and a global two-level predictor) based on which predictor has historically demonstrated greater accuracy for that specific branch. Yeh and Patt's two-level adaptive techniques and their derivatives (including gshare, tournament predictors, and modern neural perceptron predictors) formed the core branch prediction engine in virtually all high-performance microprocessors, including the Intel Pentium Pro/II/III/4/Core, AMD K6/Athlon/Zen, and DEC Alpha 21264.
+Building upon Yeh and Patt's two-level framework, \textbf{Scott McFarling} introduced the \textit{gshare predictor}, which computes a bitwise XOR of the global branch history register with the branch instruction address (PC) to index the PHT, significantly reducing aliasing (conflict interference) between different branches \cite{mcfarling1993combining}. McFarling also pioneered \textit{combining (tournament) predictors}, which use a secondary array of 2-bit counters to dynamically select between two different prediction strategies (such as a local bimodal predictor and a global two-level predictor) based on which predictor has historically demonstrated greater accuracy for that specific branch. Yeh and Patt's two-level adaptive techniques and their derivatives (including gshare, tournament predictors, and modern neural perceptron predictors) formed the core branch prediction engine in virtually all high-performance microprocessors, including the Intel Pentium Pro/II/III/4/Core, AMD K6/Athlon/Zen, and DEC Alpha 21264.
 
 
 \section{Programming Pipelined Processors}
@@ -1087,10 +1090,13 @@ The earliest dynamic scheduling technique for out-of-order execution was the \em
 
 The scoreboard is a centralized hardware control unit that maintains the status of all active instructions, functional units, and registers. It dynamically steers instruction progress through four execution stages:
 \begin{enumerate}
-    \item \textbf{Issue}: Decodes the instruction and checks for \textbf{structural hazards} and \textbf{WAW hazards} (output dependencies). If the required functional unit is busy, or if another previously issued instruction has the same destination register ($rd$), the instruction issue stage stalls. No subsequent instructions can issue until the hazard resolves.
-    \item \textbf{Read Operands}: Monitors \textbf{RAW hazards} (true data dependencies). An instruction remains in this stage until all of its source operands are available in the register file---meaning no currently active functional unit is computing a value destined for those registers. Once the operands are valid, the functional unit reads them directly from the register file.
+    \item \textbf{Issue}: Decodes the instruction and checks for \textit{structural hazards} and \textit{WAW hazards} (output dependencies). If the required functional unit is busy, or if another previously issued instruction has the same destination register ($rd$), the instruction issue stage stalls. No subsequent instructions can issue until the hazard resolves.
+    
+    \item \textbf{Read Operands}: Monitors \textit{RAW hazards} (true data dependencies). An instruction remains in this stage until all of its source operands are available in the register file---meaning no currently active functional unit is computing a value destined for those registers. Once the operands are valid, the functional unit reads them directly from the register file.
+    
     \item \textbf{Execution}: The functional unit performs the requested operation over its required latency (e.g., 1 cycle for integer addition, 4 cycles for floating-point addition, 10 cycles for floating-point multiplication). When execution completes, the unit notifies the scoreboard.
-    \item \textbf{Write Result}: Checks for \textbf{WAR hazards} (anti-dependencies). Before a functional unit can write its result back to the register file, the scoreboard checks whether any earlier issued instruction has yet to read its source operand from this destination register. If such an instruction exists, the writeback stage stalls until the dependent instruction has completed its \textit{Read Operands} phase!
+    
+    \item \textbf{Write Result}: Checks for \textit{WAR hazards} (anti-dependencies). Before a functional unit can write its result back to the register file, the scoreboard checks whether any earlier issued instruction has yet to read its source operand from this destination register. If such an instruction exists, the writeback stage stalls until the dependent instruction has completed its \textit{Read Operands} phase!
 \end{enumerate}
 
 Although the scoreboard achieved unprecedented performance for its time by enabling independent operations to complete out of order, it suffered from two key limitations:
@@ -1104,14 +1110,18 @@ Although the scoreboard achieved unprecedented performance for its time by enabl
 To overcome the performance bottlenecks of scoreboarding, Robert M. Tomasulo invented an algorithm for dynamic instruction scheduling with register renaming at IBM in 1967 for the System/360 Model 91 floating-point unit \cite{tomasulo1967}. Tomasulo's algorithm introduces three revolutionary microarchitectural concepts:
 \begin{enumerate}
     \item \textbf{Distributed Reservation Stations}: Instead of a centralized control structure, small storage buffers called \emph{Reservation Stations} (RS) are placed directly at the input of each functional unit. Instructions are dispatched immediately into an available reservation station, freeing the instruction issue logic to fetch and decode subsequent instructions.
-    \item \textbf{Dynamic Register Renaming}: Register specifiers are replaced by \emph{tags} identifying the reservation station that will produce the result. If a source operand is not yet available at issue time, the reservation station stores the tag of the producing unit rather than the operand value. Because operands are buffered and referenced by tags rather than architectural register names, \textbf{WAR and WAW hazards are completely eliminated without stalling}.
+    
+    \item \textbf{Dynamic Register Renaming}: Register specifiers are replaced by \emph{tags} identifying the reservation station that will produce the result. If a source operand is not yet available at issue time, the reservation station stores the tag of the producing unit rather than the operand value. Because operands are buffered and referenced by tags rather than architectural register names, WAR and WAW hazards are completely eliminated without stalling.
+    
     \item \textbf{Common Data Bus (CDB)}: Results are not written point-to-point into the register file. Instead, when a functional unit finishes, it broadcasts its reservation station tag along with the computed data over a shared broadcast bus called the \emph{Common Data Bus} (CDB). All reservation stations waiting for that tag snoop the bus and latch the result simultaneously, bypassing the register file entirely.
 \end{enumerate}
 
 Tomasulo's algorithm coordinates execution through three distinct phases:
 \begin{enumerate}
     \item \textbf{Issue}: Checks for a structural hazard (is there a free reservation station for this instruction's functional unit type?). If a reservation station is free, the instruction is issued. If a source operand is already available in the register file, its value is copied directly into the reservation station's value field ($V_j$ or $V_k$). If the operand is currently being computed by another instruction, the tag of the producing reservation station is copied into the tag field ($Q_j$ or $Q_k$). Finally, the destination register in the register status table is updated to point to this reservation station ($Q_i$), dynamically renaming the register.
-    \item \textbf{Execute}: When all required source operands are available in the reservation station (i.e., $Q_j = 0$ and $Q_k = 0$), the functional unit begins execution. While waiting, the reservation station snoops the CDB on every cycle to capture pending values when their producing tags are broadcast, resolving \textbf{RAW hazards} dynamically.
+    
+    \item \textbf{Execute}: When all required source operands are available in the reservation station (i.e., $Q_j = 0$ and $Q_k = 0$), the functional unit begins execution. While waiting, the reservation station snoops the CDB on every cycle to capture pending values when their producing tags are broadcast, resolving RAW hazards dynamically.
+    
     \item \textbf{Write Result}: Upon completion, the functional unit broadcasts its result and tag over the CDB. Any reservation station waiting on that tag copies the value into its $V$ field and clears its $Q$ field. If the register status table indicates that this reservation station is still the latest producer for the destination register ($Q_i == \text{this RS}$), the register file is updated. Finally, the reservation station is marked free ($Busy = 0$).
 \end{enumerate}
 
@@ -1138,12 +1148,12 @@ If an instruction triggers a hardware exception (such as an arithmetic overflow,
 
 To resolve this critical flaw, James E. Smith and Andrew R. Pleszkun introduced the \textbf{Reorder Buffer (ROB)} to support precise interrupts and speculative branch recovery \cite{smith1988precise}. Gurindar S. Sohi extended this approach with the Register Update Unit (RUU) \cite{sohi1990instruction}. Together, Smith and Sohi synthesized the foundational framework for modern speculative superscalar microarchitectures \cite{smith1991}.
 
-The core insight of the Reorder Buffer is to \textbf{decouple execution completion from architectural state update}:
+The core insight of the Reorder Buffer is to decouple execution completion from architectural state update:
 \begin{itemize}
-    \item Instructions are dispatched and issued \textbf{in strict program order}.
-    \item Instructions execute and produce results \textbf{out of order}.
-    \item Completed results are buffered \textbf{speculatively} in the Reorder Buffer.
-    \item Instructions commit and update the permanent architectural register file and memory \textbf{strictly in program order}.
+    \item Instructions are dispatched and issued in strict program order.
+    \item Instructions execute and produce results out of order.
+    \item Completed results are buffered speculatively in the Reorder Buffer.
+    \item Instructions commit and update the permanent architectural register file and memory strictly in program order.
 \end{itemize}
 
 \paragraph{ROB Organization and Entry Fields}
@@ -1172,13 +1182,13 @@ With a Reorder Buffer, instruction execution proceeds through four distinct stag
     \end{itemize}
 \end{enumerate}
 
-\subsubsection{Instruction Compounding and SCISM (Vassiliadis et al.)}\label{sec:scism}
+\subsubsection{Instruction Compounding and SCISM}\label{sec:scism}
 \index{SCISM: Scalable Compound Instruction Set Machine}
 \index{Vassiliadis, Stamatis (1951-2008)}
 \index{compound instructions!superscalar issue}
 \index{branch folding!zero-cycle branch execution}
 
-While out-of-order execution, register renaming, and reorder buffers successfully eliminate false dependencies and tolerate variable execution latencies, widening a superscalar datapath to issue multiple instructions per clock cycle introduces a severe microarchitectural bottleneck in the processor front-end: the \textbf{quadratic scaling problem of dependency checking}.
+While out-of-order execution, register renaming, and reorder buffers successfully eliminate false dependencies and tolerate variable execution latencies, widening a superscalar datapath to issue multiple instructions per clock cycle introduces a severe microarchitectural bottleneck in the processor front-end: the quadratic scaling problem of dependency checking.
 
 \paragraph{The Quadratic Issue-Width Bottleneck}
 In a conventional $W$-issue superscalar core, the issue logic must concurrently examine all $W$ candidate instructions in each clock cycle to detect intra-cycle data dependencies (RAW, WAR, and WAW hazards), register write conflicts, and execution resource contention. For $W$ candidate instructions, the number of potential pairwise dependency checks scales quadratically as:
@@ -1188,16 +1198,18 @@ In a conventional $W$-issue superscalar core, the issue logic must concurrently 
 For a 2-issue processor, only 1 pairwise check is required; for a 4-issue processor, 6 checks are needed; for an 8-issue processor, 28 simultaneous pairwise comparisons are required across all source and destination register specifiers. This $O(W^2)$ comparator matrix creates severe wiring congestion, consumes substantial silicon area, dissipates high dynamic switching power, and critically lengthens the combinational path of the issue stage, directly threatening the processor's maximum clock frequency.
 
 \paragraph{The SCISM Architecture}
-To break through this complexity barrier, Stamatis Vassiliadis, Bart Blaner, and Richard J. Eickemeyer invented the \textbf{Scalable Compound Instruction Set Machine (SCISM)} at IBM in 1994 \cite{vassiliadis1994scism}. 
+To mitigate this complexity barrier, \textbf{Stamatis Vassiliadis}, \textbf{Bart Blaner}, and \textbf{Richard J. Eickemeyer} invented the \textit{Scalable Compound Instruction Set Machine (SCISM)} at IBM in 1994 \cite{vassiliadis1994scism}. 
 
-The foundational insight of SCISM is to shift dependency analysis and grouping forward in the pipeline, pre-processing instructions to form \textbf{compound instructions} that can be issued and dispatched concurrently without requiring an $O(W^2)$ interlock check during the time-critical issue cycle:
+The foundational insight of SCISM is to shift dependency analysis and grouping forward in the pipeline, pre-processing instructions to form \textit{compound instructions} that can be issued and dispatched concurrently without requiring an $O(W^2)$ interlock check during the time-critical issue cycle:
 \begin{enumerate}
     \item \textbf{Instruction Compounding}: Instructions from a single sequential program stream are examined (either statically by the compiler, dynamically during instruction cache line reload, or via a lightweight pre-decode stage) and grouped into compound instruction packets. A compound instruction encapsulates multiple independent or chained operations that are structurally guaranteed to execute in parallel without dependency hazards.
+    
     \item \textbf{Conflict-Free Parallel Execution}: Because inter-instruction dependencies are resolved prior to entering the issue stage, the issue logic treats the compound instruction as a single dispatch entity. The component operations of the compound instruction are routed directly to parallel execution units (such as a Compound Arithmetic Logic Unit \cite{vassiliadis1993calu}) without activating an $O(W^2)$ comparison matrix.
+    
     \item \textbf{Branch Pre-Processing and Zero-Cycle Branch Folding}: SCISM integrates a specialized branch processing unit that dynamically scans ahead in the instruction stream, extracts conditional and unconditional branches before they reach the main instruction queue, and resolves or predicts their outcomes. By folding branches out of the sequential instruction stream, SCISM delivers uninterrupted, ``branchless'' compound instruction sequences to the execution core.
 \end{enumerate}
 
-Vassiliadis, Blaner, and Eickemeyer demonstrated that a SCISM architecture achieves over $90\%$ of the performance of an idealized dual-issue superscalar machine while preserving the simple, high-frequency clock cycle and minimal control logic of a scalar pipeline \cite{vassiliadis1994scism}.
+The SCISM architecture achieves over $90\%$ of the performance of an idealized dual-issue superscalar machine while preserving the simple, high-frequency clock cycle and minimal control logic of a scalar pipeline \cite{vassiliadis1994scism}.
 
 
 \subsubsection{Modern Frontiers in Superscalar Dispatch and Execution}\label{sec:modern_superscalar_frontiers}
@@ -1207,14 +1219,15 @@ Vassiliadis, Blaner, and Eickemeyer demonstrated that a SCISM architecture achie
 \index{physical register file (PRF)!unified register architecture}
 \index{memory disambiguation!speculative store-to-load forwarding}
 
-Vassiliadis' pioneering concept of instruction compounding established the conceptual foundation for modern 21st-century superscalar microarchitectures. Modern high-performance cores (such as the Intel Core microarchitecture \cite{gochman2006intel}, AMD Zen \cite{singh2017zen, suggs2020zen2}, Berkeley BOOM \cite{celio2018boom}, and XiangShan \cite{xiangshan2022micro}) incorporate four advanced techniques that push superscalar execution far beyond the classic Tomasulo and ROB models:
+Modern high-performance cores (such as the Intel Core microarchitecture \cite{gochman2006intel}, AMD Zen \cite{singh2017zen, suggs2020zen2}, Berkeley BOOM \cite{celio2018boom}, and XiangShan \cite{xiangshan2022micro}) incorporate four advanced techniques that push superscalar execution far beyond the classic Tomasulo and ROB models:
 
 \paragraph{1. Macro-Op and Micro-Op Fusion}
-First deployed commercially in the Intel Core microarchitecture \cite{gochman2006intel} and now pervasive across x86, ARM, and RISC-V processors, \textbf{instruction fusion} represents the direct modern commercial evolution of SCISM's compounding principle:
+First deployed commercially in the Intel Core microarchitecture \cite{gochman2006intel} and now pervasive across x86, ARM, and RISC-V processors, \textit{instruction fusion} represents the direct modern commercial evolution of SCISM's compounding principle:
 \begin{itemize}
     \item \textbf{Macro-Op Fusion}: During the instruction decode stage, hardware logic inspects adjacent architectural instructions and merges compatible pairs into a single internal micro-operation ($\mu$op):
     \begin{itemize}
         \item \textit{In x86}: A comparison or test instruction (\texttt{CMP} or \texttt{TEST}) followed by a conditional branch (\texttt{Jcc}) is fused into a single compare-and-branch $\mu$op that is renamed, queued, and executed as a single entity, saving decode bandwidth and ROB entries.
+       
         \item \textit{In RISC-V}: Common two-instruction sequences are fused by the decoder into single micro-ops. For example, \texttt{lui} (Load Upper Immediate) followed by \texttt{addi} is fused into a single 32-bit constant generation $\mu$op; \texttt{auipc} followed by \texttt{jalr} is fused into a single direct function call; and address calculations followed by memory operations are fused into single indexed load/store operations.
     \end{itemize}
     \item \textbf{Micro-Op Fusion}: Merges two sub-operations of a single complex instruction (such as a memory load fused with an ALU arithmetic operation, or a store-address fused with store-data) into a single entry within the Reorder Buffer and issue queue. The fused $\mu$op occupies only a single slot in the ROB, expanding effective ROB capacity and issue bandwidth by $20\%\text{--}30\%$, and splits into separate execution components only at the functional unit issue ports.
@@ -1227,27 +1240,31 @@ To eliminate this waste, modern processors implement \textbf{Zero-Cycle Move Eli
 \begin{itemize}
     \item When the register renamer encounters a register-to-register move instruction, it simply updates the Register Alias Table (RAT) so that the architectural destination register points to the exact same physical register as the source operand.
     \item The reference count of the physical register is incremented, and the move instruction is immediately marked as completed.
-    \item \textbf{Hardware Impact}: The move instruction never enters the reservation stations, consumes zero ALU execution cycles, burns zero dynamic switching power on the execution buses, and has an effective latency of \textbf{zero cycles}!
+    \item \textbf{Hardware Impact}: The move instruction never enters the reservation stations, consumes zero ALU execution cycles, burns zero dynamic switching power on the execution buses, and has an effective latency of zero cycles.
 \end{itemize}
 
 \paragraph{3. Decoupled Physical Register File (PRF) Architecture vs. Data-Carrying ROB}
-A pivotal architectural transition occurred between early out-of-order processors of the 1990s and modern processors:
+An architectural transition occurred between early out-of-order processors of the 1990s and modern processors:
 \begin{itemize}
     \item \textbf{Data-Carrying ROB (Classic Intel P6 / Pentium Pro \cite{papworth1996tuning})}: In the classic Tomasulo + ROB scheme, speculative arithmetic results are written over the CDB directly into storage fields inside the Reorder Buffer entries. When instructions commit, the values are copied from the ROB into the separate Architectural Register File (ARF). Because each ROB entry must physically house wide 32-bit or 64-bit data registers and multi-ported forwarding multiplexers, the wiring capacitance and power dissipation scale rapidly, capping practical ROB capacities to $32\text{--}40$ entries.
     \item \textbf{Unified Physical Register File (PRF) (MIPS R10000 \cite{yeager1996mips}, DEC Alpha 21264 \cite{kessler1999alpha}, Intel Sandy Bridge \cite{rotem2012power}, AMD Zen \cite{singh2017zen, suggs2020zen2}, Berkeley BOOM \cite{celio2018boom})}:
     \begin{itemize}
-        \item The ROB is completely decoupled from data storage: each ROB entry stores \textbf{only instruction status, exception indicators, and physical register specifiers (tags)}. No data values are stored in the ROB!
-        \item All data values (speculative and committed) reside in a centralized \textbf{Unified Physical Register File (PRF)} containing $128\text{--}300+$ physical registers for 32 architectural registers.
+        \item The ROB is completely decoupled from data storage: each ROB entry stores only instruction status, exception indicators, and physical register specifiers (tags). No data values are stored in the ROB.
+        
+        \item All data values (speculative and committed) reside in a centralized \textit{Unified Physical Register File (PRF)} containing $128\text{--}300+$ physical registers for 32 architectural registers.
+        
         \item Renaming maps architectural registers to physical registers drawn from a Free List. When execution completes, the result is written once into the allocated physical register.
+        
         \item When the instruction reaches the head of the ROB and commits, the processor merely marks the physical register as committed in the architectural RAT and returns the \emph{previous} physical register assigned to that architectural register back to the Free List.
     \end{itemize}
 \end{itemize}
 This data-decoupled PRF architecture is what enables modern out-of-order instruction windows to scale to massive dimensions: 512 entries in Intel Golden Cove, 320--448 entries in AMD Zen 4/5 \cite{suggs2020zen2}, and over 630 entries in Apple Silicon, allowing the processor to look ahead across hundreds of instructions to expose latent ILP and hide long-latency memory cache misses.
 
 \paragraph{4. Dynamic Memory Disambiguation and Speculative Store-to-Load Forwarding}
-Because memory addresses are computed dynamically at runtime by Address Generation Units (AGUs), the processor cannot determine whether a memory load instruction conflicts with an older, pending store instruction at decode time. Modern processors manage memory dependencies through \textbf{Load and Store Queues (LSQ)}:
+Because memory addresses are computed dynamically at runtime by Address Generation Units (AGUs), the processor cannot determine whether a memory load instruction conflicts with an older, pending store instruction at decode time. Modern processors manage memory dependencies through \textit{Load and Store Queues (LSQ)}:
 \begin{itemize}
     \item \textbf{Store-to-Load Forwarding}: If a younger load requires data from an older store whose address has already been computed and matches, the data is forwarded directly from the Store Queue entry to the load without waiting for an L1 cache access.
+    
     \item \textbf{Speculative Memory Disambiguation} \cite{moshovos1997dynamic, chrysos1998memory}: Rather than stalling a ready load until all preceding store addresses have been computed, the processor uses dynamic predictors (such as Store Sets \cite{chrysos1998memory}) to predict whether the load aliases with any active store. If predicted independent, the load issues speculatively to memory immediately. If an address conflict is later detected when the older store address finishes computing (a memory order violation), the speculative load and all subsequent dependent instructions are squashed and replayed, analogous to branch misprediction recovery.
 \end{itemize}
 
@@ -1285,7 +1302,9 @@ Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational 
   \end{center}
 \end{table}
 
-\section{Hardware Multithreading: Exploiting Thread-Level Parallelism}\label{sec:hardware_multithreading}
+%*************************************************************************************************
+\section{Hardware Multithreading}\label{sec:hardware_multithreading}
+%**************************************************************************************************
 \index{multithreading!hardware multithreading}
 \index{thread-level parallelism (TLP)}
 \index{simultaneous multithreading (SMT)}
@@ -1296,7 +1315,7 @@ Table \ref{tab:scoreboard_vs_tomasulo} contrasts the structural and operational 
 \index{Levy, Henry M.}
 \index{Smith, Burton J.}
 
-While superscalar issue, dynamic out-of-order scheduling, and branch prediction extract substantial \textbf{Instruction-Level Parallelism (ILP)} from a single program, modern microprocessors inevitably confront the \textbf{ILP Wall}. Due to true data dependencies, unpredictable branch behavior, and the memory wall (cache misses that require hundreds of cycles to reach off-chip DRAM), an individual thread of execution rarely possesses enough independent instructions to saturate a wide-issue superscalar datapath.
+While superscalar issue, dynamic out-of-order scheduling, and branch prediction extract substantial Instruction-Level Parallelism (ILP) from a single program, modern microprocessors inevitably confront the \textit{ILP Wall}. Due to true data dependencies, unpredictable branch behavior, and the memory wall (cache misses that require hundreds of cycles to reach off-chip DRAM), an individual thread of execution rarely possesses enough independent instructions to saturate a wide-issue superscalar datapath.
 
 Figure \ref{fig:smt_waste} conceptually illustrates the resulting inefficiency in superscalar execution engines, categorized into two distinct forms of issue slot waste:
 \begin{itemize}
@@ -1341,17 +1360,19 @@ Figure \ref{fig:smt_waste} conceptually illustrates the resulting inefficiency i
   \end{center}
 \end{figure}
 
-To convert this unutilized execution capacity into productive compute throughput, architects turn from Instruction-Level Parallelism to \textbf{Thread-Level Parallelism (TLP)}. By maintaining multiple independent thread contexts on a single physical core, \textbf{hardware multithreading} allows instructions from alternative threads to fill pipeline bubbles when one thread is stalled or lacks sufficient ILP.
+To convert this unutilized execution capacity into productive compute throughput, architects turn from Instruction-Level Parallelism to \textit{Thread-Level Parallelism (TLP)}. By maintaining multiple independent thread contexts on a single physical core, \textit{hardware multithreading} allows instructions from alternative threads to fill pipeline bubbles when one thread is stalled or lacks sufficient ILP.
 
 \subsection{Taxonomy of Hardware Multithreading}
 
 Hardware multithreading is classified into three foundational microarchitectural strategies based on how thread switching is scheduled across time and execution resources:
 
 \subsubsection{Fine-Grained (Interleaved / Barrel) Multithreading}\label{sec:barrel_multithreading}
-In fine-grained multithreading, the instruction fetch and issue logic switches between active threads on \textbf{every consecutive clock cycle} in a deterministic, round-robin sequence. 
+In fine-grained multithreading, the instruction fetch and issue logic switches between active threads on every consecutive clock cycle in a deterministic, round-robin sequence. 
 \begin{itemize}
-    \item \textbf{Hazard Elimination}: If a processor pipeline has $k$ stages and the hardware interleaves $N \ge k$ independent threads, no two instructions from the same thread can simultaneously occupy the pipeline. Consequently, \textbf{data hazards, control hazards, and pipeline stalls are completely eliminated by structural design}, requiring zero forwarding multiplexers and zero interlock logic!
+    \item \textbf{Hazard Elimination}: If a processor pipeline has $k$ stages and the hardware interleaves $N \ge k$ independent threads, no two instructions from the same thread can simultaneously occupy the pipeline. Consequently, data hazards, control hazards, and pipeline stalls are completely eliminated by structural design, requiring zero forwarding multiplexers and zero interlock logic!
+    
     \item \textbf{Historical Implementations}: Fine-grained multithreading was pioneered in the peripheral processors of the CDC 6600, the Denelcor HEP (Heterogeneous Element Processor), and the Tera MTA (Multi-Threaded Architecture), which maintained up to 128 hardware thread contexts per processor \cite{thornton1964, smith1978hep}.
+    
     \item \textbf{Trade-offs}: Fine-grained multithreading maximizes overall processor throughput and tolerates short execution latencies effortlessly. However, it slows down the individual execution time (latency) of a single thread, because an individual thread only executes one instruction every $N$ cycles even if all other threads are idle.
 \end{itemize}
 
@@ -1364,9 +1385,7 @@ Coarse-grained multithreading executes instructions from a single primary thread
 \end{itemize}
 
 \subsubsection{Simultaneous Multithreading (SMT)}
-The crowning synthesis of superscalar microarchitecture and thread-level parallelism is \textbf{Simultaneous Multithreading (SMT)}, introduced in landmark research by Dean M. Tullsen, Susan J. Eggers, and Henry M. Levy \cite{tullsen1995simultaneous}.
-
-In SMT, the processor does not restrict instruction issue to a single thread in any given cycle. Instead, SMT dynamically issues instructions from \textbf{multiple independent threads within the very same clock cycle} to the shared pool of out-of-order execution units:
+\textit{Simultaneous Multithreading (SMT)}, introduced in landmark research by Dean M. Tullsen, Susan J. Eggers, and Henry M. Levy \cite{tullsen1995simultaneous}, does not restrict instruction issue to a single thread in any given cycle. Instead, SMT dynamically issues instructions from multiple independent threads within the same clock cycle to the shared pool of out-of-order execution units:
 \begin{itemize}
     \item SMT simultaneously attacks both horizontal and vertical waste: if Thread 0 can only provide 2 ready instructions in a 4-issue machine, the dispatch logic fills the remaining 2 slots with ready instructions from Thread 1 or Thread 2.
     \item If Thread 0 suffers an L3 cache miss, the execution window is not left idle; instructions from other active threads immediately occupy the functional units.
@@ -1375,7 +1394,7 @@ In SMT, the processor does not restrict instruction issue to a single thread in 
 
 \subsection{Hardware Resource Sharing in Multithreaded Processors}
 
-Hardware multithreading is fundamentally an \textbf{organizational optimization} rather than an architectural reinvention. To the software running on each thread, the processor appears as an independent, private single-threaded core executing standard sequential machine code. 
+Hardware multithreading is fundamentally an organizational optimization rather than an architectural reinvention. To the software running on each thread, the processor appears as an independent, private single-threaded core executing standard sequential machine code. 
 
 The microarchitecture achieves this efficiency by selectively replicating low-cost architectural state while sharing expensive execution and memory structures:
 \begin{enumerate}
@@ -1402,7 +1421,7 @@ The microarchitecture achieves this efficiency by selectively replicating low-co
 
 \subsection{Architectural Interface and Support for Multithreading}
 
-Although hardware multithreading is implemented primarily within the microarchitecture, it requires three vital points of \textbf{architectural support}:
+Although hardware multithreading is implemented primarily within the microarchitecture, it requires three architectural support:
 
 \begin{enumerate}
     \item \textbf{Hardware Thread Identification}:
@@ -1421,7 +1440,8 @@ Although hardware multithreading is implemented primarily within the microarchit
     \item \textbf{Memory Consistency Models and Fences}:
     In a multithreaded core with out-of-order memory execution, load and store operations from one thread may be observed by another thread out of program order. To guarantee deterministic memory synchronization:
     \begin{itemize}
-        \item The architecture defines a formal \textbf{Memory Consistency Model} (such as RISC-V Weak Memory Ordering, \emph{RVWMO}, or Total Store Order, \emph{TSO}).
+        \item The architecture defines a formal \textit{Memory Consistency Model} (such as RISC-V Weak Memory Ordering, \emph{RVWMO}, or Total Store Order, \emph{TSO}).
+        
         \item The ISA provides explicit memory fence instructions (\texttt{fence} and \texttt{fence.i}) allowing software to enforce strict ordering between preceding and succeeding memory accesses across threads.
     \end{itemize}
 \end{enumerate}
@@ -1443,9 +1463,9 @@ Throughout the history of semiconductor microprocessors, processing logic and pr
 
 Between 1980 and the mid-2000s, microprocessor performance expanded at an extraordinary rate of approximately $52\%$ per year \cite{Hennessy19}. This unprecedented growth was sustained by the simultaneous convergence of architectural innovations (deep instruction pipelining, superscalar multi-issue, dynamic out-of-order execution, and branch prediction) and physical device scaling governed by Robert Dennard's MOSFET scaling laws. Dennard scaling permitted transistor switching speeds to increase in direct proportion to circuit density while maintaining constant power density per unit chip area.
 
-In contrast, commodity Dynamic RAM (DRAM) followed an optimization trajectory focused overwhelmingly on \textbf{capacity and cost-per-bit} rather than access latency. Storing a bit of information in DRAM requires charging or discharging a minute capacitor through a single access transistor (the 1T-1C cell). The physics of capacitive charge transfer, long capacitive bitline charging delays, analog sense amplifier sensing times, and external bus multiplexing severely constrained latency improvements. Over the same era, DRAM access latency improved at an average rate of only $\sim 7\%$ per year \cite{Patterson97}.
+In contrast, commodity Dynamic RAM (DRAM) followed an optimization trajectory focused overwhelmingly on capacity and cost-per-bit rather than access latency. Storing a bit of information in DRAM requires charging or discharging a minute capacitor through a single access transistor (the 1T-1C cell). The physics of capacitive charge transfer, long capacitive bitline charging delays, analog sense amplifier sensing times, and external bus multiplexing severely constrained latency improvements. Over the same era, DRAM access latency improved at an average rate of only $\sim 7\%$ per year \cite{Patterson97}.
 
-In 1995, Wm. A. Wulf and Sally A. McKee formalized this divergence and coined the term \textbf{The Memory Wall} \cite{wulf1995hitting}. Wulf and McKee proved that because processor clock speeds improve exponentially faster than memory access times, the fraction of execution time spent waiting for off-chip memory references approaches $100\%$, rendering further processor frequency gains completely futile unless accompanied by aggressive caching and memory latency hiding techniques.
+In 1995, Wm. A. Wulf and Sally A. McKee formalized this divergence and coined the term \textit{The Memory Wall} \cite{wulf1995hitting}. They proved that because processor clock speeds improve exponentially faster than memory access times, the fraction of execution time spent waiting for off-chip memory references approaches $100\%$, rendering further processor frequency gains completely futile unless accompanied by aggressive caching and memory latency hiding techniques.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -1558,7 +1578,7 @@ Figure \ref{fig:processor_memory_gap} charts the evolution of this performance g
 \index{locality principle!temporal locality}
 \index{locality principle!spatial locality}
 
-Despite the formidable gap between processor and DRAM speeds, computer systems achieve high performance because programs do not reference memory uniformly or randomly. Instead, empirical program execution strongly adheres to the \textbf{Locality Principle}:
+Despite the formidable gap between processor and DRAM speeds, computer systems achieve high performance because programs do not reference memory uniformly or randomly. Instead, empirical program execution strongly adheres to the \textit{Locality Principle}:
 
 \paragraph{Temporal Locality (Locality in Time)}
 If a specific memory location is referenced at time $t$, there is a high probability that the exact same location will be referenced again in the near future ($t + \Delta t$).
@@ -1578,7 +1598,7 @@ Spatial locality is exhibited by:
     \item \textbf{Record and Object Fields}: Reading adjacent fields stored sequentially within a common data structure or class instance.
 \end{itemize}
 
-The locality principle provides the theoretical foundation for memory hierarchy design. By transferring \textbf{blocks (lines)} of contiguous bytes upon a miss (exploiting spatial locality) and retaining recently accessed blocks in small, fast SRAM buffers positioned immediately adjacent to the processor core (exploiting temporal locality), the memory hierarchy creates the effective illusion of a storage system that is simultaneously as fast as the smallest on-chip SRAM register and as vast and inexpensive as off-chip DRAM.
+The locality principle provides the theoretical foundation for memory hierarchy design. By transferring blocks (lines) of contiguous bytes upon a miss (exploiting spatial locality) and retaining recently accessed blocks in small, fast SRAM buffers positioned immediately adjacent to the processor core (exploiting temporal locality), the memory hierarchy creates the effective illusion of a storage system that is simultaneously as fast as the smallest on-chip SRAM register and as vast and inexpensive as off-chip DRAM.
 
 \subsection{Cache Memory Microarchitecture}\label{sec:cache_microarchitecture}
 \index{cache memory!placement policies}
@@ -1587,10 +1607,10 @@ The locality principle provides the theoretical foundation for memory hierarchy 
 \index{cache memory!miss classification (3 Cs)}
 \index{average memory access time (AMAT)}
 
-The concept of a cache memory was first articulated by Maurice Wilkes in 1965 as a ``slave memory'' \cite{wilkes1965slave} and was commercially implemented in hardware in the IBM System/360 Model 85 in 1968 \cite{liptay1968cache}. 
+The concept of a cache memory was first articulated by Maurice Wilkes in 1965 as a \cite{wilkes1965slave} and was commercially implemented in hardware in the IBM System/360 Model 85 in 1968 \cite{liptay1968cache}. 
 
 \subsubsection{Cache Organization and Address Decomposition}
-A cache is organized into an array of $S$ sets, where each set contains $N$ cache lines (or blocks). Each cache line stores $B = 2^b$ bytes of contiguous data along with a \textbf{Tag} and metadata status bits (a \textbf{Valid bit} indicating valid data, and a \textbf{Dirty bit} indicating modified data in write-back caches).
+A cache is organized into an array of $S$ sets, where each set contains $N$ cache lines (or blocks). Each cache line stores $B = 2^b$ bytes of contiguous data along with a \textit{Tag} and metadata status bits (a \textit{Valid bit} indicating valid data, and a \textit{Dirty bit} indicating modified data in write-back caches).
 
 When the CPU issues an $m$-bit physical memory address, the cache hardware decomposes the address into three orthogonal bitfields:
 \begin{equation}
@@ -1612,7 +1632,7 @@ Caches are categorized according to their associativity, which defines how many 
     \[
     \text{Set Index} = (\text{Block Address}) \pmod S
     \]
-    Direct-mapped caches require only a single tag comparator and zero multiplexing logic, providing the fastest hit time. However, if two frequently accessed memory blocks share the same index, they will repeatedly evict each other in a destructive cycle known as \textbf{thrashing}.
+    Direct-mapped caches require only a single tag comparator and zero multiplexing logic, providing the fastest hit time. However, if two frequently accessed memory blocks share the same index, they will repeatedly evict each other in a destructive cycle known as \textit{thrashing}.
     
     \item \textbf{Set-Associative Cache ($N$-Way Associative, $N > 1$)}: Each set contains $N$ distinct line slots (ways). A memory block maps to a specific set based on its index bits, but can reside in any of the $N$ ways within that set. The cache controller checks all $N$ tags concurrently using $N$ parallel comparators. Set associativity drastically reduces conflict misses at the expense of slightly higher lookup latency and silicon area.
     
@@ -1641,7 +1661,7 @@ Because store instructions modify cache data, the microarchitecture must maintai
 \index{cache misses!conflict}
 \index{Hill, Mark D.}
 
-In his doctoral dissertation, Mark D. Hill formalized the classic \textbf{3 Cs model} to classify cache misses into three distinct categories based on their underlying cause \cite{hill1987aspects}:
+In his doctoral dissertation, \textbf{Mark D. Hill} formalized the classic \textit{3 Cs model} to classify cache misses into three distinct categories based on their underlying cause \cite{hill1987aspects}:
 \begin{enumerate}
     \item \textbf{Compulsory (Cold) Misses}: The very first reference to a memory block. Because the block has never been loaded into the cache, compulsory misses cannot be avoided by altering cache capacity or associativity. They can only be reduced by increasing the block size $B$ (which prefetches contiguous data via spatial locality) or through speculative hardware prefetching.
     \item \textbf{Capacity Misses}: Misses that occur because the cache cannot contain all the blocks needed to execute the program's active working set. A capacity miss occurs when a previously accessed block was evicted solely because the total cache capacity $C$ was exhausted. Capacity misses can be eliminated only by increasing total cache size.
@@ -1672,7 +1692,7 @@ where $m_{\text{local}, L2}$ and $m_{\text{local}, L3}$ represent the \textbf{lo
 \index{translation lookaside buffer (TLB): cache of recent virtual-to-physical address translations}
 \index{content-addressable memory (CAM)!TLB implementation}
 
-Just as cache memory transparently bridges the processor-DRAM gap, \textbf{Virtual Memory} bridges primary DRAM and secondary storage (SSDs/HDDs) while providing vital architectural abstractions:
+Just as cache memory transparently bridges the processor-DRAM gap, \textbf{Virtual Memory} bridges primary DRAM and secondary storage (SSDs/HDDs):
 \begin{enumerate}
     \item \textbf{Address Space Virtualization}: Each process is granted the illusion of a vast, contiguous, private linear address space independent of actual physical memory size.
     \item \textbf{Protection and Isolation}: Hardware access permissions (Read, Write, Execute) prevent erroneous or malicious processes from corrupting the address spaces of the operating system or other user tasks.
@@ -1695,13 +1715,13 @@ The CPU generates a virtual address composed of two fields (Figure \ref{vmm}b):
 The page translation hardware converts the Virtual Page Number into a Physical Page Number (PPN), which concatenates with the page offset to form the physical address for DRAM access.
 
 \subsubsection{Associative Memory (CAM)-Based Translation Lookaside Buffer (TLB)}
-Because page table structures reside in main memory, performing a full memory-based page table walk on every instruction fetch and data operand access would double or quadruple memory access latency. To eliminate this penalty, processors incorporate a specialized high-speed cache of recent address translations called the \textbf{Translation Lookaside Buffer (TLB)}.
+Because page table structures reside in main memory, performing a full memory-based page table walk on every instruction fetch and data operand access would double or quadruple memory access latency. To eliminate this penalty, processors incorporate a specialized high-speed cache of recent address translations called the \textit{Translation Lookaside Buffer (TLB)}.
 
 Two fundamental circuit strategies exist for implementing the page translation mechanism:
 \begin{enumerate}
     \item \textbf{RAM-Based Lookup Table}: A direct RAM lookup structure would require an entry for each of the $n$ virtual pages ($n$ words of $\log_2 m$ bits). Because $n \gg m$, the overwhelming majority of entries in such a RAM are empty or invalid at any given moment; in Figure \ref{vmm}a, only $m$ of the $n$ locations are actively populated, yielding a memory utilization efficiency of at most $(m/n)\%$. The silicon area scales as $O(n \times (\log m + \log n))$.
     
-    \item \textbf{Associative Memory (CAM)-Based TLB}: Rather than dimensioning the table to the vast virtual address space $n$, an \textbf{Associative Memory (AM)} dimensions the structure to match the physical page capacity $m$. The TLB consists of:
+    \item \textbf{Associative Memory (CAM)-Based TLB}: Rather than dimensioning the table to the vast virtual address space $n$, an \textit{Associative Memory (AM)} dimensions the structure to match the physical page capacity $m$. The TLB consists of:
     \begin{itemize}
         \item A Content-Addressable Memory (CAM) array of $m$ entries holding the active Virtual Page Numbers (tags) of length $\log_2 n$ bits (see Section \ref{assocMemory} and Section \ref{lb:cam}).
         \item A paired RAM data array of $m$ entries holding the corresponding Physical Page Numbers of length $\log_2 m$ bits.

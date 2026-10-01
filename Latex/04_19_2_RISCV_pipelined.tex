@@ -10,25 +10,25 @@ T_{\text{clock, single}} \ge T_{\text{fetch}} + T_{\text{decode}} + T_{\text{exe
 \end{equation}
 where $T_{\text{fetch}}$ represents instruction SRAM address driving and retrieval ($T_{\text{IF}}$), $T_{\text{decode}}$ represents instruction decoding and dual-port register file read ($T_{\text{ID}}$), $T_{\text{execute}}$ represents ALU arithmetic, shifting, and branch comparison ($T_{\text{EX}}$), and $T_{\text{sram\_wb}}$ represents data SRAM access and write-back register commit ($T_{\text{MEM/WB}}$).
 
-In advanced physical processes, this monolithic combinational path limits clock frequencies. To improve computational throughput, this section develops a 4-stage pipelined implementation of the base \texttt{RV32I} processor, designated \texttt{RiscvPipelined} (and explores its extension to \texttt{RV32I\_Zmmul}). Reusing the core pipeline concepts of \textbf{PipeNyte},\footnote{\url{https://github.com/Ypologist/KryptoNyte}} the datapath divides execution into four sequential synchronous stages separated by explicit pipeline registers. In this pipelined processor, each stage executes concurrently in its own clock cycle, so the minimum clock period is constrained not by the sum of delays, but by the maximum delay among the individual pipeline stages:
+In advanced physical processes, this monolithic combinational path limits clock frequencies. To improve computational throughput, this section develops a 4-stage pipelined implementation of the base \texttt{RV32I} processor, designated \texttt{RiscvPipelined} (and explores its extension to \texttt{RV32I\_Zmmul}). Reusing the core pipeline concepts of \textit{PipeNyte},\footnote{\url{https://github.com/Ypologist/KryptoNyte}} the datapath divides execution into four sequential synchronous stages separated by explicit pipeline registers. In this pipelined processor, each stage executes concurrently in its own clock cycle, so the minimum clock period is constrained not by the sum of delays, but by the maximum delay among the individual pipeline stages:
 \begin{equation}
 T_{\text{clock, pipe}} \ge \max\left(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}\right) + T_{\text{reg\_overhead}},
 \end{equation}
-where $T_{\text{reg\_overhead}} = t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}$ denotes the sequential register setup, clock-to-Q, and clock skew overhead introduced at every pipeline stage boundary. Incorporating an active \textbf{Hazard Detection Unit}, the core stalls instruction issue upon detecting data dependencies and flushes speculative instructions upon branch resolution. Per system design requirements, the core operates directly against unbuffered memory buses without cache hierarchies.
+where $T_{\text{reg\_overhead}} = t_{\text{setup}} + t_{\text{cq}} + t_{\text{skew}}$ denotes the sequential register setup, clock-to-Q, and clock skew overhead introduced at every pipeline stage boundary. Incorporating an active \textit{Hazard Detection Unit}, the core stalls instruction issue upon detecting data dependencies and flushes speculative instructions upon branch resolution. In this design, the core operates directly against unbuffered memory buses without cache hierarchies.
 
 
 \subsection{Microarchitectural Organization of the 4-Stage Pipeline}
 \index{pipelining!microarchitectural stages}\index{PipeNyte!4-stage architecture}
 
-The 4-stage pipeline partitions the Fetch-Execute cycle into four balanced operational stages (Figure \ref{fig:riscv_4stage_pipeline}):
+The 4-stage pipeline partitions the Fetch-Execute cycle into four (hopefully) balanced operational stages (Figure \ref{fig:riscv_4stage_pipeline}):
 \begin{enumerate}
     \item \textbf{Stage 1: Instruction Fetch (IF)}:
     Maintains the architectural Program Counter register (\texttt{pcReg}). Drives the unbuffered instruction memory bus (\texttt{io.imem.addr}) and latches the incoming 32-bit instruction word into the \texttt{if\_id} pipeline register. Under normal sequential execution, the PC increments by 4 ($\text{PC} \leftarrow \text{PC} + 4$). When a control transfer (branch or jump) resolves taken in the EX stage, the PC updates to the target address, and the \texttt{if\_id} register is flushed. When a data hazard stall is signaled by the ID stage, the PC and \texttt{if\_id} register are frozen.
     
     \item \textbf{Stage 2: Instruction Decode and Operand Fetch (ID)}:
-    Decodes the instruction latched in \texttt{if\_id} using \texttt{RiscvDecoder}, generates sign-extended immediates via \texttt{RiscvImmGen}, and accesses the architectural register file (\texttt{RiscvRegFile}). In this baseline implementation, \textbf{no forwarding} is implemented (operands are read directly from the register storage array). All data dependencies are resolved strictly by stalling until writeback commits.
+    Decodes the instruction latched in \texttt{if\_id} using \texttt{RiscvDecoder}, generates sign-extended immediates via \texttt{RiscvImmGen}, and accesses the architectural register file (\texttt{RiscvRegFile}). In this baseline implementation, \textit{no forwarding} is implemented (operands are read directly from the register storage array). All data dependencies are resolved strictly by stalling until writeback commits.
     
-    The ID stage houses the \textbf{Hazard Detection Unit}. If an instruction in ID reads a register targeted by an in-flight instruction currently in either the EX stage (distance-1 dependency) or the MEM/WB stage (distance-2 dependency), the hazard detection unit asserts a pipeline stall.
+    The ID stage houses the \textit{Hazard Detection Unit}. If an instruction in ID reads a register targeted by an in-flight instruction currently in either the EX stage (distance-1 dependency) or the MEM/WB stage (distance-2 dependency), the hazard detection unit asserts a pipeline stall.
     
     \item \textbf{Stage 3: Execute (EX)}:
     Executes arithmetic, logical, and shift operations via the 32-bit executive ALU (\texttt{RiscvALU}), with optional support for the standard \texttt{Zmmul} multiplication extension. The EX stage evaluates branch conditions (\texttt{BEQ}, \texttt{BNE}, \texttt{BLT}, \texttt{BGE}, \texttt{BLTU}, \texttt{BGEU}) and calculates branch/jump target addresses:
@@ -120,7 +120,7 @@ and control flags into the combined memory and register write-back stage. \\
 \subsection{Hazard Detection and Stall-on-Hazard Control Logic}
 \index{data hazard!RAW stall}\index{hazard detection unit!boolean equations}
 
-Data hazards arise when an instruction in the decode stage requires an operand that has not yet been committed to the architectural register file by an earlier instruction in the pipeline. Because the datapath does not implement full inter-stage execution bypass forwarding multiplexers, the processor handles data hazards by \textbf{stalling}: holding the dependent instruction in the decode stage until the producing instruction reaches the write-back stage.
+Data hazards arise when an instruction in the decode stage requires an operand that has not yet been committed to the architectural register file by an earlier instruction in the pipeline. Because this (intentionally) naively pipelined datapath does not implement full inter-stage execution bypass forwarding multiplexers, the processor handles data hazards by stalling: holding the dependent instruction in the decode stage until the producing instruction reaches the write-back stage.
 
 \subsubsection{Source Operand Usage Identification}
 An instruction in the ID stage only generates a hazard if it actively reads a source register:
@@ -167,7 +167,7 @@ In this baseline configuration without forwarding multiplexers:
     \item \textbf{Load-Use Dependencies} (e.g., \texttt{LW x1, 0(x2)} followed by \texttt{ADD x3, x1, x4}):
     Because load data arrives in the MEM/WB stage, distance-1 load-use dependencies incur \textbf{2 stall cycles}.
 \end{itemize}
-While these interlocks simplify the datapath by eliminating bypass multiplexers and comparator networks, they impose significant CPI penalties on code with dense register dependencies, as quantified in subsequent benchmark sections.
+
 
 \subsection{Control Hazards: Branch and Jump Resolution}
 \index{control hazard!branch penalty}\index{pipeline flush!control transfer}
@@ -228,10 +228,12 @@ Synchronization (\texttt{FENCE})                    & 1 & 148   & 238   \\
 
 Across the 38 pure \texttt{RV32I} test suites, cumulative execution cycles increased from 77,274 cycles on the single-cycle core to 168,638 cycles on the unforwarded pipelined core, yielding an average CPI of 2.18 across the verification suite. This overhead reflects the 2-cycle stalls on distance-1 RAW dependencies, 1-cycle stalls on distance-2 RAW dependencies, and 2-cycle flushes incurred whenever conditional branches or unconditional jumps are taken.
 
+%-------------------------------------------------------------------------------------
 \subsection{Physical ASIC Design Methodology and Synthesis on ASAP7 7\,nm Technology}
+%-------------------------------------------------------------------------------------
 \index{ASAP7!methodology}\index{synthesis!ASAP7 7nm RV32I}\index{critical path!RV32I pipeline}
 
-To obtain realistic silicon metrics independent of speculative FPGA lookup-table estimates, all physical implementations in this chapter target the \textbf{ASAP7 7\,nm FinFET Predictive Process Design Kit (PDK)} developed by Arizona State University in collaboration with ARM \cite{clark2016asap7}. ASAP7 models an advanced sub-10\,nm FinFET technology node with realistic lithographic design rules and physical parasitics:
+To obtain realistic silicon metrics, all physical implementations in this chapter target the ASAP7 7\,nm FinFET Predictive Process Design Kit (PDK) developed by Arizona State University in collaboration with ARM \cite{clark2016asap7}. ASAP7 models an advanced 7\,nm FinFET technology node with realistic lithographic design rules and physical parasitics:
 \begin{itemize}
     \item \textbf{Standard-Cell Architecture}: We utilize the 7.5-track standard-cell library (\texttt{asap7sc7p5t\_28}) at the Regular $V_t$ (RVT) process corner, operating at nominal supply voltage $V_{dd} = 0.70\,\text{V}$ and junction temperature $T = 25^\circ\text{C}$ (Typical-Typical corner).
     \item \textbf{Timing Constraints and Driving Capacitance}: Static timing analysis is performed with an output capacitive load constraint of $C_{\text{load}} = 2.0\,\text{fF}$ applied across all primary outputs, reflecting typical local on-chip interconnect loading.
@@ -285,24 +287,27 @@ Embench-IoT Embedded Suite (19 Kernels)        & 1.00$\times$ Baseline       & G
 
 \subsubsection{Architectural Analysis of the RV32I Pipelined Speedup}
 
-The synthesis and performance results of the pure \texttt{RV32I} baseline in ASAP7 7\,nm FinFET illustrate fundamental computer architecture principles:
+The synthesis and performance results of the \texttt{RV32I} baseline in ASAP7 7\,nm FinFET show:
 \begin{enumerate}
     \item \textbf{The 4-Step Pipeline Delay Model}:
     In a processor implementation, instruction execution consists of four essential physical operations:
     \begin{itemize}
         \item \textbf{SRAM Fetch ($T_{\text{fetch}}$)}: The program counter updates, address is driven to instruction SRAM, and the 32-bit instruction word is retrieved. Modeled with a small standard 7\,nm FinFET SRAM macro ($T_{\text{sram}} = 0.500\,\text{ns}$), plus register clock-to-Q and setup, $T_{\text{fetch}} = \mathbf{0.550\,\text{ns}}$ (550\,ps).
+        
         \item \textbf{Decode and Register Read ($T_{\text{decode}}$)}: The instruction decoder decodes opcodes and generates immediates ($0.209\,\text{ns}$), while the dual-read register file retrieves source register values $rs1$ and $rs2$ ($0.283\,\text{ns}$). With control steering, $T_{\text{decode}} = \mathbf{0.540\,\text{ns}}$ (540\,ps).
-        \item \textbf{Execute ($T_{\text{execute}}$)}: The 32-bit ALU performs arithmetic, shifting, or comparison ($1.046\,\text{ns}$), followed by branch condition evaluation ($0.120\,\text{ns}$) and pipeline register setup, yielding $T_{\text{execute}} = \mathbf{1.363\,\text{ns}}$ (1,363\,ps). Crucially, the baseline ALU relies on a standard ripple-carry adder (RCA), which exhibits an isolated critical path propagation delay of $1.045\,\text{ns}$ in ASAP7 7\,nm FinFET. Notice that \textbf{the ripple-carry adder alone has approximately $2\times$ the delay of any other pipeline stage in the entire processor} ($1.045\,\text{ns}$ vs.\ $0.550\,\text{ns}$ for Fetch, $0.540\,\text{ns}$ for Decode, and $0.600\,\text{ns}$ for Write-Back). This slow adder represents the primary structural bottleneck unbalancing the pipeline.
-        \item \textbf{SRAM Data Memory and Write-Back ($T_{\text{sram\_wb}}$)}: For load instructions, the memory address is presented to the data SRAM ($T_{\text{sram}} = 0.500\,\text{ns}$), the retrieved data is multiplexed with ALU and jump results ($0.080\,\text{ns}$), and routed to the register file write port ($0.020\,\text{ns}$ setup), totaling $T_{\text{sram\_wb}} = \mathbf{0.600\,\text{ns}}$ (600\,ps).
+        
+        \item \textbf{Execute ($T_{\text{execute}}$)}: The 32-bit ALU performs arithmetic, shifting, or comparison ($1.046\,\text{ns}$), followed by branch condition evaluation ($0.120\,\text{ns}$) and pipeline register setup, yielding $T_{\text{execute}} = \mathbf{1.363\,\text{ns}}$ (1,363\,ps). Crucially, the baseline ALU relies on a standard ripple-carry adder (RCA), which exhibits an isolated critical path propagation delay of $1.045\,\text{ns}$ in ASAP7 7\,nm FinFET. Notice that the ripple-carry adder alone has approximately $2\times$ the delay of any other pipeline stage in the entire processor ($1.045\,\text{ns}$ vs.\ $0.550\,\text{ns}$ for Fetch, $0.540\,\text{ns}$ for Decode, and $0.600\,\text{ns}$ for Write-Back). This slow adder represents the primary structural bottleneck unbalancing the pipeline.
+        
+        \item \textbf{SRAM Data Memory and Write-Back ($T_{\text{sram\_wb}}$)}: For load instructions, the memory address is presented to the data SRAM ($T_{\text{sram}} = 0.500\,\text{ns}$), the retrieved data is multiplexed with ALU and jump results ($0.080\,\text{ns}$), and routed to the register file write port ($0.020\,\text{ns}$ setup), totaling $T_{\text{sram\_wb}} = 0.600\,\text{ns}$ (600\,ps).
     \end{itemize}
     
     \item \textbf{FE Core Sum vs.\ Pipelined Core Max}:
-    In the \textbf{single-cycle Fetch-Execute (FE) processor}, every instruction must traverse all four steps in series within a single clock cycle:
+    In the single-cycle Fetch-Execute (FE) processor, every instruction must traverse all four steps in series within a single clock cycle:
     \begin{align}
     T_{\text{clk, FE}} &= T_{\text{fetch}} + T_{\text{decode}} + T_{\text{execute}} + T_{\text{sram\_wb}} \nonumber \\
                        &= 0.550 + 0.540 + 1.363 + 0.600 = \mathbf{3.053\,\text{ns}} \quad (327.5\,\text{MHz}).
     \end{align}
-    In the \textbf{4-stage pipelined processor}, synchronous pipeline registers decouple the four steps into independent pipeline stages. The clock period is constrained only by the single longest pipeline step:
+    In the 4-stage pipelined processor, synchronous pipeline registers decouple the four steps into independent pipeline stages. The clock period is constrained only by the single longest pipeline step:
     \begin{align}
     T_{\text{clk, pipe}} &= \max\left(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}\right) \nonumber \\
                          &= \max(0.550, 0.540, 1.363, 0.600) = \mathbf{1.363\,\text{ns}} \quad (733.7\,\text{MHz}).
@@ -311,14 +316,15 @@ The synthesis and performance results of the pure \texttt{RV32I} baseline in ASA
     \begin{equation}
     \Delta T = T_{\text{clk, FE}} - T_{\text{clk, pipe}} = 3.053\,\text{ns} - 1.363\,\text{ns} = \mathbf{1.690\,\text{ns}}.
     \end{equation}
-    This reduction of $1.690\,\text{ns}$ represents the sum of the other three stages that are now overlapped across clock cycles, delivering a \textbf{+124.0\% system frequency boost} ($2.240\times$ frequency multiplier).
+    This reduction of $1.690\,\text{ns}$ represents the sum of the other three stages that are now overlapped across clock cycles, delivering a +124.0\% system frequency boost ($2.240\times$ frequency multiplier). However, the overall speedup is only about 20\%. We will now begin to enhance the pipeline performance.
 \end{enumerate}
 
-
+%************************************************************************************
 \section{Balancing the Pipeline: Selection and Integration of High-Performance Adders}\label{riscvAdderBalancing}
+%*************************************************************************************
 \index{pipeline balancing!adder optimization}\index{carry select adder!pipeline integration}
 
-As established in Section \ref{riscvPerformance}, the critical path of the baseline 4-stage \texttt{RV32I} pipeline is overwhelmingly dominated by the Execute (EX) stage ($T_{\text{execute}} = 1.363\,\text{ns}$). More strikingly, the unoptimized 32-bit ripple-carry adder (RCA) embedded inside the baseline ALU accounts for $1.045\,\text{ns}$ of that latency---nearly \textbf{$2\times$ the delay of any other stage} in the entire processor ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, and $T_{\text{sram\_wb}} = 0.600\,\text{ns}$). Because a synchronous pipeline can run no faster than its slowest stage, the slow ripple-carry adder acts as an anchor holding the clock frequency to $733.7\,\text{MHz}$, even though the remaining three-quarters of the machine are physically capable of clocking at $1.67\,\text{GHz}$ ($1 / 0.600\,\text{ns}$).
+The critical path of the baseline 4-stage \texttt{RV32I} pipeline is overwhelmingly dominated by the Execute (EX) stage ($T_{\text{execute}} = 1.363\,\text{ns}$). More strikingly, the unoptimized 32-bit ripple-carry adder (RCA) embedded inside the baseline ALU accounts for $1.045\,\text{ns}$ of that latency---nearly \textbf{$2\times$ the delay of any other stage} in the entire processor ($T_{\text{fetch}} = 0.550\,\text{ns}$, $T_{\text{decode}} = 0.540\,\text{ns}$, and $T_{\text{sram\_wb}} = 0.600\,\text{ns}$). Because a synchronous pipeline can run no faster than its slowest stage, the slow ripple-carry adder acts as an anchor holding the clock frequency to $733.7\,\text{MHz}$, even though the remaining three-quarters of the machine are physically capable of clocking at $1.67\,\text{GHz}$ ($1 / 0.600\,\text{ns}$).
 
 To eliminate this structural bottleneck, we select the high-performance adder identified in the empirical evaluation conducted in Chapter \ref{chap:perf_opt_logic} (Section \ref{sec:asap7_adders_synthesis}, Table \ref{tab:asap7_adders_comparison}). Among the 32-bit topologies evaluated in ASAP7 7\,nm FinFET technology (Ripple-Carry, Carry Lookahead, Brent-Kung, Kogge-Stone, and Carry-Select), the \textbf{Carry-Select Adder (CSelA)} achieves the lowest propagation delay: \textbf{519.83\,ps (0.520\,ns)}, delivering a \textbf{$2.01\times$ speedup} over the ripple-carry baseline and reaching a standalone frequency of \textbf{1.92\,GHz}. In deep-submicron FinFET standard cells, partitioning the 32-bit adder into 4-bit blocks allows speculative dual-carry chains ($C_{\text{in}} = 0$ and $C_{\text{in}} = 1$) to evaluate concurrently in under $120\,\text{ps}$. The block carry selection then ripples through an ultra-fast chain of transmission-gate multiplexers with an average delay of only $35\text{--}40\,\text{ps}$ per block, making it exceptionally fast at the 32-bit width. We therefore choose the Carry-Select Adder to replace the ripple-carry adder in our processor's execution unit.
 

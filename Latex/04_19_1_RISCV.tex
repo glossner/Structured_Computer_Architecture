@@ -1,18 +1,17 @@
-% Licensed under the Solderpad Hardware License v 2.1
-% See: https://solderpad.org/licenses/SHL-2.1/
-
 \chapter{The RISC-V Processor: Architecture, Implementation, and Verification}\label{riscvProcessor}
 \index{RISC-V: open standard instruction set architecture}\index{RISC-V!architecture, implementation, and verification}
 \localtoc
 
+%*******************************************************************
 \section{Introduction to the RISC-V Architecture}\label{riscvIntro}
+%*******************************************************************
 \index{RISC-V!design philosophy}\index{open standard instruction set}
 
 The RISC-V (pronounced ``risk-five'') instruction set architecture represents a fundamental paradigm shift in computer architecture. Unlike proprietary instruction set architectures (such as x86 and ARM) whose definitions are tightly controlled by commercial entities, RISC-V is an open, royalty-free standard governed by RISC-V International. Conceived in 2010 at the University of California, Berkeley \cite{asanovic2014case,waterman2014riscv,waterman2016design,patterson2017riscvreader}, RISC-V was developed to provide a clean, modern, extensible, and mathematically structured instruction set architecture suitable for academic instruction, research, and high-performance commercial silicon. The formal definition of the architecture is maintained in the RISC-V Instruction Set Manual, comprising Volume I for the Unprivileged ISA \cite{riscv-spec}, Volume II for the Privileged Architecture \cite{riscv-priv-spec}, and modular ratified extension standards including the \texttt{Zmmul} multiplication extension \cite{riscv-zmmul-spec}.
 
 The architectural philosophy of RISC-V is guided by four foundational principles:
 \begin{enumerate}
-    \item \textbf{Simplicity and Regularity}: The instruction set is structured around a small, frozen base integer instruction set (\texttt{RV32I} for 32-bit addresses, \texttt{RV64I} for 64-bit addresses). Instructions maintain a uniform 32-bit length, fixed opcode locations, and symmetric register source and destination fields.
+    \item \textbf{Simplicity and Regularity}: The instruction set is structured around a small, base integer instruction set (\texttt{RV32I} for 32-bit addresses, \texttt{RV64I} for 64-bit addresses). Instructions maintain a uniform 32-bit length, fixed opcode locations, and symmetric register source and destination fields.
     \item \textbf{Strict Modularity}: Rather than obligating every implementation to support an expansive, monolithic feature set, RISC-V organizes capabilities into modular standard extensions. A minimalist embedded core may implement only the base integer instructions (\texttt{RV32I}), while an accelerator or application processor can incrementally add standard extensions for multiplication and division (\texttt{M}), atomic memory operations (\texttt{A}), single-precision floating-point (\texttt{F}), double-precision floating-point (\texttt{D}), and vector processing (\texttt{V}).
     \item \textbf{Clear Separation of Privileged and Unprivileged Architecture}: Instruction execution, computational semantics, and user-level register manipulation are strictly decoupled from machine-mode control, exception management, physical memory protection, and virtual memory translation.
     \item \textbf{Extensibility Without Fragmentation}: The base instruction set reserves dedicated opcode spaces and major instruction formats specifically for custom, application-specific instructions without conflicting with standardized extensions.
@@ -134,10 +133,12 @@ The standard \texttt{Zmmul} extension defines the integer multiplication subset 
 \end{itemize}
 
 
+%***********************************************************************************
 \section{Harvard 5-OS Hardware Architecture and Microarchitecture}\label{riscvArch}
+%***********************************************************************************
 \index{Harvard architecture!RISC-V 5-OS}\index{processor architecture!5-OS loops}
 
-In accordance with the structural classification of computing systems developed in Chapter \ref{lect6a}, our RISC-V processor is implemented as a \textbf{5th-Order System (Harvard 5-OS)} comprising five coupled structural feedback loops:
+As described in the structural classification of computing systems Chapter \ref{lect6a}, our RISC-V processor is implemented as a \textbf{5th-Order System (Harvard 5-OS)} comprising five coupled structural feedback loops:
 \begin{enumerate}
     \item \textbf{1st loop (1-OS) --- Memory State Loop}: Closed by the architectural register file (\texttt{RiscvRegFile}). Source operands read from \texttt{rs1} and \texttt{rs2} are processed and rewritten synchronously to destination register \texttt{rd} on the rising clock edge when \texttt{regWrite} is asserted, preserving state across instruction steps. Register $x0$ is hardwired to zero on both read and write.
     \item \textbf{2nd loop (2-OS) --- Autonomous Subsystem Loops}: Operates two internal autonomous automata:
@@ -154,10 +155,12 @@ In accordance with the structural classification of computing systems developed 
     \item \textbf{5th loop (5-OS) --- Data Memory Loop}: The RALU drives computed effective address $\text{rs1} + \text{imm}$ and store data \texttt{rs2Data} to byte-addressable memory (\texttt{RiscvDataMemory}), and receives load data into the register write-back multiplexer.
 \end{enumerate}
 
+%---------------------------------------------
 \subsection{Single-Cycle Fetch-Execute Cycle}
+%----------------------------------------------
 \index{Fetch-Execute cycle!single-cycle RISC-V}
 
-The processor executes each instruction within a single clock cycle across five coordinated logical functions:
+A single-cycle fetch-execute processor executes each instruction within a single clock cycle across five coordinated logical functions:
 \begin{enumerate}
     \item \textbf{Instruction Fetch (IF)}: The \texttt{ProgramCounter} presents address \texttt{pc.io.pc} onto \texttt{io.imem.addr}. Unbuffered memory combinationally returns the 32-bit instruction word \texttt{inst}.
     \item \textbf{Instruction Decode (ID)}: \texttt{RiscvDecoder} unpacks register addresses (\texttt{rd}, \texttt{rs1}, \texttt{rs2}), while \texttt{RiscvImmGen} produces sign-extended 32-bit immediate \texttt{d.imm}. Direct-wire bit extraction maps $\{\text{inst}[25], \text{inst}[30], \text{inst}[14:12]\}$ directly into \texttt{c.aluOp}.
@@ -174,21 +177,25 @@ Listing \ref{lst:chisel_riscv_core_ch18} presents the complete Chisel implementa
 \includechiselcode[caption={RISC-V RV32I\_Zmmul 5-OS Fetch-Execute Processor Core (Chisel: RiscvFetchExecute.scala)}, label={lst:chisel_riscv_core_ch18}, firstline=10, firstnumber=10, lastline=125]{\chiselSourceDir/riscv/RiscvFetchExecute.scala}
 
 
+%***********************************************************************
 \section{Architectural Conformance Verification}\label{riscvConformance}
+%************************************************************************
 \index{conformance testing!RISC-V architectural tests}\index{verification!Spike co-simulation}
 
-A critical challenge in processor engineering is guaranteeing that a hardware implementation strictly conforms to the formal instruction set specification. While ad-hoc assembly tests can verify basic functionality, they rarely test corner cases such as arithmetic overflow boundary conditions, sign extension edge cases, misaligned immediate offsets, and bit-level side effects.
+A challenge in processor engineering is guaranteeing that a hardware implementation strictly conforms to the formal instruction set specification. While ad-hoc assembly tests can verify basic functionality, they rarely test corner cases such as arithmetic overflow boundary conditions, sign extension edge cases, misaligned immediate offsets, and bit-level side effects.
 
-To establish absolute correctness, all processor implementations in this chapter are verified against the official \textbf{RISC-V Architectural Conformance Suite} (\texttt{riscv-arch-test}) developed by RISC-V International \cite{riscv-arch-test}.
+To establish correctness, all processor implementations in this chapter are verified against the official RISC-V Architectural Conformance Suite (\texttt{riscv-arch-test}) developed by RISC-V International \cite{riscv-arch-test}.
 
 \subsection{Verification Methodology: Pure Chisel/Scala Simulation}
 \index{EphemeralSimulator!architectural testbench}
 
-While we can generate Verilog and compile a C++ simulator using external tools (such as Verilator), we choose to use Chisel's built-in simulator (\texttt{EphemeralSimulator}). For the prior approach, see the KryptoNyte processor environment.\footnote{\url{https://github.com/Ypologist/KryptoNyte}} This achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework without requiring external synthesis or toolchain dependencies:
+While we can generate Verilog and compile a C++ simulator using external tools (such as Verilator), we choose to use Chisel's built-in simulator (\texttt{EphemeralSimulator}) 
+\footnote{For the prior approach, see the KryptoNyte processor environment. \url{https://github.com/Ypologist/KryptoNyte}}.
+Our Ephemeral simulator approach achieves cycle-accurate software simulation entirely within the \texttt{sbt} test framework without requiring external synthesis or toolchain dependencies:
 \begin{itemize}
     \item \textbf{4MB Emulated Memory System}: A simulation memory buffer is initialized at base address \texttt{0x80000000} (the canonical RISC-V boot vector).
     \item \textbf{Mailbox Completion Protocol}: The testbench continuously executes instructions and monitors data memory writes. When the processor writes to the memory-mapped mailbox register \texttt{tohost} (\texttt{0x80004000}), the test completes. A write value of \texttt{0x1} signifies success, whereas any other non-zero value indicates a failure code.
-    \item \textbf{Golden Reference Signature Comparison}: Upon test completion, memory contents between linker symbols \texttt{begin\_signature} and \texttt{end\_signature} are extracted word-by-word into a test signature. This signature is compared against the golden reference signature produced by \textbf{Spike}, the official RISC-V reference golden model \cite{riscv-spike}\footnote{\url{https://github.com/riscv-software-src/riscv-isa-sim}}.
+    \item \textbf{Golden Reference Signature Comparison}: Upon test completion, memory contents between linker symbols \texttt{begin\_signature} and \texttt{end\_signature} are extracted word-by-word into a test signature. This signature is compared against the golden reference signature produced by \textit{Spike}, the official RISC-V reference golden model \cite{riscv-spike}\footnote{\url{https://github.com/riscv-software-src/riscv-isa-sim}}.
 \end{itemize}
 
 Listing \ref{lst:chisel_conformance_spec} illustrates a partial listing of the Chisel/Scala conformance test runner (showing lines 94--111).
