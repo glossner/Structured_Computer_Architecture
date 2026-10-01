@@ -413,7 +413,7 @@ Because each RBA cell adds two redundant binary vectors into a single redundant 
 \end{itemize}
 
 
-% It is important to note that RBMs do not dominate generic DSP designs. Most commercial general-purpose DSPs (such as TI TMS320, CEVA, and Qualcomm Hexagon) and general-purpose microprocessors employ Booth-recoded 4:2 carry-save compressor trees due to the silicon area overhead and dual-rail wiring requirements of redundant binary logic.
+In high-performance microprocessors and custom arithmetic datapaths, designers widely employ Radix-4 Modified Booth recoding combined with balanced 4:2 carry-save compressor trees \cite{santoro1989, goto1992, ohkubo1995}. This combination provides a regular layout and halves the number of partial products, avoiding both the irregular routing of Wallace trees and the area and dual-rail wiring overhead of redundant binary logic.
 
 \subsection{Architectural Comparison of High-Performance Multipliers}
 
@@ -494,14 +494,39 @@ When a hardware designer writes a multiplication expression in HDL (such as \tex
     
     \item \textit{Multiply-Accumulate Transformation (\texttt{alumacc})}: The synthesis engine executes the \texttt{alumacc} pass, scanning the design hierarchy to group multiplication, addition, and subtraction operations into multi-operand multiply-accumulate macro-cells (\texttt{\$macc}).
     
-    \item \textit{Carry-Save Compressor Tree Mapping (\texttt{maccmap})}: Rather than flattening the multiplication into a linear ripple-carry chain, the \texttt{maccmap} pass expands the \texttt{\$macc} cell into a bit-slice carry-save compressor tree built from 1-bit full adders (\texttt{\$fa}). It then generates a fast parallel-prefix vector-merging adder (specifically a Brent-Kung parallel prefix carry-lookahead adder, \texttt{\$lcu\_brent\_kung}) to merge the final sum and carry vectors.
+    \item \textit{Carry-Save Compressor Tree Mapping (\texttt{maccmap})}: Rather than flattening the multiplication into a linear ripple-carry chain, the \texttt{maccmap} pass expands the \texttt{\$macc} cell into a bit-slice carry-save compressor tree built from 1-bit full adders (\texttt{\$fa}). In Yosys technology mapping, the carry-lookahead cell (\texttt{\$lcu}) is mapped by default to a Brent-Kung parallel-prefix carry tree (\texttt{\_90\_lcu\_brent\_kung}) to merge the final sum and carry vectors.
     
     \item \textit{Boolean Resynthesis and Delay Optimization (Berkeley ABC)}: The resulting netlist is processed by Berkeley ABC for technology mapping. ABC executes structural hashing (\texttt{strash}), Functional Redundancy Identification, and cut-based delay mapping (\texttt{dch}, \texttt{map}) targeting the ASAP7 standard-cell library. ABC restructures logic cones along the critical path into balanced And-Inverter Graph (AIG) trees.
 \end{itemize}
 
 Consequently, the synthesizer's ``behavioral baseline'' is already an optimized carry-save compressor tree with a parallel-prefix final adder. 
 
-In the RISC-V \texttt{Zmmul} extension, the datapath must support four distinct signed/unsigned multiplication instructions: \texttt{MUL}, \texttt{MULH}, \texttt{MULHSU}, and \texttt{MULHU}. In unoptimized behavioral HDL code, multiplexing between signed and unsigned product expressions caused the synthesizer to instantiate two complete, independent 64-bit carry-save compressor trees behind an output multiplexer---one for sign-extended signed operands and one for zero-extended unsigned operands. This duplication doubled the cell count and silicon area without improving propagation delay.
+In the RISC-V \texttt{Zmmul} extension, the datapath must support four distinct signed/unsigned multiplication instructions: \texttt{MUL}, \texttt{MULH}, \texttt{MULHSU}, and \texttt{MULHU}. In behavioral HDL code, a common implementation writes separate multiplication expressions under a conditional multiplexer:
+
+\begin{chiselcode}
+when(io.isSigned === 1.U) {
+  io.result := (io.a.asSInt * io.b.asSInt).asUInt
+}.otherwise {
+  io.result := io.a * io.b
+}
+\end{chiselcode}
+
+Because Chisel emits Verilog with separate signed and unsigned multiplication operators (\texttt{\$signed(a) * \$signed(b)} versus \texttt{a * b}), the synthesis front-end assigns distinct signedness attributes to each operator. As a result, the synthesizer instantiates two complete, independent 64-bit carry-save compressor trees behind an output multiplexer---one for sign-extended signed operands and one for zero-extended unsigned operands. This duplication doubled the cell count and silicon area without improving propagation delay.
+
+To prevent this duplication, the designer can condition the inputs before multiplication rather than multiplexing the outputs of two separate multiplier trees. By extending both 32-bit operands by one bit to 33 bits and conditionally setting the sign bit based on the operation, a single signed $33 \times 33$ multiplier computes all signed, unsigned, and mixed-signed combinations:
+
+\begin{chiselcode}
+val isSignedA = (io.mulOp === AluOp.MULH) || (io.mulOp === AluOp.MULHSU)
+val isSignedB = (io.mulOp === AluOp.MULH)
+
+val aExt = Cat(Mux(isSignedA, io.a(31), 0.U(1.W)), io.a).asSInt
+val bExt = Cat(Mux(isSignedB, io.b(31), 0.U(1.W)), io.b).asSInt
+val product = (aExt * bExt).asUInt
+
+val result = Mux(io.isHigh, product(63, 32), product(31, 0))
+\end{chiselcode}
+
+By conditioning the operands prior to multiplication, only a single multiplication AST node is generated in the emitted hardware description. This cuts the synthesized compressor tree area and cell count in half while preserving single-cycle throughput, a technique we employ in our pipelined multiplier design.
 
 \subsubsection{Array Multiplier Standard Cell Synthesis}
 \index{array multiplier!synthesis delay advantage}\index{partial product generation!AND gate delay}

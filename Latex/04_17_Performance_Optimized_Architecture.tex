@@ -137,7 +137,12 @@ True vector architectures operate on deep vectors of configurable length using v
 \begin{itemize}
     \item The instruction specifies operations on entire one-dimensional mathematical vectors, leaving the hardware free to execute the vector across whatever physical width (lanes) the silicon budget permits.
     
-    \item \textbf{Modern vector architectures}: Describe Unity. ARM SVE.
+    \item \textbf{Variable-Length Vector Architectures}: Fixed-width SIMD architectures bind instruction encodings to a specific hardware width, requiring recompilation when hardware expands. In contrast, variable-length vector architectures decouple software instructions from the physical vector datapath width:
+    \begin{itemize}
+        \item \textit{Optimum Semiconductor Unity}: Moudgill et al.~\cite{moudgill2018unity} patented a vector processor configured to operate on variable-length vectors using implicitly typed instructions. Rather than fixing operand sizes or register widths in instruction opcodes, the Unity processor dynamically processes variable-length vector streams, allowing binaries to run unmodified across varying silicon implementations.
+        \item \textit{Arm Scalable Vector Extension (SVE)}: Stephens et al.~\cite{stephens2017arm} introduced Arm SVE, establishing a Vector Length Agnostic (VLA) execution paradigm for high-performance computing. Hardware implementations can implement any vector register width from 128 to 2048 bits (in 128-bit increments), while software adapts dynamically through predicate-driven execution without scalar cleanup loops.
+        \item \textit{Non-RISC-V Vector Supercomputers}: Other systems utilizing configurable or dynamic vector lengths include the NEC SX architecture (exemplified by SX-Aurora TSUBASA \cite{komatsu2018aurora}) and classic vector supercomputers such as the Cray-1 and Cray X-MP \cite{cray1978cray1}, which utilized software-configurable vector length registers to control deep arithmetic pipelines.
+    \end{itemize}
 \end{itemize}
 
 \subsection{The RISC-V Vector Extension (RVV) Architecture}
@@ -242,7 +247,7 @@ When different threads within the same 32-thread warp evaluate a conditional bra
 During branch divergence, execution throughput drops by 50\% or more, illustrating why GPUs achieve maximum efficiency on uniform, regular compute kernels.
 
 \subsection{Open-Source RISC-V GPGPU Architectures}
-The principles of SIMT execution have recently been applied to open-source hardware through architectures such as \textit{Vortex}, a RISC-V GPGPU. Vortex augments the base RISC-V ISA with hardware warp scheduling, SIMT stack convergence instructions, and high-bandwidth shared scratchpad memories, enabling native execution of OpenCL and Vulkan compute workloads on an open-standard RISC-V foundation.
+The principles of SIMT execution have recently been applied to open-source hardware through architectures such as \textit{Vortex}, an open-source RISC-V GPGPU developed by Tine et al.~\cite{tine2021vortex}. Vortex augments the base RISC-V ISA with hardware warp scheduling, SIMT stack convergence instructions, and high-bandwidth shared scratchpad memories, enabling native execution of OpenCL and Vulkan compute workloads on an open-standard RISC-V foundation.
 
 %*******************************************************************************************
 \section{Digital Signal Processors (DSPs)}\label{sec:dsp_architecture}
@@ -331,6 +336,21 @@ A classic 2D systolic array architecture is exemplified by the Google Tensor Pro
 \end{enumerate}
 A $256 \times 256$ systolic array executes $65,536$ multiply-accumulate operations (131,072 arithmetic operations) every single clock cycle, while accessing off-chip memory only at the array perimeter!
 
+\subsection{TCX: A RISC-Style Tensor Computing Extension and Processor}\label{sec:tcx_tensor_extension}
+\index{TCX}\index{tensor computing extension}\index{tensor processor}
+
+While dedicated systolic accelerators provide high peak compute density for large matrix multiplications, tightly coupling tensor acceleration to a general-purpose processor offers significant advantages in programmability, latency, and area efficiency. Dedicated coprocessors and monolithic neural processing units (NPUs) often suffer from complex host-device memory transfers, rigid execution graphs, and poor flexibility when deploying emerging machine learning model architectures.
+
+To bridge this gap, Liang et al.~\cite{liang2023tcx} introduced TCX (Tensor Computing Extension), a RISC-style instruction set extension and programmable tensor processor architecture. Grounded in the classical RISC philosophy of architectural regularity and streamlined load/store execution, TCX exposes multidimensional tensor operations directly within the instruction set:
+\begin{itemize}
+    \item \textbf{Tensor Register Architecture}: TCX defines dedicated two-dimensional Tensor Register Files (TRFs) alongside standard scalar registers. By decoupling multidimensional data tiling and strided address generation from the scalar execution pipeline, tensor load and store instructions fetch 2D feature maps and weight tiles directly into high-bandwidth on-chip tensor storage.
+    
+    \item \textbf{Streamlined Instruction Encoding}: Rather than requiring rigid, high-overhead command descriptor queues, TCX formulates tensor operations using standard RISC instruction formats. A single instruction specifies matrix multiply-accumulate operations, 2D convolution, pooling, or nonlinear activations, which are dispatched directly to an integrated 2D processing element (PE) array.
+    
+    \item \textbf{Compiler Agility and Operator Fusion}: By integrating tensor execution at the ISA level, compilers can freely interleave scalar control, vector preprocessing, and tensor arithmetic. This enables seamless operator fusion (such as combining convolution, bias addition, and activation in a single pass), avoids intermediate round-trips to main memory, and allows software to adapt to novel neural network topologies without requiring silicon redesign.
+\end{itemize}
+Physical implementation and silicon characterization demonstrate that a RISC-style tensor extension like TCX delivers energy efficiency and area density comparable to fixed-function NPUs while retaining the programmability, compiler flexibility, and software agility of general-purpose RISC processors \cite{liang2023tcx}.
+
 \subsection{Low-Precision AI Numerics}
 Deep neural networks exhibit remarkable resilience to numerical noise. High-precision 64-bit or 32-bit floating-point numbers are completely unnecessary for neural network inference.
 
@@ -350,23 +370,25 @@ To natively support deep learning, the RISC-V ecosystem is standardizing the RIS
 Table \ref{tab:dsa_comparison} synthesizes the architectural trade-offs across all major paradigms of computing.
 
 \begin{table}[htbp]
-  \begin{center}
-    \caption{Comparative Synthesis of General-Purpose and Domain-Specific Architectures.}
-    \label{tab:dsa_comparison}
-    \small
-    \begin{tabular}{|l|l|l|l|l|l|}
-      \hline
-      \textbf{Dimension} & \textbf{General CPU} & \textbf{Vector Core} & \textbf{GPU (SIMT)} & \textbf{DSP} & \textbf{Tensor / TPU} \\ \hline \hline
-      \textbf{Primary Target} & General serial & Scientific DLP & Massively parallel & Streaming signal & AI / GEMM \\ \hline
-      \textbf{Programming}    & Sequential scalar & Vectorized VLA & Massively threaded & Fixed-point & Matrix / Graph \\ \hline
-      \textbf{Hardware Concurrency} & ILP (1--8 issue) & DLP (lanes) & Thread / Warp & DSP MAC pipelines & 2D Systolic PEs \\ \hline
-      \textbf{Control Overhead}     & Very High ($>80\%$) & Low ($<10\%$) & Low ($<15\%$) & Very Low ($<5\%$) & Negligible ($<2\%$) \\ \hline
-      \textbf{Latency Strategy}     & Deep OOO / Cache & Pipelined lanes & Zero-cycle context switch & Deterministic pipe & Spatial pipelining \\ \hline
-      \textbf{Memory Dataflow}      & Cache hierarchy & Strided / Gather & High-bandwidth HBM & Modified Harvard & Streaming / Systolic \\ \hline
-      \textbf{Typical Precision}    & 32/64-bit int/FP & 32/64-bit FP/int & 16/32-bit FP & 16/32-bit fixed & INT8, FP8, BF16 \\ \hline
-      \textbf{Energy Efficiency}    & Low ($\sim 1\times$) & High ($\sim 10\times$) & High ($\sim 15\times$) & Very High ($\sim 30\times$) & Peak ($\sim 50\text{--}100\times$) \\ \hline
-    \end{tabular}
-  \end{center}
+\centering
+\caption{Comparative Synthesis of General-Purpose and Domain-Specific Architectures.}
+\label{tab:dsa_comparison}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{|l|l|l|l|l|l|}
+  \hline
+  \textbf{Dimension} & \textbf{General CPU} & \textbf{Vector Core} & \textbf{GPU (SIMT)} & \textbf{DSP} & \textbf{Tensor / TPU} \\ \hline \hline
+  \textbf{Primary Target} & General serial & Scientific DLP & Massively parallel & Streaming signal & AI / GEMM \\ \hline
+  \textbf{Programming}    & Sequential scalar & Vectorized VLA & Massively threaded & Fixed-point & Matrix / Graph \\ \hline
+  \textbf{Hardware Concurrency} & ILP (1--8 issue) & DLP (lanes) & Thread / Warp & DSP MAC pipelines & 2D Systolic PEs \\ \hline
+  \textbf{Control Overhead}     & Very High ($>80\%$) & Low ($<10\%$) & Low ($<15\%$) & Very Low ($<5\%$) & Negligible ($<2\%$) \\ \hline
+  \textbf{Latency Strategy}     & Deep OOO / Cache & Pipelined lanes & Zero-cycle context switch & Deterministic pipe & Spatial pipelining \\ \hline
+  \textbf{Memory Dataflow}      & Cache hierarchy & Strided / Gather & High-bandwidth HBM & Modified Harvard & Streaming / Systolic \\ \hline
+  \textbf{Typical Precision}    & 32/64-bit int/FP & 32/64-bit FP/int & 16/32-bit FP & 16/32-bit fixed & INT8, FP8, BF16 \\ \hline
+  \textbf{Energy Efficiency}    & Low ($\sim 1\times$) & High ($\sim 10\times$) & High ($\sim 15\times$) & Very High ($\sim 30\times$) & Peak ($\sim 50\text{--}100\times$) \\ \hline
+\end{tabular}%
+}
 \end{table}
 
 

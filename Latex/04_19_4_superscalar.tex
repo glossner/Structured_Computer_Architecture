@@ -8,16 +8,16 @@ With data forwarding, multiplier pipelining, dynamic branch prediction, multi-le
 \begin{equation}
 \text{CPI}_{\text{scalar, min}} = 1.00 \quad \iff \quad \text{IPC}_{\text{scalar, max}} = 1.00.
 \end{equation}
-Achieving $\text{CPI} \approx 1.05\text{--}1.08$ across CoreMark and Dhrystone corresponds to an aggregate instruction throughput of $\text{IPC} \approx 0.93\text{--}0.95$. In other words, the balanced 4-stage pipeline is operating at over \textbf{93\% of the maximum possible throughput of a single instruction issue stream}. The remaining overhead consists of irreducible physical constraints:
+Achieving $\text{CPI} \approx 1.05\text{--}1.08$ across CoreMark and Dhrystone corresponds to an aggregate instruction throughput of $\text{IPC} \approx 0.93\text{--}0.95$. In other words, the balanced 4-stage pipeline is operating at over \textit{93\% of the maximum possible throughput of a single instruction issue stream}. The remaining overhead consists of irreducible physical constraints:
 \begin{itemize}
     \item True load-use data hazards (1-cycle bubble when an instruction immediately uses loaded memory data).
     \item Indirect jump redirects (\texttt{JALR} target addresses computed in the EX stage).
     \item Compulsory Level-1 cache misses.
 \end{itemize}
 
-To break through the fundamental $\text{CPI} = 1.00$ ($\text{IPC} = 1.00$) scalar barrier, computer architecture must abandon single-instruction issue and transition to \textbf{Superscalar Execution}.
+To break through the fundamental $\text{CPI} = 1.00$ ($\text{IPC} = 1.00$) scalar barrier, computer architecture must abandon single-instruction issue and transition to \textit{Superscalar Execution}.
 
-In the next chapter, we will design, verify, and physically synthesize a \textbf{2-Way In-Order Dual-Issue Superscalar RV32I Processor Core} (\texttt{RiscvSuperscalar2Way}):
+In the next chapter, we will design, verify, and physically synthesize a \textit{2-Way In-Order Dual-Issue Superscalar RV32I Processor Core} (\texttt{RiscvSuperscalar2Way}):
 \begin{enumerate}
     \item \textbf{Dual Instruction Fetch}: The IF stage fetches 64 bits (two 32-bit instructions, $I_0$ and $I_1$) per clock cycle from the Level-1 Instruction Cache.
     \item \textbf{Parallel Dual Decode and Intra-Issue Dependency Checking}: The ID stage decodes $I_0$ and $I_1$ simultaneously and evaluates:
@@ -33,7 +33,7 @@ By issuing up to two instructions per cycle, a dual-issue superscalar core eleva
 \section{VLIW Processors}\label{riscvVLIW}
 \index{VLIW processors}\index{Very Long Instruction Word}\index{instruction-level parallelism!static multiple issue}\index{compiler!instruction scheduling}
 
-While superscalar processors rely on sophisticated runtime hardware logic to dynamically extract instruction-level parallelism (ILP), \textbf{Very Long Instruction Word (VLIW)} architectures embody the alternative architectural philosophy: shifting the burden of parallelism detection, dependency analysis, and hazard prevention entirely from execution silicon into the \textbf{optimizing compiler}.
+While superscalar processors rely on sophisticated runtime hardware logic to dynamically extract instruction-level parallelism (ILP), \textit{Very Long Instruction Word (VLIW)} architectures embody the alternative architectural philosophy: shifting the burden of parallelism detection, dependency analysis, and hazard prevention entirely from execution silicon into the \textit{optimizing compiler}.
 
 \subsection{Architectural Principles of Static Multiple Issue}
 In a classical VLIW processor, the compiler statically analyzes the data dependency graph (DDG) of the program, identifies mutually independent instructions, and packs them into a single wide instruction word (often termed an \emph{instruction packet} or \emph{bundle}). Each issue slot within the packet directly controls a specific, dedicated functional unit:
@@ -55,9 +55,9 @@ Despite their structural efficiency, traditional VLIW architectures confront thr
 \end{enumerate}
 
 \subsection{Synergy with Fine-Grained Multithreading and DSP}
-VLIW architectures achieve their highest operational efficiency in workloads characterized by regular, predictable loop dataflow, such as Digital Signal Processing (DSP), radar baseband processing, image filtering, and deep learning matrix kernels. In these domains, the compiler leverages advanced loop transformations---including \textbf{Software Pipelining} (Modulo Scheduling) and \textbf{Trace Scheduling}---to keep every issue slot saturated with operations across loop iterations.
+VLIW architectures achieve their highest operational efficiency in workloads characterized by regular, predictable loop dataflow, such as Digital Signal Processing (DSP), radar baseband processing, image filtering, and deep learning matrix kernels. In these domains, the compiler leverages advanced loop transformations---including \textit{Software Pipelining} (Modulo Scheduling) and \textit{Trace Scheduling}---to keep every issue slot saturated with operations across loop iterations.
 
-Furthermore, VLIW execution can be synergistically combined with \textbf{Fine-Grained Multithreading (FGMT)}: by interleaving VLIW packets from multiple independent threads in round-robin sequence, the architecture hides memory latency and functional unit latencies while sustaining massive parallel arithmetic throughput. Subsequent chapters will detail the formal compilation algorithms, datapath synthesis, and benchmark characterization of VLIW and hybrid multithreaded-VLIW architectures.
+Furthermore, VLIW execution can be synergistically combined with \textit{Fine-Grained Multithreading (FGMT)}: by interleaving VLIW packets from multiple independent threads in round-robin sequence, the architecture hides memory latency and functional unit latencies while sustaining massive parallel arithmetic throughput. Subsequent chapters will detail the formal compilation algorithms, datapath synthesis, and benchmark characterization of VLIW and hybrid multithreaded-VLIW architectures.
 
 
 \section{Summary}\label{riscvSummary}
@@ -74,7 +74,7 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item Full physical synthesis targeting the predictive ASAP7 7\,nm FinFET standard cell library was conducted for the baseline \texttt{RV32I} and \texttt{RV32I\_Zmmul} cores. Under the 4-step pipeline delay model, the baseline 4-stage pipelined \texttt{RV32I} reduced the clock period from $3.053\,\text{ns}$ to $1.363\,\text{ns}$ ($327.5\,\text{MHz} \to 733.7\,\text{MHz}$).
     \item Integrating the balanced Carry-Select Adder (CSA) in Section \ref{riscvAdderBalancing} eliminated the execution stage bottleneck, reducing the critical clock period to $0.600\,\text{ns}$ and unlocking an operating frequency of $\mathbf{1.67\,\text{GHz}}$ (a $3.82\times$ frequency boost over single-cycle).
     \item Hardware data bypassing was implemented in Chisel, providing distance-1 forwarding (MEM/WB to EX) and distance-2 write-through bypassing (WB to ID). All ALU data dependencies are satisfied with zero stall cycles; only Load-Use hazards require a 1-cycle stall.
-    \item Physical ASIC synthesis in ASAP7 7\,nm FinFET revealed that adding full data bypassing requires only +390 standard cells and expands core silicon area by \textbf{merely +2.7\%} with 0 additional flip-flops.
+    \item Physical ASIC synthesis in ASAP7 7\,nm FinFET revealed that adding full data bypassing requires only +390 standard cells and expands core silicon area by \textit{merely +2.7\%} with 0 additional flip-flops.
     \item On standard benchmarks, bypassing eliminated $>60\%$ of all pipeline stalls: CoreMark CPI dropped from 1.88 to 1.33, delivering an application speedup of $\mathbf{2.79\times}$ over the single-cycle baseline (scoring 1,390.3 CoreMarks at operating frequency). Dhrystone CPI dropped from 1.76 to 1.44 (delivering $\mathbf{2.56\times}$ speedup, 919.4 DMIPS).
     \item Single-stream processor performance for Multiply-Accumulate (MAC) intensive workloads (FIR filters, convolution, vector dot products) was accelerated by pipelining the hardware multiplier across EX and MEM/WB. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA reduction tree to redundant carry-save vectors ($Sum$, $Carry$), which are captured in the inter-stage pipeline registers (\texttt{ex\_mem}). Stage 2 in MEM/WB performs vector-merging addition and forwards the product directly to EX operands via data bypassing. This microarchitecture eliminates all stalls between back-to-back \texttt{mul} and \texttt{add} instructions, sustaining an issue rate of 1 instruction entering the pipeline per clock cycle while maintaining high clock frequency ($1.54\text{--}1.67\,\text{GHz}$).
     \item On the DSP hardware multiply benchmark, the pipelined multiplier core slashed execution time to $0.62\,\mu\text{s}$, achieving a $\mathbf{2.97\times}$ speedup over the single-cycle core, while surprisingly reducing full core silicon area by $-22.6\%$ due to standard cell drive-strength optimization.
@@ -86,13 +86,13 @@ This chapter presented the comprehensive architecture, microarchitectural implem
     \item The interaction between compiler optimization levels and processor microarchitecture was systematically quantified across ten optimization configurations (\texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3}, \texttt{-O4}, \texttt{-O5}, \texttt{-Os}, \texttt{-Oz}, \texttt{-Ofast}, and \texttt{ridiculous} LTO/unrolling). In modern Clang 21, \texttt{-O4} and \texttt{-O5} are deprecated aliases for \texttt{-O3} (producing 100\% bit-for-bit identical binaries), while \texttt{-Ofast} on integer code is equivalent to \texttt{-O3}.
     \item Moving from unoptimized \texttt{-O0} to basic \texttt{-O1} slashes dynamic instruction count by $4.8\times$ on CoreMark ($4,204,574 \to 874,891$) by replacing stack spills with register allocation. However, compilers cannot schedule away RAW pipeline hazards: the unforwarded pipeline exhibits a persistently poor $\text{CPI} \approx 1.88\text{--}2.29$ across all compiler optimization levels.
     \item The code-size paradox of \texttt{-Oz} was demonstrated: while achieving the smallest static text footprint (8.8\,KB, a $-31\%$ reduction), \texttt{-Oz} increases dynamic instruction count by $+11.2\%$ on CoreMark and $+199.7\%$ on Dhrystone by converting inlined loops into outlined helper calls, increasing runtime latency. Conversely, extreme loop unrolling (\texttt{ridiculous}) expands text size by $5.1\times$ to 61.1\,KB, but retires the fewest dynamic instructions (829,488 on CoreMark).
-    \item On the 4-stage pipeline with data bypassing and dynamic Gshare branch prediction, CoreMark achieves $\text{CPI} = 1.09\text{--}1.10$ ($\text{IPC} \approx 0.914$) across all optimized compiler variants, operating at \textbf{91.4\% of theoretical maximum scalar throughput}.
+    \item On the 4-stage pipeline with data bypassing and dynamic Gshare branch prediction, CoreMark achieves $\text{CPI} = 1.09\text{--}1.10$ ($\text{IPC} \approx 0.914$) across all optimized compiler variants, operating at \textit{91.4\% of theoretical maximum scalar throughput}.
     \item The Memory Wall was characterized under realistic DDR-5 DRAM latency ($100$ processor clock cycles round-trip). Split Level-1 Instruction and Data Caches (Harvard organization, 32-byte lines, write-back with write-allocate) were integrated into the 4-stage pipeline in Chisel. Physical ASIC synthesis in ASAP7 7\,nm FinFET proved that parallel tag comparison and 4-way multiplexing add only $348\,\text{ps}$, fitting comfortably within the $0.650\,\text{ns}$ clock period without degrading the $1.538\,\text{GHz}$ clock frequency.
     \item Isolated cache sweeps established that a 4\,KB 2-Way I-Cache and 4\,KB 2-Way D-Cache recover $>97\%$ of ideal flat-memory throughput on CoreMark ($\text{CPI} = 1.127$) and Dhrystone ($\text{CPI} = 1.266$). For complex embedded workloads with larger footprints (the 19-kernel Embench-IoT suite), an on-chip Unified Level-2 Cache (10-cycle hit latency) was shown to filter $>94\%$ of L1 misses, boosting geometric mean performance by $3.60\times$ (slashing CPI from $4.82$ down to $1.34$).
     \item Multithreaded execution was introduced via the 4-thread barrel core (\texttt{RiscvBarrel4T}), inspired by the TetraNyte core from the pRISC/KryptoNyte architecture. Interleaving 4 threads in round-robin order structurally eliminates pipeline interlocks and branch delay bubbles. Multithreaded register file synthesis in ASAP7 showed that 4 threads require $285.2\,\text{ps}$ read delay, leaving $+189.8\,\text{ps}$ positive slack at $600\,\text{ps}$ ($1.67\,\text{GHz}$).
     \item When 4 concurrent threads share a 4\,KB Level-1 cache, direct-mapped (1-way) organization collapses due to severe inter-thread cache thrashing (miss rates $>54\text{--}70\%$, CPI $>75\text{--}85$). Expanding associativity to 4-way completely resolves thrashing by providing each active thread with a dedicated line per set, slashing miss rates to $<0.4\%$ and restoring aggregate CPI to $1.08\text{--}1.10$.
     \item Multithreading trade-offs were systematically synthesized: deepening execution to 5 stages with 5 threads structurally eliminates Pipemul interlocks; deepening to 6 stages with 6 threads eliminates accumulator recursive hazards in DSP MAC filter loops; and deepening to 8 stages with 8 threads arrives at the single-issue Sandblaster DSP architecture, eliminating all vector SIMD hazards while relaxing SRAM access cycles to half clock frequency.
-    \item Having exhausted the single-stream efficiency frontier ($\text{CPI} \approx 1.05\text{--}1.08$, $\text{IPC} \approx 0.93\text{--}0.95$), the primary figure of architectural merit fundamentally flips from \textbf{minimizing CPI} ($\text{CPI} \ge 1.00$) to \textbf{maximizing IPC} ($\text{IPC} \le W$). Multiple-issue execution is explored across two competing paradigms: dynamic issue in \textbf{superscalar processors} ($\text{IPC} \le 2.00$) and static compiler bundling in \textbf{VLIW processors}.
+    \item Having exhausted the single-stream efficiency frontier ($\text{CPI} \approx 1.05\text{--}1.08$, $\text{IPC} \approx 0.93\text{--}0.95$), the primary figure of architectural merit fundamentally flips from \textit{minimizing CPI} ($\text{CPI} \ge 1.00$) to \textit{maximizing IPC} ($\text{IPC} \le W$). Multiple-issue execution is explored across two competing paradigms: dynamic issue in \textit{superscalar processors} ($\text{IPC} \le 2.00$) and static compiler bundling in \textit{VLIW processors}.
 \end{itemize}
 
 
@@ -140,8 +140,8 @@ and x6, x1, x7
 \textbf{Solution}:
 \begin{enumerate}
     \item Both \texttt{sub} and \texttt{and} have a Read-After-Write (RAW) data hazard on register \texttt{x1} produced by \texttt{add}.
-    \item In the baseline pipeline without forwarding, \texttt{add} computes its result in EX and writes it to the register file during MEM/WB. When \texttt{sub} enters the ID stage immediately following \texttt{add} (distance-1 dependency), \texttt{add} is in EX. The Hazard Detection Unit stalls \texttt{sub} for \textbf{2 clock cycles} (freezing PC and IF/ID while inserting bubbles into ID/EX) until \texttt{add} completes MEM/WB and updates \texttt{x1}.
-    \item The instruction \texttt{and} has a distance-2 RAW dependency on \texttt{x1} from \texttt{add}. When \texttt{and} reaches the ID stage, because \texttt{sub} was stalled for 2 cycles, \texttt{add} has already committed to the register file. However, in an arbitrary program where a distance-2 instruction is separated from the producer by one independent instruction (with no prior stalls), the producer is in MEM/WB when the consumer is in ID, requiring \textbf{1 stall cycle} without forwarding.
+    \item In the baseline pipeline without forwarding, \texttt{add} computes its result in EX and writes it to the register file during MEM/WB. When \texttt{sub} enters the ID stage immediately following \texttt{add} (distance-1 dependency), \texttt{add} is in EX. The Hazard Detection Unit stalls \texttt{sub} for \textit{2 clock cycles} (freezing PC and IF/ID while inserting bubbles into ID/EX) until \texttt{add} completes MEM/WB and updates \texttt{x1}.
+    \item The instruction \texttt{and} has a distance-2 RAW dependency on \texttt{x1} from \texttt{add}. When \texttt{and} reaches the ID stage, because \texttt{sub} was stalled for 2 cycles, \texttt{add} has already committed to the register file. However, in an arbitrary program where a distance-2 instruction is separated from the producer by one independent instruction (with no prior stalls), the producer is in MEM/WB when the consumer is in ID, requiring \textit{1 stall cycle} without forwarding.
     \item When data forwarding is introduced, bypass multiplexers forward the calculated result directly from the output of the EX stage (for distance-1) or the MEM/WB stage (for distance-2) to the ALU inputs. This completely eliminates both stall cycles, allowing back-to-back ALU execution at 0 stall cycles (1.0 CPI).
 \end{enumerate}
 $\diamond$
@@ -157,8 +157,8 @@ In the 4-stage pipeline, branch condition evaluation and target address generati
 
 \textbf{Solution}:
 \begin{enumerate}
-    \item When a branch is taken, the two instructions fetched speculatively into the IF and ID stages are flushed. Thus, the penalty is \textbf{2 clock cycles}.
-    \item When a branch is not taken, execution falls through sequentially without flushing the pipeline. Thus, the penalty is \textbf{0 clock cycles}.
+    \item When a branch is taken, the two instructions fetched speculatively into the IF and ID stages are flushed. Thus, the penalty is \textit{2 clock cycles}.
+    \item When a branch is not taken, execution falls through sequentially without flushing the pipeline. Thus, the penalty is \textit{0 clock cycles}.
     \item Average branch penalty per instruction:
     \begin{equation}
     \text{CPI}_{\text{branch}} = 0.20 \times (0.60 \times 2 + 0.40 \times 0) = 0.20 \times 1.20 = 0.24 \ \text{cycles/instruction}.
@@ -244,14 +244,14 @@ add a5, t0, a5    // a5 += t0 (accumulate)
 \textbf{Solution}:
 \begin{enumerate}
     \item An unpipelined combinational multiplier has a propagation delay of $2.148\,\text{ns}$ in ASAP7 7\,nm FinFET. Adding multiplexer and register setup overhead inflates the Execute stage delay to $T_{\text{execute}} = 2.462\,\text{ns}$. By Amdahl's Law for clock periods, $T_{\text{clk}} = \max(T_{\text{fetch}}, T_{\text{decode}}, T_{\text{execute}}, T_{\text{sram\_wb}}) = 2.462\,\text{ns}$, causing the operating clock frequency of the entire core to collapse from $733.7\,\text{MHz}$ down to $406.2\,\text{MHz}$ (a $-44.6\%$ penalty on all instructions).
-    \item Partitioning the multiplier decouples carry-save partial product reduction from final carry-propagating vector addition. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA compressor tree ($\approx 0.61\,\text{ns}$, carry-free). Stage 2 in MEM/WB executes a 64-bit vector-merging adder ($\approx 0.52\,\text{ns}$). The intermediate pipeline register \texttt{ex\_mem} synchronously stores the unmerged redundant vectors: \texttt{ex\_mem.mulSum} (64 bits), \texttt{ex\_mem.mulCarry} (64 bits), \texttt{ex\_mem.mulOp} (5 bits), and \texttt{ex\_mem.isMul} (1 bit). Because both sub-stages require $\le 0.65\,\text{ns}$, the Execute stage delay drops back to the balanced Carry-Select Adder integer ALU critical path ($0.600\text{--}0.650\,\text{ns}$), restoring the operating frequency to \textbf{1.54\,GHz}.
+    \item Partitioning the multiplier decouples carry-save partial product reduction from final carry-propagating vector addition. Stage 1 in EX computes Radix-4 Booth recoding and a 6-level CSA compressor tree ($\approx 0.61\,\text{ns}$, carry-free). Stage 2 in MEM/WB executes a 64-bit vector-merging adder ($\approx 0.52\,\text{ns}$). The intermediate pipeline register \texttt{ex\_mem} synchronously stores the unmerged redundant vectors: \texttt{ex\_mem.mulSum} (64 bits), \texttt{ex\_mem.mulCarry} (64 bits), \texttt{ex\_mem.mulOp} (5 bits), and \texttt{ex\_mem.isMul} (1 bit). Because both sub-stages require $\le 0.65\,\text{ns}$, the Execute stage delay drops back to the balanced Carry-Select Adder integer ALU critical path ($0.600\text{--}0.650\,\text{ns}$), restoring the operating frequency to \textit{1.54\,GHz}.
     \item Execution cycle trace:
     \begin{itemize}
         \item Cycle 1: \texttt{mul} in ID, \texttt{add} in IF.
         \item Cycle 2: \texttt{mul} in EX (Stage 1 computes Booth PPG and 6-level CSA tree into \texttt{mulSum} and \texttt{mulCarry}). \texttt{add} in ID. Because \texttt{mul} is not a memory load ($\texttt{memRead} == 0$), the hazard unit detects no load-use hazard and asserts 0 stalls ($\texttt{stall} == 0$).
-        \item Cycle 3: \texttt{mul} enters MEM/WB (Stage 2 vector adder computes product and places \texttt{mulStage2Result} onto \texttt{exMemFwdData}). Simultaneously, \texttt{add} enters EX. The forwarding unit detects $\texttt{ex\_mem.rd} == \texttt{id\_ex.rs1}$ (\texttt{t0}) and routes \texttt{exMemFwdData} directly to ALU operand A. The ALU computes the accumulation with \textbf{0 stall cycles}.
+        \item Cycle 3: \texttt{mul} enters MEM/WB (Stage 2 vector adder computes product and places \texttt{mulStage2Result} onto \texttt{exMemFwdData}). Simultaneously, \texttt{add} enters EX. The forwarding unit detects $\texttt{ex\_mem.rd} == \texttt{id\_ex.rs1}$ (\texttt{t0}) and routes \texttt{exMemFwdData} directly to ALU operand A. The ALU computes the accumulation with \textit{0 stall cycles}.
     \end{itemize}
-    Consecutive instructions enter the pipeline at \textbf{1 instruction per cycle}.
+    Consecutive instructions enter the pipeline at \textit{1 instruction per cycle}.
     \item Total execution times:
     \begin{itemize}
         \item Single-Cycle (CSA): $T_{\text{exec}} = 804 \times 2.290\,\text{ns} = \mathbf{1,841.16\,\text{ns}}$ ($1.84\,\mu\text{s}$).
@@ -298,7 +298,7 @@ Consider branch prediction in the 4-stage \texttt{RiscvPipelined} processor:
         \item \textbf{Dynamic Gshare}:
         After initial training, the 2-bit saturating counter is in state 11 (Strongly Taken). For the 999 taken branches, prediction is correct (0 bubbles). On exit, Gshare mispredicts taken (2 bubbles) and the counter decrements to 10 (Weakly Taken). Total stall cycles = 4 cycles (or 2 if BTB is pre-warmed). Total cycles $\approx 11,004$ cycles ($\text{CPI} \approx \mathbf{1.00}$).
     \end{enumerate}
-    \item A 1-bit predictor immediately changes its prediction on any misprediction. On loop exit, a 1-bit predictor flips to Not-Taken. When the loop is re-entered later, the very first iteration will mispredict not-taken (paying another penalty). A 2-bit saturating counter requires \textbf{two consecutive mispredictions} to flip its MSB prediction: state 11 (Strongly Taken) decrements to 10 (Weakly Taken) on loop exit, but still predicts Taken on the next invocation! Thus, Gshare incurs only 1 misprediction per loop execution, whereas a 1-bit predictor incurs 2 mispredictions per loop execution.
+    \item A 1-bit predictor immediately changes its prediction on any misprediction. On loop exit, a 1-bit predictor flips to Not-Taken. When the loop is re-entered later, the very first iteration will mispredict not-taken (paying another penalty). A 2-bit saturating counter requires \textit{two consecutive mispredictions} to flip its MSB prediction: state 11 (Strongly Taken) decrements to 10 (Weakly Taken) on loop exit, but still predicts Taken on the next invocation! Thus, Gshare incurs only 1 misprediction per loop execution, whereas a 1-bit predictor incurs 2 mispredictions per loop execution.
 \end{enumerate}
 $\diamond$
 \end{problem}
@@ -306,8 +306,8 @@ $\diamond$
 \begin{problem}
 Consider a 4-thread barrel processor (\texttt{RiscvBarrel4T}) with a 4-stage pipeline (IF, ID, EX, MEM/WB):
 \begin{enumerate}
-    \item Explain why single-cycle ALU data hazards (such as \texttt{add x1, x2, x3} followed immediately by \texttt{sub x4, x1, x5} in the same thread) incur \textbf{zero stall cycles} even in the complete absence of data forwarding hardware.
-    \item Explain why conditional branches evaluate with \textbf{zero branch delay penalty} and require zero speculative pipeline flushes.
+    \item Explain why single-cycle ALU data hazards (such as \texttt{add x1, x2, x3} followed immediately by \texttt{sub x4, x1, x5} in the same thread) incur \textit{zero stall cycles} even in the complete absence of data forwarding hardware.
+    \item Explain why conditional branches evaluate with \textit{zero branch delay penalty} and require zero speculative pipeline flushes.
     \item If the 4 threads share a 4\,KB direct-mapped (1-way) Level-1 Instruction Cache with 32-byte lines, describe the phenomenon of inter-thread cache thrashing. Why does increasing cache associativity to 4-way resolve this thrashing?
 \end{enumerate}
 

@@ -134,7 +134,7 @@ The standard \texttt{Zmmul} extension defines the integer multiplication subset 
 
 
 %***********************************************************************************
-\section{Harvard 5-OS Hardware Architecture and Microarchitecture}\label{riscvArch}
+\subsection{Harvard 5-OS Hardware Architecture and Microarchitecture}\label{riscvArch}
 %***********************************************************************************
 \index{Harvard architecture!RISC-V 5-OS}\index{processor architecture!5-OS loops}
 
@@ -156,7 +156,7 @@ As described in the structural classification of computing systems Chapter \ref{
 \end{enumerate}
 
 %---------------------------------------------
-\subsection{Single-Cycle Fetch-Execute Cycle}
+\subsubsection{Single-Cycle Fetch-Execute Cycle}
 %----------------------------------------------
 \index{Fetch-Execute cycle!single-cycle RISC-V}
 
@@ -169,7 +169,7 @@ A single-cycle fetch-execute processor executes each instruction within a single
     \item \textbf{Next PC Generation (PC)}: When a branch condition is satisfied or a jump is decoded, target address $\text{pc} + \text{imm}$ or $\text{rs1} + \text{imm}$ is loaded into the PC automaton via \texttt{Mode.Jalr} (enforcing LSB $= 0$). Otherwise, the PC automaton increments by $+4$.
 \end{enumerate}
 
-\subsection{Chisel Hardware Implementation}
+\subsubsection{Chisel Hardware Implementation}
 \index{Chisel!RiscvFetchExecute implementation}
 
 Listing \ref{lst:chisel_riscv_core_ch18} presents the complete Chisel implementation of the single-cycle processor core.

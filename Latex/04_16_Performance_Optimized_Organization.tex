@@ -1380,7 +1380,7 @@ In fine-grained multithreading, the instruction fetch and issue logic switches b
 Coarse-grained multithreading executes instructions from a single primary thread continuously at full speed until that thread encounters a \textbf{long-latency event}---most commonly a level-2 or level-3 data cache miss that requires off-chip memory access.
 \begin{itemize}
     \item When a stall is detected, the hardware traps execution, drains or freezes the stalled thread's pipeline state, and context-switches to an alternate ready thread.
-    \item \textbf{Historical Implementations}: Implemented in machines such as the IBM Northstar (RS64-IV) and commercial network processors.
+    \item \textbf{Historical Implementations}: Implemented in commercial server processors such as the IBM RS64-IV (Northstar) \cite{borkenhagen2000multithreaded} and network processors such as the Intel IXP1200/IXP2800 family \cite{johnson2002ixp}.
     \item \textbf{Trade-offs}: Unlike fine-grained multithreading, coarse-grained multithreading preserves peak single-thread execution latency under normal operation. However, the thread-switch itself incurs a non-zero latency penalty (the \emph{pipeline switch overhead}) to drain and prime the pipeline stages. Consequently, coarse-grained multithreading is effective only for very long stalls (tens to hundreds of cycles), and cannot hide short hazards such as ALU dependencies or branch mispredictions.
 \end{itemize}
 
@@ -1389,7 +1389,7 @@ Coarse-grained multithreading executes instructions from a single primary thread
 \begin{itemize}
     \item SMT simultaneously attacks both horizontal and vertical waste: if Thread 0 can only provide 2 ready instructions in a 4-issue machine, the dispatch logic fills the remaining 2 slots with ready instructions from Thread 1 or Thread 2.
     \item If Thread 0 suffers an L3 cache miss, the execution window is not left idle; instructions from other active threads immediately occupy the functional units.
-    \item \textbf{Commercial Implementations}: Intel Hyper-Threading (introduced in the Pentium 4 Xeon and pervasive across modern Core architectures), IBM POWER5 through POWER10 (supporting up to 8 SMT threads per core, SMT8), and AMD Zen (SMT2).
+    \item \textbf{Commercial Implementations}: Intel Hyper-Threading (introduced in the Pentium 4 Xeon and pervasive across modern Core architectures) \cite{marr2002hyperthreading}, IBM POWER5 through POWER10 (supporting up to 8 SMT threads per core, SMT8) \cite{kalla2004power5}, and AMD Zen (SMT2) \cite{singh2017zen}.
 \end{itemize}
 
 \subsection{Hardware Resource Sharing in Multithreaded Processors}
@@ -1461,7 +1461,7 @@ However, modern high-performance microprocessors cannot operate directly against
 
 Throughout the history of semiconductor microprocessors, processing logic and primary memory followed dramatically divergent technological trajectories.
 
-Between 1980 and the mid-2000s, microprocessor performance expanded at an extraordinary rate of approximately $52\%$ per year \cite{Hennessy19}. This unprecedented growth was sustained by the simultaneous convergence of architectural innovations (deep instruction pipelining, superscalar multi-issue, dynamic out-of-order execution, and branch prediction) and physical device scaling governed by Robert Dennard's MOSFET scaling laws. Dennard scaling permitted transistor switching speeds to increase in direct proportion to circuit density while maintaining constant power density per unit chip area.
+Between 1980 and the mid-2000s, microprocessor performance expanded at an extraordinary rate of approximately $52\%$ per year \cite{Hennessy19}. This unprecedented growth was sustained by the simultaneous convergence of architectural innovations (deep instruction pipelining, superscalar multi-issue, dynamic out-of-order execution, and branch prediction) and physical device scaling governed by Robert Dennard's MOSFET scaling laws \cite{dennard1974}. Dennard scaling permitted transistor switching speeds to increase in direct proportion to circuit density while maintaining constant power density per unit chip area.
 
 In contrast, commodity Dynamic RAM (DRAM) followed an optimization trajectory focused overwhelmingly on capacity and cost-per-bit rather than access latency. Storing a bit of information in DRAM requires charging or discharging a minute capacitor through a single access transistor (the 1T-1C cell). The physics of capacitive charge transfer, long capacitive bitline charging delays, analog sense amplifier sensing times, and external bus multiplexing severely constrained latency improvements. Over the same era, DRAM access latency improved at an average rate of only $\sim 7\%$ per year \cite{Patterson97}.
 
